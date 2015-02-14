@@ -19,4 +19,5 @@ cut -f2 macrophage-gxe-study/data/DF_patch1_samples.txt | head -n 15 | python ~/
 #Some ran out of time. Use the long queue to do the alignment
 cut -f1 long.txt | python ~/software/utils/submitJobs.py --ncores 6 --queue long --MEM 8000 --jobname tophat2_align_long --command "python ~/software/utils/tophat-align.py --index ../../annotations/GRCh38/bowtie2-index/GRCh38 --txindex ../../annotations/GRCh38/genes/GRCh38_76/GRCh38_76 --out tophat2/ --ncores 6 --fastq fq/"
 
-
+#Count reads over genes
+cut -f2 macrophage-gxe-study/data/DF_batch1_samples.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname featureCounts --command  "python ~/software/utils/bam2counts.py --bams bams --counts results/ --gtf ../../annotations/GRCh38/genes/Homo_sapiens.GRCh38.76.gtf --execute True"
