@@ -1,0 +1,6 @@
+Sample ID	User ID	Date 	Time 	ng/ul 	A260 	A280 	260/280 	260/230 	Constant 	Cursor Pos.	Cursor abs.	340 raw
+coxy A	Default	9/8/2014	4:22 PM	155.81	3.895	1.852	2.10	1.90	40.00	230	2.052	0.022
+coxy B	Default	9/8/2014	4:23 PM	148.67	3.717	1.748	2.13	2.08	40.00	230	1.791	0.034
+coxy C	Default	9/8/2014	4:23 PM	81.86	2.046	0.972	2.11	1.97	40.00	230	1.041	0.022
+coxy D	Default	9/8/2014	4:24 PM	99.96	2.499	1.174	2.13	1.82	40.00	230	1.371	0.031
+
