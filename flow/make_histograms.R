@@ -1,0 +1,43 @@
+library("flowCore")
+a = read.FCS("flow/fcs/debk_271114_CD14+CD16+CD206.fcs", alter.names = TRUE)
+linearTrans <- linearTransform(transformationId="Linear-transformation", a=, b=100)
+b = flowCore::transform(a, CD14_1 = linearTrans(X450.50..405..A))
+b = flowCore::transform(b, CD14_2 = log(CD14_1))
+plot(b, "CD14_2", xlim = c(0,11), breaks = 100)
+
+a = read.FCS("flow/fcs/aipt_160614_CD14+CD16+CD206.fcs", alter.names = TRUE)
+linearTrans <- linearTransform(transformationId="Linear-transformation", a=, b=100)
+b = flowCore::transform(a, CD14_1 = linearTrans(Pacific.Blue.A))
+b = flowCore::transform(b, CD14_2 = log(CD14_1))
+plot(b, "CD14_2", xlim = c(0,11), breaks = 100)
+
+
+a = read.FCS("flow/fcs/huls_190914_CD14+CD16+CD206.fcs", alter.names = TRUE)
+linearTrans <- linearTransform(transformationId="Linear-transformation", a=, b=100)
+b = flowCore::transform(a, CD14_1 = linearTrans(X450.50..405..A))
+b = flowCore::transform(b, CD14_2 = log(CD14_1))
+plot(b, "CD14_2", xlim = c(0,11), breaks = 100)
+
+a = read.FCS("flow/fcs/ougl_200514_CD14+CD16+CD206.fcs", alter.names = TRUE)
+linearTrans <- linearTransform(transformationId="Linear-transformation", a=, b=100)
+b = flowCore::transform(a, CD14_1 = linearTrans(Pacific.Blue.A))
+b = flowCore::transform(b, CD14_2 = log(CD14_1))
+plot(b, "CD14_2", xlim = c(0,11), breaks = 100)
+
+a = read.FCS("flow/fcs/ffdp_200514_CD14+CD16+CD206.fcs", alter.names = TRUE)
+linearTrans <- linearTransform(transformationId="Linear-transformation", a=, b=100)
+b = flowCore::transform(a, CD14_1 = linearTrans(Pacific.Blue.A))
+b = flowCore::transform(b, CD14_2 = log(CD14_1))
+plot(b, "CD14_2", xlim = c(0,11), breaks = 100)
+
+a = read.FCS("flow/fcs/zuta_111114_CD14+CD16+CD206.fcs", alter.names = TRUE)
+linearTrans <- linearTransform(transformationId="Linear-transformation", a=, b=100)
+b = flowCore::transform(a, CD14_1 = linearTrans(X450.50..405..A))
+b = flowCore::transform(b, CD14_2 = log(CD14_1))
+plot(b, "CD14_2", xlim = c(0,11), breaks = 100)
+
+a = read.FCS("flow/fcs/bima_161214_CD14+CD16+CD206.fcs", alter.names = TRUE)
+linearTrans <- linearTransform(transformationId="Linear-transformation", a=, b=100)
+b = flowCore::transform(a, CD14_1 = linearTrans(X450.50..405..A))
+b = flowCore::transform(b, CD14_2 = log(CD14_1))
+plot(b, "CD14_2", xlim = c(0,11), breaks = 50)
