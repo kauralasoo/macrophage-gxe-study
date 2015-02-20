@@ -3,18 +3,20 @@ library("dplyr")
 library("devtools")
 library("gplots")
 library("ggplot2")
+library("tidyr")
 load_all("macrophage-gxe-study/seqUtils/")
 
 #Load filtered gene metadata from disk
-filtered_metadata = readRDS("annotations/biomart_transcripts.filtered.rds")
+filtered_metadata = tbl_df(readRDS("annotations/biomart_transcripts.filtered.rds"))
 gene_data = dplyr::select(filtered_metadata, gene_id, gene_name, gene_biotype) %>% unique()
 
 #Read count files from disk
-sample_names = read.table("fastq/acLDL_samples.txt", sep ="\t",comment.char = "", stringsAsFactors = FALSE)[,2]
+sample_names = read.table("macrophage-gxe-study/data/sample_lists/acLDL_names.txt", sep ="\t",comment.char = "", stringsAsFactors = FALSE)[,1]
 data = read.table("results/acLDL/acLDL_combined_counts.txt", stringsAsFactors = FALSE, header = TRUE)
 
 #Construct a design matrix
-design = data.frame(sample_id = sample_names, treatment = c("ctrl", "acLDL", "ctrl", "acLDL", "ctrl", "acLDL"), stringsAsFactors = FALSE)
+design = data.frame(sample_id = sample_names)
+design = design %>% tidyr::separate(sample_id, into = c("donor", "time","treatment"), sep ="_", remove = FALSE)
 rownames(design) = design$sample_id
 
 #Filter counts data
@@ -28,16 +30,18 @@ tpm = calculateTPM(counts, lengths = length_df)
 tpm_expressed = tpm[which(apply(tpm, 1, mean) > 2), ] #Keep only expressed genes
 
 #Make heatmap of gene expression
-cor_matrix = cor(log(tpm_expressed + 0.1, 2), method = "pearson")
+cor_matrix = cor(log(tpm_expressed + 0.1, 2), method = "spearman")
 heatmap.2(cor_matrix, margins = c(12,12))
 
 #Perform PCA
 tpm_z = zScoreNormalize(tpm_expressed)
 pca_list = performPCA(tpm_z, design)
-ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = treatment)) + geom_point()
+ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = treatment, label = sample_id)) + 
+  geom_point() +
+  geom_text()
 
 #Peform differential expression analysis
-dds = DESeqDataSetFromMatrix(count_matrix, design, ~treatment)
+dds = DESeqDataSetFromMatrix(counts, design, ~treatment)
 dds = DESeq(dds)
 res = results(dds) #Extract DE results
 de_results = res %>%
@@ -49,4 +53,4 @@ de_results = res %>%
   dplyr::arrange(desc(log2FoldChange))
 
 #Save results to disk
-write.table(de_results, "results/acLDL/DE_genes.txt")
+write.table(de_results, "results/acLDL/DE_genes.txt", sep= "\t", quote = FALSE, row.names = FALSE)
