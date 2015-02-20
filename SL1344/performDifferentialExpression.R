@@ -2,6 +2,7 @@ library("DESeq2")
 library("dplyr")
 library("devtools")
 library("tidyr")
+library("ggplot2")
 load_all("macrophage-gxe-study/seqUtils/")
 
 #Load data from disk
@@ -40,8 +41,7 @@ dds = DESeq(dds)
 
 #Perform PCA analysis
 tpm_z = zScoreNormalize(tpm_expressed)
-pca = prcomp(t(tpm_z))
-pca_res = as.data.frame(pca$x)
-pca_matrix = as.data.frame(pca$x) %>% dplyr::mutate(sample_id = rownames(pca_res)) %>%
-  dplyr::left_join(design, by = "sample_id")
-
+pca_list = performPCA(tpm_z, design)
+ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = condition_name, label = sample_id)) + 
+  geom_point() +
+  geom_text()
