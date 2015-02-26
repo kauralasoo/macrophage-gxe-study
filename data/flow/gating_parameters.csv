@@ -1,0 +1,2 @@
+alias,pop,parent,dims,gating_method,gating_args,collapseDataForGating,groupBy,preprocessing_method,preprocessing_args
+nonDebris,nonDebris,root,FSC.A,mindensity,max=150000,,NA,,NA
