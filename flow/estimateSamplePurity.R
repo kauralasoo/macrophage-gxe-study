@@ -32,7 +32,7 @@ gating(gt, gs)
 plotGate(gs[["fpdl_291014_CD14+CD16+CD206"]], path = 1, default.y = "SSC.A")
 plotGate(gs[["fpdl_291014_isotype"]], path = 1, default.y = "SSC.A")
 plotGate(gs[["ffdk_200514_CD14+CD16+CD206"]], path = 1, default.y = "SSC.A")
-plotGate(gs[["ougl_200514_CD14+CD16+CD206"]],path = 1, default.y = "SSC.A")
+plotGate(gs[["cehw_181114_CD14+CD16+CD206"]],path = 1, default.y = "SSC.A")
 
 #Extract population statistics for QC purposes
 stat = t(getPopStats(gs))
@@ -54,12 +54,17 @@ selected_df = dplyr::select(gated_df, name, APC.A, PE.A, Pacific.Blue.A) %>%
 
 #Make density plots for all channels
 plot = ggplot(selected_df, aes(x = intensity, color = staining, fill = staining, alpha = 0.5)) + geom_density() + facet_grid(sample~channel) 
-ggsave("results/flow_density.pdf", plot = plot, width = 8, height = 49)
+ggsave("results/flow/flow_density.pdf", plot = plot, width = 8, height = 49)
 
 #Estimate the purity of all samples
+sample_names = unique(filtered_metadata$sample)
 purity_data = ldply(as.list(sample_names), estimateSamplePurity, filtered_metadata, gated_data)
-purity_data = tidyr::separate(purity_data, sample, c("donor", "date"), sep ="_", remove = FALSE)
-write.table(purity_data, "results/flow/purity_estimates.txt", quote = FALSE, sep = "\t", row.names = FALSE)
+purity_df = dplyr::mutate(purity_data, sample = as.character(sample)) %>%
+  tidyr::separate(sample, c("donor", "flow_date"), sep ="_", remove = FALSE) %>%
+  dplyr::mutate(flow_date = as.Date(flow_date, "%d%m%y")) %>%
+  tbl_df()
+saveRDS(purity_df, "results/covariates/flow_cytometry_purity.rds")
+write.table(purity_df, "results/covariates/flow_cytometry_purity.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 
 #### Finally, we want to know if the purity values are lower for those lines that cluster separately on the RNA-Seq PCA plot. ####
 
@@ -69,7 +74,7 @@ cluster_samples = c("iasn","huls","debk", "ougl", "gomv", "ffdp", "peop")
 outliers = c("golb_111114","fpdj_200514")
 
 #Calculate and filter max purity
-max_purity = dplyr::group_by(purity_data, sample) %>% summarize(max_purity = max(purity), donor = donor[1])
+max_purity = dplyr::group_by(purity_data, sample) %>% dplyr::summarize(max_purity = max(purity), donor = donor[1])
 filtered_purity = semi_join(max_purity, rna_design, by = "donor")
 filtered_purity = dplyr::mutate(filtered_purity, cluster = ifelse(donor %in% cluster_samples, "yes", "no")) %>%
   dplyr::filter(!(sample %in% outliers))

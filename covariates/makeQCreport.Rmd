@@ -1,0 +1,90 @@
+---
+title: "Macrophage GxE study QC report"
+output: html_document
+---
+
+```{r echo=FALSE}
+# This chunk contains some setup which we do not want to display in the final
+# document, hence `echo=FALSE` is used.
+# When you’re reading this document, it may be easier to ignore this chunk for
+# now, and continue with the document below, starting at “Introduction”
+
+# Make library loading silent
+library = function (...) suppressMessages(base::library(...))
+```
+This is a QC report for the macrophage GxE study.
+
+Load required packages and import raw metadata from disk.
+```{r}
+setwd("../../")
+library(dplyr)
+library(ggplot2)
+
+dat = tbl_df(read.csv("macrophage-gxe-study/data/sample_lists/line_metadata_020315.csv", stringsAsFactors = FALSE, na.strings = ""))
+flow_purity = readRDS("results/covariates/flow_cytometry_purity.rds")
+rna_concentrations = readRDS("results/covariates/rna_concentrations.rds")
+```
+Do some munging of the data before we can start making pretty plots.
+```{r}
+#Convert all date fields to date
+line_metadata = dat %>%
+  tidyr::separate(line_id, into = c("donor","clone"), sep = "_", remove = FALSE) %>%
+  dplyr::mutate(ips_received = as.Date(ips_received, "%d/%m/%Y"), 
+                ips_started = as.Date(ips_started, "%d/%m/%Y"),
+                EB_formation = as.Date(EB_formation, "%d/%m/%Y"),
+                diff_start = as.Date(diff_start, "%d/%m/%Y"),
+                MF_harvest = as.Date(MF_harvest, "%d/%m/%Y"),
+                salmonella = as.Date(salmonella, "%d/%m/%Y"),
+                flow_date = as.Date(flow_date, "%d/%m/%Y"),
+                terminated = as.Date(terminated, "%d/%m/%Y"),
+                extraction_date = as.Date(extraction_date, "%d/%m/%Y"),
+                rna_submit = as.Date(rna_submit, "%d/%m/%Y"))
+
+#Add mean RNA concentration and flow purity to the data
+mean_rna_concentrations = dplyr::select(rna_concentrations, donor, ng_ul_mean, replicate) %>% unique()
+mean_flow_purity = flow_purity %>%
+  dplyr::filter(!(donor == "gedo" & channel == "Pacific.Blue.A")) %>% #Remove an outlier measurement
+  group_by(donor,flow_date) %>% 
+  dplyr::summarize(mean_purity = mean(purity), max_purity = max(purity))
+
+line_data = dplyr::left_join(line_metadata, mean_rna_concentrations, by = c("donor", "replicate")) %>%
+  dplyr::left_join(mean_flow_purity, by = c("donor", "flow_date"))
+```
+
+# Flow cytometry
+## Quantifying the purity of macrophage samples
+For all of the iPSDM samples we performed flow cytometry for 3 cell surface markers: CD14, CD16 and CD206. We then counted the percentage of the cells that stained positive for each of marker. Finally, we used the maximum of the three percentage as the purity score of the sample (we found maximum to be more robust than the mean).
+
+Extract data and remove sample in which flow cytometry was done more than 20 days later than RNA extraction.
+```{r}
+flow_df = line_data %>% 
+  dplyr::filter(status %in% c("Success", "FC_QC_fail"), !is.na(max_purity)) %>%
+  dplyr::filter(flow_date - salmonella < 20 | is.na(salmonella)) 
+```
+Make a histogram of the purity scores. Samples that failed flow cytometry QC are shown in red.
+```{r warning = FALSE}
+ggplot(flow_df, aes(x = max_purity-0.001, fill = status)) + 
+  geom_histogram(binwidth = 0.01) + 
+  xlab("Maximum purity")
+```
+
+## Outlier samples on PCA
+We found that some of the samples on the gene expression PCA plot clearly clustered separately from the others. Do these samples also have lower purity scores? Yes, it does seem to be the case:
+```{r}
+cluster_df = flow_df %>%
+  dplyr::mutate(separate_cluster = ifelse(donor %in% c("iasn","ougl","debk","gomv","ffdp","peop","huls"), "Yes", "No")) %>%
+  dplyr::filter(!is.na(rna_submit)) #Sequenced samples only
+ggplot(cluster_df, aes(x = separate_cluster, y = max_purity, label = donor)) +
+  geom_boxplot() +
+  geom_text() +
+  xlab("Is in separate cluster?") + 
+  ylab("Maximum purity")
+```
+
+Furthermore, it this difference is not explained by RNA concentration:
+```{r}
+ggplot(cluster_df, aes(x = separate_cluster, y = ng_ul_mean)) +
+  geom_violin() +
+  xlab("Is in separate cluster?") + 
+  ylab("RNA concentration (ng/ul)")
+```

@@ -2,6 +2,7 @@ library("flowCore")
 library("flowViz")
 library("tidyr")
 library("dplyr")
+source("macrophage-gxe-study/flow/flow_functions.R")
 
 #Construct a flow metadata data.frame:
 file_names = data.frame(file_name = list.files("flow/fcs/"), stringsAsFactors = FALSE)

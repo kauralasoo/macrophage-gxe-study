@@ -17,13 +17,14 @@ rna_sample_stats = dplyr::mutate(rna_df, ng_ul = ifelse(grepl("eofe_",sample_id)
 
 #Separate sample_id into fields
 rna_sample_stats = tidyr::separate(rna_sample_stats, sample_id, into = c("donor","condition","replicate"), sep = "_", extra = "drop", remove = FALSE) %>%
-  mutate(replicate = ifelse(is.na(replicate), 1, replicate)) #if no replicate in file name then set it to 1
-
+  mutate(replicate = ifelse(is.na(replicate), 1, replicate)) %>% #if no replicate in file name then set it to 1
+  mutate(replicate = as.integer(replicate))
+  
 #Calculate mean concentration per line
 rna_line_stats = dplyr::filter(rna_sample_stats, sample_id != "aipt_A") %>%
-  group_by(donor, replicate) %>%
-  summarise(ng_ul_mean = mean(ng_ul), extraction_date = Date[1]) %>%
-  ungroup()
+  dplyr::group_by(donor, replicate) %>%
+  dplyr::summarise(ng_ul_mean = mean(ng_ul), extraction_date = Date[1]) %>%
+  dplyr::ungroup()
 
 #Combine line-level and sample-level stats
 rna_stats = dplyr::left_join(rna_sample_stats, rna_line_stats, by = c("donor", "replicate"))
