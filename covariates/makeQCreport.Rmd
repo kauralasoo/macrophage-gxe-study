@@ -25,7 +25,7 @@ flow_purity = readRDS("results/covariates/flow_cytometry_purity.rds")
 rna_concentrations = readRDS("results/covariates/rna_concentrations.rds")
 ```
 Do some munging of the data before we can start making pretty plots.
-```{r}
+```{r cache=TRUE}
 #Convert all date fields to date
 line_metadata = dat %>%
   tidyr::separate(line_id, into = c("donor","clone"), sep = "_", remove = FALSE) %>%
@@ -50,6 +50,32 @@ mean_flow_purity = flow_purity %>%
 line_data = dplyr::left_join(line_metadata, mean_rna_concentrations, by = c("donor", "replicate")) %>%
   dplyr::left_join(mean_flow_purity, by = c("donor", "flow_date"))
 ```
+#Basic statistics
+What is the overall success rate of our macrophage differentiations?
+```{r}
+success_df = line_data %>%
+  dplyr::mutate(success = ifelse(status == "Success", "Success", "Fail")) %>%
+  dplyr::mutate(status = ifelse(status == "RNA_QC_fail", "Stimulation_fail", status))
+ggplot(success_df, aes(x = success, fill = status)) + geom_bar()
+```
+
+Our success rate thus far is 39/59 = 66%. Most commonly, the iPS line fails to differentiate completely and we do not get any macrophages (Diff fail). However, often the line does differentiate but the resulting macrophages are contaminate by some other cell type that cannot be easily separate (FC_QC_fail).
+
+How are these successes and failures distributed over time?
+
+```{r}
+monthly_df = success_df %>%
+  dplyr::select(donor, clone, EB_formation, status) %>% 
+  dplyr::arrange(EB_formation) %>% 
+  dplyr::mutate(month = format(EB_formation, "%b,%y")) %>%
+  dplyr::mutate(month = factor(month, levels = unique(month)))
+ggplot(monthly_df, aes(x = month, fill = status)) + geom_bar() + 
+  xlab("Start of differentiation (month)")
+
+```
+
+We spent first couple of months of 2014 setting everything up and optimizing the stimulation assays. From May-July we were limited by the number of lines that CGaP could provide us. We received our first larger batch of cells in August, but unfortunately many of these differentiations failed, probably because of too infrequent medium change. After that we increased the medium change frequncy to 4-5 days and this improved our success rates dramatically. We did not start any new differentiations after the beginning of November, because we wanted to finish all of them before Christmas.
+
 
 # Flow cytometry
 ## Quantifying the purity of macrophage samples
@@ -81,7 +107,7 @@ ggplot(cluster_df, aes(x = separate_cluster, y = max_purity, label = donor)) +
   ylab("Maximum purity")
 ```
 
-Furthermore, it this difference is not explained by RNA concentration:
+Furthermore this difference is not explained by RNA concentration:
 ```{r}
 ggplot(cluster_df, aes(x = separate_cluster, y = ng_ul_mean)) +
   geom_violin() +
