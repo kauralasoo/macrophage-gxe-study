@@ -17,13 +17,23 @@ This is a QC report for the macrophage GxE study.
 Load required packages and import raw metadata from disk.
 ```{r}
 setwd("../../")
-library(dplyr)
-library(ggplot2)
+library("dplyr")
+library("ggplot2")
+library("tidyr")
 
 dat = tbl_df(read.csv("macrophage-gxe-study/data/sample_lists/line_metadata_020315.csv", stringsAsFactors = FALSE, na.strings = ""))
 flow_purity = readRDS("results/covariates/flow_cytometry_purity.rds")
 rna_concentrations = readRDS("results/covariates/rna_concentrations.rds")
 ```
+
+##Load HipSci genotype sample names
+```{r}
+genotypes = read.table("genotypes//genotype_sample_names.txt", stringsAsFactors = FALSE)
+colnames(genotypes) = c("genotype_id")
+genotypes = tidyr::separate(genotypes, genotype_id, into = c("batch_id", "line_id"), sep = "-", remove = FALSE) %>% 
+  dplyr::select(genotype_id, line_id)
+```
+
 Do some munging of the data before we can start making pretty plots.
 ```{r cache=TRUE}
 #Convert all date fields to date
@@ -48,9 +58,50 @@ mean_flow_purity = flow_purity %>%
   dplyr::summarize(mean_purity = mean(purity), max_purity = max(purity))
 
 line_data = dplyr::left_join(line_metadata, mean_rna_concentrations, by = c("donor", "replicate")) %>%
-  dplyr::left_join(mean_flow_purity, by = c("donor", "flow_date"))
+  dplyr::left_join(mean_flow_purity, by = c("donor", "flow_date")) %>%
+  dplyr::left_join(genotypes, by = "line_id")
 ```
+
+## Export genotypes for RNA-Seq samples
+```{r}
+rna_seq_genotypes = dplyr::filter(line_data, !is.na(rna_submit)) %>% 
+  dplyr::select(line_id, genotype_id) %>% 
+  arrange(line_id) %>% 
+  unique()
+write.table(rna_seq_genotypes, "genotypes/rna_seq_genotypes.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+```
+
+
 #Basic statistics
+##Duration
+How long does it take from EB formation to stimulation experiment?
+```{r}
+duration_df = line_data %>%
+  dplyr::filter(status == "Success") %>%
+  dplyr::mutate(diff_duration = as.numeric(salmonella - EB_formation)) %>%
+  dplyr::mutate(ips_culture_duration = as.numeric(EB_formation - ips_started))
+ggplot(duration_df, aes(x = diff_duration)) + 
+  geom_histogram(binwidth = 1) +
+  xlab("Duration of differentiation (days)")
+```
+
+How long does it take to expand iPS cells before differentiation?
+```{r}
+ggplot(duration_df, aes(x = ips_culture_duration, fill = received_as)) + 
+  geom_histogram(binwidth = 1) + 
+  xlab("Duration of iPS cell culture (days).")
+```
+
+How many medium changes with cytokines (IL-3 + M-CSF) do we need to perform for each line?
+```{r}
+ggplot(duration_df, aes(x = medium_changes)) + 
+  geom_histogram(binwidth = 1) + 
+  xlab("Median number of medium changes per line.")
+```
+
+From this plot, the median number of medium changes per line is 8. TODO: add cost estimates based on this.
+
+##Success rate
 What is the overall success rate of our macrophage differentiations?
 ```{r}
 success_df = line_data %>%
@@ -76,6 +127,19 @@ ggplot(monthly_df, aes(x = month, fill = status)) + geom_bar() +
 
 We spent first couple of months of 2014 setting everything up and optimizing the stimulation assays. From May-July we were limited by the number of lines that CGaP could provide us. We received our first larger batch of cells in August, but unfortunately many of these differentiations failed, probably because of too infrequent medium change. After that we increased the medium change frequncy to 4-5 days and this improved our success rates dramatically. We did not start any new differentiations after the beginning of November, because we wanted to finish all of them before Christmas.
 
+##Batch sizes
+How large are the stimulation batches?
+```{r}
+batch_df = line_data %>%
+  dplyr::filter(status == "Success") %>%
+  group_by(salmonella) %>% 
+  summarize(batch_size = length(salmonella))
+ggplot(batch_df, aes(x = batch_size)) + 
+  geom_histogram(binwidth = 1) +
+  xlab("Size of stimulation batch (lines)")
+```
+
+The median is 3 lines per stimulation batch, but there are also two batches that only contained 1 line.
 
 # Flow cytometry
 ## Quantifying the purity of macrophage samples
