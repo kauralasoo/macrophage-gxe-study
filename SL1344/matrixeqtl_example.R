@@ -18,6 +18,9 @@ snps$fileSkipRows = 1;          # one row of column labels
 snps$fileSkipColumns = 1;       # one column of row labels
 snps$fileSliceSize = 2000;      # read file in slices of 2,000 rows
 snps$LoadFile(SNP_file_name);
+snps$LoadFile("genotypes/genotypes_for_matrixeQTL.tsv")
+
+
 
 ## Load gene expression data
 
