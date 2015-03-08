@@ -60,6 +60,7 @@ mean_flow_purity = flow_purity %>%
 line_data = dplyr::left_join(line_metadata, mean_rna_concentrations, by = c("donor", "replicate")) %>%
   dplyr::left_join(mean_flow_purity, by = c("donor", "flow_date")) %>%
   dplyr::left_join(genotypes, by = "line_id")
+saveRDS(line_data, "annotations/compiled_line_metadata.rds")
 ```
 
 ## Export genotypes for RNA-Seq samples

@@ -6,11 +6,14 @@ ensembl_dataset = useDataset("hsapiens_gene_ensembl",mart=ensembl_mart)
 
 #Download data from biomart
 selected_attributes = c("ensembl_transcript_id", "ensembl_gene_id", "external_gene_name" ,"gene_biotype", 
-                        "transcript_biotype","chromosome_name","strand")
+                        "transcript_biotype","chromosome_name","start_position","end_position","strand",
+                        "percentage_gc_content")
 data = getBM(attributes = selected_attributes, mart = ensembl_dataset)
 
 #Rename some columns
-data = dplyr::rename(data, transcript_id = ensembl_transcript_id, gene_id = ensembl_gene_id, gene_name = external_gene_name)
+data = dplyr::rename(data, transcript_id = ensembl_transcript_id, 
+                     gene_id = ensembl_gene_id, gene_name = external_gene_name,
+                     gene_start = start_position, gene_end = end_position)
 saveRDS(data, "annotations/biomart_transcripts.rds")
 
 #Create a filtered version of the annotations
