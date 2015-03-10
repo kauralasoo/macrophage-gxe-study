@@ -28,7 +28,7 @@ rna_concentrations = readRDS("results/covariates/rna_concentrations.rds")
 
 ##Load HipSci genotype sample names
 ```{r}
-genotypes = read.table("/Users/alasoo/projektid/macrophage-gxe-study/genotypes/genotype_sample_names.txt", stringsAsFactors = FALSE)
+genotypes = read.table("genotypes/genotype_sample_names.txt", stringsAsFactors = FALSE)
 colnames(genotypes) = c("genotype_id")
 genotypes = tidyr::separate(genotypes, genotype_id, into = c("batch_id", "line_id"), sep = "-", remove = FALSE) %>% 
   dplyr::select(genotype_id, line_id)
