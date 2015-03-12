@@ -3,45 +3,85 @@ library("dplyr")
 library("devtools")
 library("tidyr")
 library("ggplot2")
+library("gplots")
+library("cqn")
+library("gProfileR")
 load_all("macrophage-gxe-study/seqUtils/")
 
 #Load data from disk
 data = read.table("results//SL1344//combined_counts.txt", stringsAsFactors = FALSE)
+#There seems to be a sample swap between coio_C and coio_D, fix that
+indexes = c(which(colnames(data) == "coio_C"), which(colnames(data) == "coio_D"))
+colnames(data)[indexes] = c("coio_D", "coio_C")
+
+#Load metadata
 filtered_metadata = readRDS("annotations/biomart_transcripts.filtered.rds")
-gene_data = dplyr::select(filtered_metadata, gene_id, gene_name, gene_biotype) %>% unique()
+gene_data = dplyr::select(filtered_metadata, gene_id, gene_name, gene_biotype, percentage_gc_content) %>% unique()
+length_df = dplyr::select(data, gene_id, length)
+gene_metadata = dplyr::left_join(gene_data, length_df, by = "gene_id")
 
 #Filter genes
 filtered_data = dplyr::filter(data, gene_id %in% gene_data$gene_id)
-length_df = dplyr::select(filtered_data, gene_id, length)
 counts = dplyr::select(filtered_data, -gene_id, -length)
 rownames(counts) = filtered_data$gene_id
+counts = counts[gene_metadata$gene_id,] #Reoder counts
 
-#TPM_normalize the data
-tpm = calculateTPM(counts, lengths = length_df)
+#Construct a design matrix from the sample names
+design_matrix = constructDesignMatrix_SL1344(sample_ids = colnames(counts))
 
-expressed_genes = which(apply(tpm, 1, mean) > 2)
-tpm_expressed = tpm[expressed_genes, ]
-heatmap.2(cor(log(tpm_expressed+0.1,2), method = "spearman"))
+#CQN normalize the data
+exprs_cqn = calculateCQN(counts, gene_metadata)
+expressed_genes = which(apply(exprs_cqn, 1, mean) > 1)
+exprs_cqn_filtered = exprs_cqn[expressed_genes, ]
+pdf("results/SL1344/diffExp/sample_heatmap.pdf", width = 10, height = 10)
+heatmap.2(cor(exprs_cqn_filtered, method = "spearman"), trace = "none")
+dev.off()
 
-#Set up the design matrix
-design = data.frame(sample_id = colnames(counts), stringsAsFactors = FALSE)
-condition_names = data.frame(condition = c("A","B","C","D"), condition_name = c("naive", "IFNg", "SL1344", "IFNg+SL1344"), stringsAsFactors = FALSE)
-design = design %>% 
-  separate(sample_id, into = c("donor", "condition", "replicate"), extra = "drop", remove =FALSE) %>%
-  mutate(replicate = ifelse(is.na(replicate), 1, replicate)) %>% #if no replicate in file name then set it to 1
-  dplyr::mutate(replicate = ifelse(donor == "oarz", 1, replicate)) %>% #Oarz only has one replicate
-  dplyr::left_join(condition_names, by = "condition") %>%
-  dplyr::mutate(SL1344 = ifelse(condition %in% c("C","D"), "infected", "control")) %>%
-  dplyr::mutate(IFNg = ifelse(condition %in% c("B","D"), "primed", "naive"))
-rownames(design)= design$sample_id
-
-dds = DESeqDataSetFromMatrix(counts, design, ~SL1344 + IFNg + SL1344:IFNg)
-dds = DESeq(dds)
-
+#Calculate mean expression in each condition
+exprs_cqn_mean = calculateMean(exprs_cqn, design_matrix, "condition")
+exprs_cqn_mean = dplyr::mutate(exprs_cqn_mean, gene_id = rownames(exprs_cqn_mean)) %>% tbl_df()
 
 #Perform PCA analysis
-tpm_z = zScoreNormalize(tpm_expressed)
-pca_list = performPCA(tpm_z, design)
-ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = condition_name, label = sample_id)) + 
-  geom_point() +
+pca_list = performPCA(exprs_cqn_filtered, design_matrix)
+pca_plot = ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = condition_name, label = sample_id)) + 
   geom_text()
+ggsave("results/SL1344/diffExp/PCA_of_gene_expression.pdf", plot = pca_plot, width = 8.5, height = 6.5)
+
+#Perform DEseq (This takes a really long time!)
+dds_gene_meta = dplyr::select(gene_metadata,gene_id, gene_name, gene_biotype)
+dds = DESeqDataSetFromMatrix(counts, design_matrix, ~SL1344 + IFNg)
+saveRDS(dds, "results/SL1344/DESeq2_results_full_data.rds")
+dds = readRDS("results/SL1344/DESeq2_results_full_data.rds")
+
+#IFNg results
+ifng_results = results(dds, contrast = c("IFNg","primed","naive"))
+ifng_results_filtered = filterDESeqResults(ifng_results, dds_gene_meta, biotype_filter = "protein_coding")
+
+#Salmonella results
+sl1344_results = results(dds, contrast = c("SL1344","infected","control"))
+sl1344_results_filtered = filterDESeqResults(sl1344_results, dds_gene_meta, biotype_filter = "protein_coding")
+
+#Interaction_genes
+interaction_results = results(dds, name = "SL1344infected.IFNgprimed")
+interaction_results_filtered = filterDESeqResults(interaction_results, dds_gene_meta, biotype_filter = "protein_coding")
+
+#Iddentify syneregestically activated genes
+pos_interaction = dplyr::semi_join(exprs_cqn_mean, interaction_results_filtered$up_genes, by = "gene_id") %>% 
+  dplyr::left_join(dds_gene_meta, by = "gene_id") %>%
+  dplyr::mutate(salmonella_fc = C-A, interaction_fc = D-A)
+synergestic_activation = dplyr::filter(pos_interaction, interaction_fc - salmonella_fc > 1, interaction_fc > 1)
+
+
+#Perform GO analysis
+ifng_up_go = gprofiler(ifng_results_filtered$up_genes$gene_id, organism = "hsapiens") %>% tbl_df() %>% arrange(p.value)
+sl1344_up_go = gprofiler(sl1344_results_filtered$up_genes$gene_id, organism = "hsapiens") %>% tbl_df() %>% arrange(p.value)
+dplyr::filter(sl1344_up_go, term.size < 300) %>% dplyr::select(p.value, term.name, term.size) %>% View()
+
+go_results = list(ifng_up_go = ifng_up_go, sl1344_up_go = sl1344_up_go)
+saveRDS(go_results, "results/SL1344/diffExp/GO_results.rds")
+
+#Make plot of IFNb
+design_matrix$condition_name = factor(design_matrix$condition_name, levels = c("naive","IFNg","SL1344", "IFNg+SL1344"))
+ifnb_plot = plotGene("ENSG00000171855",exprs_cqn, design_matrix, dds_gene_meta)
+ggsave("results/SL1344/diffExp/IFNB1.pdf", plot = ifnb_plot, width = 5, height = 5)
+

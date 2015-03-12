@@ -17,6 +17,6 @@ for line in vcf_file:
 			contigs[contig] = 1
 	else:
 		fields = line.split("\t",1)
-		fields[0] = "chr" + fields[0]
+		fields[0] = "chr" + fields[0] #Add chr in front of the chromosome names
 		if(fields[0] in contigs):
-			print("\t".join(fields))
+			print("\t".join(fields)) #Only keep SNPs that fall into contigs mentioned in the header
