@@ -8,29 +8,10 @@ library("cqn")
 library("gProfileR")
 load_all("macrophage-gxe-study/seqUtils/")
 
-#Load data from disk
-data = read.table("results//SL1344//combined_counts.txt", stringsAsFactors = FALSE)
-#There seems to be a sample swap between coio_C and coio_D, fix that
-indexes = c(which(colnames(data) == "coio_C"), which(colnames(data) == "coio_D"))
-colnames(data)[indexes] = c("coio_D", "coio_C")
+#Load expression data from disk
+expression_list = readRDS("results/SL1344/combined_expression_data.rds")
 
-#Load metadata
-filtered_metadata = readRDS("annotations/biomart_transcripts.filtered.rds")
-gene_data = dplyr::select(filtered_metadata, gene_id, gene_name, gene_biotype, percentage_gc_content) %>% unique()
-length_df = dplyr::select(data, gene_id, length)
-gene_metadata = dplyr::left_join(gene_data, length_df, by = "gene_id")
-
-#Filter genes
-filtered_data = dplyr::filter(data, gene_id %in% gene_data$gene_id)
-counts = dplyr::select(filtered_data, -gene_id, -length)
-rownames(counts) = filtered_data$gene_id
-counts = counts[gene_metadata$gene_id,] #Reoder counts
-
-#Construct a design matrix from the sample names
-design_matrix = constructDesignMatrix_SL1344(sample_ids = colnames(counts))
-
-#CQN normalize the data
-exprs_cqn = calculateCQN(counts, gene_metadata)
+#Make heatmap
 expressed_genes = which(apply(exprs_cqn, 1, mean) > 1)
 exprs_cqn_filtered = exprs_cqn[expressed_genes, ]
 pdf("results/SL1344/diffExp/sample_heatmap.pdf", width = 10, height = 10)
