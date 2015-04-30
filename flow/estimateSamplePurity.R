@@ -12,7 +12,7 @@ flowset = readRDS("flow/combined_flowSet.rds")
 metadata = pData(flowset) %>% tbl_df()
 
 #Filter out QC-fail samples
-qc_fail_samples = c("iasn_160614","liun_160614","piun_271114","piun-SN_271114","qanu_160614")
+qc_fail_samples = c("iasn_160614","liun_160614","piun_271114","piun-SN_271114","qanu_160614", "cups_020415","nusw_080415")
 filtered_metadata = dplyr::filter(metadata, !(sample %in% qc_fail_samples))
 flowset = flowset[filtered_metadata$name]
 
@@ -32,7 +32,7 @@ gating(gt, gs)
 plotGate(gs[["fpdl_291014_CD14+CD16+CD206"]], path = 1, default.y = "SSC.A")
 plotGate(gs[["fpdl_291014_isotype"]], path = 1, default.y = "SSC.A")
 plotGate(gs[["ffdk_200514_CD14+CD16+CD206"]], path = 1, default.y = "SSC.A")
-plotGate(gs[["cehw_181114_CD14+CD16+CD206"]],path = 1, default.y = "SSC.A")
+plotGate(gs[["dium_020415_CD14+CD16+CD206"]],path = 1, default.y = "SSC.A")
 
 #Extract population statistics for QC purposes
 stat = t(getPopStats(gs))
@@ -54,7 +54,7 @@ selected_df = dplyr::select(gated_df, name, APC.A, PE.A, Pacific.Blue.A) %>%
 
 #Make density plots for all channels
 plot = ggplot(selected_df, aes(x = intensity, color = staining, fill = staining, alpha = 0.5)) + geom_density() + facet_grid(sample~channel) 
-ggsave("results/flow/flow_density.pdf", plot = plot, width = 8, height = 49)
+ggsave("results/flow/flow_density.pdf", plot = plot, width = 8, height = 70, limitsize = FALSE)
 
 #Estimate the purity of all samples
 sample_names = unique(filtered_metadata$sample)
