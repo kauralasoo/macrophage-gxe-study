@@ -1,4 +1,6 @@
 load_all("macrophage-gxe-study/seqUtils/")
+> library(plyr)
+> library(dplyr)
 
 #Load the raw eQTL dataset
 eqtl_dataset = readRDS("results/SL1344/matrixeQTL/matrixeQTL_dataset.rds")
@@ -31,3 +33,8 @@ condD_plots = makeMultiplePlots(condD_snps, eqtl_dataset)
 savePlots(condD_plots, path = "results/SL1344/matrixeQTL/condD_plots/",width = 7, height = 7)
 
 
+condA_eqtls = read.table("results/SL1344/matrixeQTL/temp/matrixeQTL_condition_A.txt", header = TRUE, sep ="\t", stringsAsFactors = FALSE)
+condB_eqtls = read.table("results/SL1344/matrixeQTL/temp/matrixeQTL_condition_B.txt", header = TRUE, sep ="\t", stringsAsFactors = FALSE)
+condC_eqtls = read.table("results/SL1344/matrixeQTL/temp/matrixeQTL_condition_C.txt", header = TRUE, sep ="\t", stringsAsFactors = FALSE)
+condD_eqtls = read.table("results/SL1344/matrixeQTL/temp/matrixeQTL_condition_D.txt", header = TRUE, sep ="\t", stringsAsFactors = FALSE)
+eqtl_list = list(A = condA_eqtls, B = condB_eqtls, C = condC_eqtls, D = condD_eqtls)

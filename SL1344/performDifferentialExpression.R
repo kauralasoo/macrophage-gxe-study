@@ -12,14 +12,14 @@ load_all("macrophage-gxe-study/seqUtils/")
 expression_list = readRDS("results/SL1344/combined_expression_data.rds")
 
 #Make heatmap
-expressed_genes = which(apply(exprs_cqn, 1, mean) > 1)
-exprs_cqn_filtered = exprs_cqn[expressed_genes, ]
+expressed_genes = which(apply(expression_list$exprs_cqn, 1, mean) > 1)
+exprs_cqn_filtered = expression_list$exprs_cqn[expressed_genes, ]
 pdf("results/SL1344/diffExp/sample_heatmap.pdf", width = 10, height = 10)
 heatmap.2(cor(exprs_cqn_filtered, method = "spearman"), trace = "none")
 dev.off()
 
 #Calculate mean expression in each condition
-exprs_cqn_mean = calculateMean(exprs_cqn, design_matrix, "condition")
+exprs_cqn_mean = calculateMean(expression_list$exprs_cqn, expression_list$design, "condition")
 exprs_cqn_mean = dplyr::mutate(exprs_cqn_mean, gene_id = rownames(exprs_cqn_mean)) %>% tbl_df()
 
 #Perform PCA analysis
