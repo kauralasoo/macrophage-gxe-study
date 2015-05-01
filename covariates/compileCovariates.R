@@ -6,6 +6,7 @@ library("tidyr")
 dat = tbl_df(read.csv("macrophage-gxe-study/data/sample_lists/line_metadata_020315.csv", stringsAsFactors = FALSE, na.strings = ""))
 flow_purity = readRDS("results/covariates/flow_cytometry_purity.rds")
 rna_concentrations = readRDS("results/covariates/rna_concentrations.rds")
+gender_map = read.table("macrophage-gxe-study/data/sample_lists/line_gender_map.txt", header = TRUE, stringsAsFactors = FALSE)
 
 #Load genotype sample names
 genotypes = read.table("genotypes/genotype_sample_names.txt", stringsAsFactors = FALSE)
@@ -27,15 +28,51 @@ line_metadata = dat %>%
                 extraction_date = as.Date(extraction_date, "%d/%m/%Y"),
                 rna_submit = as.Date(rna_submit, "%d/%m/%Y"))
 
-#Add mean RNA concentration and flow purity to the data
+#Add mean RNA concentration and divide it into bins (of 100 ng/ul)
 mean_rna_concentrations = dplyr::select(rna_concentrations, donor, ng_ul_mean, replicate) %>% unique()
+rna_bins = data_frame(rna_bin = c(0,1,2), rna_concentration = c("0-100","100-200","200+"))
+rna_cons = dplyr::mutate(mean_rna_concentrations, rna_bin = floor(mean_rna_concentrations$ng_ul_mean/100)) %>% 
+  dplyr::mutate(rna_bin = ifelse(rna_bin > 2, 2, rna_bin)) %>% #Remove anything bigger than 300
+  dplyr::left_join(rna_bins, by = "rna_bin") %>% 
+  dplyr::select(donor, replicate, rna_concentration, ng_ul_mean)
+
+#Add flow purity
 mean_flow_purity = flow_purity %>%
   dplyr::filter(!(donor == "gedo" & channel == "Pacific.Blue.A")) %>% #Remove an outlier measurement
   group_by(donor,flow_date) %>% 
   dplyr::summarize(mean_purity = mean(purity), max_purity = max(purity))
 
-line_data = dplyr::left_join(line_metadata, mean_rna_concentrations, by = c("donor", "replicate")) %>%
+#Add gender to the metadata
+tidy_gender = dplyr::mutate(gender_map, new_gender = ifelse(gender == "Female" | gender == "female*", "female", gender)) %>% 
+  dplyr::mutate(new_gender = ifelse(gender == "Male" | gender == "male*", "male", new_gender)) %>% 
+  dplyr::select(line_id, new_gender) %>% 
+  dplyr::rename(gender = new_gender)
+
+#Put all of the annotations together
+line_data = dplyr::left_join(line_metadata, rna_cons, by = c("donor", "replicate")) %>%
   dplyr::left_join(mean_flow_purity, by = c("donor", "flow_date")) %>%
-  dplyr::left_join(genotypes_names, by = "line_id")
+  dplyr::left_join(genotypes_names, by = "line_id") %>%
+  dplyr::left_join(tidy_gender, by = "line_id")
+
+#Calculate duration of differentiation and make bins of 10 days
+line_data = dplyr::mutate(line_data, diff_days = as.numeric(salmonella - EB_formation)) %>%
+  dplyr::mutate(diff_bins = floor(diff_days/10)*10) %>%
+  dplyr::mutate(diff_bins = ifelse(diff_bins > 50, 50, diff_bins)) #Cut-off at 50 days
+
+#Add iPS cell culture duration
+line_data = dplyr::mutate(line_data, ips_culture_days = as.numeric(EB_formation - ips_started)) %>% #iPS culture duration
+  dplyr::mutate(mf_diff_days = as.numeric(salmonella - MF_harvest)) #MF diff duration
+
+#Split the iPS passage into 3 bins
+line_data = dplyr::mutate(line_data, passage_diff_bins = floor(line_data$passage_diff/10)*10) %>% 
+  dplyr::mutate(passage_diff_bins = ifelse(passage_diff_bins < 20, 20, passage_diff_bins)) %>%
+  dplyr::mutate(passage_diff_bins = ifelse(passage_diff_bins > 40, 40, passage_diff_bins))
+
+#Remove flow purity for samples were flow was done more than 2 weeks after RNA extraction
+line_data = dplyr::mutate(line_data, max_purity = ifelse(as.numeric(line_data$flow_date - line_data$salmonella) > 14, NA, max_purity),
+                          mean_purity = ifelse(as.numeric(line_data$flow_date - line_data$salmonella) > 14,NA,mean_purity)) %>%
+  dplyr::mutate(purity_bins = ifelse(max_purity < 0.98, "low", "high"))
+
 saveRDS(line_data, "results/SL1344/sample_info/compiled_line_metadata.rds")
+
 
