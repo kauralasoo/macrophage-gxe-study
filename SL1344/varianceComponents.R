@@ -25,21 +25,35 @@ pca_plot = ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = condition_n
   geom_text()
 
 #Specify alternative models
-model1 <- function(model_data){
-  mod = lme4::lmer(exp_value ~ (1|SL1344) + (1|IFNg) + (1|SL1344:IFNg) + (1|salmonella) + (1|donor), model_data)
+model_extended <- function(model_data){
+  mod = lme4::lmer(exp_value ~ (1|SL1344) + (1|IFNg) + (1|SL1344:IFNg) + 
+                     (1|salmonella) + (1|donor) + (1|gender) + (1|purity_bins) +
+                     (1|rna_concentration) + (1|passage_diff_bins) + (1|diff_bins) + 
+                     (1|library_pool) + (1|mf_diff_days), model_data)
   return(mod)
 }
 
-#Perform variance component analysis
-selected_meta = dplyr::select(line_metadata, donor, replicate, max_purity, salmonella, ng_ul_mean)
+model_compact <- function(model_data){
+  mod = lme4::lmer(exp_value ~ (1|SL1344) + (1|IFNg) + (1|SL1344:IFNg) + 
+                     (1|salmonella) + (1|donor) + (1|gender) + (1|purity_bins) +
+                     (1|rna_concentration) + (1|library_pool), model_data)
+  return(mod)
+}
 
 #Apply lmer to a list of genes
 gene_ids = rownames(exprs_cqn_filtered)
 gene_id_list = idVectorToList(gene_ids)
-gene_data_list = lapply(gene_id_list, constructGeneData, exprs_cqn, design, selected_meta)
-variance_list = lapply(gene_data_list, estimateVarianceExplained, model1)
+gene_data_list = lapply(gene_id_list, constructGeneData, exprs_cqn, design, line_metadata)
+
+#Fit the compact model
+variance_list = lapply(gene_data_list, estimateVarianceExplained, model_compact)
 var_table = ldply(variance_list, .id = "gene_id")
-saveRDS(var_table, "results/varComp/model1_results.rds")
+saveRDS(var_table, "results/varComp/model_compact_results.rds")
+
+#Fit the extended model
+variance_list = lapply(gene_data_list, estimateVarianceExplained, model_extended)
+var_table = ldply(variance_list, .id = "gene_id")
+saveRDS(var_table, "results/varComp/model_extended_results.rds")
 
 #Plot binned estimates of variance explained
 var_table = readRDS("results/varComp/model1_results.rds") %>% tbl_df()
@@ -71,55 +85,3 @@ var_comp_plot = ggplot(var_explained, aes(x = residual_bin, y = var_explained, f
   ylab("% variance explained") +
   xlab("Residual variance bin")
 ggsave("results/varComp/var_comp_plot.pdf", plot = var_comp_plot, width = 11, height = 7)
-
-
-#Fit a model
-summary(lmer_model)
-varianceExplained(lmer_model)
-
-summary(lmer_model)
-varianceExplained(lmer_model)
-
-
-lmer_model = lme4::lmer(exp_value ~ SL1344 + IFNg + IFNg:SL1344 + (1|donor) + (1|salmonella), model_data)
-
-lmer_model = lme4::lmer(exp_value ~ (1|SL1344) + (1|IFNg) + (1|IFNg:SL1344) + (1|salmonella), model_data)
-varianceExplained(lmer_model)
-
-lmer_model = lme4::lmer(exp_value ~ IFNg + (IFNg|SL1344), model_data)
-varianceExplained(lmer_model)
-
-lmer_model = lme4::lmer(exp_value ~ (1|IFNg:SL1344) + (1|salmonella), model_data)
-varianceExplained(lmer_model)
-
-lm_model = lm(exp_value ~ SL1344 + IFNg + IFNg:SL1344 + factor(salmonella) + max_purity + ng_ul_mean + donor, model_data)
-lm_an = anova(lm_model)
-lm_an[,2] = lm_an[,2] / sum(lm_an[,2])
-
-lmer_model = lme4::lmer(exp_value ~ (1|SL1344) + (1|IFNg) + (1|IFNg:SL1344) + (1|salmonella) + (1|donor) + ng_ul_mean, model_data)
-a = varianceExplained(lmer_model)
-
-aov_mod = aov(exp_value ~ ng_ul_mean, model_data)
-a = varianceExplained(lmer_model)
-
-library(faraway)
-data(pulp)
-pulp_aov = aov(bright ~ operator, pulp)
-
-warningTest <- function(x){
-  if(x < 5){
-    warning("X is too small.")
-  }
-  return(x)
-}
-
-run <- function(x){
-  tryCatch({
-    d = warningTest(x)
-    return(list(value = d, converged = TRUE))
-    },
-    warning = function(c){
-      d = suppressWarnings(warningTest(x))
-      return(list(value = d, converged = FALSE))
-    })
-}

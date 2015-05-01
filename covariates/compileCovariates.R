@@ -65,8 +65,8 @@ line_data = dplyr::mutate(line_data, ips_culture_days = as.numeric(EB_formation 
 
 #Split the iPS passage into 3 bins
 line_data = dplyr::mutate(line_data, passage_diff_bins = floor(line_data$passage_diff/10)*10) %>% 
-  dplyr::mutate(passage_diff_bins = ifelse(passage_diff_bins < 20, 20, passage_diff_bins)) %>%
-  dplyr::mutate(passage_diff_bins = ifelse(passage_diff_bins > 40, 40, passage_diff_bins))
+  dplyr::mutate(passage_diff_bins = ifelse(passage_diff_bins < 20, 20, passage_diff_bins)) %>% #Below 30 is lowest
+  dplyr::mutate(passage_diff_bins = ifelse(passage_diff_bins > 40, 40, passage_diff_bins)) #Above 40 is highest
 
 #Remove flow purity for samples were flow was done more than 2 weeks after RNA extraction
 line_data = dplyr::mutate(line_data, max_purity = ifelse(as.numeric(line_data$flow_date - line_data$salmonella) > 14, NA, max_purity),
