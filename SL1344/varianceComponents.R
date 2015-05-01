@@ -25,21 +25,19 @@ pca_plot = ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = condition_n
   geom_text()
 
 #Specify alternative models
-fitLmer_model1 <- function(model_data){
-  lmer_model = lme4::lmer(exp_value ~ (1|SL1344) + (1|IFNg) + (1|SL1344:IFNg) + (1|salmonella) + (1|donor), model_data)
-  variance = varianceExplained(lmer_model)
-  return(variance)
+model1 <- function(model_data){
+  mod = lme4::lmer(exp_value ~ (1|SL1344) + (1|IFNg) + (1|SL1344:IFNg) + (1|salmonella) + (1|donor), model_data)
+  return(mod)
 }
 
 #Perform variance component analysis
 selected_meta = dplyr::select(line_metadata, donor, replicate, max_purity, salmonella, ng_ul_mean)
 
 #Apply lmer to a list of genes
-#gene_ids = c("ENSG00000170458","ENSG00000183709")
 gene_ids = rownames(exprs_cqn_filtered)
 gene_id_list = idVectorToList(gene_ids)
 gene_data_list = lapply(gene_id_list, constructGeneData, exprs_cqn, design, selected_meta)
-variance_list = lapply(gene_data_list, fitLmer_model1)
+variance_list = lapply(gene_data_list, estimateVarianceExplained, model1)
 var_table = ldply(variance_list, .id = "gene_id")
 saveRDS(var_table, "results/varComp/model1_results.rds")
 
@@ -108,3 +106,20 @@ library(faraway)
 data(pulp)
 pulp_aov = aov(bright ~ operator, pulp)
 
+warningTest <- function(x){
+  if(x < 5){
+    warning("X is too small.")
+  }
+  return(x)
+}
+
+run <- function(x){
+  tryCatch({
+    d = warningTest(x)
+    return(list(value = d, converged = TRUE))
+    },
+    warning = function(c){
+      d = suppressWarnings(warningTest(x))
+      return(list(value = d, converged = FALSE))
+    })
+}
