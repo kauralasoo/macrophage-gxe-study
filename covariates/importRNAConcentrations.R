@@ -28,6 +28,6 @@ rna_line_stats = dplyr::filter(rna_sample_stats, sample_id != "aipt_A") %>%
 
 #Combine line-level and sample-level stats
 rna_stats = dplyr::left_join(rna_sample_stats, rna_line_stats, by = c("donor", "replicate"))
-saveRDS(rna_stats, "results/covariates/rna_concentrations.rds")
-write.table(rna_stats, "results/covariates/rna_concentrations.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+saveRDS(rna_stats, "macrophage-gxe-study/data/covariates/rna_concentrations.rds")
+write.table(rna_stats, "macrophage-gxe-study/data/covariates/rna_concentrations.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 

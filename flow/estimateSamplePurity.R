@@ -63,8 +63,8 @@ purity_df = dplyr::mutate(purity_data, sample = as.character(sample)) %>%
   tidyr::separate(sample, c("donor", "flow_date"), sep ="_", remove = FALSE) %>%
   dplyr::mutate(flow_date = as.Date(flow_date, "%d%m%y")) %>%
   tbl_df()
-saveRDS(purity_df, "results/covariates/flow_cytometry_purity.rds")
-write.table(purity_df, "results/covariates/flow_cytometry_purity.txt", quote = FALSE, sep = "\t", row.names = FALSE)
+saveRDS(purity_df, "macrophage-gxe-study/data/covariates/flow_cytometry_purity.rds")
+write.table(purity_df, "macrophage-gxe-study/data/covariates/flow_cytometry_purity.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 
 #### Finally, we want to know if the purity values are lower for those lines that cluster separately on the RNA-Seq PCA plot. ####
 

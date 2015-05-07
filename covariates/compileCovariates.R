@@ -4,12 +4,12 @@ library("tidyr")
 
 #Import different files
 dat = tbl_df(read.csv("macrophage-gxe-study/data/sample_lists/line_metadata_020315.csv", stringsAsFactors = FALSE, na.strings = ""))
-flow_purity = readRDS("results/covariates/flow_cytometry_purity.rds")
-rna_concentrations = readRDS("results/covariates/rna_concentrations.rds")
+flow_purity = readRDS("macrophage-gxe-study/data/covariates/flow_cytometry_purity.rds")
+rna_concentrations = readRDS("macrophage-gxe-study/data/covariates/rna_concentrations.rds")
 gender_map = read.table("macrophage-gxe-study/data/sample_lists/line_gender_map.txt", header = TRUE, stringsAsFactors = FALSE)
+genotypes = read.table("macrophage-gxe-study/data/sample_lists/genotype_sample_names.txt", stringsAsFactors = FALSE)
 
 #Load genotype sample names
-genotypes = read.table("genotypes/genotype_sample_names.txt", stringsAsFactors = FALSE)
 colnames(genotypes) = c("genotype_id")
 genotypes_names = tidyr::separate(genotypes, genotype_id, into = c("batch_id", "line_id"), sep = "-", remove = FALSE) %>% 
   dplyr::select(genotype_id, line_id)
@@ -73,6 +73,6 @@ line_data = dplyr::mutate(line_data, max_purity = ifelse(as.numeric(line_data$fl
                           mean_purity = ifelse(as.numeric(line_data$flow_date - line_data$salmonella) > 14,NA,mean_purity)) %>%
   dplyr::mutate(purity_bins = ifelse(max_purity < 0.98, "low", "high"))
 
-saveRDS(line_data, "results/SL1344/sample_info/compiled_line_metadata.rds")
-
+saveRDS(line_data, "macrophage-gxe-study/data/covariates/compiled_line_metadata.rds")
+write.table(line_data, "macrophage-gxe-study/data/covariates/compiled_line_metadata.txt", row.names = FALSE, sep = "\t", quote = FALSE)
 
