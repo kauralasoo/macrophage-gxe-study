@@ -54,7 +54,7 @@ dplyr::filter(var_explained, residual_bin == "Total") %>%
 
 We can also look at the distribution of variance explained across genes:
 
-```{r}
+```{r, fig.width=10}
 dat = tidyr::gather(model_compact, factor, var_explained, donor:SL1344_IFNg)
 ggplot(dat, aes(x = factor, y = var_explained)) + geom_violin(scale = "width" ) + 
   geom_boxplot(width = .2, outlier.shape = NA)
@@ -64,10 +64,9 @@ Or, for each factor, we count the number of genes where this particular factor e
 
 ```{r}
 maximum_factor = maximumFactorPerGene(model_compact)
-ggplot(maximum_factor, aes(x = component_max, y = var_explained_max)) + geom_violin()
 table(maximum_factor$component_max)
 ```
-
+### Pooled model
 Since we noticed that library pool and rna concentration explain only a small amout of the variation we can pool these together with batch and name the derived factor as technical variance.
 
 ```{r}
@@ -79,6 +78,27 @@ var_pooled_plot = plotBinnedVariance(var_pooled)
 var_pooled_plot
 ```
 
+### Expaned model
+The extended model contains three additional factors: passage of the iPS cells prior to differenitation, duration of differntiation from iPS cells to macrophages and duration of differentiation from progenitors to macrophages:
 
+```{r}
+model_extended = readRDS(paste(project_home, "results/varComp/model_extended_results.rds", sep = "")) %>% tbl_df() %>%
+  dplyr::filter(converged == TRUE) %>% #Remove genes where lmr4 did not converge
+  dplyr::select(-type, -converged) %>% #Remove unnecessary columns
+  dplyr::rename(residual = Residual,SL1344_IFNg = `SL1344:IFNg`, batch = salmonella) #Rename some factos
+```
 
+It seems that neither the duration of macrophage differentiation (diff_bins) nor the the passage of the iPS line prior to differentiation seem to explain large proportion of the variance. Days of macrophage differntiation (6,7 or 8) seems to explain some variance, but this can be confounded by batch, because cells in the sme batch were always treated on the same day. Also the amount of variance explained by purtiy_bins seems quite high, but we need more data to be condifent about that, because 4/7 purity low purity samples are from the first stimulation batch.
 
+```{r}
+extended_binned = binGenesByResidual(model_extended, n_bins = 20)
+extended_var_explained = meanVarianceWithinBins(extended_binned)
+dplyr::filter(extended_var_explained, residual_bin == "Total") %>% 
+  arrange(-var_explained)
+```
+For completeness, here is the violin plot:
+```{r, fig.width=10}
+dat = tidyr::gather(model_extended, factor, var_explained, donor:SL1344_IFNg)
+ggplot(dat, aes(x = factor, y = var_explained)) + geom_violin(scale = "width" ) + 
+  geom_boxplot(width = .2, outlier.shape = NA)
+```
