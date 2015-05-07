@@ -1,6 +1,6 @@
 load_all("macrophage-gxe-study/seqUtils/")
-> library(plyr)
-> library(dplyr)
+library(plyr)
+library(dplyr)
 
 #Load the raw eQTL dataset
 eqtl_dataset = readRDS("results/SL1344/matrixeQTL/matrixeQTL_dataset.rds")

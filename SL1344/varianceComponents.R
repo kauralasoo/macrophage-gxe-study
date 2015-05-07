@@ -55,33 +55,45 @@ variance_list = lapply(gene_data_list, estimateVarianceExplained, model_extended
 var_table = ldply(variance_list, .id = "gene_id")
 saveRDS(var_table, "results/varComp/model_extended_results.rds")
 
-#Plot binned estimates of variance explained
-var_table = readRDS("results/varComp/model1_results.rds") %>% tbl_df()
+#Analysed the compact model
+model_compact = readRDS("results/varComp/model_compact_results.rds") %>% tbl_df() %>%
+  dplyr::filter(converged == TRUE) %>%
+  dplyr::select(-type, -converged) %>% #Remove unnecessary columns
+  dplyr::rename(residual = Residual,SL1344_IFNg = `SL1344:IFNg`, batch = salmonella)
 
-binned_table = dplyr::arrange(var_table, Residual) %>% 
-  dplyr::mutate(residual_bin = 20-floor(Residual*20)) %>% 
-  dplyr::select(-type) %>% 
-  dplyr::rename(SL1344_IFNg = `SL1344:IFNg`) %>%
-  dplyr::rename(batch = salmonella) %>%
-  dplyr::rename(line = donor)
+#Bin by residual and calculate variance explained within each bin
+binned_table = binGenesByResidual(model_compact, n_bins = 20)
+var_explained = meanVarianceWithinBins(binned_table)
+var_comp_plot = plotBinnedVariance(var_explained) 
+ggsave("results/varComp/var_comp_plot.pdf", plot = var_comp_plot, width = 11, height = 7)
+
+#Make a violin plot of all components
+dat = tidyr::gather(model_compact, factor, var_explained, donor:SL1344_IFNg)
+ggplot(dat, aes(x = factor, y = var_explained)) + geom_violin(scale = "width" ) + geom_boxplot(width = .2, outlier.shape = NA)
+
+#### Pool technical source of variance together ####
+model_pooled = dplyr::transmute(model_compact, gene_id, donor, gender, IFNg, SL1344, SL1344_IFNg, residual, 
+                                technical = batch + library_pool + rna_concentration, purity = purity_bins)
+binned_pooled = binGenesByResidual(model_pooled, n_bins = 20)
+var_pooled = meanVarianceWithinBins(binned_pooled)
+var_pooled_plot = plotBinnedVariance(var_pooled)
+ggsave("results/varComp/var_pooled_plot.pdf", plot = var_pooled_plot, width = 11, height = 7)
+
+#Bin variance by maximum factor
+maximum_factor = tidyr::gather(model_compact, factor, var_explained, donor:SL1344_IFNg) %>% 
+  group_by(gene_id) %>% 
+  arrange(-var_explained) %>% 
+  filter(row_number() == 1) %>% 
+  rename(max_factor = factor, max_var_explained = var_explained)
+ggplot(maximum_factor, aes(x = max_factor, y = max_var_explained)) + geom_violin()
+table(maximum_factor$max_factor)
 
 #Calculate the number of genes in each bin
 bin_size_table = dplyr::group_by(binned_table, residual_bin) %>% dplyr::summarise(bin_size = length(residual_bin))
-
-#Calculate mean variance explained within each group
-var_explained = tidyr::gather(binned_table, component, var_explained, line:SL1344_IFNg) %>% 
-  group_by(residual_bin, component) %>% 
-  dplyr::summarise(var_explained = mean(var_explained)) %>%
-  dplyr::mutate(component = factor(as.vector(component), 
-                  levels = c("Residual", "SL1344", "IFNg", "SL1344_IFNg", "line", "batch"))) %>%
-  dplyr::arrange(component)
 
 #Make plots
 bin_sizes_plot = ggplot(bin_size_table, aes(x = residual_bin, y = bin_size)) + geom_bar(stat = "identity") + 
   ylab("Number of genes") + 
   xlab("Residual variance bin")
 ggsave("results/varComp/bin_sizes_plot.pdf", plot = bin_sizes_plot, width = 8, height = 3)
-var_comp_plot = ggplot(var_explained, aes(x = residual_bin, y = var_explained, fill = component)) + geom_bar(stat="identity") +
-  ylab("% variance explained") +
-  xlab("Residual variance bin")
-ggsave("results/varComp/var_comp_plot.pdf", plot = var_comp_plot, width = 11, height = 7)
+
