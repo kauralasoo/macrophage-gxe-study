@@ -55,6 +55,12 @@ variance_list = lapply(gene_data_list, estimateVarianceExplained, model_extended
 var_table = ldply(variance_list, .id = "gene_id")
 saveRDS(var_table, "results/varComp/model_extended_results.rds")
 
+
+
+
+
+
+
 #Analysed the compact model
 model_compact = readRDS("results/varComp/model_compact_results.rds") %>% tbl_df() %>%
   dplyr::filter(converged == TRUE) %>%
@@ -80,13 +86,9 @@ var_pooled_plot = plotBinnedVariance(var_pooled)
 ggsave("results/varComp/var_pooled_plot.pdf", plot = var_pooled_plot, width = 11, height = 7)
 
 #Bin variance by maximum factor
-maximum_factor = tidyr::gather(model_compact, factor, var_explained, donor:SL1344_IFNg) %>% 
-  group_by(gene_id) %>% 
-  arrange(-var_explained) %>% 
-  filter(row_number() == 1) %>% 
-  rename(max_factor = factor, max_var_explained = var_explained)
-ggplot(maximum_factor, aes(x = max_factor, y = max_var_explained)) + geom_violin()
-table(maximum_factor$max_factor)
+maximum_factor = maximumFactorPerGene(model_compact)
+ggplot(maximum_factor, aes(x = component_max, y = var_explained_max)) + geom_violin()
+table(maximum_factor$component_max)
 
 #Calculate the number of genes in each bin
 bin_size_table = dplyr::group_by(binned_table, residual_bin) %>% dplyr::summarise(bin_size = length(residual_bin))

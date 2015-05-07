@@ -1,0 +1,84 @@
+---
+title: "Variance Component analysis of Salmonella RNA-Seq data"
+output: html_document
+---
+
+```{r echo=FALSE}
+# This chunk contains some setup which we do not want to display in the final
+# document, hence `echo=FALSE` is used.
+# When you’re reading this document, it may be easier to ignore this chunk for
+# now, and continue with the document below, starting at “Introduction”
+
+# Make library loading silent
+library = function (...) suppressMessages(base::library(...))
+options(warn=-1)
+project_home = "../../../"
+library("dplyr")
+library("devtools")
+library("ggplot2")
+load_all(paste(project_home, "macrophage-gxe-study/seqUtils/", sep = ""))
+```
+The varianceComponents.R script generated two tables that contain the variance explaind by each factor for each gene. Let's look at the compact model first.
+
+First, lets import the variance compoment estimates for each gene:
+```{r}
+model_compact = readRDS(paste(project_home, "results/varComp/model_compact_results.rds", sep = "")) %>% tbl_df() %>%
+  dplyr::filter(converged == TRUE) %>% #Remove genes where lmr4 did not converge
+  dplyr::select(-type, -converged) %>% #Remove unnecessary columns
+  dplyr::rename(residual = Residual,SL1344_IFNg = `SL1344:IFNg`, batch = salmonella) #Rename some factos
+```
+
+Now, we first bin the genes by the amount of residual variance. We notice that only a small number of genes have high residual variance. 
+```{r}
+binned_table = binGenesByResidual(model_compact, n_bins = 20)
+bin_size_table = dplyr::group_by(binned_table, residual_bin) %>% dplyr::summarise(bin_size = length(residual_bin))
+bin_sizes_plot = ggplot(bin_size_table, aes(x = residual_bin, y = bin_size)) + geom_bar(stat = "identity") + 
+  ylab("Number of genes") + 
+  xlab("Residual variance bin")
+bin_sizes_plot
+```
+
+We can now look what are the factors that explain variance in each bin. 
+
+```{r}
+var_explained = meanVarianceWithinBins(binned_table)
+plotBinnedVariance(var_explained)
+```
+
+However, this plot becomes hard to read, becuase there are so many different factors. Let's focus on the total variance explaind by each component. Here is the mean variance explained by each factor:
+
+```{r}
+dplyr::filter(var_explained, residual_bin == "Total") %>% 
+  arrange(-var_explained)
+```
+
+We can also look at the distribution of variance explained across genes:
+
+```{r}
+dat = tidyr::gather(model_compact, factor, var_explained, donor:SL1344_IFNg)
+ggplot(dat, aes(x = factor, y = var_explained)) + geom_violin(scale = "width" ) + 
+  geom_boxplot(width = .2, outlier.shape = NA)
+```
+
+Or, for each factor, we count the number of genes where this particular factor explains the most variance:
+
+```{r}
+maximum_factor = maximumFactorPerGene(model_compact)
+ggplot(maximum_factor, aes(x = component_max, y = var_explained_max)) + geom_violin()
+table(maximum_factor$component_max)
+```
+
+Since we noticed that library pool and rna concentration explain only a small amout of the variation we can pool these together with batch and name the derived factor as technical variance.
+
+```{r}
+model_pooled = dplyr::transmute(model_compact, gene_id, donor, gender, IFNg, SL1344, SL1344_IFNg, residual, 
+                                technical = batch + library_pool + rna_concentration, purity = purity_bins)
+binned_pooled = binGenesByResidual(model_pooled, n_bins = 20)
+var_pooled = meanVarianceWithinBins(binned_pooled)
+var_pooled_plot = plotBinnedVariance(var_pooled)
+var_pooled_plot
+```
+
+
+
+
