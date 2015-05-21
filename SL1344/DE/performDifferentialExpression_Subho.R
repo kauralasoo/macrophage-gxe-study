@@ -4,6 +4,7 @@ library("devtools")
 library("tidyr")
 library("ggplot2")
 library("gplots")
+library("cqn")
 load_all("macrophage-gxe-study/seqUtils/")
 
 #Load data from disk
@@ -95,3 +96,33 @@ design_filtered$condition_name = factor(design_filtered$condition_name, levels =
 plots = lapply(as.list(synergestic_activation$gene_id), plotGene, exprs_cqn, design_filtered, dds_gene_meta)
 savePlots(plots, path = "results/SL1344/proteomics_comparison/",width = 5, height = 5)
 
+
+#Compare to baseline
+#Perform DEseq (This takes a really long time!)
+dds_gene_meta = dplyr::select(gene_metadata,gene_id, gene_name, gene_biotype)
+dds = DESeqDataSetFromMatrix(counts, design_filtered, ~condition_name)
+dds = DESeq(dds)
+
+#IFNG
+ifng_results = results(dds, contrast = c("condition_name","IFNg","naive"))
+ifng_table = ifng_results %>% data.frame() %>% dplyr::mutate(gene_id = rownames(ifng_results)) %>% 
+  tbl_df() %>% 
+  dplyr::left_join(dds_gene_meta, by = "gene_id") %>% 
+  dplyr::arrange(padj)
+write.table(ifng_table, "results/SL1344/proteomics_comparison/DESeq2_naive_vs_IFNg.txt", sep ="\t", quote = FALSE, row.names = FALSE)
+
+#SL1344
+sl1344_results = results(dds, contrast = c("condition_name","SL1344","naive"))
+sl1344_table = sl1344_results %>% data.frame() %>% dplyr::mutate(gene_id = rownames(ifng_results)) %>% 
+  tbl_df() %>% 
+  dplyr::left_join(dds_gene_meta, by = "gene_id") %>% 
+  dplyr::arrange(padj)
+write.table(sl1344_table, "results/SL1344/proteomics_comparison/DESeq2_naive_vs_SL1344.txt", sep ="\t", quote = FALSE, row.names = FALSE)
+
+#Both
+both_results = results(dds, contrast = c("condition_name","IFNg.SL1344","naive"))
+both_table = both_results %>% data.frame() %>% dplyr::mutate(gene_id = rownames(ifng_results)) %>% 
+  tbl_df() %>% 
+  dplyr::left_join(dds_gene_meta, by = "gene_id") %>% 
+  dplyr::arrange(padj)
+write.table(both_table, "results/SL1344/proteomics_comparison/DESeq2_naive_vs_IFNg+SL1344.txt", sep ="\t", quote = FALSE, row.names = FALSE)
