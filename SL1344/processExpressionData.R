@@ -7,6 +7,19 @@ data = read.table("results/SL1344/SL1344_basic_counts.txt", stringsAsFactors = F
 #There seems to be a sample swap between coio_C and coio_D, fix that
 indexes = c(which(colnames(data) == "coio_C"), which(colnames(data) == "coio_D"))
 colnames(data)[indexes] = c("coio_D", "coio_C")
+#Also, all vorx and zuta samples seem to have been swapped. Fix it.
+samples = colnames(data)
+vorx_samples = c(which(samples == "vorx_A"),
+                 which(samples == "vorx_B"),
+                 which(samples == "vorx_C"),
+                 which(samples == "vorx_D"))
+zuta_samples = c(which(samples == "zuta_A"),
+                 which(samples == "zuta_B"),
+                 which(samples == "zuta_C"),
+                 which(samples == "zuta_D"))
+samples[vorx_samples] = c("zuta_A","zuta_B","zuta_C","zuta_D")
+samples[zuta_samples] = c("vorx_A","vorx_B","vorx_C","vorx_D")
+colnames(data) = samples
 
 #Load transcript metadata
 valid_chromosomes = c("1","10","11","12","13","14","15","16","17","18","19",

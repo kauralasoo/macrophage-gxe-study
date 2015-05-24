@@ -21,6 +21,10 @@ cut -f1 fastq/SL1344_names.txt | python ~/software/utils/submitJobs.py --MEM 320
 
 cut -f1 fastq/SL1344_names.txt | tail -n 16 | python ~/software/utils/submitJobs.py --MEM 32000 --jobname star_align --ncores 8 --queue hugemem --command "python ~/software/utils/STAR-align.py --outputDir STAR/SL1344/ --fastqDir fastq/SL1344/ --genomeDir ../../annotations/GRCh38/STAR_index_79/ --runThreadN 8"
 
+#Rerun failed samples
+cut -f1 fastq/SL1344_failed.txt | python ~/software/utils/submitJobs.py --MEM 32000 --jobname star_align --ncores 8 --queue hugemem --command "python ~/software/utils/STAR-align.py --outputDir STAR/SL1344_rerun/ --fastqDir fastq/SL1344/ --genomeDir ../../annotations/GRCh38/STAR_index_79/ --runThreadN 8"
+
+
 #Count the number of reads overlapping gene annotations
 cut -f1 fastq/SL1344_names.txt | tail -n 40 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname featureCounts --command "python ~/software/utils/bam2counts.py --sampleDir STAR/SL1344/ --gtf ../../annotations/GRCh38/genes/Homo_sapiens.GRCh38.78.gtf --strand 2 --execute True"
 
@@ -32,10 +36,11 @@ cut -f1 fastq/SL1344_names.txt | head -n 1 | python ~/software/utils/submitJobs.
 
 #Count reads overlaping GENCODE basic annotations
 cut -f1 fastq/SL1344_names.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname featureCounts --command "python ~/software/utils/bam2counts.py --sampleDir STAR/SL1344/ --gtf ../../annotations/GRCh38/genes/Homo_sapiens.GRCh38.79.gencode_basic.gtf --strand 2 --countsSuffix .gencode_basic.counts.txt --execute True"
+cut -f1 fastq/SL1344_failed.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname featureCounts --command "python ~/software/utils/bam2counts.py --sampleDir STAR/SL1344/ --gtf ../../annotations/GRCh38/genes/Homo_sapiens.GRCh38.79.gencode_basic.gtf --strand 2 --countsSuffix .gencode_basic.counts.txt --execute True"
 
 #Count reads overlapping full Ensembl 79 annotations
 cut -f1 fastq/SL1344_names.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname featureCounts --command "python ~/software/utils/bam2counts.py --sampleDir STAR/SL1344/ --gtf ../../annotations/GRCh38/genes/Homo_sapiens.GRCh38.79.gtf --strand 2 --countsSuffix .counts.txt --execute True"
-
+cut -f1 fastq/SL1344_failed.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname featureCounts --command "python ~/software/utils/bam2counts.py --sampleDir STAR/SL1344/ --gtf ../../annotations/GRCh38/genes/Homo_sapiens.GRCh38.79.gtf --strand 2 --countsSuffix .counts.txt --execute True"
 
 #Convert bedgraph files to bigwig
 cut -f1 fastq/SL1344_names.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bedgraph2bigwig --command "python ~/software/utils/bedgraph2bigwig.py --indir STAR/SL1344 --outdir STAR/SL1344 --chrlengths ../../annotations/GRCh38/bt2-index/chromosome_lengths.txt --insuffix .Signal.Unique.str1.out.bg --outsuffix .str1.bw"
@@ -43,11 +48,16 @@ cut -f1 fastq/SL1344_names.txt | python ~/software/utils/submitJobs.py --MEM 100
 cut -f1 fastq/SL1344_names.txt | tail -n 16 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bedgraph2bigwig --command "python ~/software/utils/bedgraph2bigwig.py --indir STAR/SL1344 --outdir STAR/SL1344 --chrlengths ../../annotations/GRCh38/bt2-index/chromosome_lengths.txt --insuffix .Signal.Unique.str1.out.bg --outsuffix .str1.bw"
 cut -f1 fastq/SL1344_names.txt | tail -n 16 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bedgraph2bigwig --command "python ~/software/utils/bedgraph2bigwig.py --indir STAR/SL1344 --outdir STAR/SL1344 --chrlengths ../../annotations/GRCh38/bt2-index/chromosome_lengths.txt --insuffix .Signal.Unique.str2.out.bg --outsuffix .str2.bw"
 
+cut -f1 fastq/SL1344_failed.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bedgraph2bigwig --command "python ~/software/utils/bedgraph2bigwig.py --indir STAR/SL1344 --outdir STAR/SL1344 --chrlengths ../../annotations/GRCh38/bt2-index/chromosome_lengths.txt --insuffix .Signal.Unique.str1.out.bg --outsuffix .str1.bw"
+
 #Index bam files
 cut -f1 fastq/SL1344_names.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname index_bams --command  "python ~/software/utils/index-bams.py --bamdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.out.bam --execute True"
+cut -f1 fastq/SL1344_failed.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname index_bams --command  "python ~/software/utils/index-bams.py --bamdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.out.bam --execute True"
+
 
 #Use verifyBamID to check concordance with the vcf file
 cut -f1 fastq/SL1344_names.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname verifyBamID --command  "python ~/software/utils/runVerifyBamID.py --bamdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.out.bam --vcf genotypes/selected_genotypes.GRCh38.sorted.vcf.gz --execute True" 
+cut -f1 fastq/SL1344_failed.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname verifyBamID --command  "python ~/software/utils/runVerifyBamID.py --bamdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.out.bam --vcf genotypes/selected_genotypes.GRCh38.sorted.vcf.gz --execute True" 
 
 
 
