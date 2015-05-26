@@ -16,13 +16,11 @@ condD_eqtls = filterEQTLs(read.table("results/SL1344/matrixeQTL/fixed/matrixeQTL
 
 
 #eQTLS found in SL1344
-condA_snps = dplyr::select(condA_eqtls, gene_id = gene, genotype_id = snps)
-condA_plots = makeMultiplePlots(condA_eqtls, eqtl_dataset)
+condA_plots = makeMultiplePlots(condA_eqtls, expression_dataset, vcf_file, line_metadata)
 savePlots(condA_plots, path = "results/SL1344/matrixeQTL/condA_plots/",width = 7, height = 7)
 
 #eQTLS found in IFNg
-condB_snps = dplyr::select(condB_eqtls, gene_id = gene, genotype_id = snps)
-condB_plots = makeMultiplePlots(condB_eqtls, eqtl_dataset)
+condB_plots = makeMultiplePlots(condB_eqtls, expression_dataset, vcf_file, line_metadata)
 savePlots(condB_plots, path = "results/SL1344/matrixeQTL/condB_plots/",width = 7, height = 7)
 
 #eQTLS found in SL1344
@@ -30,8 +28,7 @@ condC_plots = makeMultiplePlots(condC_eqtls, expression_dataset, vcf_file, line_
 savePlots(condC_plots, path = "results/SL1344/matrixeQTL/condC_plots/",width = 7, height = 7)
 
 #eQTLS found in SL1344
-condD_snps = dplyr::select(condD_eqtls, gene_id = gene, genotype_id = snps)
-condD_plots = makeMultiplePlots(condD_eqtls, eqtl_dataset)
+condD_plots = makeMultiplePlots(condD_eqtls, expression_dataset, vcf_file, line_metadata)
 savePlots(condD_plots, path = "results/SL1344/matrixeQTL/condD_plots/",width = 7, height = 7)
 
 

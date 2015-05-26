@@ -62,7 +62,12 @@ go_results = list(ifng_up_go = ifng_up_go, sl1344_up_go = sl1344_up_go)
 saveRDS(go_results, "results/SL1344/diffExp/GO_results.rds")
 
 #Make plot of IFNb
-design_matrix$condition_name = factor(design_matrix$condition_name, levels = c("naive","IFNg","SL1344", "IFNg+SL1344"))
-ifnb_plot = plotGene("ENSG00000171855",exprs_cqn, design_matrix, dds_gene_meta)
+design_matrix = expression_list$design
+design_matrix$condition_name = factor(design_matrix$condition_name, levels = c("naive","IFNg","SL1344", "IFNg_SL1344"))
+ifnb_plot = plotGene("ENSG00000171855",expression_list$exprs_cqn, design_matrix, expression_list$gene_metadata)
 ggsave("results/SL1344/diffExp/IFNB1.pdf", plot = ifnb_plot, width = 5, height = 5)
 
+#Make some plots for subho
+subho_genes = read.table("../LPS/subho_genes.txt", stringsAsFactors = FALSE)[,1]
+plots = lapply(as.list(subho_genes), plotGene, expression_list$exprs_cqn, design_matrix, expression_list$gene_metadata)
+savePlots(plots, "subho_plots/", 6, 6)

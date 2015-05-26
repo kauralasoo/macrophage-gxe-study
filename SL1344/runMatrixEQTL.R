@@ -39,7 +39,27 @@ condB_res = runMatrixEQTL(condB_exp, geno_data, vcf_file$snpspos, genepos)
 write.table(condB_res$cis$eqtls, "results/SL1344/matrixeQTL/fixed/matrixeQTL_condition_B.txt", sep ="\t", quote = FALSE, row.names = FALSE)
 condC_res = runMatrixEQTL(condC_exp, geno_data, vcf_file$snpspos, genepos)
 write.table(condC_res$cis$eqtls, "results/SL1344/matrixeQTL/fixed/matrixeQTL_condition_C.txt", sep ="\t", quote = FALSE, row.names = FALSE)
-condD_res = runMatrixEQTL(condD_exp, geno_data, vcf_file$snpspos, genepos)write.table(condD_res$cis$eqtls, "results/SL1344/matrixeQTL/fixed/matrixeQTL_condition_D.txt", sep ="\t", quote = FALSE, row.names = FALSE)
+condD_res = runMatrixEQTL(condD_exp, geno_data, vcf_file$snpspos, genepos)
 write.table(condD_res$cis$eqtls, "results/SL1344/matrixeQTL/fixed/matrixeQTL_condition_D.txt", sep ="\t", quote = FALSE, row.names = FALSE)
 
+#Save the data to disk for use with eqtlbma
+#Expression data
+write.table(condA_exp, "eqtlbma/exp_condition_A.txt", sep ="\t", quote = FALSE)
+write.table(condB_exp, "eqtlbma/exp_condition_B.txt", sep ="\t", quote = FALSE)
+write.table(condC_exp, "eqtlbma/exp_condition_C.txt", sep ="\t", quote = FALSE)
+write.table(condD_exp, "eqtlbma/exp_condition_D.txt", sep ="\t", quote = FALSE)
+
+#Gene positions
+genepos_eqtlbma = dplyr::filter(expression_dataset$gene_metadata, gene_id %in% expressed_genes) %>% 
+  dplyr::transmute(chr = chromosome_name, left = start_position, right = end_position, geneid = gene_id, score = 1000, strand) %>%
+  dplyr::mutate(strand = ifelse(strand == 1, "+","-")) %>%
+  as.data.frame()
+write.table(genepos_eqtlbma, "eqtlbma/gene_coords.bed", sep ="\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
+
+#SNP positions
+snpspos_eqtlbma = dplyr::transmute(vcf_file$snpspos, chr, start  = pos-1, end = pos, snpid)
+write.table(snpspos_eqtlbma, "eqtlbma/snp_coords.bed", sep ="\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
+
+#Genotypes
+write.table(geno_data, "eqtlbma/genotypes.txt", sep ="\t", quote = FALSE)
 
