@@ -1,5 +1,6 @@
 library("devtools")
 library("cqn")
+library("dplyr")
 load_all("macrophage-gxe-study/seqUtils/")
 
 #Import raw read counts 
@@ -32,7 +33,8 @@ metadata = readRDS("annotations/Homo_sapiens.GRCh38.79.transcript_data.rds")
 
 #Filter annotations
 filtered_metadata = dplyr::filter(metadata,transcript_gencode_basic == "GENCODE basic") %>% 
-  dplyr::select(ensembl_gene_id, gene_biotype, chromosome_name, percentage_gc_content,external_gene_name) %>% 
+  dplyr::select(ensembl_gene_id, gene_biotype, chromosome_name, start_position, end_position, 
+                percentage_gc_content, external_gene_name) %>% 
   unique() %>%
   dplyr::filter(gene_biotype %in% valid_gene_biotypes, chromosome_name %in% valid_chromosomes) %>%
   dplyr::rename(gene_id = ensembl_gene_id, gene_name = external_gene_name)
