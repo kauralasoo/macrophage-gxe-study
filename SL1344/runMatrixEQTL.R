@@ -1,5 +1,6 @@
 library("MatrixEQTL")
 library("ggplot2")
+library("devtools")
 load_all("macrophage-gxe-study/seqUtils/")
 
 #Load expresison dataset preapred previously by processExpressionData.R script
@@ -42,7 +43,7 @@ write.table(condC_res$cis$eqtls, "results/SL1344/matrixeQTL/fixed/matrixeQTL_con
 condD_res = runMatrixEQTL(condD_exp, geno_data, vcf_file$snpspos, genepos)
 write.table(condD_res$cis$eqtls, "results/SL1344/matrixeQTL/fixed/matrixeQTL_condition_D.txt", sep ="\t", quote = FALSE, row.names = FALSE)
 
-#Save the data to disk for use with eqtlbma
+#### Save the data to disk for use with eqtlbma ####
 #Expression data
 write.table(condA_exp, "eqtlbma/exp_condition_A.txt", sep ="\t", quote = FALSE)
 write.table(condB_exp, "eqtlbma/exp_condition_B.txt", sep ="\t", quote = FALSE)
