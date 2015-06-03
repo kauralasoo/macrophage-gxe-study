@@ -1,0 +1,2 @@
+Sample ID	User ID	Date 	Time 	ng/ul 	A260 	A280 	260/280 	260/230 	Constant 	Cursor Pos.	Cursor abs.	340 raw
+ruyv C	Default	5/24/2015	6:01 PM	16.78	0.419	0.230	1.82	1.39	40.00	230	0.302	0.044
