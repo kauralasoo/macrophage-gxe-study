@@ -76,8 +76,20 @@ zcat eqtlbma/output/subset_test_eqtlbma_hm_txt.gz | grep "#config" | awk '{split
 #Extract grid weigths
 zcat eqtlbma/output/subset_test_eqtlbma_hm_txt.gz | grep "#grid" | cut -f2 > eqtlbma/output/subset_test_grid_weights.txt
 
-#Calculate posteriors
+#Lift over imputed genotypes from GRCh37 to GRCh38
+cut -f1 genotypes/vcf_file_list.txt | tail -n 22 | python ~/software/utils/submitJobs.py --MEM 5000 --jobname liftOverVCF --command "python ~/software/utils/vcf/liftoverVcfGenotypes.py --chrMapFwd macrophage-gxe-study/data/liftOver_genotypes/GRCh38ToHg38_chromosome_map.txt --chrMapRev macrophage-gxe-study/data/liftOver_genotypes/Hg38ToGRCh38_chromosome_map.txt --liftOver macrophage-gxe-study/data/liftOver_genotypes/hg19ToHg38.over.chain --reference ../../annotations/hg38/hg38.fa --vcfSuffix .vcf.gz --indir genotypes/raw/gtarray/imputed_vcf/20150128_858samples/ --outdir genotypes/GRCh38/ --execute True"
+
+#LiftOver raw genotypes from GRCh37 to GRCh38
+echo "hipsci.wec.gtarray.HumanCoreExome-12_v1_0.858samples.20141111.genotypes" | python ~/software/utils/submitJobs.py --MEM 5000 --jobname liftOverVCF --command "python ~/software/utils/vcf/liftoverVcfGenotypes.py --chrMapFwd macrophage-gxe-study/data/liftOver_genotypes/GRCh38ToHg38_chromosome_map.txt --chrMapRev macrophage-gxe-study/data/liftOver_genotypes/Hg38ToGRCh38_chromosome_map.txt --liftOver macrophage-gxe-study/data/liftOver_genotypes/hg19ToHg38.over.chain --reference ../../annotations/hg38/hg38.fa --vcfSuffix .vcf.gz --indir genotypes/raw/gtarray/vcf/20141111_858samples/ --outdir genotypes/GRCh38/ --execute True"
 
 
+cut -f1 genotypes/vcf_file_list.txt | grep chr3 | python ~/software/utils/submitJobs.py --MEM 5000 --jobname liftOverVCF --command "python ~/software/utils/vcf/liftoverVcfGenotypes.py --chrMapFwd macrophage-gxe-study/data/liftOver_genotypes/GRCh38ToHg38_chromosome_map.txt --chrMapRev macrophage-gxe-study/data/liftOver_genotypes/Hg38ToGRCh38_chromosome_map.txt --liftOver macrophage-gxe-study/data/liftOver_genotypes/hg19ToHg38.over.chain --reference ../../annotations/hg38/hg38.fa --vcfSuffix .vcf.gz --indir genotypes/raw/gtarray/imputed_vcf/20150128_858samples/ --outdir genotypes/GRCh38/ --execute True"
+
+cut -f1 genotypes/vcf_file_list.txt | grep chr6 | python ~/software/utils/submitJobs.py --MEM 5000 --jobname liftOverVCF --command "python ~/software/utils/vcf/liftoverVcfGenotypes.py --chrMapFwd macrophage-gxe-study/data/liftOver_genotypes/GRCh38ToHg38_chromosome_map.txt --chrMapRev macrophage-gxe-study/data/liftOver_genotypes/Hg38ToGRCh38_chromosome_map.txt --liftOver macrophage-gxe-study/data/liftOver_genotypes/hg19ToHg38.over.chain --reference ../../annotations/hg38/hg38.fa --vcfSuffix .vcf.gz --indir genotypes/raw/gtarray/imputed_vcf/20150128_858samples/ --outdir genotypes/GRCh38/ --execute True"
+
+cut -f1 genotypes/vcf_file_list.txt | grep chr7 | python ~/software/utils/submitJobs.py --MEM 5000 --jobname liftOverVCF --command "python ~/software/utils/vcf/liftoverVcfGenotypes.py --chrMapFwd macrophage-gxe-study/data/liftOver_genotypes/GRCh38ToHg38_chromosome_map.txt --chrMapRev macrophage-gxe-study/data/liftOver_genotypes/Hg38ToGRCh38_chromosome_map.txt --liftOver macrophage-gxe-study/data/liftOver_genotypes/hg19ToHg38.over.chain --reference ../../annotations/hg38/hg38.fa --vcfSuffix .vcf.gz --indir genotypes/raw/gtarray/imputed_vcf/20150128_858samples/ --outdir genotypes/GRCh38/ --execute True"
+
+#Filter genotypes
+echo "hipsci.chr21.gtarray.HumanCoreExome-12_v1_0.imputed_phased.858_samples.20150128.genotypes.GRCh38.sorted" | python ~/software/utils/submitJobs.py --MEM 5000 --jobname filterVCF --command "python ~/software/utils/vcf/filterVcf.py --sampleList genotypes/SL1344/SL1344_genotype_names.txt --MAF 0.05 --indir genotypes/GRCh38/imputed/ --outdir genotypes/SL1344/ --execute True --IMP2 0.7"
 
 
