@@ -3,7 +3,7 @@ library("ggplot2")
 library("tidyr")
 
 #Import different files
-dat = tbl_df(read.csv("macrophage-gxe-study/data/sample_lists/line_metadata_020315.csv", stringsAsFactors = FALSE, na.strings = ""))
+dat = tbl_df(read.csv("macrophage-gxe-study/data/sample_lists/line_metadata_010715.csv", stringsAsFactors = FALSE, na.strings = ""))
 flow_purity = readRDS("macrophage-gxe-study/data/covariates/flow_cytometry_purity.rds")
 rna_concentrations = readRDS("macrophage-gxe-study/data/covariates/rna_concentrations.rds")
 gender_map = read.table("macrophage-gxe-study/data/sample_lists/line_gender_map.txt", header = TRUE, stringsAsFactors = FALSE)
