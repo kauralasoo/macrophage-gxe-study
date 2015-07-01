@@ -25,6 +25,7 @@ cat genotypes/SL1344/SL1344_sample_genotype_map.txt | tail -n 56 | python ~/soft
 cut -f1 genotypes/SL1344/SL1344_sample_genotype_map.txt | tail -n 108 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname index_bams --command  "python ~/software/utils/index-bams.py --bamdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.RG.bam --execute True"
 
 #Use ASEReadCounter to count allele-specific expression
-cut -f1 genotypes/SL1344/SL1344_sample_genotype_map.txt | head -n1 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bamCountASE --command "python ~/software/utils/bamCountASE.py --indir STAR/SL1344 --outdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.RG.bam --reference ../../annotations/GRCh38/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sites genotypes/SL1344/snps_only/auotsomes.snps_only.sorted.uniq.no_duplicates.vcf --execute True"
+cut -f1 genotypes/SL1344/SL1344_sample_genotype_map.txt | head -n1 | python ~/software/utils/submitJobs.py --MEM 2000 --jobname bamCountASE --command "python ~/software/utils/bamCountASE.py --indir STAR/SL1344 --outdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.RG.bam --reference ../../annotations/GRCh38/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sites genotypes/SL1344/snps_only/auotsomes.snps_only.sorted.uniq.no_duplicates.vcf --execute True"
 
-cut -f1 genotypes/SL1344/SL1344_sample_genotype_map.txt | head -n 16 | python ~/software/utils/index-bams.py --bamdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.out.bam --execute False
+#Merge ASE read counts into one file:
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>9000] rusage[mem=9000]" -q normal -M 9000 -o mergeASEcounts.%J.jobout "python ~/software/utils/mergeASECounts.py --sample_list STAR/SL1344_ASE_counts/sample_file_map.txt --indir STAR/SL1344_ASE_counts > STAR/SL1344_ASE_counts/SL1344_ASE_counts_merged.txt"
