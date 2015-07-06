@@ -29,22 +29,30 @@ cut -f1 fastq/acLDL_names_2.txt | python ~/software/utils/submitJobs.py --MEM 32
 
 #Count reads overlaping GENCODE basic annotations
 cut -f1 fastq/acLDL_names.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname featureCounts --command "python ~/software/utils/bam2counts.py --sampleDir STAR/acLDL/ --gtf ../../annotations/GRCh38/genes/Homo_sapiens.GRCh38.79.gencode_basic.gtf --strand 2 --countsSuffix .gencode_basic.counts.txt --execute True"
+cut -f1 fastq/acLDL_names_2.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname featureCounts --command "python ~/software/utils/bam2counts.py --sampleDir STAR/acLDL/ --gtf ../../annotations/GRCh38/genes/Homo_sapiens.GRCh38.79.gencode_basic.gtf --strand 2 --countsSuffix .gencode_basic.counts.txt --execute True"
 
 #Count reads overlapping full Ensembl 79 annotations
 cut -f1 fastq/acLDL_names.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname featureCounts --command "python ~/software/utils/bam2counts.py --sampleDir STAR/acLDL/ --gtf ../../annotations/GRCh38/genes/Homo_sapiens.GRCh38.79.gtf --strand 2 --countsSuffix .counts.txt --execute True"
+cut -f1 fastq/acLDL_names_2.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname featureCounts --command "python ~/software/utils/bam2counts.py --sampleDir STAR/acLDL/ --gtf ../../annotations/GRCh38/genes/Homo_sapiens.GRCh38.79.gtf --strand 2 --countsSuffix .counts.txt --execute True"
 
 #Convert bedgraph to bigwig and compress bedgraphs
 cut -f1 fastq/acLDL_names.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bedgraph2bigwig --command "python ~/software/utils/bedgraph2bigwig.py --indir STAR/acLDL --outdir STAR/acLDL --chrlengths ../../annotations/GRCh38/bt2-index/chromosome_lengths.txt --insuffix .Signal.Unique.str1.out.bg --outsuffix .str1.bw"
 cut -f1 fastq/acLDL_names.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bedgraph2bigwig --command "python ~/software/utils/bedgraph2bigwig.py --indir STAR/acLDL --outdir STAR/acLDL --chrlengths ../../annotations/GRCh38/bt2-index/chromosome_lengths.txt --insuffix .Signal.Unique.str2.out.bg --outsuffix .str2.bw"
+
+cut -f1 fastq/acLDL_names_2.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bedgraph2bigwig --command "python ~/software/utils/bedgraph2bigwig.py --indir STAR/acLDL --outdir STAR/acLDL --chrlengths ../../annotations/GRCh38/bt2-index/chromosome_lengths.txt --insuffix .Signal.Unique.str1.out.bg --outsuffix .str1.bw"
+cut -f1 fastq/acLDL_names_2.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bedgraph2bigwig --command "python ~/software/utils/bedgraph2bigwig.py --indir STAR/acLDL --outdir STAR/acLDL --chrlengths ../../annotations/GRCh38/bt2-index/chromosome_lengths.txt --insuffix .Signal.Unique.str2.out.bg --outsuffix .str2.bw"
 
 #Extract samples from the large VCF file
 echo "hipsci.wec.gtarray.HumanCoreExome-12_v1_0.858samples.20141111.genotypes.GRCh38.sorted" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname filterVCF --command "python ~/software/utils/vcf/filterVcf.py  --sampleList genotypes/acLDL/acLDL_genotype_list.txt --MAF 0.05 --indir genotypes/GRCh38/genotyped/ --outdir genotypes/acLDL/ --execute True  --vcfSuffix .vcf.gz"
 
 #Index bam files
 cut -f1 fastq/acLDL_names.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname index_bams --command  "python ~/software/utils/index-bams.py --bamdir STAR/acLDL --insuffix .Aligned.sortedByCoord.out.bam --execute True"
+cut -f1 fastq/acLDL_names_2.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname index_bams --command  "python ~/software/utils/index-bams.py --bamdir STAR/acLDL --insuffix .Aligned.sortedByCoord.out.bam --execute True"
 
 #Run VerifyBamID
 cut -f1 fastq/acLDL_names.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname verifyBamID --command  "python ~/software/utils/runVerifyBamID.py --bamdir STAR/acLDL --insuffix .Aligned.sortedByCoord.out.bam --vcf genotypes/acLDL/hipsci.wec.gtarray.HumanCoreExome-12_v1_0.858samples.20141111.genotypes.GRCh38.sorted.filtered.vcf.gz --execute True" 
+cut -f1 fastq/acLDL_names_2.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname verifyBamID --command  "python ~/software/utils/runVerifyBamID.py --bamdir STAR/acLDL --insuffix .Aligned.sortedByCoord.out.bam --vcf genotypes/acLDL/hipsci.wec.gtarray.HumanCoreExome-12_v1_0.858samples.20141111.genotypes.GRCh38.sorted.filtered.vcf.gz --execute True" 
+cut -f1 macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_2.txt | grep OUGL | python ~/software/utils/submitJobs.py --MEM 1000 --jobname verifyBamID --command  "python ~/software/utils/runVerifyBamID.py --bamdir STAR/acLDL --insuffix .Aligned.sortedByCoord.out.bam --vcf genotypes/acLDL/hipsci.wec.gtarray.HumanCoreExome-12_v1_0.858samples.20141111.genotypes.GRCh38.sorted.filtered.vcf.gz --execute True" 
 
 
 

@@ -7,7 +7,7 @@ load_all("macrophage-gxe-study/seqUtils/")
 #Import Compiled metadata
 line_meta = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds")
 #Import acLDL sample names
-acldl_names = read.table("fastq/acLDL_names_all.txt", stringsAsFactors = FALSE, comment = "")[,1]
+acldl_names = read.table("macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_all.txt", stringsAsFactors = FALSE, comment = "")[,1]
 
 #Match sample ids to genotypes
 acldl_design = constructDesignMatrix_acLDL(acldl_names)
