@@ -26,10 +26,32 @@ write.table(genotype_ids,"genotypes/SL1344/SL1344_genotype_list.txt", row.names 
 sg_match = dplyr::filter(sample_meta) %>% dplyr::select(genotype_id, sample_id, condition)
 
 write.table(dplyr::filter(sg_match, condition == "A") %>% dplyr::select(-condition),
-            "genotypes/SL1344/SL1344_sg_map_A.txt", row.names = FALSE, col.names = FALSE, sep = "\t", quote = FALSE)
+            "rasqual/input/SL1344_sg_map_A.txt", row.names = FALSE, col.names = FALSE, sep = "\t", quote = FALSE)
 write.table(dplyr::filter(sg_match, condition == "B") %>% dplyr::select(-condition),
-            "genotypes/SL1344/SL1344_sg_map_B.txt", row.names = FALSE, col.names = FALSE, sep = "\t", quote = FALSE)
+            "rasqual/input/SL1344_sg_map_B.txt", row.names = FALSE, col.names = FALSE, sep = "\t", quote = FALSE)
 write.table(dplyr::filter(sg_match, condition == "C") %>% dplyr::select(-condition),
-            "genotypes/SL1344/SL1344_sg_map_C.txt", row.names = FALSE, col.names = FALSE, sep = "\t", quote = FALSE)
+            "rasqual/input/SL1344_sg_map_C.txt", row.names = FALSE, col.names = FALSE, sep = "\t", quote = FALSE)
 write.table(dplyr::filter(sg_match, condition == "D") %>% dplyr::select(-condition),
-            "genotypes/SL1344/SL1344_sg_map_D.txt", row.names = FALSE, col.names = FALSE, sep = "\t", quote = FALSE)
+            "rasqual/input/SL1344_sg_map_D.txt", row.names = FALSE, col.names = FALSE, sep = "\t", quote = FALSE)
+
+#Export read counts in each condtion
+cond_A_counts = expression_dataset$exprs_counts[,dplyr::filter(sg_match, condition == "A")$sample_id]
+write.table(cond_A_counts, "rasqual/input/cond_A_counts.txt", row.names = TRUE, col.names = FALSE, sep ="\t", quote = FALSE)
+cond_B_counts = expression_dataset$exprs_counts[,dplyr::filter(sg_match, condition == "B")$sample_id]
+write.table(cond_B_counts, "rasqual/input/cond_B_counts.txt", row.names = TRUE, col.names = FALSE, sep ="\t", quote = FALSE)
+cond_C_counts = expression_dataset$exprs_counts[,dplyr::filter(sg_match, condition == "C")$sample_id]
+write.table(cond_C_counts, "rasqual/input/cond_C_counts.txt", row.names = TRUE, col.names = FALSE, sep ="\t", quote = FALSE)
+cond_D_counts = expression_dataset$exprs_counts[,dplyr::filter(sg_match, condition == "D")$sample_id]
+write.table(cond_D_counts, "rasqual/input/cond_D_counts.txt", row.names = TRUE, col.names = FALSE, sep ="\t", quote = FALSE)
+
+#Estimate size factors for each sample
+cond_A_factors = calculateNormFactors(cond_A_counts, method = "RLE")
+write.table(cond_A_factors, "rasqual/input/cond_A_factors.txt", row.names = TRUE, col.names = FALSE, sep ="\t", quote = FALSE)
+cond_B_factors = calculateNormFactors(cond_B_counts, method = "RLE")
+write.table(cond_B_factors, "rasqual/input/cond_B_factors.txt", row.names = TRUE, col.names = FALSE, sep ="\t", quote = FALSE)
+cond_C_factors = calculateNormFactors(cond_C_counts, method = "RLE")
+write.table(cond_C_factors, "rasqual/input/cond_C_factors.txt", row.names = TRUE, col.names = FALSE, sep ="\t", quote = FALSE)
+cond_D_factors = calculateNormFactors(cond_D_counts, method = "RLE")
+write.table(cond_D_factors, "rasqual/input/cond_D_factors.txt", row.names = TRUE, col.names = FALSE, sep ="\t", quote = FALSE)
+
+
