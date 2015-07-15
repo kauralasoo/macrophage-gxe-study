@@ -2,7 +2,7 @@ library("devtools")
 library("dplyr")
 load_all("macrophage-gxe-study/seqUtils/")
 
-sample_names = read.table("fastq/SL1344_names.txt", sep ="\t",comment.char = "", stringsAsFactors = FALSE)[,1]
+sample_names = read.table("macrophage-gxe-study/data/sample_lists/SL1344/SL1344_names.txt", sep ="\t",comment.char = "", stringsAsFactors = FALSE)[,1]
 
 #Import Gencode Basic counts
 basic_data = loadCounts("STAR/SL1344/", sample_names, sub_dir = TRUE, counts_suffix = ".gencode_basic.counts.txt")
