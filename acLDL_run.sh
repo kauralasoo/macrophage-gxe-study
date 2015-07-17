@@ -7,10 +7,12 @@ python ~/software/utils/irodsGetSamplesInStudy.py --studyName "Characterization 
 #Map lanelet ids to sample ids
 python ~/software/utils/irodsFetchMeta.py --irodsList fastq/acLDL_samples.txt | sort -k1 > fastq/acLDL_names.txt 
 python ~/software/utils/irodsFetchMeta.py --irodsList fastq/acLDL_samples_2.txt | sort -k1 > fastq/acLDL_names_2.txt 
+python ~/software/utils/irodsFetchMeta.py --irodsList fastq/acLDL_samples_3.txt | sort -k1 > fastq/acLDL_names_3.txt 
 
 #Fetch lanelets in cram format from irods
 cut -f1 fastq/acLDL_samples.txt | python ~/software/utils/fetch-irods.py --dir fastq/acLDL/cram/ --suffix .cram
 cut -f1 fastq/acLDL_samples_2.txt | python ~/software/utils/fetch-irods.py --dir fastq/acLDL/cram/ --suffix .cram
+cut -f1 fastq/acLDL_samples_3.txt | python ~/software/utils/fetch-irods.py --dir fastq/acLDL/cram/ --suffix .cram
 
 #Convert cram files into fastq
 cut -f1 fastq/acLDL_samples.txt |  python ~/software/utils/submitJobs.py --MEM 1000 --jobname cramToFastq --command "python ~/software/utils/cramToFastq.py --inputDir fastq/acLDL/cram/ --outputDir fastq/acLDL/"
