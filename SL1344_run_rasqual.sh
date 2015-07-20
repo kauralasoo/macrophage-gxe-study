@@ -5,7 +5,7 @@ cut -f1 genotypes/vcf_file_list.txt | tail -n 22 | python ~/software/utils/submi
 echo "hipsci.chr21.gtarray.HumanCoreExome-12_v1_0.imputed_phased.858_samples.20150128.genotypes.GRCh38.sorted" | python ~/software/utils/submitJobs.py --MEM 5000 --jobname filterVCF --command "python ~/software/utils/vcf/filterVcf.py --sampleList genotypes/SL1344/SL1344_genotype_names.txt --MAF 0.05 --indir genotypes/GRCh38/imputed/ --outdir genotypes/SL1344/ --execute True --IMP2 0.7"
 
 #Filter VCF files for samples, MAF and IMP2 values
-cut -f1 genotypes/vcf_file_list.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname filterVCF --command "python ~/software/utils/vcf/filterVcf.py  --sampleList genotypes/SL1344/SL1344_genotype_names.txt --MAF 0.05 --indir genotypes/GRCh38/imputed/ --outdir genotypes/SL1344/imputed_filtered/ --execute True --IMP2 0.7 --vcfSuffix .GRCh38.sorted.vcf.gz"
+cut -f1 genotypes/vcf_file_list.txt | head -n 22 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname filterVCF --command "python ~/software/utils/vcf/filterVcf.py  --sampleList macrophage-gxe-study/data/sample_lists/SL1344/SL1344_gt_list.txt --MAF 0.05 --indir genotypes/GRCh38/imputed/ --outdir genotypes/SL1344/imputed_filtered/ --execute True --IMP2 0.7 --vcfSuffix .GRCh38.sorted.vcf.gz"
 
 #Filter VCF files again to only keep SNPs
 cut -f1 genotypes/vcf_file_list.txt | head -n 22| python ~/software/utils/submitJobs.py --MEM 1000 --jobname filterVCFKeepSnps --command "python ~/software/utils/vcf/filterVcfKeepSnps.py  --indir genotypes/SL1344/imputed_filtered/ --outdir genotypes/SL1344/snps_only/ --execute True --vcfSuffix .filtered.GRCh38.sorted.vcf.gz"
@@ -24,8 +24,7 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q norm
 python ~/software/utils/vcf/vcfDetectDuplicateVariants.py --vcf auotsomes.snps_only.sorted.uniq.vcf > auotsomes.snps_only.sorted.uniq.no_duplicates.vcf
 
 #Add read group to the BAM files to make them work with GATK
-cat genotypes/SL1344/SL1344_sample_genotype_map.txt | head -n 16 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bamAddRG --command "python ~/software/utils/bamAddRG.py --indir STAR/SL1344 --outdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.out.bam --outsuffix .Aligned.sortedByCoord.RG.bam --execute True"
-cat genotypes/SL1344/SL1344_sample_genotype_map.txt | tail -n 56 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bamAddRG --command "python ~/software/utils/bamAddRG.py --indir STAR/SL1344 --outdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.out.bam --outsuffix .Aligned.sortedByCoord.RG.bam --execute True"
+cat macrophage-gxe-study/data/sample_lists/SL1344/SL1344_sample_gt_map.txt | head -n 132 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bamAddRG --command "python ~/software/utils/bamAddRG.py --indir STAR/SL1344 --outdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.out.bam --outsuffix .Aligned.sortedByCoord.RG.bam --execute True"
 
 #Index bams
 cut -f1 genotypes/SL1344/SL1344_sample_genotype_map.txt | tail -n 108 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname index_bams --command  "python ~/software/utils/index-bams.py --bamdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.RG.bam --execute True"
