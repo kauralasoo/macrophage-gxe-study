@@ -8,7 +8,7 @@
 # riiv and meqo not subimtted because of low concentration
 # ieki A,B only one well per condition
 # dium 1 well per sample for all conditions
-# ruyv_C concentration after clean-up, lost par of the sample
+# ruyv_C concentration after clean-up, lost par of the sample (5/24/2015)
 sample_name	sample_id	User ID	Date 	Time 	ng/ul 	A260 	A280 	260/280 	260/230 	Constant 	Cursor Pos.	Cursor abs.	340 raw
 peop A	peop_A	Default	6/6/2014	2:07 PM	72.10	1.803	0.870	2.07	2.24	40.00	230	0.803	0.011
 peop B	peop_B	Default	6/6/2014	2:09 PM	113.82	2.846	1.377	2.07	1.88	40.00	230	1.515	0.016
@@ -218,10 +218,10 @@ ieki A	ieki_A	Default	4/25/2015	9:02 PM	100.31	2.508	1.186	2.11	1.87	40.00	230	1
 ieki B	ieki_B	Default	4/25/2015	9:02 PM	102.51	2.563	1.210	2.12	1.85	40.00	230	1.385	0.003
 ieki C	ieki_C	Default	4/25/2015	9:03 PM	246.02	6.150	2.982	2.06	2.13	40.00	230	2.893	0.008
 ieki D	ieki_D	Default	4/25/2015	9:04 PM	261.75	6.544	3.174	2.06	1.53	40.00	230	4.281	0.009
-licq A	licq_A	Default	4/25/2015	9:05 PM	48.73	1.218	0.595	2.05	1.67	40.00	230	0.728	-0.065
-licq B	licq_B	Default	4/25/2015	9:05 PM	83.70	2.093	1.020	2.05	2.03	40.00	230	1.029	0.009
-licq C	licq_C	Default	4/25/2015	9:06 PM	51.86	1.296	0.600	2.16	1.20	40.00	230	1.081	0.005
-licq D	licq_D	Default	4/25/2015	9:07 PM	74.23	1.856	0.857	2.17	1.99	40.00	230	0.932	-0.004
+iicq A	iicq_A	Default	4/25/2015	9:05 PM	48.73	1.218	0.595	2.05	1.67	40.00	230	0.728	-0.065
+iicq B	iicq_B	Default	4/25/2015	9:05 PM	83.70	2.093	1.020	2.05	2.03	40.00	230	1.029	0.009
+iicq C	iicq_C	Default	4/25/2015	9:06 PM	51.86	1.296	0.600	2.16	1.20	40.00	230	1.081	0.005
+iicq D	iicq_D	Default	4/25/2015	9:07 PM	74.23	1.856	0.857	2.17	1.99	40.00	230	0.932	-0.004
 nibo A	nibo_A	Default	4/25/2015	9:08 PM	151.62	3.791	1.826	2.08	1.84	40.00	230	2.062	-0.003
 nibo B	nibo_B	Default	4/25/2015	9:08 PM	211.00	5.275	2.546	2.07	2.09	40.00	230	2.519	0.004
 nibo C	nibo_C	Default	4/25/2015	9:09 PM	111.92	2.798	1.333	2.10	1.76	40.00	230	1.586	0.003
@@ -292,7 +292,7 @@ iisa C	iisa_C	Default	5/22/2015	6:05 PM	205.19	5.130	2.508	2.05	1.88	40.00	230	2
 iisa D	iisa_D	Default	5/22/2015	6:05 PM	270.78	6.769	3.299	2.05	2.13	40.00	230	3.175	-0.002
 ruyv A	ruyv_A	Default	4/29/2015	7:14 PM	63.01	1.575	0.776	2.03	1.96	40.00	230	0.802	0.675
 ruyv B	ruyv_B	Default	4/29/2015	7:15 PM	33.16	0.829	0.416	1.99	1.78	40.00	230	0.465	0.676
-ruyv C	ruyv_C	Default	5/24/2015	6:01 PM	16.78	0.419	0.230	1.82	1.39	40.00	230	0.302	0.044
+ruyv C	ruyv_C	Default	4/29/2015	6:01 PM	16.78	0.419	0.230	1.82	1.39	40.00	230	0.302	0.044
 ruyv D	ruyv_D	Default	4/29/2015	7:17 PM	30.07	0.752	0.369	2.04	1.36	40.00	230	0.553	0.688
 ruyv A	NA	Default	5/17/2015	3:43 PM	21.71	0.543	0.270	2.01	1.49	40.00	230	0.365	0.004
 ruyv B	NA	Default	5/17/2015	3:44 PM	23.41	0.585	0.283	2.07	1.60	40.00	230	0.365	0.012
