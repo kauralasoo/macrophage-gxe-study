@@ -2,7 +2,7 @@ library("dplyr")
 library("ggplot2")
 library("tidyr")
 
-rna_data = tbl_df(read.table("macrophage-gxe-study/data/RNA_extractions/RNA_extractions_170215.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE))
+rna_data = tbl_df(read.table("macrophage-gxe-study/data/RNA_extractions/RNA_extractions_070515.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE))
 
 #Select and process relevant columns
 rna_df = dplyr::rename(rna_data, ng_ul = ng.ul, ratio_260_280 = X260.280, ratio_260_230 = X260.230) %>% #Rename columns
@@ -10,10 +10,13 @@ rna_df = dplyr::rename(rna_data, ng_ul = ng.ul, ratio_260_280 = X260.280, ratio_
   dplyr::select(sample_id, Date, ng_ul, ratio_260_280, ratio_260_230) %>% #Select only relevant columns
   dplyr::mutate(Date = as.Date(Date, "%m/%d/%Y"))
 
-#Deal with know artifacts in the data
+#Deal with know artifacts in the data ruyv_C
 rna_sample_stats = dplyr::mutate(rna_df, ng_ul = ifelse(grepl("eofe_",sample_id), 2*ng_ul, ng_ul)) %>% #1 well per condition
   dplyr::mutate(ng_ul = ifelse(grepl("fpdl_",sample_id), 2*ng_ul, ng_ul)) %>% #1 well per condition
-  dplyr::mutate(ng_ul = ifelse(sample_id == "gomv_D", (21.5/35*ng_ul), ng_ul)) #gomv_D had 21.5 ul of sample instead of 35 ul
+  dplyr::mutate(ng_ul = ifelse(sample_id == "gomv_D", (21.5/35*ng_ul), ng_ul)) %>% #gomv_D had 21.5 ul of sample instead of 35 ul
+  dplyr::mutate(ng_ul = ifelse(sample_id %in% c("ieki_A", "ieki_B"), 2*ng_ul, ng_ul)) %>% #ieki A,B only one well per condition
+  dplyr::mutate(ng_ul = ifelse(sample_id %in% c("ougl_A_2","ougl_B_2","ougl_C_2","ougl_D_2"),2*ng_ul,ng_ul)) %>% #ougl_X_2 one well per condition
+  dplyr::mutate(ng_ul = ifelse(sample_id == "ruyv_C",2*ng_ul,ng_ul)) #ougl_X_2 one well per condition
 
 #Separate sample_id into fields
 rna_sample_stats = tidyr::separate(rna_sample_stats, sample_id, into = c("donor","condition","replicate"), sep = "_", extra = "drop", remove = FALSE) %>%
