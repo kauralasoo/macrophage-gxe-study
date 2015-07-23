@@ -21,22 +21,23 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q norm
 ~/software/vcflib/bin/vcfuniq auotsomes.snps_only.sorted.vcf > auotsomes.snps_only.sorted.uniq.vcf
 
 #Sometimes there ALT allele of measured and genotyped variants do not agree. One of the variants has to be removed manually:
-python ~/software/utils/vcf/vcfDetectDuplicateVariants.py --vcf auotsomes.snps_only.sorted.uniq.vcf > auotsomes.snps_only.sorted.uniq.no_duplicates.vcf
+python ~/software/utils/vcf/vcfDetectDuplicateVariants.py --vcf auotsomes.snps_only.sorted.uniq.vcf --duplicates duplicates.txt > auotsomes.snps_only.sorted.uniq.no_duplicates.vcf
 
 #Add read group to the BAM files to make them work with GATK
 cat macrophage-gxe-study/data/sample_lists/SL1344/SL1344_sample_gt_map.txt | head -n 132 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bamAddRG --command "python ~/software/utils/bamAddRG.py --indir STAR/SL1344 --outdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.out.bam --outsuffix .Aligned.sortedByCoord.RG.bam --execute True"
 
 #Index bams
-cut -f1 genotypes/SL1344/SL1344_sample_genotype_map.txt | tail -n 108 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname index_bams --command  "python ~/software/utils/index-bams.py --bamdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.RG.bam --execute True"
+cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_sample_gt_map.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname index_bams --command  "python ~/software/utils/index-bams.py --bamdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.RG.bam --execute True"
 
 #Use ASEReadCounter to count allele-specific expression
-cut -f1 genotypes/SL1344/SL1344_sample_genotype_map.txt | head -n1 | python ~/software/utils/submitJobs.py --MEM 2000 --jobname bamCountASE --command "python ~/software/utils/bamCountASE.py --indir STAR/SL1344 --outdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.RG.bam --reference ../../annotations/GRCh38/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sites genotypes/SL1344/snps_only/auotsomes.snps_only.sorted.uniq.no_duplicates.vcf --execute True"
+cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_sample_gt_map.txt | head -n1 | python ~/software/utils/submitJobs.py --MEM 2000 --jobname bamCountASE --command "python ~/software/utils/bamCountASE.py --indir STAR/SL1344 --outdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.RG.bam --reference ../../annotations/GRCh38/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sites genotypes/SL1344/snps_only/auotsomes.snps_only.sorted.uniq.no_duplicates.vcf --execute True"
+cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_sample_gt_map.txt | tail -n251 | python ~/software/utils/submitJobs.py --MEM 2000 --jobname bamCountASE --command "python ~/software/utils/bamCountASE.py --indir STAR/SL1344 --outdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.RG.bam --reference ../../annotations/GRCh38/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sites genotypes/SL1344/snps_only/auotsomes.snps_only.sorted.uniq.no_duplicates.vcf --execute True"
 
 #Merge ASE read counts per condition into one file:
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/mergeASEcounts.%J.jobout "python ~/software/utils/mergeASECounts.py --sample_list genotypes/SL1344/SL1344_sg_map_A.txt --indir STAR/SL1344_ASE_counts --suffix .ASEcounts > results/SL1344/ASE/SL1344_ASE_counts_condA.txt"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/mergeASEcounts.%J.jobout "python ~/software/utils/mergeASECounts.py --sample_list genotypes/SL1344/SL1344_sg_map_B.txt --indir STAR/SL1344_ASE_counts --suffix .ASEcounts > results/SL1344/ASE/SL1344_ASE_counts_condB.txt"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/mergeASEcounts.%J.jobout "python ~/software/utils/mergeASECounts.py --sample_list genotypes/SL1344/SL1344_sg_map_C.txt --indir STAR/SL1344_ASE_counts --suffix .ASEcounts > results/SL1344/ASE/SL1344_ASE_counts_condC.txt"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/mergeASEcounts.%J.jobout "python ~/software/utils/mergeASECounts.py --sample_list genotypes/SL1344/SL1344_sg_map_D.txt --indir STAR/SL1344_ASE_counts --suffix .ASEcounts > results/SL1344/ASE/SL1344_ASE_counts_condD.txt"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/mergeASEcounts.%J.jobout "python ~/software/utils/mergeASECounts.py --sample_list rasqual/input/SL1344_sg_map_A.txt --indir STAR/SL1344 --suffix .ASEcounts > results/SL1344/ASE/SL1344_ASE_counts_condA.txt"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/mergeASEcounts.%J.jobout "python ~/software/utils/mergeASECounts.py --sample_list rasqual/input/SL1344_sg_map_B.txt --indir STAR/SL1344 --suffix .ASEcounts > results/SL1344/ASE/SL1344_ASE_counts_condB.txt"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/mergeASEcounts.%J.jobout "python ~/software/utils/mergeASECounts.py --sample_list rasqual/input/SL1344_sg_map_C.txt --indir STAR/SL1344 --suffix .ASEcounts > results/SL1344/ASE/SL1344_ASE_counts_condC.txt"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/mergeASEcounts.%J.jobout "python ~/software/utils/mergeASECounts.py --sample_list rasqual/input/SL1344_sg_map_D.txt --indir STAR/SL1344 --suffix .ASEcounts > results/SL1344/ASE/SL1344_ASE_counts_condD.txt"
 
 #Add ASE counts to the VCF file
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/vcfAddASE.%J.jobout "python ~/software/utils/vcf/vcfAddASE.py --ASEcounts results/SL1344/ASE/SL1344_ASE_counts_condA.txt --VCFfile genotypes/SL1344/snps_only/auotsomes.snps_only.sorted.uniq.no_duplicates.vcf | bgzip > results/SL1344/ASE/SL1344_ASE_counts_condA.vcf.gz"

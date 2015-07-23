@@ -3,7 +3,7 @@ library("ggplot2")
 library("tidyr")
 
 #Import different files
-dat = tbl_df(read.csv("macrophage-gxe-study/data/sample_lists/line_metadata_010715.csv", stringsAsFactors = FALSE, na.strings = ""))
+dat = tbl_df(read.csv("macrophage-gxe-study/data/sample_lists/line_metadata_210715.csv", stringsAsFactors = FALSE, na.strings = ""))
 flow_purity = readRDS("macrophage-gxe-study/data/covariates/flow_cytometry_purity.rds")
 rna_concentrations = readRDS("macrophage-gxe-study/data/covariates/rna_concentrations.rds")
 gender_map = read.table("macrophage-gxe-study/data/sample_lists/line_gender_map.txt", header = TRUE, stringsAsFactors = FALSE)
@@ -46,7 +46,8 @@ mean_flow_purity = flow_purity %>%
 tidy_gender = dplyr::mutate(gender_map, new_gender = ifelse(gender == "Female" | gender == "female*", "female", gender)) %>% 
   dplyr::mutate(new_gender = ifelse(gender == "Male" | gender == "male*", "male", new_gender)) %>% 
   dplyr::select(line_id, new_gender) %>% 
-  dplyr::rename(gender = new_gender)
+  dplyr::rename(gender = new_gender) %>%
+  unique()
 
 #Put all of the annotations together
 line_data = dplyr::left_join(line_metadata, rna_cons, by = c("donor", "replicate")) %>%
@@ -69,8 +70,8 @@ line_data = dplyr::mutate(line_data, passage_diff_bins = floor(line_data$passage
   dplyr::mutate(passage_diff_bins = ifelse(passage_diff_bins > 40, 40, passage_diff_bins)) #Above 40 is highest
 
 #Remove flow purity for samples were flow was done more than 2 weeks after RNA extraction
-line_data = dplyr::mutate(line_data, max_purity = ifelse(as.numeric(line_data$flow_date - line_data$salmonella) > 14, NA, max_purity),
-                          mean_purity = ifelse(as.numeric(line_data$flow_date - line_data$salmonella) > 14,NA,mean_purity)) %>%
+line_data = dplyr::mutate(line_data, max_purity_filtered = ifelse(as.numeric(line_data$flow_date - line_data$salmonella) > 14, NA, max_purity),
+                          mean_purity_filtered = ifelse(as.numeric(line_data$flow_date - line_data$salmonella) > 14,NA,mean_purity)) %>%
   dplyr::mutate(purity_bins = ifelse(max_purity < 0.98, "low", "high"))
 
 saveRDS(line_data, "macrophage-gxe-study/data/covariates/compiled_line_metadata.rds")
