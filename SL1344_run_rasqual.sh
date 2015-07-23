@@ -39,11 +39,33 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q norm
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/mergeASEcounts.%J.jobout "python ~/software/utils/mergeASECounts.py --sample_list rasqual/input/SL1344_sg_map_C.txt --indir STAR/SL1344 --suffix .ASEcounts > results/SL1344/ASE/SL1344_ASE_counts_condC.txt"
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/mergeASEcounts.%J.jobout "python ~/software/utils/mergeASECounts.py --sample_list rasqual/input/SL1344_sg_map_D.txt --indir STAR/SL1344 --suffix .ASEcounts > results/SL1344/ASE/SL1344_ASE_counts_condD.txt"
 
+#Construct genotype list
+cut -f1 SL1344_sg_map_A.txt > genotype_list.txt 
+
+#Extract only relevant genotypes from the vcf file
+bcftools view -S rasqual/input/genotype_list.txt genotypes/SL1344/snps_only/auotsomes.snps_only.sorted.uniq.no_duplicates.vcf > genotypes/SL1344/autosomes.snps_only.no_replicates.vcf
+echo "hipsci.wec.gtarray.HumanCoreExome-12_v1_0.858samples.20141111.genotypes.GRCh38.sorted" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname filterVCF --command "python ~/software/utils/vcf/filterVcf.py  --sampleList rasqual/input/genotype_list.txt --MAF 0.05 --indir genotypes/GRCh38/genotyped/ --outdir genotypes/SL1344/ --execute True  --vcfSuffix .vcf.gz"
+
 #Add ASE counts to the VCF file
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/vcfAddASE.%J.jobout "python ~/software/utils/vcf/vcfAddASE.py --ASEcounts results/SL1344/ASE/SL1344_ASE_counts_condA.txt --VCFfile genotypes/SL1344/snps_only/auotsomes.snps_only.sorted.uniq.no_duplicates.vcf | bgzip > results/SL1344/ASE/SL1344_ASE_counts_condA.vcf.gz"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/vcfAddASE.%J.jobout "python ~/software/utils/vcf/vcfAddASE.py --ASEcounts results/SL1344/ASE/SL1344_ASE_counts_condB.txt --VCFfile genotypes/SL1344/snps_only/auotsomes.snps_only.sorted.uniq.no_duplicates.vcf | bgzip > results/SL1344/ASE/SL1344_ASE_counts_condB.vcf.gz"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/vcfAddASE.%J.jobout "python ~/software/utils/vcf/vcfAddASE.py --ASEcounts results/SL1344/ASE/SL1344_ASE_counts_condC.txt --VCFfile genotypes/SL1344/snps_only/auotsomes.snps_only.sorted.uniq.no_duplicates.vcf | bgzip > results/SL1344/ASE/SL1344_ASE_counts_condC.vcf.gz"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/vcfAddASE.%J.jobout "python ~/software/utils/vcf/vcfAddASE.py --ASEcounts results/SL1344/ASE/SL1344_ASE_counts_condD.txt --VCFfile genotypes/SL1344/snps_only/auotsomes.snps_only.sorted.uniq.no_duplicates.vcf | bgzip > results/SL1344/ASE/SL1344_ASE_counts_condD.vcf.gz"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/vcfAddASE.%J.jobout "python ~/software/utils/vcf/vcfAddASE.py --ASEcounts results/SL1344/ASE/SL1344_ASE_counts_condA.txt --VCFfile genotypes/SL1344/autosomes.snps_only.no_replicates.vcf | bgzip > rasqual/input/ASE/SL1344_ASE_counts_condA.vcf.gz"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/vcfAddASE.%J.jobout "python ~/software/utils/vcf/vcfAddASE.py --ASEcounts results/SL1344/ASE/SL1344_ASE_counts_condB.txt --VCFfile genotypes/SL1344/autosomes.snps_only.no_replicates.vcf | bgzip > rasqual/input/ASE/SL1344_ASE_counts_condB.vcf.gz"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/vcfAddASE.%J.jobout "python ~/software/utils/vcf/vcfAddASE.py --ASEcounts results/SL1344/ASE/SL1344_ASE_counts_condC.txt --VCFfile genotypes/SL1344/autosomes.snps_only.no_replicates.vcf | bgzip > rasqual/input/ASE/SL1344_ASE_counts_condC.vcf.gz"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/vcfAddASE.%J.jobout "python ~/software/utils/vcf/vcfAddASE.py --ASEcounts results/SL1344/ASE/SL1344_ASE_counts_condD.txt --VCFfile genotypes/SL1344/autosomes.snps_only.no_replicates.vcf | bgzip > rasqual/input/ASE/SL1344_ASE_counts_condD.vcf.gz"
+
+#Index the VCF files using tabix
+tabix -p vcf rasqual/input/ASE/SL1344_ASE_counts_condA.vcf.gz
+tabix -p vcf rasqual/input/ASE/SL1344_ASE_counts_condB.vcf.gz
+tabix -p vcf rasqual/input/ASE/SL1344_ASE_counts_condC.vcf.gz
+tabix -p vcf rasqual/input/ASE/SL1344_ASE_counts_condD.vcf.gz
 
 #Extract exon start-end coordinates from the Txdb
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>12000] rusage[mem=12000]" -q normal -M 12000 -o FarmOut/exonCoords.%J.jobout "/software/R-3.1.2/bin/Rscript macrophage-gxe-study/SL1344/eQTL/convertTxdbToCoords.R"
+
+#Extract SNP coords from a vcf file
+grep -v "#" genotypes/SL1344/autosomes.snps_only.no_replicates.vcf | cut -f 1,2,3 > genotypes/SL1344/snp_coords.txt
+
+#Count SnpPerGene
+Rscript countsSnpsPerGene.R
+
+#Run RASQUAL on a subset of genes
+echo "ENSG00000170458" | python ~/software/utils/runRasqual.py --readCounts rasqual/input/counts/cond_A_counts.bin --offsets rasqual/input/counts/cond_A_factors.bin --n 59 --geneids rasqual/input/counts/gene_id_list.txt --vcf rasqual/input/ASE/SL1344_ASE_counts_condA.vcf.gz --geneMetadata rasqual/input/snp_counts.txt --featureCoords annotations/Homo_sapiens.GRCh38.79.gene_exon_start_end.txt 

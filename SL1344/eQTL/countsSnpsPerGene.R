@@ -1,7 +1,9 @@
 library("GenomicRanges")
+library("plyr")
+library("dplyr")
 
 #Count the number of cis SNPs and feature SNPs for each gene
-snp_coords = read.table("genotypes/SL1344/snps_only/snp_coords.txt", stringsAsFactors = FALSE)
+snp_coords = read.table("genotypes/SL1344/snp_coords.txt", stringsAsFactors = FALSE)
 snp_granges = GRanges(seqnames = snp_coords[,1], ranges = IRanges(start = snp_coords[,2], end = snp_coords[,2]))
 
 #Import exon coordinates
