@@ -8,7 +8,7 @@ library("dplyr")
 #exons = exonsBy(txdb78, by = "tx", use.names = TRUE)
 
 #Downlaod transcript metadata from Ensembl
-ensembl = useMart("ENSEMBL_MART_ENSEMBL", host="may2015.archive.ensembl.org")
+ensembl = useMart("ENSEMBL_MART_ENSEMBL", host="mar2015.archive.ensembl.org")
 ensembl = useDataset("hsapiens_gene_ensembl",mart=ensembl)
 attributes = listAttributes(ensembl)
 
