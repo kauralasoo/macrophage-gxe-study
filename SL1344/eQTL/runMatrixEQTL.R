@@ -6,11 +6,12 @@ load_all("macrophage-gxe-study/seqUtils/")
 #Load expresison dataset preapred previously by processExpressionData.R script
 expression_dataset = readRDS("results/SL1344/combined_expression_data.rds") #expression data
 line_metadata = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds") #Line metadata
-vcf_file = readRDS("genotypes/selected_genotypes.GRCh38.vcfToMatrix.rds") #genotypes
+vcf_file = readRDS("genotypes/SL1344/array_genotypes.59_samples.vcfToMatrix.rds") #genotypes
 
 #Discard replicate samples
-design = dplyr::filter(expression_dataset$design, !(donor == "ffdp")) %>% #ffdp identical to fpdl
-  dplyr::filter(!(donor == "fpdj" & replicate == 2)) #fpdj has two replicates
+design = dplyr::filter(expression_dataset$design, !(donor == "fpdj")) %>% tbl_df() %>% #Remove all fpdj samples (same as nibo)
+  dplyr::filter(!(donor == "fpdl" & replicate == 2)) %>% #Remove second fpdl sample (ffdp)
+  dplyr::filter(!(donor == "ougl" & replicate == 2)) #Remove second ougl sample (dium)
 sample_meta = dplyr::left_join(design, line_metadata, by = c("donor", "replicate"))
 
 #Filter expression data by min expression
@@ -45,22 +46,22 @@ write.table(condD_res$cis$eqtls, "results/SL1344/matrixeQTL/fixed/matrixeQTL_con
 
 #### Save the data to disk for use with eqtlbma ####
 #Expression data
-write.table(condA_exp, "eqtlbma/exp_condition_A.txt", sep ="\t", quote = FALSE)
-write.table(condB_exp, "eqtlbma/exp_condition_B.txt", sep ="\t", quote = FALSE)
-write.table(condC_exp, "eqtlbma/exp_condition_C.txt", sep ="\t", quote = FALSE)
-write.table(condD_exp, "eqtlbma/exp_condition_D.txt", sep ="\t", quote = FALSE)
+write.table(condA_exp, "eqtlbma/input/exp_condition_A.txt", sep ="\t", quote = FALSE)
+write.table(condB_exp, "eqtlbma/input/exp_condition_B.txt", sep ="\t", quote = FALSE)
+write.table(condC_exp, "eqtlbma/input/exp_condition_C.txt", sep ="\t", quote = FALSE)
+write.table(condD_exp, "eqtlbma/input/exp_condition_D.txt", sep ="\t", quote = FALSE)
 
 #Gene positions
 genepos_eqtlbma = dplyr::filter(expression_dataset$gene_metadata, gene_id %in% expressed_genes) %>% 
   dplyr::transmute(chr = chromosome_name, left = start_position, right = end_position, geneid = gene_id, score = 1000, strand) %>%
   dplyr::mutate(strand = ifelse(strand == 1, "+","-")) %>%
   as.data.frame()
-write.table(genepos_eqtlbma, "eqtlbma/gene_coords.bed", sep ="\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
+write.table(genepos_eqtlbma, "eqtlbma/input/gene_coords.bed", sep ="\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
 
 #SNP positions
 snpspos_eqtlbma = dplyr::transmute(vcf_file$snpspos, chr, start  = pos-1, end = pos, snpid)
-write.table(snpspos_eqtlbma, "eqtlbma/snp_coords.bed", sep ="\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
+write.table(snpspos_eqtlbma, "eqtlbma/input/snp_coords.bed", sep ="\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
 
 #Genotypes
-write.table(geno_data, "eqtlbma/genotypes.txt", sep ="\t", quote = FALSE)
+write.table(geno_data, "eqtlbma/input/genotypes.txt", sep ="\t", quote = FALSE)
 

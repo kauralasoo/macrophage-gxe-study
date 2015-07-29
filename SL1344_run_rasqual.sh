@@ -68,4 +68,5 @@ grep -v "#" genotypes/SL1344/autosomes.snps_only.no_replicates.vcf | cut -f 1,2,
 Rscript countsSnpsPerGene.R
 
 #Run RASQUAL on a subset of genes
-echo "ENSG00000170458" | python ~/software/utils/runRasqual.py --readCounts rasqual/input/counts/cond_A_counts.bin --offsets rasqual/input/counts/cond_A_factors.bin --n 59 --geneids rasqual/input/counts/gene_id_list.txt --vcf rasqual/input/ASE/SL1344_ASE_counts_condA.vcf.gz --geneMetadata rasqual/input/snp_counts.txt --featureCoords annotations/Homo_sapiens.GRCh38.79.gene_exon_start_end.txt 
+echo "ENSG00000170458,ENSG00000166750,ENSG00000104689,ENSG00000109861" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname runRasqual --command  "python ~/software/utils/runRasqual.py --readCounts rasqual/input/counts/cond_A_counts.bin --offsets rasqual/input/counts/cond_A_factors.bin --n 59 --geneids rasqual/input/counts/gene_id_list.txt --vcf rasqual/input/ASE/SL1344_ASE_counts_condA.vcf.gz --geneMetadata rasqual/input/snp_counts.txt --featureCoords annotations/Homo_sapiens.GRCh38.79.gene_exon_start_end.txt > rasqual.out"
+

@@ -29,10 +29,11 @@ gs = GatingSet(flowset_trans)
 gating(gt, gs)
 
 #Plot some examples
-plotGate(gs[["fpdl_291014_CD14+CD16+CD206"]], path = 1, default.y = "SSC.A")
-plotGate(gs[["fpdl_291014_isotype"]], path = 1, default.y = "SSC.A")
-plotGate(gs[["ffdk_200514_CD14+CD16+CD206"]], path = 1, default.y = "SSC.A")
-plotGate(gs[["ougl_020415_CD14+CD16+CD206"]],path = 1, default.y = "SSC.A")
+#plotGate(gs[["fpdl_291014_CD14+CD16+CD206"]], path = 1, default.y = "SSC.A")
+#plotGate(gs[["fpdl_291014_isotype"]], path = 1, default.y = "SSC.A")
+#plotGate(gs[["ffdk_200514_CD14+CD16+CD206"]], path = 1, default.y = "SSC.A")
+#plotGate(gs[["ougl_020415_CD14+CD16+CD206"]],path = 1, default.y = "SSC.A")
+plotGate(gs[["mijn_140515_CD14+CD16+CD206"]],path = 1, default.y = "SSC.A")
 
 #Extract population statistics for QC purposes
 stat = t(getPopStats(gs))
