@@ -15,7 +15,7 @@ gene_data = dplyr::select(metadata, ensembl_gene_id, external_gene_name, gene_bi
   dplyr::rename(gene_id = ensembl_gene_id, gene_name = external_gene_name)
 
 #Remove outlier samples xegx and nusw
-filtered_design = dplyr::filter(dataset$design, !(donor %in% c("nusw","xegx")))
+filtered_design = dplyr::filter(dataset$design, !(donor %in% c("xegx")))
 rownames(filtered_design) = filtered_design$sample_id
 filtered_exprs_cqn = dataset$exprs_cqn[,filtered_design$sample_id]
 filtered_counts = dataset$exprs_counts[,filtered_design$sample_id]
