@@ -9,7 +9,7 @@ line_metadata = readRDS("macrophage-gxe-study/data/covariates/compiled_line_meta
 vcf_file = readRDS("genotypes/acLDL/acLDL_array_genotypes.GRCh38.vcfToMatrix.rds") #genotypes
 
 #Remove outlier samples xegx and nusw
-filtered_design = dplyr::filter(dataset$design, !(donor %in% c("nusw","xegx")))
+filtered_design = dplyr::filter(dataset$design, !(donor %in% c("xegx")))
 rownames(filtered_design) = filtered_design$sample_id
 filtered_exprs_cqn = dataset$exprs_cqn[,filtered_design$sample_id]
 filtered_counts = dataset$exprs_counts[,filtered_design$sample_id]
@@ -17,15 +17,11 @@ filtered_counts = dataset$exprs_counts[,filtered_design$sample_id]
 #Extraxt donor genotype match from metadata
 donor_genotype_match = dplyr::left_join(filtered_design, line_metadata, by = "donor") %>% 
   dplyr::select(line_id, donor, genotype_id) %>% unique()
-sample_meta = dplyr::left_join(filtered_designc, donor_genotype_match, by = "donor")
+sample_meta = dplyr::left_join(filtered_design, donor_genotype_match, by = "donor")
 
 #Filter genes by expression
 expressed_genes = names(which(rowMeans(filtered_exprs_cqn) > 0)) #Set conservative threshold to expression level
 exprs_sel = filtered_exprs_cqn[expressed_genes,]
-
-#Correct vorx and zuta swap
-indexes = which(colnames(exprs_sel) == "ZUTA_24h_Ctrl" | colnames(exprs_sel) == "ZUTA_24h_AcLDL" | colnames(exprs_sel) == "VORX_24h_Ctrl" | colnames(exprs_sel) == "VORX_24h_AcLDL")
-colnames(exprs_sel)[indexes] = c("ZUTA_24h_AcLDL","ZUTA_24h_Ctrl","VORX_24h_AcLDL","VORX_24h_Ctrl")
 
 #Filter genotype data
 sample_meta_filtered = dplyr::filter(sample_meta, condition == "Ctrl")

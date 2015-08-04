@@ -33,7 +33,7 @@ joint_eqtls = rbind(condA_eqtls, condB_eqtls, condC_eqtls, condD_eqtls) %>%
 
 #Test interaction between genotype and condition
 res = testMultipleInteractions(joint_eqtls, expression_dataset, vcf_file, line_metadata)
-gene_id_name_map = dplyr::select(expression_dataset$gene_metadata, gene_id, gene_name
+gene_id_name_map = dplyr::select(expression_dataset$gene_metadata, gene_id, gene_name)
 interaction_pvalues = ldply(res,function(x){x[[6]][2]},.id = "gene_id") %>%
   dplyr::arrange(V1)
 interaction_df = dplyr::left_join(interaction_pvalues, joint_eqtls, by = "gene_id")
