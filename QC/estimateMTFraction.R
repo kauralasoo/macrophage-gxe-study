@@ -39,3 +39,5 @@ write.table(mt_data, "results/ATAC/QC/ATAC_mitochondrial_fraction.txt", sep = "\
 #Make histogram
 mt_fraction_plot = ggplot(mt_data, aes(x = MT)) + geom_histogram(binwidth = 0.05)
 ggsave("results/ATAC/QC/ATAC_mitochondrial_fraction_plot.pdf", mt_fraction_plot, width = 5, height = 5)
+
+
