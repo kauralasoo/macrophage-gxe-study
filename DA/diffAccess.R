@@ -16,6 +16,7 @@ counts = readRDS("results/ATAC//ATAC_combined_counts.rds")
 rownames(counts) = counts$gene_id
 diff_counts = counts[,rownames(diff_design)]
 
+##### Interaction model #####
 dds = DESeqDataSetFromMatrix(diff_counts, diff_design, ~SL1344 + IFNg + IFNg:SL1344)
 dds = DESeq(dds)
 
@@ -36,3 +37,25 @@ interaction_results = results(dds, name = "SL1344infected.IFNgprimed")
 interaction_results$peak_id = rownames(interaction_results)
 interaction_results_filtered = dplyr::filter(as.data.frame(interaction_results), padj < 0.05, abs(log2FoldChange) > 2) %>% 
   dplyr::arrange(padj)
+
+
+##### Three condition model #####
+dds = DESeqDataSetFromMatrix(diff_counts, diff_design, ~condition)
+dds = DESeq(dds)
+both_results = results(dds, contrast = c("condition","naive","IFNg_SL1344"))
+both_results$peak_id = rownames(both_results)
+both_results_filtered = dplyr::filter(as.data.frame(both_results), padj < 0.05, abs(log2FoldChange) > 2) %>% 
+  dplyr::arrange(padj)
+
+ifng_results = results(dds, contrast = c("condition","naive","IFNg"))
+ifng_results$peak_id = rownames(ifng_results)
+ifng_results_filtered = dplyr::filter(as.data.frame(ifng_results), padj < 0.05, abs(log2FoldChange) > 2) %>% 
+  dplyr::arrange(padj)
+
+sl1344_results = results(dds, contrast = c("condition","naive","SL1344"))
+sl1344_results$peak_id = rownames(sl1344_results)
+sl1344_results_filtered = dplyr::filter(as.data.frame(sl1344_results), padj < 0.05, abs(log2FoldChange) > 2) %>% 
+  dplyr::arrange(padj)
+
+
+
