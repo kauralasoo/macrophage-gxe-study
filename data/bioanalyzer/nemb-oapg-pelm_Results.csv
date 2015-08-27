@@ -1,0 +1,349 @@
+Data File Name,2100 expert_Eukaryote Total RNA Nano_DE13805865_2015-08-27_12-22-16.xad
+Data File Path,C:\Program Files (x86)\Agilent\2100 bioanalyzer\2100 expert\Data\2015-08-27
+Date Created,"Thursday, August 27, 2015 12:22:15 PM"
+Date Last Modified,"Thursday, August 27, 2015 12:45:19 PM"
+Version Created,B.02.08.SI648
+Version Last Modified,B.02.08.SI648
+ 
+Assay Name,Eukaryote Total RNA Nano Series II
+Assay Path,C:\Program Files (x86)\Agilent\2100 bioanalyzer\2100 expert\assays\RNA
+Assay Title,Eukaryote Total RNA Nano
+Assay Version,2.6
+ 
+Number of Samples Run,12
+ 
+Sample Name,nemb_A
+ 
+Peak Table
+Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
+3.0,0.9,27.29,2.5,0.7
+53.4,24.6,42.42,48.6,1.9
+2.9,1.4,44.31,2.0,0.9
+5.8,2.9,45.37,2.6,1.2
+3.0,1.5,46.10,2.7,0.7
+2.8,1.4,46.98,2.6,0.8
+7.0,3.7,48.36,4.2,1.2
+119.5,64.8,49.92,58.7,3.3
+12.2,7.0,52.64,3.8,2.8
+ 
+Fragment Table
+Name,Start Time [s],End Time [s],Area,% of total Area
+18S,41.64,43.57,50.4,20.5
+28S,48.77,51.86,99.1,40.4
+ 
+Overall Results:
+RNA Area:,245.4715,
+RNA Concentration:,154.4967,ng/µl
+rRNA Ratio [28s / 18s]:,1.964418,
+RNA Integrity Number (RIN):,10   (B.02.08),
+Result Flagging Color:,16768991,
+Result Flagging Label:,RIN:10,
+ 
+Sample Name,nemb_B
+ 
+Peak Table
+Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
+3.6,1.1,27.29,3.1,0.8
+66.9,31.1,42.40,60.5,2.0
+7.5,3.7,45.32,3.6,1.2
+3.9,1.9,46.00,3.7,0.7
+3.6,1.8,46.92,3.3,0.8
+10.0,5.3,48.33,5.8,1.2
+156.0,85.2,49.84,77.6,3.3
+18.0,10.4,52.76,5.8,3.0
+ 
+Fragment Table
+Name,Start Time [s],End Time [s],Area,% of total Area
+18S,41.39,43.49,64.1,20.5
+28S,48.70,51.98,127.5,40.7
+ 
+Overall Results:
+RNA Area:,313.2101,
+RNA Concentration:,197.1306,ng/µl
+rRNA Ratio [28s / 18s]:,1.989373,
+RNA Integrity Number (RIN):,10   (B.02.08),
+Result Flagging Color:,16768991,
+Result Flagging Label:,RIN:10,
+ 
+Sample Name,nemb_C
+ 
+Peak Table
+Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
+2.4,0.7,27.30,2.0,0.7
+47.4,22.2,42.37,45.0,1.9
+2.5,1.2,44.32,1.6,1.0
+4.8,2.4,45.27,2.4,1.1
+2.6,1.3,46.04,2.4,0.7
+2.3,1.2,46.95,2.2,0.7
+5.8,3.1,48.35,3.6,1.2
+106.3,58.5,49.84,58.0,3.1
+8.8,5.1,52.79,3.2,2.3
+ 
+Fragment Table
+Name,Start Time [s],End Time [s],Area,% of total Area
+18S,41.33,43.55,45.5,21.3
+28S,48.62,51.79,91.1,42.7
+ 
+Overall Results:
+RNA Area:,213.5068,
+RNA Concentration:,134.3785,ng/µl
+rRNA Ratio [28s / 18s]:,2.002507,
+RNA Integrity Number (RIN):,10   (B.02.08),
+Result Flagging Color:,16768991,
+Result Flagging Label:,RIN:10,
+ 
+Sample Name,nemb_D
+ 
+Peak Table
+Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
+2.9,0.9,27.30,2.5,0.7
+54.7,25.9,42.36,51.0,2.0
+3.4,1.7,44.33,2.3,1.0
+4.2,2.1,45.31,2.8,0.8
+2.6,1.3,46.03,2.5,0.7
+3.0,1.6,46.97,2.6,0.8
+7.2,3.9,48.36,4.1,1.2
+124.7,69.3,49.80,64.3,3.4
+11.0,6.4,52.57,4.0,2.6
+ 
+Fragment Table
+Name,Start Time [s],End Time [s],Area,% of total Area
+18S,41.01,43.48,53.1,22.3
+28S,48.68,52.04,104.3,43.8
+ 
+Overall Results:
+RNA Area:,237.8844,
+RNA Concentration:,149.7215,ng/µl
+rRNA Ratio [28s / 18s]:,1.963293,
+RNA Integrity Number (RIN):,10   (B.02.08),
+Result Flagging Color:,16768991,
+Result Flagging Label:,RIN:10,
+ 
+Sample Name,oapg_A
+ 
+Peak Table
+Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
+2.3,0.7,27.32,2.0,0.8
+43.8,20.8,42.41,41.7,1.9
+2.3,1.2,44.38,1.7,1.0
+3.7,1.9,45.36,2.1,1.0
+1.8,0.9,46.07,1.8,0.7
+2.2,1.1,46.96,2.0,0.8
+5.5,3.0,48.39,3.2,1.2
+100.9,56.3,49.78,57.8,3.1
+9.1,5.4,52.72,3.4,2.6
+ 
+Fragment Table
+Name,Start Time [s],End Time [s],Area,% of total Area
+18S,41.61,43.57,42.0,21.7
+28S,48.66,52.05,86.4,44.5
+ 
+Overall Results:
+RNA Area:,193.9448,
+RNA Concentration:,122.0664,ng/µl
+rRNA Ratio [28s / 18s]:,2.055536,
+RNA Integrity Number (RIN):,10   (B.02.08),
+Result Flagging Color:,16768991,
+Result Flagging Label:,RIN:10,
+ 
+Sample Name,oapg_B
+ 
+Peak Table
+Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
+2.7,0.8,27.32,2.3,0.8
+55.4,26.3,42.32,50.5,2.0
+2.5,1.2,44.29,1.8,0.9
+5.1,2.6,45.27,2.7,1.1
+2.5,1.3,45.98,2.4,0.7
+2.6,1.4,46.88,2.5,0.8
+7.8,4.2,48.30,4.2,1.3
+132.9,74.1,49.73,69.0,3.3
+13.9,8.2,52.46,4.9,2.9
+ 
+Fragment Table
+Name,Start Time [s],End Time [s],Area,% of total Area
+18S,41.34,43.53,54.0,21.5
+28S,48.62,51.92,110.3,43.9
+ 
+Overall Results:
+RNA Area:,251.1084,
+RNA Concentration:,158.0445,ng/µl
+rRNA Ratio [28s / 18s]:,2.044373,
+RNA Integrity Number (RIN):,10   (B.02.08),
+Result Flagging Color:,16768991,
+Result Flagging Label:,RIN:10,
+ 
+Sample Name,oapg_C
+ 
+Peak Table
+Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
+15.8,7.4,42.40,16.8,1.3
+40.1,22.2,49.81,26.1,2.9
+3.3,1.9,52.41,1.7,1.2
+ 
+Fragment Table
+Name,Start Time [s],End Time [s],Area,% of total Area
+18S,41.63,43.52,16.6,20.9
+28S,48.68,52.14,37.3,46.9
+ 
+Overall Results:
+RNA Area:,79.53497,
+RNA Concentration:,50.05832,ng/µl
+rRNA Ratio [28s / 18s]:,2.248919,
+RNA Integrity Number (RIN):,10   (B.02.08),
+Result Flagging Color:,16768991,
+Result Flagging Label:,RIN:10,
+ 
+Sample Name,oapg_D
+ 
+Peak Table
+Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
+1.1,0.3,27.35,0.8,0.7
+31.8,14.8,42.28,31.0,1.8
+4.1,2.1,45.23,1.4,2.1
+1.1,0.6,45.95,1.3,0.6
+1.1,0.6,46.81,1.3,0.7
+3.4,1.8,48.22,2.1,1.2
+78.3,42.8,49.63,46.5,3.3
+7.0,4.0,52.44,2.9,1.6
+ 
+Fragment Table
+Name,Start Time [s],End Time [s],Area,% of total Area
+18S,41.46,43.41,30.8,20.4
+28S,48.58,51.94,69.8,46.3
+ 
+Overall Results:
+RNA Area:,150.6549,
+RNA Concentration:,94.8203,ng/µl
+rRNA Ratio [28s / 18s]:,2.267388,
+RNA Integrity Number (RIN):,10   (B.02.08),
+Result Flagging Color:,16768991,
+Result Flagging Label:,RIN:10,
+ 
+Sample Name,pelm_A
+ 
+Peak Table
+Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
+20.0,9.3,42.26,20.2,1.6
+1.5,0.7,45.27,0.7,1.3
+1.9,1.0,48.25,1.2,1.1
+50.4,27.3,49.62,29.0,2.8
+5.3,3.0,52.50,2.3,1.9
+ 
+Fragment Table
+Name,Start Time [s],End Time [s],Area,% of total Area
+18S,41.30,43.35,19.9,19.8
+28S,48.48,51.31,42.9,42.7
+ 
+Overall Results:
+RNA Area:,100.3739,
+RNA Concentration:,63.17408,ng/µl
+rRNA Ratio [28s / 18s]:,2.151806,
+RNA Integrity Number (RIN):,10   (B.02.08),
+Result Flagging Color:,16768991,
+Result Flagging Label:,RIN:10,
+ 
+Sample Name,pelm_B
+ 
+Peak Table
+Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
+0.9,0.3,27.35,0.7,0.6
+31.8,14.5,42.18,30.1,1.8
+3.8,1.8,45.14,1.2,2.1
+0.8,0.4,46.71,0.8,0.6
+3.5,1.8,48.00,2.1,1.2
+80.2,43.0,49.53,39.5,3.0
+11.6,6.5,52.21,4.4,2.5
+ 
+Fragment Table
+Name,Start Time [s],End Time [s],Area,% of total Area
+18S,41.26,43.29,31.0,19.3
+28S,48.47,51.61,65.2,40.6
+ 
+Overall Results:
+RNA Area:,160.6311,
+RNA Concentration:,101.0992,ng/µl
+rRNA Ratio [28s / 18s]:,2.105897,
+RNA Integrity Number (RIN):,10   (B.02.08),
+Result Flagging Color:,16768991,
+Result Flagging Label:,RIN:10,
+ 
+Sample Name,pelm_C
+ 
+Peak Table
+Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
+20.9,9.4,42.20,20.8,1.5
+0.4,0.2,43.60,0.6,0.5
+2.5,1.2,45.84,0.7,2.2
+1.9,1.0,48.03,1.3,1.1
+53.1,28.2,49.48,27.8,3.0
+7.0,3.9,52.05,2.8,2.0
+ 
+Fragment Table
+Name,Start Time [s],End Time [s],Area,% of total Area
+18S,41.36,43.32,20.3,21.5
+28S,48.36,51.54,43.8,46.3
+ 
+Overall Results:
+RNA Area:,94.59729,
+RNA Concentration:,59.53836,ng/µl
+rRNA Ratio [28s / 18s]:,2.150966,
+RNA Integrity Number (RIN):,10   (B.02.08),
+Result Flagging Color:,16768991,
+Result Flagging Label:,RIN:10,
+ 
+Sample Name,pelm_D
+ 
+Peak Table
+Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
+13.3,6.0,42.23,13.7,1.5
+0.4,0.2,43.59,0.5,0.5
+36.1,19.0,49.51,17.3,4.2
+5.6,3.1,51.95,2.5,1.8
+ 
+Fragment Table
+Name,Start Time [s],End Time [s],Area,% of total Area
+18S,41.57,43.26,12.9,18.5
+28S,48.48,51.53,27.0,38.9
+ 
+Overall Results:
+RNA Area:,69.41351,
+RNA Concentration:,43.688,ng/µl
+rRNA Ratio [28s / 18s]:,2.100087,
+RNA Integrity Number (RIN):,10   (B.02.08),
+Result Flagging Color:,16768991,
+Result Flagging Label:,RIN:10,
+ 
+Sample Name,Ladder
+ 
+Peak Table
+Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
+1.6,0.4,24.73,0.3,1.8
+0.9,0.3,26.82,0.3,0.8
+1.6,0.5,27.47,0.7,0.8
+34.9,10.8,28.87,20.7,2.2
+1.3,0.5,32.17,0.6,0.9
+46.5,16.5,33.01,28.3,1.7
+1.7,0.7,35.56,0.7,1.3
+0.6,0.2,36.03,0.7,0.4
+2.0,0.8,37.38,1.0,1.0
+27.3,11.2,38.07,19.3,1.8
+0.8,0.3,39.61,0.8,0.4
+0.6,0.3,39.98,0.8,0.3
+2.2,1.0,40.86,0.9,1.1
+1.8,0.8,41.75,1.1,0.8
+28.7,13.4,43.61,13.6,2.5
+1.0,0.5,45.05,0.9,0.6
+0.6,0.3,45.84,0.7,0.4
+2.0,1.0,46.72,1.2,1.0
+2.0,1.0,47.32,1.2,0.9
+45.0,24.5,50.67,11.9,4.5
+39.2,23.7,56.25,7.2,5.9
+0.5,0.3,60.11,0.7,0.5
+0.6,0.4,60.76,0.6,0.7
+ 
+Overall Results:
+RNA Area:,238.3269,
+RNA Concentration:,150,ng/µl
+Result Flagging Color:,16759715,
+Result Flagging Label:,All Other Samples,
