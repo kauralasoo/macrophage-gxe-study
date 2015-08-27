@@ -28,7 +28,6 @@ cqn_expressed = filtered_exprs_cqn[cqn_expressed_genes,]
 cor_matrix = cor(cqn_expressed, method = "spearman")
 heatmap.2(cor_matrix, margins = c(12,12))
 
-
 #Perform PCA
 tpm_z = zScoreNormalize(tpm_expressed)
 pca_list = performPCA(cqn_expressed, dataset$design)
@@ -50,3 +49,4 @@ de_results = res %>%
 
 #Save results to disk
 write.table(de_results, "results/acLDL/DE_genes.txt", sep= "\t", quote = FALSE, row.names = FALSE)
+write.table(filtered_exprs_cqn, "results/acLDL/expression_cqn_normalised.txt", sep = "\t", quote = FALSE)

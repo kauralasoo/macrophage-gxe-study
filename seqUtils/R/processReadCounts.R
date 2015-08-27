@@ -29,7 +29,7 @@ calculateCQN <- function(counts_matrix, gene_metadata){
   return(expression_norm)
 }
 
-loadCounts <- function(sample_dir, sample_names, counts_suffix = ".counts.txt", sub_dir = TRUE){
+loadCounts <- function(sample_dir, sample_names, counts_suffix = ".counts.txt", sub_dir = TRUE, n_comment_lines = 1){
   #Load featureCounts output into R
   matrix = c()
   for (i in c(1:length(sample_names))){
@@ -39,7 +39,7 @@ loadCounts <- function(sample_dir, sample_names, counts_suffix = ".counts.txt", 
       path = file.path(sample_dir, paste(sample_names[i], counts_suffix, sep = ""))      
     }
     print(sample_names[i])
-    table = read.table(path, header = TRUE)
+    table = as.data.frame(readr::read_tsv(path, skip = n_comment_lines, col_types = "cciicii"))
     print(head(table))
     if (i == 1){
       matrix = table[,c(1,6,7)]
