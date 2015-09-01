@@ -1,40 +1,7 @@
 library("rtracklayer")
 library("devtools")
 library("dplyr")
-load_all("../macrophage-gxe-study/macrophage-gxe-study/seqUtils/")
-
-loadNarrowPeaks <- function(sample_dir, sample_names, peaks_suffix = "_peaks.narrowPeak"){
-  #Import read counts per chromosome for each sample
-  result = list()
-  extraCols_narrowPeak <- c(signalValue = "numeric", pValue = "numeric", qValue = "numeric", peak = "integer")
-  for (i in c(1:length(sample_names))){
-    path = file.path(sample_dir, sample_names[i], paste(sample_names[i], peaks_suffix, sep = ""))
-    print(path)
-    peaks = rtracklayer::import(path, format = "BED", extraCols = extraCols_narrowPeak)
-    result[[sample_names[i]]] = peaks
-  }
-  return(result)
-}
-
-filterOverlaps <- function(peak_list, minOverlapCount = 3){
-  #For each set of peaks, find the ones that are present in at least minOverlapCount samples
-  result = list()
-  for (i in 1:length(peak_list)){
-    query_peaks = peak_list[[i]]
-    query_hits = c()
-    for (j in 1:length(peak_list)){
-      target_peaks = peak_list[[j]]
-      overlaps = findOverlaps(query_peaks, target_peaks)
-      unique_hits = unique(queryHits(overlaps))
-      query_hits = c(query_hits, unique_hits)
-    }
-    query_hits = table(query_hits)
-    query_hits = query_hits[query_hits >= minOverlapCount]
-    query_filtered = query_peaks[as.numeric(rownames(query_hits))]
-    result[i] = query_filtered
-  }
-  return(result)
-}
+load_all("../seqUtils/")
 
 #Find peaks in condition A
 cond_A_names = c("bima_A_ATAC","vass_A_ATAC","cicb_A_ATAC","eofe_A_ATAC")
