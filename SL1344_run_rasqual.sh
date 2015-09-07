@@ -65,8 +65,11 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>12000] rusage[mem=12000]" -q no
 grep -v "#" genotypes/SL1344/autosomes.snps_only.no_replicates.vcf | cut -f 1,2,3 > genotypes/SL1344/snp_coords.txt
 
 #Count SnpPerGene
-Rscript countsSnpsPerGene.R
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/countSnpsPerGene.%J.jobout "/software/R-3.1.2/bin/Rscript ~/software/utils/vcf/countsSnpsPerGene.R -s genotypes/SL1344/snp_coords.txt -e annotations/Homo_sapiens.GRCh38.79.gene_exon_start_end.filtered_genes.txt -c genotypes/SL1344/snps_per_gene.txt"
+
 
 #Run RASQUAL on a subset of genes
 echo "ENSG00000170458,ENSG00000166750,ENSG00000104689,ENSG00000109861" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname runRasqual --command  "python ~/software/utils/runRasqual.py --readCounts rasqual/input/counts/cond_A_counts.bin --offsets rasqual/input/counts/cond_A_factors.bin --n 59 --geneids rasqual/input/counts/gene_id_list.txt --vcf rasqual/input/ASE/SL1344_ASE_counts_condA.vcf.gz --geneMetadata rasqual/input/snp_counts.txt --featureCoords annotations/Homo_sapiens.GRCh38.79.gene_exon_start_end.txt > rasqual.out"
+
+echo "ENSG00000170458" | python ~/software/utils/runRasqual.py --readCounts rasqual/input/counts/cond_A_counts.bin --offsets rasqual/input/counts/cond_A_factors.bin --n 59 --geneids rasqual/input/counts/gene_id_list.txt --vcf rasqual/input/ASE/SL1344_ASE_counts_condA.vcf.gz --geneMetadata genotypes/SL1344/snps_per_gene.txt --execute True > rasqual.out3
 
