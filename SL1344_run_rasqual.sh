@@ -42,7 +42,7 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q norm
 #Construct genotype list
 cut -f1 SL1344_sg_map_A.txt > genotype_list.txt 
 
-#Extract only relevant genotypes from the vcf file
+#Extract only relevant genotypes from the vcf file (in the correct order)
 bcftools view -S rasqual/input/genotype_list.txt genotypes/SL1344/snps_only/auotsomes.snps_only.sorted.uniq.no_duplicates.vcf > genotypes/SL1344/autosomes.snps_only.no_replicates.vcf
 echo "hipsci.wec.gtarray.HumanCoreExome-12_v1_0.858samples.20141111.genotypes.GRCh38.sorted" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname filterVCF --command "python ~/software/utils/vcf/filterVcf.py  --sampleList rasqual/input/genotype_list.txt --MAF 0.05 --indir genotypes/GRCh38/genotyped/ --outdir genotypes/SL1344/ --execute True  --vcfSuffix .vcf.gz"
 
@@ -72,4 +72,19 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q norm
 echo "ENSG00000170458,ENSG00000166750,ENSG00000104689,ENSG00000109861" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname runRasqual --command  "python ~/software/utils/runRasqual.py --readCounts rasqual/input/counts/cond_A_counts.bin --offsets rasqual/input/counts/cond_A_factors.bin --n 59 --geneids rasqual/input/counts/gene_id_list.txt --vcf rasqual/input/ASE/SL1344_ASE_counts_condA.vcf.gz --geneMetadata rasqual/input/snp_counts.txt --featureCoords annotations/Homo_sapiens.GRCh38.79.gene_exon_start_end.txt > rasqual.out"
 
 echo "ENSG00000170458" | python ~/software/utils/runRasqual.py --readCounts rasqual/input/counts/cond_A_counts.bin --offsets rasqual/input/counts/cond_A_factors.bin --n 59 --geneids rasqual/input/counts/gene_id_list.txt --vcf rasqual/input/ASE/SL1344_ASE_counts_condA.vcf.gz --geneMetadata genotypes/SL1344/snps_per_gene.txt --execute True > rasqual.out3
+
+#VCAM1
+echo "ENSG00000162692" | python ~/software/utils/runRasqual.py --readCounts rasqual/input/counts/cond_A_counts.bin --offsets rasqual/input/counts/cond_A_factors.bin --n 59 --geneids rasqual/input/counts/gene_id_list.txt --vcf rasqual/input/ASE/SL1344_ASE_counts_condA.vcf.gz --geneMetadata genotypes/SL1344/snps_per_gene.txt --execute True > VCAM1.cond_A.rasqual
+echo "ENSG00000162692" | python ~/software/utils/runRasqual.py --readCounts rasqual/input/counts/cond_B_counts.bin --offsets rasqual/input/counts/cond_B_factors.bin --n 59 --geneids rasqual/input/counts/gene_id_list.txt --vcf rasqual/input/ASE/SL1344_ASE_counts_condB.vcf.gz --geneMetadata genotypes/SL1344/snps_per_gene.txt --execute True > VCAM1.cond_B.rasqual
+
+python ~/software/utils/rasqualToIGV.py --rasqualOut VCAM1.cond_A.rasqual --geneid ENSG00000162692 > VCAM1.cond_A.gwas
+python ~/software/utils/rasqualToIGV.py --rasqualOut VCAM1.cond_B.rasqual --geneid ENSG00000162692 > VCAM1.cond_B.gwas
+
+
+#CTSC
+echo "ENSG00000109861" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname runRasqual --command "python ~/software/utils/runRasqual.py --readCounts rasqual/input/counts/cond_A_counts.bin --offsets rasqual/input/counts/cond_A_factors.bin --n 59 --geneids rasqual/input/counts/gene_id_list.txt --vcf rasqual/input/ASE/SL1344_ASE_counts_condA.vcf.gz --geneMetadata genotypes/SL1344/snps_per_gene.txt --execute True > CTSC.cond_A.rasqual"
+echo "ENSG00000109861" |  python ~/software/utils/submitJobs.py --MEM 1000 --jobname runRasqual --command "python ~/software/utils/runRasqual.py --readCounts rasqual/input/counts/cond_B_counts.bin --offsets rasqual/input/counts/cond_B_factors.bin --n 59 --geneids rasqual/input/counts/gene_id_list.txt --vcf rasqual/input/ASE/SL1344_ASE_counts_condB.vcf.gz --geneMetadata genotypes/SL1344/snps_per_gene.txt --execute True > CTSC.cond_B.rasqual"
+
+python ~/software/utils/rasqualToIGV.py --rasqualOut CTSC.cond_A.rasqual --geneid ENSG00000109861 > CTSC.cond_A.gwas
+python ~/software/utils/rasqualToIGV.py --rasqualOut CTSC.cond_B.rasqual --geneid ENSG00000109861 > CTSC.cond_B.gwas
 
