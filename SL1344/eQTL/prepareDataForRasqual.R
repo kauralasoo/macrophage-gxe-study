@@ -3,12 +3,25 @@ library("dplyr")
 library("tidyr")
 library("devtools")
 library("GenomicFeatures")
-load_all("macrophage-gxe-study/seqUtils/")
+load_all("../seqUtils/")
+
 
 #Import data
 expression_dataset = readRDS("results/SL1344/combined_expression_data.rds") #expression data
 line_metadata = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds") %>% #Line metadata
   dplyr::filter(status == "Success")
+
+#Import and export exon start-end coords
+union_exon_coords = read.table("annotations/Homo_sapiens.GRCh38.79.gene_exon_start_end.txt", stringsAsFactors = FALSE)
+colnames(union_exon_coords) = c("gene_id", "exon_starts", "exon_ends")
+union_exon_coords = union_exon_coords[union_exon_coords$gene_id %in% expression_dataset$gene_metadata$gene_id,]
+gene_meta = dplyr::select(expression_dataset$gene_metadata, gene_id, chromosome_name, strand)
+union_exon_coords = dplyr::left_join(union_exon_coords, gene_meta, by = "gene_id") %>%
+  dplyr::arrange(chromosome_name) %>%
+  dplyr::select(gene_id, chromosome_name, strand, everything())
+
+write.table(union_exon_coords, "annotations/Homo_sapiens.GRCh38.79.gene_exon_start_end.filtered_genes.txt", 
+            sep = "\t", quote = FALSE, row.names = FALSE)
 
 #Make the design matrix
 design = dplyr::filter(expression_dataset$design, !(donor == "fpdj")) %>% tbl_df() %>% #Remove all fpdj samples (same as nibo)
