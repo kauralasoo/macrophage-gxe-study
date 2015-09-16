@@ -1,7 +1,8 @@
 library("MatrixEQTL")
 library("ggplot2")
 library("devtools")
-load_all("macrophage-gxe-study/seqUtils/")
+library("dplyr")
+load_all("../seqUtils/")
 
 #Load expresison dataset preapred previously by processExpressionData.R script
 expression_dataset = readRDS("results/SL1344/combined_expression_data.rds") #expression data
@@ -11,8 +12,18 @@ vcf_file = readRDS("genotypes/SL1344/array_genotypes.59_samples.vcfToMatrix.rds"
 #Discard replicate samples
 design = dplyr::filter(expression_dataset$design, !(donor == "fpdj")) %>% tbl_df() %>% #Remove all fpdj samples (same as nibo)
   dplyr::filter(!(donor == "fpdl" & replicate == 2)) %>% #Remove second fpdl sample (ffdp)
-  dplyr::filter(!(donor == "ougl" & replicate == 2)) #Remove second ougl sample (dium)
+  dplyr::filter(!(donor == "ougl" & replicate == 2)) %>% #Remove second ougl sample (dium)
+  dplyr::filter(!(donor == "mijn")) #Remove mijn (wrong line from CGAP)
 sample_meta = dplyr::left_join(design, line_metadata, by = c("donor", "replicate"))
+
+#Export data for PEER
+expressed_genes = names(which(rowMeans(exprs_cqn) > 0)) #Set conservative threshold to expression level
+exprs_cqn = expression_dataset$exprs_cqn[expressed_genes,design$sample_id]
+
+#Condition A
+cond_A_design = dplyr::filter(design, condition == "A")
+cond_A_exprs = t(exprs_cqn[,cond_A_design$sample_id])
+write.table(cond_A_exprs, "results/SL1344/cond_A_exprs.peer.txt", row.names = FALSE, col.names = FALSE, sep = ",")
 
 #Filter expression data by min expression
 exprs_cqn = expression_dataset$exprs_cqn[,design$sample_id]
