@@ -13,10 +13,13 @@ vcf_file = readRDS("genotypes/SL1344/array_genotypes.59_samples.vcfToMatrix.rds"
 design = dplyr::filter(expression_dataset$design, !(donor == "fpdj")) %>% tbl_df() %>% #Remove all fpdj samples (same as nibo)
   dplyr::filter(!(donor == "fpdl" & replicate == 2)) %>% #Remove second fpdl sample (ffdp)
   dplyr::filter(!(donor == "ougl" & replicate == 2)) %>% #Remove second ougl sample (dium)
-  dplyr::filter(!(donor == "mijn")) #Remove mijn (wrong line from CGAP)
+  dplyr::filter(!(donor == "mijn")) %>% #Remove mijn (wrong line from CGAP)
+  dplyr::filter(!(donor == "jorr")) #Very strong outlier in PEER analysis
+
 sample_meta = dplyr::left_join(design, line_metadata, by = c("donor", "replicate"))
 
 #Export data for PEER
+exprs_cqn = expression_dataset$exprs_cqn[,design$sample_id]
 expressed_genes = names(which(rowMeans(exprs_cqn) > 0)) #Set conservative threshold to expression level
 exprs_cqn = expression_dataset$exprs_cqn[expressed_genes,design$sample_id]
 
@@ -26,7 +29,6 @@ cond_A_exprs = t(exprs_cqn[,cond_A_design$sample_id])
 write.table(cond_A_exprs, "results/SL1344/cond_A_exprs.peer.txt", row.names = FALSE, col.names = FALSE, sep = ",")
 
 #Filter expression data by min expression
-exprs_cqn = expression_dataset$exprs_cqn[,design$sample_id]
 expressed_genes = names(which(rowMeans(exprs_cqn) > 0)) #Set conservative threshold to expression level
 exprs_sel = exprs_cqn[expressed_genes,]
 
