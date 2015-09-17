@@ -1,0 +1,114 @@
+---
+title: "Macrophage GxE study QC report"
+output:
+  html_document:
+    keep_md: yes
+---
+  
+```{r echo=FALSE}
+# This chunk contains some setup which we do not want to display in the final
+# document, hence `echo=FALSE` is used.
+# When you’re reading this document, it may be easier to ignore this chunk for
+# now, and continue with the document below, starting at “Introduction”
+ 
+# Make library loading silent
+library = function (...) suppressMessages(base::library(...))
+library("knitr")
+opts_knit$set(root.dir = '../../../')
+library("ggplot2")
+library("gplots")
+library("devtools")
+library("dplyr")
+load_all("../../../../seqUtils/")
+```
+
+Load expresison dataset preapred previously by processExpressionData.R script,
+```{r}
+expression_dataset = readRDS("results/SL1344/combined_expression_data.rds") #expression data
+line_metadata = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds") #Line metadata
+```
+
+Filter the design matrix,
+```{r}
+design = dplyr::filter(expression_dataset$design, !(donor == "fpdj")) %>% tbl_df() %>% #Remove all fpdj samples (same as nibo)
+  dplyr::filter(!(donor == "fpdl" & replicate == 2)) %>% #Remove second fpdl sample (ffdp)
+  dplyr::filter(!(donor == "ougl" & replicate == 2)) %>% #Remove second ougl sample (dium)
+  dplyr::filter(!(donor == "mijn")) %>% #Remove mijn (wrong line from CGAP)
+  dplyr::filter(!(donor == "jorr")) #Very strong outlier in PEER analysis
+sample_meta = dplyr::left_join(design, line_metadata, by = c("donor", "replicate"))
+line_meta = dplyr::filter(sample_meta, condition == "A")
+```
+
+Import PEER results
+```{r}
+peer_factors = read.table("results/SL1344/PEER/25_factors/factors.txt", sep =",")
+peer_factors = peer_factors[,2:ncol(peer_factors)]
+colnames(peer_factors) = paste("PEER_factor_", c(1:ncol(peer_factors)), sep = "")
+```
+
+Add PEER results to the sample metadata
+```{r}
+peer_factors_2 = dplyr::mutate(peer_factors, sample_id = line_meta$sample_id)
+expanded_meta = dplyr::left_join(line_meta, peer_factors_2, by = "sample_id")
+expanded_meta = dplyr::mutate(expanded_meta, RNAseq_auto = ifelse(chemistry == "V4_auto", "yes", "no"))
+```
+
+Look at the variation explained by each PEER factor,
+```{r}
+precisions = read.table("results/SL1344/PEER/25_factors/precision.txt", sep = ",")
+plot(1/precisions$V1)
+```
+
+Explore the correlation between PEER factors
+```{r, fig.width = 8, fig.height = 8}
+heatmap.2(cor(peer_factors), margins = c(10,10))
+```
+
+Identify which factors are most correlated with PEER factors
+```{r,fig.width = 8, fig.height = 6}
+covariates = dplyr::select(expanded_meta, mean_purity_filtered, ng_ul_mean, RNAseq_auto, diff_days, passage_diff)
+
+peer_explained = explainPEER(peer_factors[,1:5], covariates)
+peer_explained$peer_factor = factor(peer_explained$peer_factor, 
+                                    levels = paste("PEER_factor_", c(1:ncol(peer_factors)), sep = ""))
+ggplot(peer_explained, aes(x = peer_factor, y = covariate, fill = sqrt(r_squared))) + 
+  geom_tile() + 
+  scale_fill_gradient2(space = "Lab", low = scales::muted("blue"), 
+                       high = scales::muted("red"), midpoint = 0.4, name = "Correlation")
+```
+
+Make the same plot by excluding some of the purity outliers
+```{r, fig.width = 8, fig.height = 6}
+filter = expanded_meta$mean_purity_filtered > 0.95
+peer_explained = explainPEER(peer_factors[filter,1:5], covariates[filter,])
+peer_explained$peer_factor = factor(peer_explained$peer_factor, 
+                                    levels = paste("PEER_factor_", c(1:ncol(peer_factors)), sep = ""))
+ggplot(peer_explained, aes(x = peer_factor, y = covariate, fill = sqrt(r_squared))) + 
+  geom_tile() + 
+  scale_fill_gradient2(space = "Lab", low = scales::muted("blue"), 
+                       high = scales::muted("red"), midpoint = 0.4, name = "Correlation")
+```
+
+Visualize the RNA-Seq batch effect,
+```{r,fig.width = 8, fig.height = 6}
+ggplot(expanded_meta, aes(x = PEER_factor_1, y = PEER_factor_2, label = sample_id, color = RNAseq_auto)) + 
+  geom_point() + geom_text()
+```
+
+Visualize the purity effect with one outlier,
+```{r,fig.width = 8, fig.height = 6}
+ggplot(expanded_meta, aes(x = mean_purity_filtered, y = PEER_factor_1, label = sample_id)) + 
+  geom_point() + geom_text()
+```
+
+Remove bubh outlier,
+```{r,fig.width = 8, fig.height = 6}
+ggplot(dplyr::filter(expanded_meta, mean_purity_filtered > 0.9), aes(x = mean_purity_filtered, y = PEER_factor_1, label = sample_id)) + 
+  geom_point() + geom_text()
+```
+
+Correlation between factor 1 and RNA concentration
+```{r,fig.width = 8, fig.height = 6}
+ggplot(expanded_meta, aes(x = ng_ul_mean, y = PEER_factor_1, label = sample_id)) + geom_point() + geom_text()
+cor.test(as.numeric(factor(expanded_meta$ng_ul_mean)), expanded_meta$PEER_factor_1, method = "pearson")
+```
