@@ -20,6 +20,7 @@ library("gplots")
 library("devtools")
 library("dplyr")
 load_all("../../../../seqUtils/")
+load_all("../seqUtils/")
 ```
 
 Load expresison dataset preapred previously by processExpressionData.R script,
@@ -56,7 +57,8 @@ expanded_meta = dplyr::mutate(expanded_meta, RNAseq_auto = ifelse(chemistry == "
 Look at the variation explained by each PEER factor,
 ```{r}
 precisions = read.table("results/SL1344/PEER/25_factors/precision.txt", sep = ",")
-plot(1/precisions$V1)
+precisions_vec = precisions$V1[2:nrow(precisions)]
+plot(1/precisions_vec)
 ```
 
 Explore the correlation between PEER factors
@@ -112,3 +114,39 @@ Correlation between factor 1 and RNA concentration
 ggplot(expanded_meta, aes(x = ng_ul_mean, y = PEER_factor_1, label = sample_id)) + geom_point() + geom_text()
 cor.test(as.numeric(factor(expanded_meta$ng_ul_mean)), expanded_meta$PEER_factor_1, method = "pearson")
 ```
+
+#Factors detected in Salmonella condition
+```{r}
+precisions = read.table("results/SL1344/PEER/25_factors_cond_C/precision.txt", sep = ",")
+precisions_vec = precisions$V1[2:nrow(precisions)]
+plot(1/precisions_vec)
+```
+
+Import PEER results
+```{r}
+peer_factors = read.table("results/SL1344/PEER/25_factors_cond_C/factors.txt", sep =",")
+peer_factors = peer_factors[,2:ncol(peer_factors)]
+colnames(peer_factors) = paste("PEER_factor_", c(1:ncol(peer_factors)), sep = "")
+```
+
+Add PEER results to the sample metadata
+```{r}
+peer_factors_2 = dplyr::mutate(peer_factors, sample_id = line_meta$sample_id)
+expanded_meta = dplyr::left_join(line_meta, peer_factors_2, by = "sample_id")
+expanded_meta = dplyr::mutate(expanded_meta, RNAseq_auto = ifelse(chemistry == "V4_auto", "yes", "no"))
+```
+
+ggplot(expanded_meta, aes(x = PEER_factor_1, y = PEER_factor_2, label = sample_id, color = RNAseq_auto)) + 
+  geom_point() + geom_text()
+  
+Remove bubh outlier,
+```{r,fig.width = 8, fig.height = 6}
+ggplot(dplyr::filter(expanded_meta, mean_purity_filtered > 0.9), aes(x = mean_purity_filtered, y = PEER_factor_1, label = sample_id)) + 
+  geom_point() + geom_text()
+```
+
+```{r,fig.width = 8, fig.height = 6}
+ggplot(expanded_meta, aes(x = RNAseq_auto, y = PEER_factor_3, label = sample_id, color = RNAseq_auto)) + 
+  geom_point() + geom_text()
+```
+

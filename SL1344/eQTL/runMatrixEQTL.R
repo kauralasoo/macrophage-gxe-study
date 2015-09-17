@@ -28,6 +28,11 @@ cond_A_design = dplyr::filter(design, condition == "A")
 cond_A_exprs = t(exprs_cqn[,cond_A_design$sample_id])
 write.table(cond_A_exprs, "results/SL1344/cond_A_exprs.peer.txt", row.names = FALSE, col.names = FALSE, sep = ",")
 
+#Condition C
+cond_C_design = dplyr::filter(design, condition == "C")
+cond_C_exprs = t(exprs_cqn[,cond_C_design$sample_id])
+write.table(cond_C_exprs, "results/SL1344/PEER/cond_C_exprs.peer.txt", row.names = FALSE, col.names = FALSE, sep = ",")
+
 #Filter expression data by min expression
 expressed_genes = names(which(rowMeans(exprs_cqn) > 0)) #Set conservative threshold to expression level
 exprs_sel = exprs_cqn[expressed_genes,]
