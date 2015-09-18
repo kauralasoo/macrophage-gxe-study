@@ -5,6 +5,7 @@ import os
 
 parser = argparse.ArgumentParser(description = "Apply PEER to a gene expression matrix.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--input", help = "Path to the input matrix.")
+parser.add_argument("--covariates", help = "Path to the covariates matrix.", default = None)
 parser.add_argument("--outdir", help = "Directory of the output files.")
 parser.add_argument("--n_factors", help = "Number of hidden factors to detect.", type=int)
 
@@ -22,6 +23,11 @@ model = peer.PEER()
 model.setPhenoMean(expr)
 model.setAdd_mean(True)
 
+#Add covariates
+if args.covariates != None:
+	covs = scipy.loadtxt(args.covariates, delimiter = ",")
+	model.setCovariates(covs)
+	
 #Set the number of hidden factors
 model.setNk(args.n_factors)
 model.update()

@@ -86,7 +86,9 @@ cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_names_all.txt | gre
 
 #Run PEER on condition A dataset
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>2000] rusage[mem=2000]" -q normal -M 2000 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/cond_A_exprs.peer.txt --outdir results/SL1344/PEER/15_factors/ --n_factors 15"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/cond_A_exprs.peer.txt --outdir results/SL1344/PEER/10_factors_condA/ --n_factors 10"
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/cond_A_exprs.peer.txt --outdir results/SL1344/PEER/25_factors/ --n_factors 25"
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/cond_C_exprs.peer.txt --outdir results/SL1344/PEER/25_factors_cond_C/ --n_factors 15"
+
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/complete_exprs.peer.txt --covariates results/SL1344/PEER/covariates.peer.txt --outdir results/SL1344/PEER/12_factors_all/ --n_factors 12"
 
