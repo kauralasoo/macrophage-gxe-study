@@ -10,44 +10,13 @@ line_metadata = readRDS("macrophage-gxe-study/data/covariates/compiled_line_meta
 vcf_file = readRDS("genotypes/SL1344/array_genotypes.59_samples.vcfToMatrix.rds") #genotypes
 gene_id_name_map = dplyr::select(expression_dataset$gene_metadata, gene_id, gene_name)
 
-
 #Discard replicate samples
 design = dplyr::filter(expression_dataset$design, !(donor == "fpdj")) %>% tbl_df() %>% #Remove all fpdj samples (same as nibo)
   dplyr::filter(!(donor == "fpdl" & replicate == 2)) %>% #Remove second fpdl sample (ffdp)
   dplyr::filter(!(donor == "ougl" & replicate == 2)) %>% #Remove second ougl sample (dium)
   dplyr::filter(!(donor == "mijn")) #%>% #Remove mijn (wrong line from CGAP)
   #dplyr::filter(!(donor == "jorr")) #Very strong outlier in PEER analysis
-
 sample_meta = dplyr::left_join(design, line_metadata, by = c("donor", "replicate"))
-
-#Export data for PEER
-exprs_cqn = expression_dataset$exprs_cqn[,design$sample_id]
-expressed_genes = names(which(rowMeans(exprs_cqn) > 0)) #Set conservative threshold to expression level
-exprs_cqn = expression_dataset$exprs_cqn[expressed_genes,design$sample_id]
-
-#Condition A
-cond_A_design = dplyr::filter(design, condition == "A")
-cond_A_exprs = t(exprs_cqn[,cond_A_design$sample_id])
-write.table(cond_A_exprs, "results/SL1344/PEER/cond_A_exprs.peer.txt", row.names = FALSE, col.names = FALSE, sep = ",")
-
-#Condition C
-cond_C_design = dplyr::filter(design, condition == "C")
-cond_C_exprs = t(exprs_cqn[,cond_C_design$sample_id])
-write.table(cond_C_exprs, "results/SL1344/PEER/cond_C_exprs.peer.txt", row.names = FALSE, col.names = FALSE, sep = ",")
-
-#Try to use PEER with all of the data and covariates
-complete_expression = t(exprs_cqn[,sample_meta$sample_id])
-write.table(complete_expression, "results/SL1344/PEER/complete_exprs.peer.txt", row.names = FALSE, col.names = FALSE, sep = ",")
-
-#Construct covariate matrix
-covariates = dplyr::mutate(sample_meta, ifng = ifelse(condition == "B", 1, 0)) %>% 
-  dplyr::mutate(sl1344 = ifelse(condition == "C", 1, 0)) %>%
-  dplyr::mutate(ifng_sl1344 = ifelse(condition == "D",1,0)) %>%
-  dplyr::mutate(sex = ifelse(gender == "male",1,0)) %>%
-  dplyr::select(sample_id, ifng, sl1344, ifng_sl1344, sex)
-
-write.table(covariates[,-1], "results/SL1344/PEER/covariates.peer.txt", row.names = FALSE, col.names = FALSE, sep = ",")
-
 
 #Filter expression data by min expression
 expressed_genes = names(which(rowMeans(exprs_cqn) > 0)) #Set conservative threshold to expression level
@@ -68,6 +37,13 @@ genepos = dplyr::filter(expression_dataset$gene_metadata, gene_id %in% expressed
   dplyr::transmute(geneid = gene_id, chr = chromosome_name, left = start_position, right = end_position) %>%
   as.data.frame()
 
+#Construct covariate matrix
+covariates = dplyr::mutate(sample_meta, ifng = ifelse(condition == "B", 1, 0)) %>% 
+  dplyr::mutate(sl1344 = ifelse(condition == "C", 1, 0)) %>%
+  dplyr::mutate(ifng_sl1344 = ifelse(condition == "D",1,0)) %>%
+  dplyr::mutate(sex = ifelse(gender == "male",1,0)) %>%
+  dplyr::select(sample_id, ifng, sl1344, ifng_sl1344, sex)
+
 #Set up covariates
 covs = as.data.frame(covariates)
 rownames(covs) = covs$sample_id
@@ -75,12 +51,12 @@ covs = covs[sample_meta_filtered$sample_id,]
 rownames(covs) = sample_meta_filtered$donor
 
 #USE PCs as covariates
-condA_exp = qtlProcessExpression(dplyr::filter(sample_meta, condition == "A"), exprs_sel, remove_n_pcs = 0)
+condA_exp = qtlProcessExpression(dplyr::filter(sample_meta, condition == "A"), exprs_sel)
 pca = prcomp(condA_exp)
 pca_covs = pca$rotation[,1:5]
 final_covs = t(cbind(covs, pca_covs)[,-c(1:4)])
 
-condA_res_cov = runMatrixEQTL(condA_exp, geno_data, vcf_file$snpspos, genepos, covariates = final_covs)
+condA_res_cov = runMatrixEQTL(condA_exp[,-32], geno_data[,-32], vcf_file$snpspos, genepos, covariates = final_covs[,-32])
 results_cov = filterEQTLs(condA_res_cov$cis$eqtls, gene_id_name_map = gene_id_name_map, fdr_cutoff = 0.1)
 dim(results_cov)
 plot(condA_res_cov)

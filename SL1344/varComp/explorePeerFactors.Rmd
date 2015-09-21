@@ -34,8 +34,8 @@ Filter the design matrix,
 design = dplyr::filter(expression_dataset$design, !(donor == "fpdj")) %>% tbl_df() %>% #Remove all fpdj samples (same as nibo)
   dplyr::filter(!(donor == "fpdl" & replicate == 2)) %>% #Remove second fpdl sample (ffdp)
   dplyr::filter(!(donor == "ougl" & replicate == 2)) %>% #Remove second ougl sample (dium)
-  dplyr::filter(!(donor == "mijn")) %>% #Remove mijn (wrong line from CGAP)
-  dplyr::filter(!(donor == "jorr")) #Very strong outlier in PEER analysis
+  dplyr::filter(!(donor == "mijn")) #%>% #Remove mijn (wrong line from CGAP)
+  #dplyr::filter(!(donor == "jorr")) #Very strong outlier in PEER analysis
 sample_meta = dplyr::left_join(design, line_metadata, by = c("donor", "replicate"))
 line_meta = dplyr::filter(sample_meta, condition == "A")
 ```
