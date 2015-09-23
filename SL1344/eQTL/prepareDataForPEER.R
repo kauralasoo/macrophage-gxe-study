@@ -24,44 +24,54 @@ exprs_cqn = exprs_cqn_all[expressed_genes,design$sample_id]
 #Export the design matrix to add sample names to the PEER data factors afterwards
 saveRDS(design, "results/SL1344/PEER/input/design_matrix.rds")
 
+#Construct separate design matrices
+cond_A_design = dplyr::filter(design, condition == "A")
+cond_B_design = dplyr::filter(design, condition == "B")
+cond_C_design = dplyr::filter(design, condition == "C")
+cond_D_design = dplyr::filter(design, condition == "D")
+
 #### Save only expessed genes ####
 #Condition A
-cond_A_design = dplyr::filter(design, condition == "A")
 cond_A_exprs = t(exprs_cqn[,cond_A_design$sample_id])
 write.table(cond_A_exprs, "results/SL1344/PEER/input/cond_A_exprs.txt", row.names = FALSE, col.names = FALSE, sep = ",")
 
 #Condition B
-cond_B_design = dplyr::filter(design, condition == "B")
 cond_B_exprs = t(exprs_cqn[,cond_B_design$sample_id])
 write.table(cond_B_exprs, "results/SL1344/PEER/input/cond_B_exprs.txt", row.names = FALSE, col.names = FALSE, sep = ",")
 
 #Condition C
-cond_C_design = dplyr::filter(design, condition == "C")
 cond_C_exprs = t(exprs_cqn[,cond_C_design$sample_id])
 write.table(cond_C_exprs, "results/SL1344/PEER/input/cond_C_exprs.txt", row.names = FALSE, col.names = FALSE, sep = ",")
 
 #Condition D
-cond_D_design = dplyr::filter(design, condition == "D")
 cond_D_exprs = t(exprs_cqn[,cond_D_design$sample_id])
 write.table(cond_D_exprs, "results/SL1344/PEER/input/cond_D_exprs.txt", row.names = FALSE, col.names = FALSE, sep = ",")
 
 #### Save all genes ####
 #Condition A
-cond_A_design = dplyr::filter(design, condition == "A")
 cond_A_exprs = t(exprs_cqn_all[,cond_A_design$sample_id])
 write.table(cond_A_exprs, "results/SL1344/PEER/input/cond_A_exprs.all_genes.txt", row.names = FALSE, col.names = FALSE, sep = ",")
 
 #Condition B
-cond_B_design = dplyr::filter(design, condition == "B")
 cond_B_exprs = t(exprs_cqn_all[,cond_B_design$sample_id])
 write.table(cond_B_exprs, "results/SL1344/PEER/input/cond_B_exprs.all_genes.txt", row.names = FALSE, col.names = FALSE, sep = ",")
 
 #Condition C
-cond_C_design = dplyr::filter(design, condition == "C")
 cond_C_exprs = t(exprs_cqn_all[,cond_C_design$sample_id])
 write.table(cond_C_exprs, "results/SL1344/PEER/input/cond_C_exprs.all_genes.txt", row.names = FALSE, col.names = FALSE, sep = ",")
 
 #Condition D
-cond_D_design = dplyr::filter(design, condition == "D")
 cond_D_exprs = t(exprs_cqn_all[,cond_D_design$sample_id])
 write.table(cond_D_exprs, "results/SL1344/PEER/input/cond_D_exprs.all_genes.txt", row.names = FALSE, col.names = FALSE, sep = ",")
+
+
+#Import PEER results back into R
+cond_A_factors = importPEERFactors("results/SL1344/PEER/expressed_A_10/factors.txt", cond_A_design)
+cond_B_factors = importPEERFactors("results/SL1344/PEER/expressed_B_10/factors.txt", cond_B_design)
+cond_C_factors = importPEERFactors("results/SL1344/PEER/expressed_C_10/factors.txt", cond_C_design)
+cond_D_factors = importPEERFactors("results/SL1344/PEER/expressed_D_10/factors.txt", cond_D_design)
+
+peer_factors = rbind(cond_A_factors,cond_B_factors, cond_C_factors, cond_D_factors) %>%
+  dplyr::semi_join(design, by = "sample_id")
+saveRDS(peer_factors, "results/SL1344/PEER/expressed_10_factors.rds")
+
