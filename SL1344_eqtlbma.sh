@@ -15,3 +15,8 @@ zcat eqtlbma/output/subset_test_eqtlbma_hm_txt.gz | grep "#config" | awk '{split
 zcat eqtlbma/output/subset_test_eqtlbma_hm_txt.gz | grep "#grid" | cut -f2 > eqtlbma/output/subset_test_grid_weights.txt
 
 eqtlbma_avg_bfs --in eqtlbma/output/subset_test_l10abfs_raw.txt.gz --gwts eqtlbma/output/subset_test_grid_weights.txt --nsubgrp 4 --dim 15 --cwts eqtlbma/output/subset_test_config_weights.txt --save bf+post --pi0 0.783629 --post a+b+c+d --bestdim --alldim --out eqtlbma/output/out_eqtlbma_avg_bfs.txt.gz --thread 1
+
+
+#Run eqtlbma with covariates
+#Compute bayes factors for each SNP/gene pair
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>4000] rusage[mem=4000]" -q normal -M 4000 -o FarmOut/eqtlbma_bf.%J.jobout "eqtlbma_bf --geno eqtlbma/input/list.genotypes.txt --scoord eqtlbma/input/snp_coords.bed.gz --exp eqtlbma/input/list.expression.txt --gcoord eqtlbma/gene_coords.subset.sort.bed --anchor TSS --cis 500000 --out eqtlbma/output/out_eqtlbma --analys join --covar eqtlbma/input/list.covariates.txt --gridL eqtlbma/grid_phi2_oma2_general.txt  --gridS eqtlbma/grid_phi2_oma2_with-configs.txt --bfs all --error mvlr -v 3"

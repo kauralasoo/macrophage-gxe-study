@@ -110,4 +110,5 @@ write.table(geno_data, "eqtlbma/input/genotypes.txt", sep ="\t", quote = FALSE)
 peer_factors = read.table("results/SL1344/PEER/expressed_B_10/factors.txt", sep =",")
 peer_factors2 = read.table("results/SL1344/PEER/all_B_10/factors.txt", sep =",")
 
+expression_list = list(naive = condA_exp, IFNg = condB_exp, SL1344 = condC_exp, IFNg_SL1344 = condC_exp)
 
