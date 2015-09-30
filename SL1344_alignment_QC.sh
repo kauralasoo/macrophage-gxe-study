@@ -97,6 +97,8 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/input/cond_C_exprs.all_genes.txt  --outdir results/SL1344/PEER/all_C_10/ --n_factors 10"
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/input/cond_D_exprs.all_genes.txt  --outdir results/SL1344/PEER/all_D_10/ --n_factors 10"
 
+#Convert VCF file into a matrix of genotype doses
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>32000] rusage[mem=32000]" -q hugemem -M 32000 -o FarmOut/importVCF.%J.jobout "/software/R-3.1.2/bin/Rscript macrophage-gxe-study/SL1344/eQTL/matrixeQTL_import_vcf.R"
 
 
 
