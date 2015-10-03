@@ -31,7 +31,8 @@ python ~/software/utils/eqtlbma/merge_eqtlbma_bf.py --geneBatches eqtlbma/input/
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>12000] rusage[mem=12000]" -q normal -M 12000 -o FarmOut/eqtlbma_hm.%J.jobout "python ~/software/utils/eqtlbma/run_eqtlbma_hm.py --workdir eqtlbma/output/ --outprefix eqtlbma_batched --nsubgrp 4 --dim 15"
 
 #Run the EBF procedure
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>8000] rusage[mem=8000]" -q normal -M 8000 -o FarmOut/eqtlbma_EBF.%J.jobout "eqtlbma_avg_bfs --in 'eqtlbma/output/out_eqtlbma_full_l10abfs_raw.txt.gz' --gwts eqtlbma/output/out_eqtlbma_full_grid_weights.txt --nsubgrp 4 --dim 15 --cwts eqtlbma/output/out_eqtlbma_full_config_weights.txt --save bf --out eqtlbma/output/out_eqtlbma_avg_bfs_genes.txt.gz"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>12000] rusage[mem=12000]" -q normal -M 12000 -o FarmOut/eqtlbma_EBF.%J.jobout "python ~/software/utils/eqtlbma/run_eqtlbma_avg_bfs.py --workdir eqtlbma/output/ --outprefix eqtlbma_batched --nsubgrp 4 --dim 15 --mode ebf"
 
 #Calculate average BFS over configurations
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>8000] rusage[mem=8000]" -q normal -M 8000 -o FarmOut/eqtlbma_avg_bfs.%J.jobout "eqtlbma_avg_bfs --in 'eqtlbma/output/out_eqtlbma_full_l10abfs_raw.txt.gz' --gwts eqtlbma/output/out_eqtlbma_full_grid_weights.txt --nsubgrp 4 --dim 15 --cwts eqtlbma/output/out_eqtlbma_full_config_weights.txt --save bf+post --pi0 0.6673715 --post a+b+c+d --bestdim --alldim --out eqtlbma/output/out_eqtlbma_avg_bfs.txt.gz --thread 1"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>12000] rusage[mem=12000]" -q normal -M 12000 -o FarmOut/eqtlbma_avg_bfs.%J.jobout "python ~/software/utils/eqtlbma/run_eqtlbma_avg_bfs.py --workdir eqtlbma/output/ --outprefix eqtlbma_batched --nsubgrp 4 --dim 15 --mode post --pi0 0.655"
+
