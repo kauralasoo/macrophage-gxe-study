@@ -86,16 +86,10 @@ cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_names_all.txt | gre
 
 #### PEER ####
 #Run PEER on each condition separately using only expressed genes
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/input/cond_A_exprs.txt  --outdir results/SL1344/PEER/expressed_A_10/ --n_factors 10"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/input/cond_B_exprs.txt  --outdir results/SL1344/PEER/expressed_B_10/ --n_factors 10"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/input/cond_C_exprs.txt  --outdir results/SL1344/PEER/expressed_C_10/ --n_factors 10"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/input/cond_D_exprs.txt  --outdir results/SL1344/PEER/expressed_D_10/ --n_factors 10"
-
-#Run PEER on each condition separately using all genes
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/input/cond_A_exprs.all_genes.txt  --outdir results/SL1344/PEER/all_A_10/ --n_factors 10"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/input/cond_B_exprs.all_genes.txt  --outdir results/SL1344/PEER/all_B_10/ --n_factors 10"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/input/cond_C_exprs.all_genes.txt  --outdir results/SL1344/PEER/all_C_10/ --n_factors 10"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/input/cond_D_exprs.all_genes.txt  --outdir results/SL1344/PEER/all_D_10/ --n_factors 10"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/input/naive.exprs.txt --outdir results/SL1344/PEER/naive_10/ --n_factors 10"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/input/IFNg.exprs.txt --outdir results/SL1344/PEER/IFNg_10/ --n_factors 10"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/input/SL1344.exprs.txt --outdir results/SL1344/PEER/SL1344_10/ --n_factors 10"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python macrophage-gxe-study/SL1344/eQTL/runPEER.py --input results/SL1344/PEER/input/IFNg_SL1344.exprs.txt --outdir results/SL1344/PEER/IFNg_SL1344_10/ --n_factors 10"
 
 #Convert VCF file into a matrix of genotype doses
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>64000] rusage[mem=64000]" -q hugemem -M 64000 -o FarmOut/importVCF.%J.jobout "/software/R-3.1.2/bin/Rscript macrophage-gxe-study/SL1344/eQTL/matrixeQTL_import_vcf.R"
