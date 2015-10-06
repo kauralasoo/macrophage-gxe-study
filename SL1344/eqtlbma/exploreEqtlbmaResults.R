@@ -4,7 +4,7 @@ library("devtools")
 load_all("../seqUtils/")
 library("ggplot2")
 load_all("macrophage-gxe-study/housekeeping/")
-
+library("tidyr")
 
 #Load the raw eQTL dataset
 eqtl_data_list = readRDS("results/SL1344/eqtl_data_list.rds")
@@ -63,16 +63,65 @@ interaction_plots = makeMultiplePlots(interaction_qtls, expression_dataset, vcf_
 savePlots(interaction_plots, path = "results/SL1344/eqtlbma/interaction_plots/",width = 7, height = 7)
 write.table(interaction_qtls, "results/SL1344/interaction_qtl_results.txt", quote = FALSE, sep = "\t")
 
+#Explore the raw BFs and not posteriors
+a = results %>% tbl_df() %>% 
+  dplyr::rename(gene_id = gene, snp_id = snp) %>% 
+  dplyr::semi_join(significant_genes, by = c("gene_id"))
+filtered_results = dplyr::semi_join(a, significant_genes, by = c("gene_id","snp_id")) %>% 
+  dplyr::select(gene_id, snp_id, log10.bf.1.2.3, log10.bf.1.2, log10.bf.2.3,log10.bf.1.2.3.4,log10.bf.1.4,log10.bf.3.4, log10.bf.4,log10.bf.2,log10.bf.1.3.4) %>%
+  dplyr::left_join(gene_id_name_map, by = "gene_id") %>%
+  dplyr::select(gene_id, gene_name, snp_id, everything()) %>%
+  dplyr::semi_join(interaction_qtls, by = "gene_id")
 
-#Extract genotype effect sizes
-interaction_coeficients = ldply(res,function(x){x$interaction_model$coefficients[c(2,13,14,15)]},.id = "gene_id")
-rownames(interaction_coeficients) = interaction_coeficients$gene_id
-interaction_coeficients = interaction_coeficients[,-1]
-interaction_coeficients = cbind(interaction_coeficients[,1],interaction_coeficients[,2:4]+interaction_coeficients[,1])
+#Find the best configuration for each gene
+config_labels = data_frame(best_config_index = c(1,2,3,4,5,6,7,8,9), 
+                           best_config = c("Both", "IFNg", "Salmonella", "Shared", "not_Salmonella", "not_IFNg","not_Both","Synergistic","not_Synergistic"))
+best_config = dplyr::mutate(filtered_results, best_config_index = apply(filtered_results[,4:12],1, which.max)) %>%
+  dplyr::left_join(config_labels, by = "best_config_index")
 
+#Count different types of eQTLs
+config_counts = dplyr::group_by(best_config, best_config) %>% 
+  dplyr::summarise(config_count = length(best_config)) %>% 
+  dplyr::mutate(mode = c(rep("appeared",5), rep("disappeared",4))) %>% 
+  dplyr::mutate(mode = ifelse(best_config == "Shared", "shared", mode))
+config_count_plot = ggplot(config_counts, aes(x = best_config, y = config_count)) + 
+  geom_bar(stat = "identity") + 
+  facet_grid(~mode, scales = "free_x", space = "free_x")
+ggsave("results/SL1344/eqtlbma/config_counts.png",plot = config_count_plot, width = 8, height = 6)
 
-interaction_qtls = dplyr::filter(interaction_df,interaction_fdr < 0.001)
-selected = interaction_coeficients[interaction_qtls$gene_id,]
-rownames(selected) = interaction_qtls$gene_name
-heatmap.2(cor(t(zScoreNormalize(abs(selected))), method = "pearson"), tracecol = NA)
+#Make plots for each config
+dplyr::filter(best_config, best_config == "Inflammatory") %>%
+  makeMultiplePlots(.,expression_dataset, vcf_file, line_metadata) %>%
+  savePlots(.,path = "results/SL1344/eqtlbma/two-step/Inflammatory/",width = 7, height = 7)
 
+dplyr::filter(best_config, best_config == "IFNg") %>%
+  makeMultiplePlots(.,expression_dataset, vcf_file, line_metadata) %>%
+  savePlots(.,path = "results/SL1344/eqtlbma/two-step/IFNg/",width = 7, height = 7)
+
+dplyr::filter(best_config, best_config == "SL1344") %>%
+  makeMultiplePlots(.,expression_dataset, vcf_file, line_metadata) %>%
+  savePlots(.,path = "results/SL1344/eqtlbma/two-step/SL1344/",width = 7, height = 7)
+
+dplyr::filter(best_config, best_config == "Shared") %>%
+  makeMultiplePlots(.,expression_dataset, vcf_file, line_metadata) %>%
+  savePlots(.,path = "results/SL1344/eqtlbma/two-step/Shared/",width = 7, height = 7)
+
+dplyr::filter(best_config, best_config == "not_SL1344") %>%
+  makeMultiplePlots(.,expression_dataset, vcf_file, line_metadata) %>%
+  savePlots(.,path = "results/SL1344/eqtlbma/two-step/not_SL1344/",width = 7, height = 7)
+
+dplyr::filter(best_config, best_config == "not_IFNg") %>%
+  makeMultiplePlots(.,expression_dataset, vcf_file, line_metadata) %>%
+  savePlots(.,path = "results/SL1344/eqtlbma/two-step/not_IFNg/",width = 7, height = 7)
+
+dplyr::filter(best_config, best_config == "naive") %>%
+  makeMultiplePlots(.,expression_dataset, vcf_file, line_metadata) %>%
+  savePlots(.,path = "results/SL1344/eqtlbma/two-step/naive/",width = 7, height = 7)
+
+dplyr::filter(best_config, best_config == "IFNg_SL1344") %>%
+  makeMultiplePlots(.,expression_dataset, vcf_file, line_metadata) %>%
+  savePlots(.,path = "results/SL1344/eqtlbma/two-step/IFNg_SL1344/",width = 7, height = 7)
+
+dplyr::filter(best_config, best_config == "not_IFNg_SL1344") %>%
+  makeMultiplePlots(.,expression_dataset, vcf_file, line_metadata) %>%
+  savePlots(.,path = "results/SL1344/eqtlbma/two-step/not_IFNg_SL1344/",width = 7, height = 7)
