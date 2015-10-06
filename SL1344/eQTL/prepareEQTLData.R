@@ -85,11 +85,14 @@ covariates_list = list(naive = condA_covs, IFNg = condB_covs, SL1344 = condC_cov
 #Construct a single dataset object that can be reused by many different analysis
 eqtl_dataset = list(
   exprs_cqn_list = exprs_cqn_list,
+  covariates_list = covariates_list,
   genepos = genepos,
   genotypes = geno_data,
   snpspos = vcf_file$snpspos,
-  covariates_list = covariates_list,
-  gene_metadata = expression_dataset$gene_metadata
+  gene_metadata = expression_dataset$gene_metadata,
+  sample_metadata = sample_meta,
+  covariates = t(peer_covariates),
+  exprs_cqn = exprs_cqn
   )
 saveRDS(eqtl_dataset, "results/SL1344/eqtl_data_list.rds")
 
