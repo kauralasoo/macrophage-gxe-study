@@ -2,10 +2,13 @@ library("devtools")
 library("dplyr")
 load_all("../seqUtils/")
 
+#Import genotype data from the VCF file
+vcf_file = vcfToMatrix("genotypes/SL1344/array_genotypes.59_samples.imputed.uniq.vcf", "GRCh38")
+saveRDS(vcf_file, "genotypes/SL1344/array_genotypes.59_samples.imputed.vcfToMatrix.rds")
+
 #Load the raw eQTL dataset
 expression_dataset = readRDS("results/SL1344/combined_expression_data.rds") #expression data
 line_metadata = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds") #Line metadata
-vcf_file = readRDS("genotypes/SL1344/array_genotypes.59_samples.vcfToMatrix.rds") #genotypes
 gene_id_name_map = dplyr::select(expression_dataset$gene_metadata, gene_id, gene_name)
 
 #Filter out some samples and discard replicates
@@ -102,7 +105,7 @@ saveRDS(eqtl_dataset, "results/SL1344/eqtl_data_list.rds")
 eqtlbma_dataset = eqtl_dataset
 eqtlbma_dataset$covariates_list = lapply(eqtl_dataset$covariates_list, function(x){x[1:7,]})
 #Save data for eqtlbma
-saveEqtlbmaData(eqtlbma_dataset, "eqtlbma/input", 
+saveEqtlbmaData(eqtlbma_dataset, "eqtlbma/input_imputed/", 
                 project_root = "/nfs/users/nfs_k/ka8/group-scratch/kaur/projects/macrophage-gxe-study/")
 
 #### RASQUAL ####

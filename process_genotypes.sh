@@ -25,3 +25,9 @@ grep '^#' selected_genotypes.GRCh38.vcf > selected_genotypes.GRCh38.sorted.vcf &
 #Compress and index the VCF file
 bcftools view -O z selected_genotypes.GRCh38.sorted.vcf > selected_genotypes.GRCh38.sorted.vcf.gz
 bcftools index selected_genotypes.GRCh38.sorted.vcf.gz
+
+#Find the genotyped SNPs from the imputed VCF file (will get rid of NAs)
+bcftools view -R array_genotypes.59_samples.vcf.gz -o array_genotypes.59_samples.imputed.vcf.gz -O z autosomes.snps_only.no_replicates.vcf.gz 
+
+#Keep only unique genotypes
+python ~/software/utils/vcf/vcfDetectDuplicateVariants.py --vcf array_genotypes.59_samples.imputed.vcf.gz --duplicates dup.txt | bgzip > array_genotypes.59_samples.imputed.uniq.vcf.gz 
