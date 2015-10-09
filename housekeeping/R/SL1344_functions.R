@@ -47,3 +47,19 @@ testMultipleInteractions <- function(snps_df, eqtl_data_list){
   }
   return(result)
 }
+
+constructGeneData <- function(gene_id, snp_id, eqtl_data_list){
+  #Test for interaction
+  sample_meta = dplyr::select(eqtl_data_list$sample_metadata, sample_id, donor, condition_name)
+  cov_mat = dplyr::mutate(as.data.frame(eqtl_data_list$covariates), sample_id = rownames(eqtl_data_list$covariates))
+  
+  #Extract data
+  exp_data = data_frame(sample_id = colnames(eqtl_data_list$exprs_cqn), expression = eqtl_data_list$exprs_cqn[gene_id,])
+  geno_data = data_frame(donor = colnames(eqtl_data_list$genotypes), genotype = eqtl_data_list$genotypes[snp_id,])
+  
+  sample_data = dplyr::left_join(sample_meta, cov_mat, by = "sample_id") %>%
+    dplyr::left_join(exp_data, by = "sample_id") %>%
+    dplyr::left_join(geno_data, by = "donor")
+  
+  return(sample_data)
+}
