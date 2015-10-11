@@ -31,6 +31,10 @@ significant_genes = dplyr::filter(results, gene.post > 0.8) %>% tbl_df() %>%
   dplyr::left_join(gene_id_name_map, by = "gene_id")
 table(significant_genes$best.config)
 
+#Make plots for CD14 and CD16
+CD14_plot = plotEQTL("ENSG00000170458", "rs778583", expression_dataset, vcf_file, line_metadata)
+FCGR3B_plot = plotEQTL("ENSG00000162747", "rs10917809", expression_dataset, vcf_file, line_metadata)
+
 #Make plots for condition-specific eQTLs
 dplyr::filter(significant_genes, best.config == "1-2-3") %>%
   makeMultiplePlots(.,expression_dataset, vcf_file, line_metadata) %>%

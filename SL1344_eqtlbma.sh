@@ -21,4 +21,4 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>12000] rusage[mem=12000]" -q no
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>12000] rusage[mem=12000]" -q normal -M 12000 -o FarmOut/eqtlbma_EBF.%J.jobout "python ~/software/utils/eqtlbma/run_eqtlbma_avg_bfs.py --workdir eqtlbma/output_imputed/ --outprefix eqtlbma_imputed --nsubgrp 4 --dim 15 --mode ebf"
 
 #Calculate average BFS over configurations
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>12000] rusage[mem=12000]" -q normal -M 12000 -o FarmOut/eqtlbma_avg_bfs.%J.jobout "python ~/software/utils/eqtlbma/run_eqtlbma_avg_bfs.py --workdir eqtlbma/output_imputed/ --outprefix eqtlbma_imputed --nsubgrp 4 --dim 15 --mode post --pi0 0.6417"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>12000] rusage[mem=12000]" -q normal -M 12000 -o FarmOut/eqtlbma_avg_bfs.%J.jobout "python ~/software/utils/eqtlbma/run_eqtlbma_avg_bfs.py --workdir eqtlbma/output_imputed/ --outprefix eqtlbma_imputed --nsubgrp 4 --dim 15 --mode post --pi0 0.6165"
