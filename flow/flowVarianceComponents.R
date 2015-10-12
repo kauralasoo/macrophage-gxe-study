@@ -3,6 +3,7 @@ library("lme4")
 library("devtools")
 load_all("../seqUtils/")
 library("GWASTools")
+library("ggplot2")
 
 #Import data
 flow_purity = readRDS("macrophage-gxe-study/data/covariates/flow_cytometry_purity.rds")
@@ -26,11 +27,8 @@ flow_data = dplyr::left_join(flow_purity, channel_marker_map, by = "channel") %>
   dplyr::select(line_id, genotype_id, donor, flow_date, marker, purity, intensity)
 
 #Import genotypes
-GWASTools::convertVcfGds("CD14_qtl.vcf", "CD14_qtl.gds")
-gds <- GdsGenotypeReader("CD14_qtl.gds")
-cd14_qtl = data_frame(genotype_id = getVariable(gds, "sample.name"), gt = getGenotype(gds))
-colnames(cd14_qtl)[colnames(cd14_qtl) == "gt"] = getVariable(gds, "snp.rs.id")
-close(gds)
+SNPRelate::snpgdsVCF2GDS("CD14_cis_region.vcf", "CD14_cis_region1.gds",method = "copy.num.of.ref")
+cd14_cis_region = gdsToMatrix("CD14_cis_region1.gds")
 
 #CD16 (FCGR3B)
 #"bcftools view -r 1:161732020 -S macrophage-gxe-study/data/sample_lists/flow_cytometry_gt_list.txt genotypes/GRCh38/imputed_20151005/hipsci.wec.gtarray.HumanCoreExome-12_v1_0.REL-2014-11.imputed_phased.INFO_0.4_filtered.20151005.genotypes.chr1.GRCh38.sorted.vcf.gz > FCGR3B_qtl.vcf"
@@ -41,8 +39,10 @@ colnames(cd16_qtl)[colnames(cd16_qtl) == "gt"] = getVariable(gds, "snp.rs.id")
 close(gds)
 
 #Analyse CD14 only
+geno_mat = as.data.frame(t(cd14_cis_region$genotypes)) %>% 
+  dplyr::mutate(genotype_id = colnames(cd14_cis_region$genotypes))
 cd14_data = dplyr::filter(flow_data, marker == "CD14") %>%
-  dplyr::left_join(cd14_qtl, by = "genotype_id")
+  dplyr::left_join(geno_mat, by = "genotype_id")
 cd14_model_1 = lmer(intensity ~ (1|flow_date) + (1|donor), cd14_data)
 cd14_variance = seqUtils::varianceExplained(cd14_model1)
 cd14_model_2 = lmer(intensity ~ (1|flow_date) + (1|donor) + (1|rs778583), cd14_data)
