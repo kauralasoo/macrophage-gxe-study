@@ -7,17 +7,17 @@ library("ggplot2")
 library("MatrixEQTL")
 
 #### Functions ####
-mapFlowQTLs <- function(intensity_df, genepos, genotype_list, genotype_donor_map, cisDist = 5e5, covariates = NULL){
+mapFlowQTLs <- function(intensity_df, genepos, genotype_list, genotype_donor_map, cisDist = 5e5, covariates = NULL, permute = FALSE){
   #Helper function to map QTLs for flow data
   genotype_matrix = extractSubset(genotype_donor_map, genotype_list$genotypes, 
                                   old_column_names = "genotype_id", new_column_names = "donor")
   print(head(genotype_matrix))
   qtl_results = runMatrixEQTL(intensity_df, genotype_matrix, as.data.frame(genotype_list$snpspos), 
-                              genepos, cisDist, pvOutputThreshold = 1, covariates = covariates)
+                              genepos, cisDist, pvOutputThreshold = 1, covariates = covariates, permute)
   qtl_df = dplyr::left_join(qtl_results$cis$eqtls, genotype_list$snpspos, by = c("snps" = "snpid")) %>%
     dplyr::mutate(log10_pvalue = -log(pvalue,10)) %>%
     dplyr::rename(snp_id = snps) %>%
-    dplyr::mutate(expected = -log(c(1:length(pvalue))/length(pvalue)),10 )
+    dplyr::mutate(expected = -log(c(1:length(pvalue))/length(pvalue),10))
   return(qtl_df)
 }
 
@@ -90,7 +90,7 @@ intensity_df = dplyr::left_join(cd14_mean, cd16_mean, by = "donor") %>%
   dplyr::left_join(cd206_mean, by = "donor") %>% 
   as.data.frame()
 rownames(intensity_df) = intensity_df$donor
-intensity_df = t(intensity_df[,-1])
+intensity_df = t(intensity_df[-2,-1])
 
 #Prepare gene positions
 genepos = dplyr::select(gene_coords, gene_name, chr, left, right) %>%
@@ -106,6 +106,11 @@ cd14_qtl_df = mapFlowQTLs(intensity_df, genepos[1:3,], cd14_cis_region, genotype
 cd14_manhattan = ggplot(cd14_qtl_df, aes(x = pos, y = log10_pvalue)) + geom_point()
 ggsave("results/flow/VarComp/CD14_manhattan_plot.pdf", plot = cd14_manhattan, width = 8, height = 6)
 
+#Make a QQ plot
+ggplot(cd14_qtl_df, aes(x = expected, y = log10_pvalue)) + 
+  geom_point() + 
+  stat_abline(slope = 1, intercept = 0, color = "red")
+
 #Make a QTL plot
 cd14_qtl_plot = ggplot(cd14_model_data, aes(x = factor(rs2569177), y = intensity)) + 
   geom_boxplot(outlier.shape = NA) + 
@@ -118,9 +123,19 @@ cd14_variance_qtl = seqUtils::varianceExplained(cd14_model_qtl)
 write.table(cd14_variance_qtl, "results/flow/VarComp/CD14_variance_explained.txt", sep = "\t", row.names = FALSE, quote = FALSE)
 
 #### CD16 QTLS ####
-cd16_qtl_df = mapFlowQTLs(intensity_df, genepos[1:3,], CD16_cis_region, genotype_donor_map, cisDist = 5e5)
+cd16_qtl_df = mapFlowQTLs(intensity_df, genepos[1:3,], CD16_cis_region, genotype_donor_map, cisDist = 2e5)
 cd16_manhattan = ggplot(cd16_qtl_df, aes(x = pos, y = log10_pvalue)) + geom_point()
 ggsave("results/flow/VarComp/CD16_manhattan_plot.pdf", plot = cd16_manhattan, width = 8, height = 6)
+
+#Make a QQ plot
+ggplot(cd16_qtl_df, aes(x = expected, y = log10_pvalue)) + 
+  geom_point() + 
+  stat_abline(slope = 1, intercept = 0, color = "red")
+
+#Perform permutations
+perm_list = lapply(as.list(c(1:100)), function(x){mapFlowQTLs(intensity_df, genepos[1:3,], CD16_cis_region, genotype_donor_map, cisDist = 2e5, permute = TRUE)})
+perm_max_statistic = lapply(perm_list, function(x){max(abs(x$statistic))})
+
 
 #Fit VarComp model again with four independent associations
 cd16_model_qtl = lmer(intensity ~ (1|flow_date) + (1|donor) + (1|rs10917809) + (1|rs4657019) + (1|rs2333845) + (1|rs4571943), cd16_model_data, REML = TRUE)
