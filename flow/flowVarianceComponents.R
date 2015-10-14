@@ -16,7 +16,8 @@ mapFlowQTLs <- function(intensity_df, genepos, genotype_list, genotype_donor_map
                               genepos, cisDist, pvOutputThreshold = 1, covariates = covariates)
   qtl_df = dplyr::left_join(qtl_results$cis$eqtls, genotype_list$snpspos, by = c("snps" = "snpid")) %>%
     dplyr::mutate(log10_pvalue = -log(pvalue,10)) %>%
-    dplyr::rename(snp_id = snps)
+    dplyr::rename(snp_id = snps) %>%
+    dplyr::mutate(expected = -log(c(1:length(pvalue))/length(pvalue)),10 )
   return(qtl_df)
 }
 
@@ -44,12 +45,12 @@ flow_data = dplyr::left_join(flow_purity, channel_marker_map, by = "channel") %>
 
 #Import genotypes
 #Cd14
-SNPRelate::snpgdsVCF2GDS("CD14_cis_region.vcf", "CD14_cis_region1.gds",method = "copy.num.of.ref")
+#SNPRelate::snpgdsVCF2GDS("CD14_cis_region.vcf", "CD14_cis_region1.gds",method = "copy.num.of.ref")
 cd14_cis_region = gdsToMatrix("CD14_cis_region1.gds")
 
 #CD16 (FCGR3B)
 #bcftools view -r 1:161041759-162131963 -S macrophage-gxe-study/data/sample_lists/flow_cytometry_gt_list.txt genotypes/GRCh38/imputed_20151005/hipsci.wec.gtarray.HumanCoreExome-12_v1_0.REL-2014-11.imputed_phased.INFO_0.4_filtered.20151005.genotypes.chr1.GRCh38.sorted.vcf.gz | bcftools filter -i 'MAF[0] >= 0.05' - | bcftools norm -m+both - | bcftools view -m2 -M2 - > CD16_cis.vcf
-SNPRelate::snpgdsVCF2GDS("CD16_cis.vcf", "CD16_cis.gds",method = "copy.num.of.ref")
+#SNPRelate::snpgdsVCF2GDS("CD16_cis.vcf", "CD16_cis.gds",method = "copy.num.of.ref")
 CD16_cis_region = gdsToMatrix("CD16_cis.gds")
 
 #### Estimate variance explained by donor ####
