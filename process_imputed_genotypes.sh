@@ -75,6 +75,9 @@ bcftools norm -m+any imputed.59_samples.sorted.uniq.vcf > imputed.59_samples.sor
 
 #Keep only SNPs
 bcftools view -v snps -O z imputed.59_samples.sorted.uniq.not_multiallelic.vcf > imputed.59_samples.snps_only.vcf.gz
+bcftools filter -i 'INFO[0] >= 0.8' -O z imputed.59_samples.snps_only.vcf.gz > imputed.59_samples.snps_only.INFO_08.vcf.gz 
 
 #Compress all variants
 bcftools view -O z imputed.59_samples.sorted.uniq.not_multiallelic.vcf > imputed.59_samples.snps_indels.vcf.gz
+bcftools filter -i 'INFO[0] >= 0.8' -O z imputed.59_samples.snps_indels.vcf.gz > imputed.59_samples.snps_indels.INFO_08.vcf.gz 
+

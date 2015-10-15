@@ -17,10 +17,10 @@ mapFlowQTLs <- function(intensity_df, genepos, genotype_list, genotype_donor_map
   qtl_df = dplyr::left_join(qtl_results$cis$eqtls, genotype_list$snpspos, by = c("snps" = "snpid")) %>%
     dplyr::mutate(log10_pvalue = -log(pvalue,10)) %>%
     dplyr::rename(snp_id = snps) %>%
-    dplyr::mutate(expected = -log(c(1:length(pvalue))/length(pvalue),10))
+    dplyr::mutate(expected = -log(c(1:length(pvalue))/length(pvalue),10)) %>%
+    tbl_df()
   return(qtl_df)
 }
-
 
 #Import data
 flow_purity = readRDS("macrophage-gxe-study/data/covariates/flow_cytometry_purity.rds")
@@ -44,27 +44,26 @@ flow_data = dplyr::left_join(flow_purity, channel_marker_map, by = "channel") %>
   dplyr::select(line_id, genotype_id, donor, flow_date, marker, purity, intensity)
 
 #Import genotypes
-#Cd14
-#SNPRelate::snpgdsVCF2GDS("CD14_cis_region.vcf", "CD14_cis_region1.gds",method = "copy.num.of.ref")
-cd14_cis_region = gdsToMatrix("CD14_cis_region1.gds")
-
-#CD16 (FCGR3B)
+#Filter genotypes form large VCF files
 #bcftools view -r 1:161041759-162131963 -S macrophage-gxe-study/data/sample_lists/flow_cytometry_gt_list.txt genotypes/GRCh38/imputed_20151005/hipsci.wec.gtarray.HumanCoreExome-12_v1_0.REL-2014-11.imputed_phased.INFO_0.4_filtered.20151005.genotypes.chr1.GRCh38.sorted.vcf.gz | bcftools filter -i 'MAF[0] >= 0.05' - | bcftools norm -m+both - | bcftools view -m2 -M2 - > CD16_cis.vcf
-#SNPRelate::snpgdsVCF2GDS("CD16_cis.vcf", "CD16_cis.gds",method = "copy.num.of.ref")
-CD16_cis_region = gdsToMatrix("CD16_cis.gds")
+#bcftools view -r 10:17309344-18309344 -S macrophage-gxe-study/data/sample_lists/flow_cytometry_gt_list.txt genotypes/GRCh38/imputed_20151005/hipsci.wec.gtarray.HumanCoreExome-12_v1_0.REL-2014-11.imputed_phased.INFO_0.4_filtered.20151005.genotypes.chr10.GRCh38.sorted.vcf.gz | bcftools filter -i 'MAF[0] >= 0.05' - | bcftools norm -m+both - | bcftools view -m2 -M2 - > CD206_cis.vcf
+
+#Import all genotypes
+SNPRelate::snpgdsVCF2GDS("flow_cis_regions.vcf", "flow_cis_regions.gds",method = "copy.num.of.ref")
+flow_cis_region = gdsToMatrix("flow/genotypes/flow_cis_regions.gds")
 
 #### Estimate variance explained by donor ####
 #Analyse CD14 only
-cd14_geno_mat = as.data.frame(t(cd14_cis_region$genotypes)) %>% 
-  dplyr::mutate(genotype_id = colnames(cd14_cis_region$genotypes))
+cd14_geno_mat = as.data.frame(t(flow_cis_region$genotypes)) %>% 
+  dplyr::mutate(genotype_id = colnames(flow_cis_region$genotypes))
 cd14_data = dplyr::filter(flow_data, marker == "CD14")
 cd14_model_data = dplyr::left_join(cd14_data, cd14_geno_mat, by = "genotype_id")
 cd14_model = lmer(intensity ~ (1|flow_date) + (1|donor), cd14_model_data)
 cd14_variance = seqUtils::varianceExplained(cd14_model)
 
 #Analyse CD16 only
-cd16_geno_mat = as.data.frame(t(CD16_cis_region$genotypes)) %>% 
-  dplyr::mutate(genotype_id = colnames(CD16_cis_region$genotypes))
+cd16_geno_mat = as.data.frame(t(flow_cis_region$genotypes)) %>% 
+  dplyr::mutate(genotype_id = colnames(flow_cis_region$genotypes))
 cd16_data = dplyr::filter(flow_data, marker == "CD16")
 cd16_model_data = dplyr::left_join(cd16_data, cd16_geno_mat, by = "genotype_id")
 cd16_model = lmer(intensity ~ (1|flow_date) + (1|donor), cd16_model_data, REML = TRUE)
@@ -90,7 +89,7 @@ intensity_df = dplyr::left_join(cd14_mean, cd16_mean, by = "donor") %>%
   dplyr::left_join(cd206_mean, by = "donor") %>% 
   as.data.frame()
 rownames(intensity_df) = intensity_df$donor
-intensity_df = t(intensity_df[-2,-1])
+intensity_df = t(intensity_df[,-1])
 
 #Prepare gene positions
 genepos = dplyr::select(gene_coords, gene_name, chr, left, right) %>%
@@ -101,8 +100,18 @@ genepos$geneid = c("CD14","CD206", "CD16","CD16")
 genotype_donor_map = dplyr::select(flow_data, genotype_id, donor) %>% unique() %>% 
   dplyr::filter(genotype_id != "HPSI0813i-fpdj_3")
 
-#### CD14 QTLs ####
-cd14_qtl_df = mapFlowQTLs(intensity_df, genepos[1:3,], cd14_cis_region, genotype_donor_map, cisDist = 5e5)
+#### Perform QTL mapping for all markers at the same time ####
+qtl_df = mapFlowQTLs(intensity_df, genepos[1:3,], flow_cis_region, genotype_donor_map, cisDist = 2e5)
+
+#Perform QTL mapping with permutations
+perm_list = lapply(as.list(c(1:1000)), function(x){
+  mapFlowQTLs(intensity_df, genepos[1:3,], flow_cis_region, genotype_donor_map, cisDist = 2e5, permute = TRUE)
+  })
+saveRDS(perm_list, "results/flow/VarComp/permutation_list.rds")
+perm_max_statistic = lapply(perm_list, function(x){max(abs(x$statistic))})
+
+#CD14 analysis
+cd14_qtl_df = dplyr::filter(qtl_df, gene == "CD14")
 cd14_manhattan = ggplot(cd14_qtl_df, aes(x = pos, y = log10_pvalue)) + geom_point()
 ggsave("results/flow/VarComp/CD14_manhattan_plot.pdf", plot = cd14_manhattan, width = 8, height = 6)
 
@@ -132,9 +141,6 @@ ggplot(cd16_qtl_df, aes(x = expected, y = log10_pvalue)) +
   geom_point() + 
   stat_abline(slope = 1, intercept = 0, color = "red")
 
-#Perform permutations
-perm_list = lapply(as.list(c(1:100)), function(x){mapFlowQTLs(intensity_df, genepos[1:3,], CD16_cis_region, genotype_donor_map, cisDist = 2e5, permute = TRUE)})
-perm_max_statistic = lapply(perm_list, function(x){max(abs(x$statistic))})
 
 
 #Fit VarComp model again with four independent associations
@@ -178,3 +184,7 @@ fcgr3a_rs2333845_plot = ggplot(cd16_exp, aes(x = factor(rs2333845), y = FCGR3A))
 ggsave("results/flow/VarComp/FCGR3A_rs2333845_plot.pdf", plot = fcgr3a_rs2333845_plot, width = 6, height = 6)
 fcgr3b_rs10917809_plot = ggplot(cd16_exp, aes(x = factor(rs10917809), y = FCGR3B)) +  geom_boxplot(outlier.shape = NA) + geom_jitter(position = position_jitter(width = .1))
 ggsave("results/flow/VarComp/FCGR3B_rs10917809_plot.pdf", plot = fcgr3b_rs10917809_plot, width = 6, height = 6)
+
+
+#Map QTLs for CD206
+cd206_qtl_df = mapFlowQTLs(intensity_df, genepos[1:3,], CD206_cis_region, genotype_donor_map, cisDist = 2e5)
