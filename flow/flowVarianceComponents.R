@@ -25,7 +25,8 @@ mapFlowQTLs <- function(intensity_df, genepos, genotype_list, genotype_donor_map
 #Import data
 flow_purity = readRDS("macrophage-gxe-study/data/covariates/flow_cytometry_purity.rds")
 line_medatada = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds")
-vcf_file = readRDS("genotypes/SL1344/array_genotypes.59_samples.imputed.vcfToMatrix.rds")
+#vcf_file = readRDS("genotypes/SL1344/array_genotypes.59_samples.imputed.vcfToMatrix.rds")
+vcf_file = seqUtils::gdsToMatrix("genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_indels.INFO_08.gds")
 eqtl_data_list = readRDS("results/SL1344/eqtl_data_list.rds")
 gene_id_name_map = dplyr::select(eqtl_data_list$gene_metadata, gene_id, gene_name)
 
@@ -49,7 +50,7 @@ flow_data = dplyr::left_join(flow_purity, channel_marker_map, by = "channel") %>
 #bcftools view -r 10:17309344-18309344 -S macrophage-gxe-study/data/sample_lists/flow_cytometry_gt_list.txt genotypes/GRCh38/imputed_20151005/hipsci.wec.gtarray.HumanCoreExome-12_v1_0.REL-2014-11.imputed_phased.INFO_0.4_filtered.20151005.genotypes.chr10.GRCh38.sorted.vcf.gz | bcftools filter -i 'MAF[0] >= 0.05' - | bcftools norm -m+both - | bcftools view -m2 -M2 - > CD206_cis.vcf
 
 #Import all genotypes
-SNPRelate::snpgdsVCF2GDS("flow_cis_regions.vcf", "flow_cis_regions.gds",method = "copy.num.of.ref")
+#SNPRelate::snpgdsVCF2GDS("flow_cis_regions.vcf", "flow_cis_regions.gds",method = "copy.num.of.ref")
 flow_cis_region = gdsToMatrix("flow/genotypes/flow_cis_regions.gds")
 
 #### Estimate variance explained by donor ####
@@ -141,8 +142,6 @@ ggplot(cd16_qtl_df, aes(x = expected, y = log10_pvalue)) +
   geom_point() + 
   stat_abline(slope = 1, intercept = 0, color = "red")
 
-
-
 #Fit VarComp model again with four independent associations
 cd16_model_qtl = lmer(intensity ~ (1|flow_date) + (1|donor) + (1|rs10917809) + (1|rs4657019) + (1|rs2333845) + (1|rs4571943), cd16_model_data, REML = TRUE)
 cd16_variance_qtl = seqUtils::varianceExplained(cd16_model_qtl)
@@ -159,32 +158,51 @@ cd16_qtl_snps = c("rs10917809","rs2333845","rs4657019")
 cd16_qtl_snp_rsquared = cor(t(CD16_cis_region$genotypes[cd16_qtl_snps,]))^2
 write.table(cd16_qtl_snp_rsquared, "results/flow/VarComp/CD16_qtl_snp_rsquared.txt", sep = "\t", row.names = FALSE, quote = FALSE)
 
-#Make boxplots of these SNPs
-cd16_rs4657019_plot = ggplot(cd16_model_data, aes(x = factor(rs4657019), y = intensity)) + geom_boxplot(outlier.shape = NA) + geom_jitter(position = position_jitter(width = .1))
-ggsave("results/flow/VarComp/CD16_rs4657019_plot.pdf", plot = cd16_rs4657019_plot, width = 6, height = 6)
-cd16_rs10917809_plot = ggplot(cd16_model_data, aes(x = factor(rs10917809), y = intensity)) +  geom_boxplot(outlier.shape = NA) + geom_jitter(position = position_jitter(width = .1))
-ggsave("results/flow/VarComp/CD16_rs10917809_plot.pdf", plot = cd16_rs10917809_plot, width = 6, height = 6)
-cd16_rs2333845_plot = ggplot(cd16_model_data, aes(x = factor(rs2333845), y = intensity)) +  geom_boxplot(outlier.shape = NA) + geom_jitter(position = position_jitter(width = .1))
-ggsave("results/flow/VarComp/CD16_rs2333845_plot.pdf", plot = cd16_rs2333845_plot, width = 6, height = 6)
-cd16_rs4571943_plot = ggplot(cd16_model_data, aes(x = factor(rs4571943), y = intensity)) +  geom_boxplot(outlier.shape = NA) + geom_jitter(position = position_jitter(width = .1))
-ggsave("results/flow/VarComp/CD16_rs4571943_plot.pdf", plot = cd16_rs4571943_plot, width = 6, height = 6)
+#Make a joint boxplot of gene expression and flow signal for CD16
+#QTL SNPs
+qtl_snps = c("rs4657019", "rs2333845", "rs10917809","rs4571943")
+#rs2333845 not in the INFO 0.8 set, maybe its too stringent?
 
-#Look at CD16 gene expression
+#Prepare flow data
+flow_geno_mat = t(flow_cis_region$genotypes[qtl_snps[c(1,3,4)],]) %>% as.data.frame()
+flow_geno_mat = dplyr::mutate(flow_geno_mat, genotype_id = rownames(flow_geno_mat))
+
+cd16_flow_df = t(intensity_df) %>% 
+  as.data.frame() %>% 
+  tbl_df() %>% 
+  dplyr::select(CD16) %>% 
+  dplyr::rename(expression = CD16) %>% 
+  dplyr::mutate(donor = colnames(intensity_df)) %>% 
+  dplyr::left_join(genotype_donor_map, by = "donor") %>% 
+  dplyr::mutate(feature = "CD16") %>%
+  dplyr::left_join(flow_geno_mat, by = "genotype_id") %>%
+  tidyr::gather(genotype, snp, rs4657019:rs4571943)
+
+#Prepare gene expression data
+exp_geno_mat = t(vcf_file$genotypes[qtl_snps[c(1,3,4)],]) %>% as.data.frame()
+exp_geno_mat = dplyr::mutate(exp_geno_mat, genotype_id = rownames(exp_geno_mat))
+
 exp_mat = t(eqtl_data_list$exprs_cqn_list$naive[c("ENSG00000203747","ENSG00000162747"),]) 
-donor_genotype_map = dplyr::filter(eqtl_data_list$sample_metadata, condition == "A") %>% dplyr::select(donor, genotype_id)
-cd16_exp = dplyr::mutate(as.data.frame(exp_mat), donor = rownames(exp_mat)) %>% 
+donor_genotype_map = dplyr::filter(eqtl_data_list$sample_metadata, condition == "A") %>% 
+  dplyr::select(donor, genotype_id)
+cd16_exp_df = exp_mat %>%
+  as.data.frame() %>%
+  tbl_df() %>%
+  dplyr::mutate(donor = rownames(exp_mat)) %>% 
   dplyr::rename(FCGR3A = ENSG00000203747, FCGR3B = ENSG00000162747) %>% 
   dplyr::left_join(donor_genotype_map, by = "donor") %>%
-  dplyr::left_join(cd16_geno_mat, by = "genotype_id") %>%
-  dplyr::filter(!is.na(rs4657019))
+  tidyr::gather(feature, expression, FCGR3A:FCGR3B) %>%
+  dplyr::left_join(exp_geno_mat, by = "genotype_id") %>%
+  tidyr::gather(genotype, snp, rs4657019:rs4571943)
 
-fcgr3a_rs4657019_plot = ggplot(cd16_exp, aes(x = factor(rs4657019), y = FCGR3A)) +  geom_boxplot(outlier.shape = NA) + geom_jitter(position = position_jitter(width = .1))
-ggsave("results/flow/VarComp/FCGR3A_rs4657019_plot.pdf", plot = fcgr3a_rs4657019_plot, width = 6, height = 6)
-fcgr3a_rs2333845_plot = ggplot(cd16_exp, aes(x = factor(rs2333845), y = FCGR3A)) +  geom_boxplot(outlier.shape = NA) + geom_jitter(position = position_jitter(width = .1))
-ggsave("results/flow/VarComp/FCGR3A_rs2333845_plot.pdf", plot = fcgr3a_rs2333845_plot, width = 6, height = 6)
-fcgr3b_rs10917809_plot = ggplot(cd16_exp, aes(x = factor(rs10917809), y = FCGR3B)) +  geom_boxplot(outlier.shape = NA) + geom_jitter(position = position_jitter(width = .1))
-ggsave("results/flow/VarComp/FCGR3B_rs10917809_plot.pdf", plot = fcgr3b_rs10917809_plot, width = 6, height = 6)
+combined_df = rbind(cd16_flow_df, cd16_exp_df) %>% dplyr::mutate(snp = factor(snp))
 
+#Make a plot
+cd16_boxplots = ggplot(combined_df, aes(x = factor(snp), y = expression)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(position = position_jitter(width = .1)) + 
+  facet_grid(feature ~ genotype, scale = "free")
+ggsave("results/flow/VarComp/cd16_boxplots.pdf", plot = cd16_boxplots, width = 7, height = 7)
 
 #Map QTLs for CD206
 cd206_qtl_df = mapFlowQTLs(intensity_df, genepos[1:3,], CD206_cis_region, genotype_donor_map, cisDist = 2e5)
