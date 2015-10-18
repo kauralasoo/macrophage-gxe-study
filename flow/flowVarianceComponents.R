@@ -109,7 +109,26 @@ perm_list = lapply(as.list(c(1:1000)), function(x){
   mapFlowQTLs(intensity_df, genepos[1:3,], flow_cis_region, genotype_donor_map, cisDist = 2e5, permute = TRUE)
   })
 saveRDS(perm_list, "results/flow/VarComp/permutation_list.rds")
-perm_max_statistic = lapply(perm_list, function(x){max(abs(x$statistic))})
+perm_list = readRDS("results/flow/VarComp/permutation_list.rds")
+
+#Interpret permutation results
+cd14_pvalues = lapply(perm_list, function(x) {
+  dplyr::filter(x, gene == "CD14")$log10_pvalue %>% abs() %>% max()
+}) %>% unlist()
+cd16_pvalues = lapply(perm_list, function(x) {
+  dplyr::filter(x, gene == "CD16")$log10_pvalue %>% abs() %>% max()
+}) %>% unlist()
+cd206_pvalues = lapply(perm_list, function(x) {
+  dplyr::filter(x, gene == "CD206")$log10_pvalue %>% abs() %>% max()
+}) %>% unlist()
+
+#Extract raw p-vlues
+cd14_qtl_df = dplyr::filter(qtl_df, gene == "CD14") %>%
+  dplyr::mutate(perm_pvalue = calculatePermutationPvalues(log10_pvalue, cd14_pvalues))
+cd16_qtl_df = dplyr::filter(qtl_df, gene == "CD16") %>%
+  dplyr::mutate(perm_pvalue = calculatePermutationPvalues(log10_pvalue, cd16_pvalues))
+cd206_qtl_df = dplyr::filter(qtl_df, gene == "CD206") %>%
+  dplyr::mutate(perm_pvalue = calculatePermutationPvalues(log10_pvalue, cd206_pvalues))
 
 #CD14 analysis
 cd14_qtl_df = dplyr::filter(qtl_df, gene == "CD14")
