@@ -1,12 +1,15 @@
 #Compress and index SNP coordinates file
-bgzip eqtlbma/input_imputed/snp_coords.bed 
-tabix -p bed eqtlbma/input_imputed/snp_coords.bed.gz
+bgzip results/SL1344/eqtlbma/input/snp_coords.bed 
+tabix -p bed results/SL1344/eqtlbma/input/snp_coords.bed.gz
 
 #Split genes into batches
-/software/R-3.1.2/bin/Rscript ~/software/utils/eqtlbma/splitGeneCoords.R -i eqtlbma/input_imputed/gene_coords.bed -b 200 -o eqtlbma/input_imputed/gene_batches.txt
+/software/R-3.1.2/bin/Rscript ~/software/utils/eqtlbma/splitGeneCoords.R -i results/SL1344/eqtlbma/input/gene_coords.bed -b 200 -o results/SL1344/eqtlbma/input/gene_batches.txt
 
 #Compute bayes factors for each SNP/gene pair
-cat eqtlbma/input/gene_batches.txt | python ~/software/utils/submitJobs.py --MEM 2000 --jobname run_eqtlbma_bf --command  "python ~/software/utils/eqtlbma/run_eqtlbma_bf.py --indir eqtlbma/input_imputed/ --outdir eqtlbma/output_imputed/ --outprefix eqtlbma_imputed"
+cat eqtlbma/input/gene_batches.txt | python ~/software/utils/submitJobs.py --MEM 6000 --jobname run_eqtlbma_bf --command  "python ~/software/utils/eqtlbma/run_eqtlbma_bf.py --indir results/SL1344/eqtlbma/input/ --outdir results/SL1344/eqtlbma/output/ --outprefix eqtlbma_info08"
+
+#Run eqtlbma with permutations
+cat eqtlbma/input/gene_batches.txt | head -n 1 | python ~/software/utils/submitJobs.py --MEM 12000 --jobname run_eqtlbma_bf --ncores 4 --command  "python ~/software/utils/eqtlbma/run_eqtlbma_bf.py --indir results/SL1344/eqtlbma/input/ --outdir results/SL1344/eqtlbma/output_perm/ --outprefix eqtlbma_perm --thread 4 --nperm 250"
 
 #Merge results from all batches
 python ~/software/utils/eqtlbma/merge_eqtlbma_bf.py --geneBatches eqtlbma/input_imputed/gene_batches.txt --outprefix eqtlbma_imputed --outdir eqtlbma/output_imputed/

@@ -3,12 +3,12 @@ library("dplyr")
 load_all("../seqUtils/")
 
 #Import imputed genotype data from disk
-SNPRelate::snpgdsVCF2GDS("genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_indels.INFO_08.vcf.gz", "genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_indels.INFO_08.gds",method = "copy.num.of.ref")
+#SNPRelate::snpgdsVCF2GDS("genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_indels.INFO_08.vcf.gz", "genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_indels.INFO_08.gds",method = "copy.num.of.ref")
 vcf_file = gdsToMatrix("genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_indels.INFO_08.gds")
 
 #Import genotype data from the VCF file
-vcf_file = vcfToMatrix("genotypes/SL1344/array_genotypes.59_samples.imputed.uniq.vcf", "GRCh38")
-saveRDS(vcf_file, "genotypes/SL1344/array_genotypes.59_samples.imputed.vcfToMatrix.rds")
+#vcf_file = vcfToMatrix("genotypes/SL1344/array_genotypes.59_samples.imputed.uniq.vcf", "GRCh38")
+#saveRDS(vcf_file, "genotypes/SL1344/array_genotypes.59_samples.imputed.vcfToMatrix.rds")
 
 #Load the raw eQTL dataset
 expression_dataset = readRDS("results/SL1344/combined_expression_data.rds") #expression data
@@ -56,6 +56,12 @@ genepos = dplyr::filter(expression_dataset$gene_metadata, gene_id %in% expressed
   as.data.frame()
 
 #### GENOTYPES ####
+#Remove two SNPs that have the same name for two different positions
+duplicates_count = table(vcf_file$snpspos$snpid)
+duplicate_ids = names(which(duplicates_count > 1))
+vcf_file$snpspos = dplyr::filter(vcf_file$snpspos, !(snpid %in% duplicate_ids))
+vcf_file$genotypes = vcf_file$genotypes[!(rownames(vcf_file$genotypes) %in% duplicate_ids),]
+
 #Filter genotype data
 geno_data = extractSubset(dplyr::filter(sample_meta, condition == "A"), vcf_file$genotypes, old_column_names = "genotype_id")
 
@@ -109,7 +115,7 @@ saveRDS(eqtl_dataset, "results/SL1344/eqtl_data_list.rds")
 eqtlbma_dataset = eqtl_dataset
 eqtlbma_dataset$covariates_list = lapply(eqtl_dataset$covariates_list, function(x){x[1:7,]})
 #Save data for eqtlbma
-saveEqtlbmaData(eqtlbma_dataset, "eqtlbma/input_imputed/", 
+saveEqtlbmaData(eqtlbma_dataset, "results/SL1344/eqtlbma/input/", 
                 project_root = "/nfs/users/nfs_k/ka8/group-scratch/kaur/projects/macrophage-gxe-study/")
 
 #### RASQUAL ####
