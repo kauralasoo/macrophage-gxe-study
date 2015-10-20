@@ -13,7 +13,7 @@ cat results/SL1344/eqtlbma/input/gene_batches.txt | python ~/software/utils/subm
 cat results/SL1344/eqtlbma/input/gene_batches.txt | head -n 1 | python ~/software/utils/submitJobs.py --MEM 12000 --jobname run_eqtlbma_bf_perm --ncores 4 --command  "python ~/software/utils/eqtlbma/run_eqtlbma_bf.py --indir results/SL1344/eqtlbma/input/ --outdir results/SL1344/eqtlbma/output_perm/ --outprefix eqtlbma_perm --thread 4 --nperm 250"
 
 #Merge results from all batches
-python ~/software/utils/eqtlbma/merge_eqtlbma_bf.py --geneBatches eqtlbma/input_imputed/gene_batches.txt --outprefix eqtlbma_imputed --outdir eqtlbma/output_imputed/
+python ~/software/utils/eqtlbma/merge_eqtlbma_bf.py --geneBatches eqtlbma/input_imputed/gene_batches.txt --outprefix eqtlbma_info08 --outdir results/SL1344/eqtlbma/output/
 
 #Run the hierarchical model
 echo "None" | python ~/software/utils/submitJobs.py --MEM 64000 --jobname run_eqtlbma_hm --ncores 6 --queue hugemem --command "python ~/software/utils/eqtlbma/run_eqtlbma_hm.py --workdir results/SL1344/eqtlbma/output/ --outprefix eqtlbma_info08 --nsubgrp 4 --dim 15 --thread 6"
