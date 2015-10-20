@@ -1,10 +1,11 @@
 library("devtools")
 library("dplyr")
 load_all("../seqUtils/")
+library("SNPRelate")
 
 #Import imputed genotype data from disk
-#SNPRelate::snpgdsVCF2GDS("genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_indels.INFO_08.vcf.gz", "genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_indels.INFO_08.gds",method = "copy.num.of.ref")
-vcf_file = gdsToMatrix("genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_indels.INFO_08.gds")
+SNPRelate::snpgdsVCF2GDS("genotypes/SL1344/array_genotypes.59_samples.imputed.uniq.vcf.gz", "genotypes/SL1344/array_genotypes.59_samples.imputed.uniq.gds",method = "copy.num.of.ref")
+vcf_file = gdsToMatrix("genotypes/SL1344/array_genotypes.59_samples.imputed.uniq.gds")
 
 #Import genotype data from the VCF file
 #vcf_file = vcfToMatrix("genotypes/SL1344/array_genotypes.59_samples.imputed.uniq.vcf", "GRCh38")

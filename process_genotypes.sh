@@ -27,7 +27,7 @@ bcftools view -O z selected_genotypes.GRCh38.sorted.vcf > selected_genotypes.GRC
 bcftools index selected_genotypes.GRCh38.sorted.vcf.gz
 
 #Find the genotyped SNPs from the imputed VCF file (will get rid of NAs)
-bcftools view -R array_genotypes.59_samples.vcf.gz -o array_genotypes.59_samples.imputed.vcf.gz -O z autosomes.snps_only.no_replicates.vcf.gz 
+bcftools view -R array_genotypes.59_samples.vcf.gz -o array_genotypes.59_samples.imputed.vcf.gz -O z imputed_20151005/imputed.59_samples.snps_only.vcf.gz
 
-#Keep only unique genotypes
-python ~/software/utils/vcf/vcfDetectDuplicateVariants.py --vcf array_genotypes.59_samples.imputed.vcf.gz --duplicates dup.txt | bgzip > array_genotypes.59_samples.imputed.uniq.vcf.gz 
+#Keep only unique genotyes
+ ~/software/vcflib/bin/vcfuniq array_genotypes.59_samples.imputed.vcf.gz | bgzip > array_genotypes.59_samples.imputed.uniq.vcf.gz 
