@@ -9,10 +9,10 @@ tabix -p bed results/SL1344/eqtlbma/input/snp_coords.bed.gz
 cat eqtlbma/input/gene_batches.txt | python ~/software/utils/submitJobs.py --MEM 6000 --jobname run_eqtlbma_bf --command  "python ~/software/utils/eqtlbma/run_eqtlbma_bf.py --indir results/SL1344/eqtlbma/input/ --outdir results/SL1344/eqtlbma/output/ --outprefix eqtlbma_info08"
 
 #Run eqtlbma with permutations
-cat eqtlbma/input/gene_batches.txt | head -n 1 | python ~/software/utils/submitJobs.py --MEM 12000 --jobname run_eqtlbma_bf --ncores 4 --command  "python ~/software/utils/eqtlbma/run_eqtlbma_bf.py --indir results/SL1344/eqtlbma/input/ --outdir results/SL1344/eqtlbma/output_perm/ --outprefix eqtlbma_perm --thread 4 --nperm 250"
+cat eqtlbma/input/gene_batches.txt | head -n 1 | python ~/software/utils/submitJobs.py --MEM 15000 --jobname run_eqtlbma_bf --ncores 2 --command  "python ~/software/utils/eqtlbma/run_eqtlbma_bf.py --indir results/SL1344/eqtlbma/input/ --outdir results/SL1344/eqtlbma/output_perm/ --outprefix eqtlbma_perm --thread 2 --nperm 250 --wrtsize 1"
 
 #Merge results from all batches
-python ~/software/utils/eqtlbma/merge_eqtlbma_bf.py --geneBatches eqtlbma/input_imputed/gene_batches.txt --outprefix eqtlbma_imputed --outdir eqtlbma/output_imputed/
+python ~/software/utils/eqtlbma/merge_eqtlbma_bf.py --geneBatches eqtlbma/input_imputed/gene_batches.txt --outprefix eqtlbma_info08 --outdir results/SL1344/eqtlbma/output/
 
 #Run the hierarchical model
 echo "None" | python ~/software/utils/submitJobs.py --MEM 12000 --jobname run_eqtlbma_hm --ncores 6 --command "python ~/software/utils/eqtlbma/run_eqtlbma_hm.py --workdir eqtlbma/output_imputed/ --outprefix eqtlbma_imputed --nsubgrp 4 --dim 15 --thread 6"
