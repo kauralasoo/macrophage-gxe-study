@@ -12,6 +12,11 @@ figure_folder = "results/technical_report/"
 line_metadata = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds")
 line_metadata_success = dplyr::filter(line_metadata, status == "Success")
 
+#Also import RNA RIN scores
+rin1 = read.table("macrophage-gxe-study/data/bioanalyzer/bioanalyser_combined_results.txt", header = TRUE)
+rin2 = read.table("macrophage-gxe-study/data/bioanalyzer/bioanalyser_illumina_bespoke.txt", header = TRUE)
+rin_scores = rbind(rin1, rin2)
+
 #How long does it take to expand iPS cells before differentiation?
 ips_duration_plot = ggplot(line_metadata, aes(x = ips_culture_days, fill = received_as)) + 
   geom_histogram(binwidth = 2) + 
@@ -69,5 +74,11 @@ mean_rna_concentration = ggplot(line_metadata_success, aes(x = ng_ul_mean)) +
   xlab("Mean RNA concentration (ng/ul)")
 ggsave(paste(figure_folder, "mean_rna_concentration.pdf"), plot = mean_rna_concentration, width = 6, height = 5)
 
+#How variable is RNA integrity between samples?
+rin_plot = ggplot(rin_scores, aes(x = RIN-0.001)) + 
+  geom_histogram(binwidth = 0.2) + 
+  xlab("RNA Integrity Number (RIN)") + 
+  scale_x_continuous(limits = c(0,10))
+ggsave(paste(figure_folder, "RIN_histogram.pdf"), plot = rin_plot, width = 6, height = 5)
 
 
