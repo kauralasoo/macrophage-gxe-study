@@ -16,7 +16,8 @@ rna_sample_stats = dplyr::mutate(rna_df, ng_ul = ifelse(grepl("eofe_",sample_id)
   dplyr::mutate(ng_ul = ifelse(sample_id == "gomv_D", (21.5/35*ng_ul), ng_ul)) %>% #gomv_D had 21.5 ul of sample instead of 35 ul
   dplyr::mutate(ng_ul = ifelse(sample_id %in% c("ieki_A", "ieki_B"), 2*ng_ul, ng_ul)) %>% #ieki A,B only one well per condition
   dplyr::mutate(ng_ul = ifelse(sample_id %in% c("ougl_A_2","ougl_B_2","ougl_C_2","ougl_D_2"),2*ng_ul,ng_ul)) %>% #ougl_X_2 one well per condition
-  dplyr::mutate(ng_ul = ifelse(sample_id == "ruyv_C",2*ng_ul,ng_ul)) #ougl_X_2 one well per condition
+  dplyr::mutate(ng_ul = ifelse(sample_id == "ruyv_C",2*ng_ul,ng_ul)) %>% #ougl_X_2 one well per condition 
+  dplyr::mutate(ng_ul = ifelse(sample_id %in% c("pelm_A","pelm_B","pelm_C","pelm_D"),2*ng_ul,ng_ul)) #pelm_X one well per condition
 
 #Separate sample_id into fields
 rna_sample_stats = tidyr::separate(rna_sample_stats, sample_id, into = c("donor","condition","replicate"), sep = "_", extra = "drop", remove = FALSE) %>%

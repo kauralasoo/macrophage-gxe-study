@@ -26,7 +26,7 @@ diff_days_plot = ggplot(line_metadata_success, aes(x = diff_days)) +
 ggsave(paste(figure_folder, "salmonella_diff_duration.pdf"), plot = diff_days_plot, width = 6, height = 5)
 
 #How many medium changes do we do for successfull differentiations?
-medium_changes_plot = ggplot(line_medatada_success, aes(x = medium_changes)) + 
+medium_changes_plot = ggplot(line_metadata_success, aes(x = medium_changes)) + 
   geom_histogram(binwidth = 1) + 
   xlab("Number of medium changes per differentiation")
 ggsave(paste(figure_folder, "medium_changes.pdf"), plot = medium_changes_plot, width = 6, height = 5)
@@ -63,6 +63,11 @@ flow_purity_plot = ggplot(flow_df, aes(x = max_purity-0.001, fill = status)) +
   xlab("Maximum purity")
 ggsave(paste(figure_folder, "flow_purity_histogram.pdf"), plot = flow_purity_plot, width = 7, height = 5)
 
+#How variable is the mean RNA concentration between different lines?
+mean_rna_concentration = ggplot(line_metadata_success, aes(x = ng_ul_mean)) + 
+  geom_histogram(binwidth = 20) + 
+  xlab("Mean RNA concentration (ng/ul)")
+ggsave(paste(figure_folder, "mean_rna_concentration.pdf"), plot = mean_rna_concentration, width = 6, height = 5)
 
 
 
