@@ -12,6 +12,10 @@ cat results/SL1344/eqtlbma/input/gene_batches.txt | python ~/software/utils/subm
 #Run each batch with 250 permutations
 cat results/SL1344/eqtlbma/input/gene_batches.txt | tail -n 82 | python ~/software/utils/submitJobs.py --MEM 15000 --jobname run_eqtlbma_bf_perm --ncores 4 --command  "python ~/software/utils/eqtlbma/run_eqtlbma_bf.py --indir results/SL1344/eqtlbma/input/ --outdir results/SL1344/eqtlbma/output_perm/ --outprefix eqtlbma_perm --thread 4 --nperm 250"
 
+#MHC genes take longer to run
+grep chr_6_batch_1 results/SL1344/eqtlbma/input/gene_batches.txt | python ~/software/utils/submitJobs.py --MEM 44000 --jobname run_eqtlbma_bf_perm --ncores 4 --queue hugemem --command  "python ~/software/utils/eqtlbma/run_eqtlbma_bf.py --indir results/SL1344/eqtlbma/input/ --outdir results/SL1344/eqtlbma/output_perm/ --outprefix eqtlbma_perm --thread 4 --nperm 250"
+grep chr_6_batch_2 results/SL1344/eqtlbma/input/gene_batches.txt | python ~/software/utils/submitJobs.py --MEM 44000 --jobname run_eqtlbma_bf_perm --ncores 4 --queue hugemem --command  "python ~/software/utils/eqtlbma/run_eqtlbma_bf.py --indir results/SL1344/eqtlbma/input/ --outdir results/SL1344/eqtlbma/output_perm/ --outprefix eqtlbma_perm --thread 4 --nperm 250"
+
 #Merge results from all batches
 python ~/software/utils/eqtlbma/merge_eqtlbma_bf.py --geneBatches results/SL1344/eqtlbma/input/gene_batches.txt --outprefix eqtlbma --outdir results/SL1344/eqtlbma/output/
 

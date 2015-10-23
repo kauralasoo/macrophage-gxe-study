@@ -69,21 +69,4 @@ purity_df = dplyr::mutate(purity_data, sample = as.character(sample)) %>%
 saveRDS(purity_df, "macrophage-gxe-study/data/covariates/flow_cytometry_purity.rds")
 write.table(purity_df, "macrophage-gxe-study/data/covariates/flow_cytometry_purity.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 
-#### Finally, we want to know if the purity values are lower for those lines that cluster separately on the RNA-Seq PCA plot. ####
-
-#Keep only the lines that also have RNA-Seq data
-rna_design = readRDS("results/SL1344/design_matrix.rds")
-cluster_samples = c("iasn","huls","debk", "ougl", "gomv", "ffdp", "peop")
-outliers = c("golb_111114","fpdj_200514")
-
-#Calculate and filter max purity
-max_purity = dplyr::group_by(purity_data, sample) %>% dplyr::summarize(max_purity = max(purity), donor = donor[1])
-filtered_purity = semi_join(max_purity, rna_design, by = "donor")
-filtered_purity = dplyr::mutate(filtered_purity, cluster = ifelse(donor %in% cluster_samples, "yes", "no")) %>%
-  dplyr::filter(!(sample %in% outliers))
-
-#Make plot
-plot = ggplot(filtered_purity, aes(x = cluster, y = max_purity, label = donor)) + geom_boxplot() + geom_point() + geom_text()
-ggsave("results/flow/purity_difference.pdf", plot = plot)
-
 
