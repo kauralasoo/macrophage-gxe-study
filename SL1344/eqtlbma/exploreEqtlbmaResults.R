@@ -11,7 +11,7 @@ library("lme4")
 eqtl_data_list = readRDS("results/SL1344/eqtl_data_list.rds")
 expression_dataset = readRDS("results/SL1344/combined_expression_data.rds") #expression data
 line_metadata = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds") #Line metadata
-vcf_file = readRDS("genotypes/SL1344/array_genotypes.59_samples.imputed.vcfToMatrix.rds") #genotypes
+vcf_file = gdsToMatrix("genotypes/SL1344/array_genotypes.59_samples.imputed.uniq.gds")
 gene_id_name_map = dplyr::select(eqtl_data_list$gene_metadata, gene_id, gene_name)
 
 #Filter the expression data set
@@ -20,9 +20,17 @@ expression_dataset$design = expression_dataset$design[selected_samples,]
 expression_dataset$exprs_cqn = expression_dataset$exprs_cqn[,selected_samples]
 expression_dataset$exprs_counts = expression_dataset$exprs_counts[,selected_samples]
 
+#Perform the QBF procedure
+#Run the QBF procedure
+gene.bfs <- read.table("results/SL1344/eqtlbma/output/eqtlbma_avg_bfs_EBF.txt.gz", header=TRUE)
+perms.qbf = read.table("results/SL1344/eqtlbma/output_perm/eqtlbma_perm_joinPermPvals.txt.gz", header = TRUE)
+pi0.qbf <- estimatePi0WithQbf(log10.bfs=as.matrix(perms.qbf[!duplicated(perms.qbf$gene),c(5,6)]),gamma=0.5, verbose=1)
+called.nulls.qbf <- ! controlBayesFdr(log10.bfs=gene.bfs$gene.log10.bf[!duplicated(gene.bfs$gene)],
+                                      pi0=pi0.qbf, fdr.level=0.1, verbose=1)
+
 #Import eqtlbma results
-results = read.table(gzfile("eqtlbma/output_imputed//eqtlbma_imputed_avg_bfs.txt.gz"), sep = "\t", skip = 1, header = TRUE, stringsAsFactors = FALSE)
-significant_genes = dplyr::filter(results, gene.post > 0.8) %>% tbl_df() %>%
+results = read.table(gzfile("results/SL1344/eqtlbma/output/eqtlbma_avg_bfs.txt.gz"), sep = "\t", skip = 1, header = TRUE, stringsAsFactors = FALSE)
+significant_genes = dplyr::filter(results, gene.post > 0.5) %>% tbl_df() %>%
   dplyr::select(gene, snp, gene.post, snp.post.the, snp.post.an, best.config, post.best.config) %>%
   dplyr::group_by(gene) %>%
   dplyr::arrange(-snp.post.an) %>%
@@ -38,22 +46,22 @@ FCGR3B_plot = plotEQTL("ENSG00000162747", "rs10917809", expression_dataset, vcf_
 #Make plots for condition-specific eQTLs
 dplyr::filter(significant_genes, best.config == "1-2-3") %>%
   makeMultiplePlots(.,expression_dataset, vcf_file, line_metadata) %>%
-savePlots(.,path = "results/SL1344/eqtlbma/inflammatory_plots/",width = 7, height = 7)
+savePlots(.,path = "results/SL1344/eqtlbma_figures/inflammatory_plots/",width = 7, height = 7)
 
 #Make plots for condition-specific eQTLs
 dplyr::filter(significant_genes, best.config %in% c("1-2","1")) %>%
   makeMultiplePlots(., expression_dataset, vcf_file, line_metadata) %>%
-  savePlots(., path = "results/SL1344/eqtlbma/ifng_plots/",width = 7, height = 7)
+  savePlots(., path = "results/SL1344/eqtlbma_figures/ifng_plots/",width = 7, height = 7)
 
 #Salmonella specific
 dplyr::filter(significant_genes, best.config == "2-3") %>%
   makeMultiplePlots(., expression_dataset, vcf_file, line_metadata) %>%
-  savePlots(., path = "results/SL1344/eqtlbma/SL1344_plots/",width = 7, height = 7)
+  savePlots(., path = "results/SL1344/eqtlbma_figures//SL1344_plots/",width = 7, height = 7)
 
 # Not Salmonella specific
 dplyr::filter(significant_genes, best.config %in% c("1-4","1-3-4")) %>%
   makeMultiplePlots(., expression_dataset, vcf_file, line_metadata) %>%
-  savePlots(., path = "results/SL1344/eqtlbma/not_SL1344_plots/",width = 7, height = 7)
+  savePlots(., path = "results/SL1344/eqtlbma_figures/not_SL1344_plots/",width = 7, height = 7)
 
 #Test for interactions between lead SNP and condition
 res = testMultipleInteractions(significant_genes, eqtl_data_list)
