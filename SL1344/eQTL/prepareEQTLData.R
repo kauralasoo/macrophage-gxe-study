@@ -6,6 +6,7 @@ library("SNPRelate")
 #Import imputed genotype data from disk
 SNPRelate::snpgdsVCF2GDS("genotypes/SL1344/array_genotypes.59_samples.imputed.uniq.vcf.gz", "genotypes/SL1344/array_genotypes.59_samples.imputed.uniq.gds",method = "copy.num.of.ref")
 vcf_file = gdsToMatrix("genotypes/SL1344/array_genotypes.59_samples.imputed.uniq.gds")
+vcf_file = gdsToMatrix("genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_indels.INFO_08.gds")
 
 #Import genotype data from the VCF file
 #vcf_file = vcfToMatrix("genotypes/SL1344/array_genotypes.59_samples.imputed.uniq.vcf", "GRCh38")
@@ -121,4 +122,41 @@ saveEqtlbmaData(eqtlbma_dataset, "results/SL1344/eqtlbma/input/",
 
 #### RASQUAL ####
 #export eqtl dataset for analysis with rasqual
+
+
+### FastQTL ####
+#Export expression data for fastQTL analysis
+eqtl_dataset = readRDS("results/SL1344/eqtl_data_list.rds")
+
+#Extract data from list
+donor_genotype_map = dplyr::filter(eqtl_dataset$sample_metadata, condition == "A") %>% dplyr::select(donor, genotype_id)
+genepos = dplyr::select(eqtl_dataset$genepos, chr, left, right, geneid) %>% dplyr::arrange(chr, left, right)
+colnames(genepos)[1] = "#chr"
+
+#Make an updated list of covariates
+fastqtl_covariates_list = lapply(eqtl_dataset$covariates_list, function(cov_mat, donor_genotype_map){
+  res = extractSubset(donor_genotype_map, as.data.frame(cov_mat), "donor", "genotype_id") %>% 
+    dplyr::mutate(id = rownames(cov_mat)) %>% 
+    dplyr::select(id, everything())
+  return(res)
+}, donor_genotype_map) %>%
+  lapply(., function(x){x[1:7,]})
+
+#Make an update list of gene expression
+fastqtl_expression_list = lapply(eqtl_dataset$exprs_cqn_list, function(exp_mat, donor_genotype_map, genepos){
+  res = extractSubset(donor_genotype_map, as.data.frame(exp_mat), "donor","genotype_id") %>%
+    dplyr::mutate(geneid = rownames(exp_mat)) %>%
+    dplyr::select(geneid, everything()) %>%
+    dplyr::left_join(genepos, ., by = "geneid")
+  return(res)
+}, donor_genotype_map, genepos)
+
+#Save matrices to disk
+saveFastqtlMatrices(fastqtl_covariates_list, "results/SL1344/fastqtl/input/", file_suffix = "covariates")
+saveFastqtlMatrices(fastqtl_expression_list, "results/SL1344/fastqtl/input/", file_suffix = "expression")
+write.table(donor_genotype_map$genotype_id, "results/SL1344/fastqtl/input/genotype_list.txt", row.names = FALSE, quote = FALSE, col.names = FALSE)
+
+#Construct chunks table
+chunks_matrix = data.frame(chunk = seq(1:200), n = 200)
+write.table(chunks_matrix, "results/SL1344/fastqtl/input/chunk_table.txt", row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
 
