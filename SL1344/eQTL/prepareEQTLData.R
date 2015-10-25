@@ -4,9 +4,9 @@ load_all("../seqUtils/")
 library("SNPRelate")
 
 #Import imputed genotype data from disk
-SNPRelate::snpgdsVCF2GDS("genotypes/SL1344/array_genotypes.59_samples.imputed.uniq.vcf.gz", "genotypes/SL1344/array_genotypes.59_samples.imputed.uniq.gds",method = "copy.num.of.ref")
+#SNPRelate::snpgdsVCF2GDS("genotypes/SL1344/array_genotypes.59_samples.imputed.uniq.vcf.gz", "genotypes/SL1344/array_genotypes.59_samples.imputed.uniq.gds",method = "copy.num.of.ref")
 vcf_file = gdsToMatrix("genotypes/SL1344/array_genotypes.59_samples.imputed.uniq.gds")
-vcf_file = gdsToMatrix("genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_indels.INFO_08.gds")
+#vcf_file = gdsToMatrix("genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_indels.INFO_08.gds")
 
 #Import genotype data from the VCF file
 #vcf_file = vcfToMatrix("genotypes/SL1344/array_genotypes.59_samples.imputed.uniq.vcf", "GRCh38")
@@ -22,7 +22,8 @@ design = dplyr::filter(expression_dataset$design, !(donor == "fpdj")) %>% tbl_df
   dplyr::filter(!(donor == "fpdl" & replicate == 2)) %>% #Remove second fpdl sample (ffdp)
   dplyr::filter(!(donor == "ougl" & replicate == 2)) %>% #Remove second ougl sample (dium)
   dplyr::filter(!(donor == "mijn")) #%>% #Remove mijn (wrong line from CGAP)
-sample_meta = dplyr::left_join(design, line_metadata, by = c("donor", "replicate"))
+sample_meta = dplyr::left_join(design, line_metadata, by = c("donor", "replicate")) %>%
+  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg", "SL1344", "IFNg_SL1344")))
 
 #Construct separate design matrices
 cond_A_design = dplyr::filter(sample_meta, condition == "A")
@@ -40,9 +41,17 @@ exprs_counts = expression_dataset$exprs_counts[,design$sample_id]
 mean_expression = calculateMean(exprs_cqn, as.data.frame(design), "condition_name")
 expressed_genes = names(which(apply(mean_expression, 1, max) > 0))
 
+#Set up the genepos data.frame
+genepos = dplyr::filter(expression_dataset$gene_metadata, gene_id %in% expressed_genes) %>% 
+  dplyr::transmute(chr = chromosome_name, left = start_position, right = end_position, geneid = gene_id, score = 1000, strand) %>%
+  dplyr::mutate(strand = ifelse(strand == 1, "+","-")) %>%
+  as.data.frame() %>%
+  dplyr::filter( !(chr %in% c("MT","Y")) ) %>% #Remove genes on MT and Y chromosomes
+  dplyr::arrange(chr, left, right)
+
 #Filter expression data by min expression
-exprs_cqn = expression_dataset$exprs_cqn[expressed_genes, design$sample_id]
-exprs_counts = expression_dataset$exprs_counts[expressed_genes, design$sample_id]
+exprs_cqn = expression_dataset$exprs_cqn[genepos$geneid, design$sample_id]
+exprs_counts = expression_dataset$exprs_counts[genepos$geneid, design$sample_id]
 
 #Set up expression data for each condition
 condA_exp = extractSubset(dplyr::filter(sample_meta, condition == "A"), exprs_cqn)
@@ -50,12 +59,6 @@ condB_exp = extractSubset(dplyr::filter(sample_meta, condition == "B"), exprs_cq
 condC_exp = extractSubset(dplyr::filter(sample_meta, condition == "C"), exprs_cqn)
 condD_exp = extractSubset(dplyr::filter(sample_meta, condition == "D"), exprs_cqn)
 exprs_cqn_list = list(naive = condA_exp, IFNg = condB_exp, SL1344 = condC_exp, IFNg_SL1344 = condD_exp)
-
-#Set up the genepos data.frame
-genepos = dplyr::filter(expression_dataset$gene_metadata, gene_id %in% expressed_genes) %>% 
-  dplyr::transmute(chr = chromosome_name, left = start_position, right = end_position, geneid = gene_id, score = 1000, strand) %>%
-  dplyr::mutate(strand = ifelse(strand == 1, "+","-")) %>%
-  as.data.frame()
 
 #### GENOTYPES ####
 #Remove two SNPs that have the same name for two different positions
@@ -130,7 +133,7 @@ eqtl_dataset = readRDS("results/SL1344/eqtl_data_list.rds")
 
 #Extract data from list
 donor_genotype_map = dplyr::filter(eqtl_dataset$sample_metadata, condition == "A") %>% dplyr::select(donor, genotype_id)
-genepos = dplyr::select(eqtl_dataset$genepos, chr, left, right, geneid) %>% dplyr::arrange(chr, left, right)
+genepos = dplyr::select(eqtl_dataset$genepos, chr, left, right, geneid)
 colnames(genepos)[1] = "#chr"
 
 #Make an updated list of covariates
@@ -140,9 +143,9 @@ fastqtl_covariates_list = lapply(eqtl_dataset$covariates_list, function(cov_mat,
     dplyr::select(id, everything())
   return(res)
 }, donor_genotype_map) %>%
-  lapply(., function(x){x[1:7,]})
+  lapply(., function(x){x[1:7,]}) #Keep the first 7 covariates
 
-#Make an update list of gene expression
+#Make an updated list of gene expression
 fastqtl_expression_list = lapply(eqtl_dataset$exprs_cqn_list, function(exp_mat, donor_genotype_map, genepos){
   res = extractSubset(donor_genotype_map, as.data.frame(exp_mat), "donor","genotype_id") %>%
     dplyr::mutate(geneid = rownames(exp_mat)) %>%
