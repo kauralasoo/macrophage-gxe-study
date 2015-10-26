@@ -1,7 +1,10 @@
 library("devtools")
 library("qvalue")
 library("dplyr")
+library("ggplot2")
+library("SNPRelate")
 load_all("../seqUtils/")
+load_all("macrophage-gxe-study/housekeeping/")
 
 #Helper functions
 enrichFastQTLPvalues <- function(fastqtl_pvalues, gene_id_name_map){
@@ -44,14 +47,23 @@ ggplot(IFNg_SL1344_qtls, aes(x = p_expected, y = p_beta_log10)) +
   stat_abline(slope = 1, intercept = 0, color = "red")
 
 #Make some example plots
-cd14_plot = plotEQTL("ENSG00000170458", "rs778583", eqtl_dataset$exprs_cqn, vcf_file$genotypes, 
-                     eqtl_dataset$sample_metadata, eqtl_dataset$gene_metadata)
-
+cd14_plot = plotEQTL("ENSG00000170458", "rs778583", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
+                     eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
 
 #Merge conditions together
 naive_hits = dplyr::filter(naive_qtls, qvalue < 0.1) %>% dplyr::select(gene_id, snp_id, qvalue)
 IFNg_hits = dplyr::filter(IFNg_qtls, qvalue < 0.1) %>% dplyr::select(gene_id, snp_id, qvalue)
-joint_df = dplyr::full_join(naive_hits, IFNg_hits, by = c("gene_id","snp_id"))
+SL1344_hits = dplyr::filter(SL1344_qtls, qvalue < 0.1) %>% dplyr::select(gene_id, snp_id, qvalue)
+IFNg_SL1344_hits = dplyr::filter(IFNg_SL1344_qtls, qvalue < 0.1) %>% dplyr::select(gene_id, snp_id, qvalue)
+
+#Merge all of the hits together
+joint_df = dplyr::full_join(naive_hits, IFNg_hits, by = c("gene_id","snp_id")) %>%
+  dplyr::full_join(SL1344_hits, c("gene_id","snp_id")) %>%
+  dplyr::full_join(IFNg_SL1344_hits,c("gene_id","snp_id"))
+
+#Test for interaction
+interaction_pvalues = testMultipleInteractions(joint_df, eqtl_data_list, vcf_file)
+saveRDS(interaction_pvalues, "results/SL1344/interaction_pvalues.rds")
 
 multi_snp_genes = group_by(joint_df, gene_id) %>% 
   dplyr::summarise(snp_count = length(gene_id)) %>% 
@@ -68,5 +80,11 @@ snps_per_gene = dplyr::semi_join(joint_df, multi_snp_genes, by = "gene_id") %>%
 snps = union(snps_per_gene$snp1, snps_per_gene$snp2)
 selected_snps = vcf_file$genotypes[snps, ]
 ld_mat = dplyr::group_by(snps_per_gene, gene_id) %>% 
+  dplyr::mutate(ld = snpgdsLDpair(selected_snps[snp1,],selected_snps[snp2,], method = "r")[1])
+dplyr::filter(ld_mat, ld*ld < 0.2) %>% View()
+
+ld_mat2 = dplyr::group_by(snps_per_gene, gene_id) %>% 
   dplyr::mutate(ld = snpgdsLDpair(selected_snps[snp1,],selected_snps[snp2,], method = "dprime")[1])
-dplyr::filter(ld_mat, ld*ld < 0.2)
+dplyr::filter(ld_mat2, ld < 0.8)
+
+plot(ld_mat$ld*ld_mat$ld, ld_mat2$ld*ld_mat2$ld)
