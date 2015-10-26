@@ -73,5 +73,10 @@ cut -f1 fastq/acLDL_names.txt | python ~/software/utils/submitJobs.py --MEM 1000
 cut -f1 fastq/acLDL_names_2.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname verifyBamID --command  "python ~/software/utils/runVerifyBamID.py --bamdir STAR/acLDL --insuffix .Aligned.sortedByCoord.out.bam --vcf genotypes/acLDL/hipsci.wec.gtarray.HumanCoreExome-12_v1_0.858samples.20141111.genotypes.GRCh38.sorted.filtered.vcf.gz --execute True" 
 cut -f1 macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_all.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname verifyBamID --command  "python ~/software/utils/runVerifyBamID.py --bamdir STAR/acLDL --insuffix .Aligned.sortedByCoord.out.bam --vcf genotypes/acLDL/hipsci.wec.gtarray.HumanCoreExome-12_v1_0.858samples.20141111.genotypes.GRCh38.sorted.filtered.vcf.gz --execute True" 
 
+#### PEER ####
+#Run PEER on each condition separately using only expressed genes
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python ~/software/utils/runPEER.py --input results/acLDL/PEER/input//Ctrl.exprs.txt --outdir results/acLDL/PEER/Ctrl_10/ --n_factors 10"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python ~/software/utils/runPEER.py --input results/acLDL/PEER/input//AcLDL.exprs.txt --outdir results/acLDL/PEER/AcLDL_10/ --n_factors 10"
+
 
 

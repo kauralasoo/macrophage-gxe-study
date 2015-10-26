@@ -1,7 +1,7 @@
 library("devtools")
 library("cqn")
 library("dplyr")
-load_all("macrophage-gxe-study/seqUtils/")
+load_all("../seqUtils/")
 
 #Import raw read counts 
 data = read.table("results/acLDL/acLDL_basic_counts.txt", stringsAsFactors = FALSE, header = TRUE)
