@@ -12,5 +12,17 @@ cat results/acLDL/fastqtl/input/chunk_table.txt | python ~/software/utils/submit
 cat results/acLDL/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/runFastQTL.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.vcf.gz --bed results/acLDL/fastqtl/input/AcLDL.expression.txt.gz --cov results/acLDL/fastqtl/input/AcLDL.covariates.txt --W 500000 --permute '100 10000' --out results/acLDL/fastqtl/output/AcLDL_perm --execute True"
 
 #Merge chunks into single files
-zcat results/acLDL/fastqtl/output/naive_perm.chunk_*.txt.gz | bgzip > results/acLDL/fastqtl/output/naive_permuted.txt.gz
-zcat results/acLDL/fastqtl/output/IFNg_perm.chunk_*.txt.gz | bgzip > results/acLDL/fastqtl/output/IFNg_permuted.txt.gz
+zcat results/acLDL/fastqtl/output/Ctrl_perm.chunk_*.txt.gz | bgzip > results/acLDL/fastqtl/output/Ctrl_permuted.txt.gz
+zcat results/acLDL/fastqtl/output/AcLDL_perm.chunk_*.txt.gz | bgzip > results/acLDL/fastqtl/output/AcLDL_permuted.txt.gz
+
+#Run on all SNPs 
+cat results/acLDL/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/runFastQTL.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.vcf.gz --bed results/acLDL/fastqtl/input/Ctrl.expression.txt.gz --cov results/acLDL/fastqtl/input/Ctrl.covariates.txt --W 500000 --out results/acLDL/fastqtl/output/Ctrl_full --execute True"
+cat results/acLDL/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/runFastQTL.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.vcf.gz --bed results/acLDL/fastqtl/input/AcLDL.expression.txt.gz --cov results/acLDL/fastqtl/input/AcLDL.covariates.txt --W 500000 --out results/acLDL/fastqtl/output/AcLDL_full --execute True"
+
+#Merge chunks into a single file
+zcat results/acLDL/fastqtl/output/Ctrl_full.chunk_*.txt.gz | bgzip > results/acLDL/fastqtl/output/Ctrl_pvalues.txt.gz
+zcat results/acLDL/fastqtl/output/AcLDL_full.chunk_*.txt.gz | bgzip > results/acLDL/fastqtl/output/AcLDL_pvalues.txt.gz
+
+#Remove the chunks
+rm results/acLDL/fastqtl/output/Ctrl_full.chunk_*.txt.gz 
+rm results/acLDL/fastqtl/output/AcLDL_full.chunk_*.txt.gz 
