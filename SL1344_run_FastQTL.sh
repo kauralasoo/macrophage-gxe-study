@@ -24,3 +24,4 @@ zcat results/SL1344/fastqtl/output/naive_perm.chunk_*.txt.gz | bgzip > results/S
 zcat results/SL1344/fastqtl/output/IFNg_perm.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output/IFNg_permuted.txt.gz
 zcat results/SL1344/fastqtl/output/SL1344_perm.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output/SL1344_permuted.txt.gz
 zcat results/SL1344/fastqtl/output/IFNg_SL1344_perm.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output/IFNg_SL1344_permuted.txt.gz
+

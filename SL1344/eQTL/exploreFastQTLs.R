@@ -6,19 +6,6 @@ library("SNPRelate")
 load_all("../seqUtils/")
 load_all("macrophage-gxe-study/housekeeping/")
 
-#Helper functions
-enrichFastQTLPvalues <- function(fastqtl_pvalues, gene_id_name_map){
-  res = tbl_df(fastqtl_pvalues) %>%
-    dplyr::arrange(p_beta) %>%
-    dplyr::filter(!is.na(p_beta)) %>%
-    dplyr::mutate(p_beta_log10 =-log(p_beta,10)) %>% 
-    dplyr::mutate(p_expected = -log(c(1:length(p_beta))/length(p_beta),10)) %>% 
-    dplyr::left_join(gene_id_name_map, by = "gene_id") %>%
-    dplyr::select(gene_id, gene_name, everything()) %>%
-    dplyr::mutate(qvalue = qvalue::qvalue(p_beta)$qvalues)
-  return(res)
-}
-
 #Import data
 eqtl_data_list = readRDS("results/SL1344/eqtl_data_list.rds")
 gene_id_name_map = dplyr::select(eqtl_data_list$gene_metadata, gene_id, gene_name)
