@@ -1,6 +1,6 @@
 library("devtools")
 library("dplyr")
-load_all("macrophage-gxe-study/seqUtils/")
+load_all("../seqUtils/")
 
 sample_names = read.table("macrophage-gxe-study/data/sample_lists/SL1344/SL1344_names_all.txt", sep ="\t",comment.char = "", stringsAsFactors = FALSE)[,1]
 
