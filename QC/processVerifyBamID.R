@@ -1,6 +1,6 @@
 library("dplyr")
 library("devtools")
-load_all("../macrophage-gxe-study/macrophage-gxe-study/seqUtils/")
+load_all("../seqUtils/")
 
 #Load verifyBamID results from disk
 sample_names = read.table("macrophage-chromatin/data/SL1344/ATAC_Salmonella_names.txt", sep ="\t",comment.char = "", stringsAsFactors = FALSE)[,1]
