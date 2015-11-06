@@ -6,7 +6,7 @@ library("ggplot2")
 library("gplots")
 library("cqn")
 library("gProfileR")
-load_all("macrophage-gxe-study/seqUtils/")
+load_all("../seqUtils/")
 
 #Load expression data from disk
 expression_list = readRDS("results/SL1344/combined_expression_data.rds")
