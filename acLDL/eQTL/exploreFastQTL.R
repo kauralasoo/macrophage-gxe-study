@@ -22,11 +22,8 @@ vcf_file = readRDS("results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.rds")
 ctrl_qtls = importFastQTLTable("results/acLDL/fastqtl/output/Ctrl_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_id_name_map)
 acLDL_qtls = importFastQTLTable("results/acLDL/fastqtl/output/AcLDL_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_id_name_map)
 
-#Comapre replicability betweeb acLDL control and Salmonella naive eQTLs
-naive_qtls = importFastQTLTable("results/SL1344/fastqtl/output/naive_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_id_name_map)
-
 #Calculate Pi1 between stimulated and unstimulated
-qtl_list = list(Ctrl = ctrl_qtls, AcLDL = acLDL_qtls, SL1344_naive = naive_qtls)
+qtl_list = list(Ctrl = ctrl_qtls, AcLDL = acLDL_qtls)
 pi1_matrix = calculatePairwisePi1(qtl_list)
 
 #Replication between the two studies is relatively low, BUT they individuals and variants tested do not overlap completely.
@@ -38,4 +35,4 @@ joint_qtls = rbind(ctrl_hits, acldl_hits) %>% dplyr::select(gene_id, snp_id) %>%
 
 interactions = testMultipleInteractions(joint_qtls, eqtl_data_list, vcf_file)
 interaction_df = plyr::ldply(interactions, .id = "id")
-saveRDS(interaction, "results/acLDL/fastqtl/output/interactions.rds")
+saveRDS(interactions, "results/acLDL/fastqtl/output/interactions.rds")

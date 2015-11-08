@@ -11,6 +11,7 @@ mapFlowQTLs <- function(intensity_df, genepos, genotype_list, genotype_donor_map
   #Helper function to map QTLs for flow data
   genotype_matrix = extractSubset(genotype_donor_map, genotype_list$genotypes, 
                                   old_column_names = "genotype_id", new_column_names = "donor")
+  intensity_df = intensity_df[,colnames(genotype_matrix)]
   print(head(genotype_matrix))
   qtl_results = runMatrixEQTL(intensity_df, genotype_matrix, as.data.frame(genotype_list$snpspos), 
                               genepos, cisDist, pvOutputThreshold = 1, covariates = covariates, permute)
@@ -26,7 +27,7 @@ mapFlowQTLs <- function(intensity_df, genepos, genotype_list, genotype_donor_map
 flow_purity = readRDS("macrophage-gxe-study/data/covariates/flow_cytometry_purity.rds")
 line_medatada = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds")
 #vcf_file = readRDS("genotypes/SL1344/array_genotypes.59_samples.imputed.vcfToMatrix.rds")
-vcf_file = seqUtils::gdsToMatrix("genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_indels.INFO_08.gds")
+#vcf_file = seqUtils::gdsToMatrix("genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_indels.INFO_08.gds")
 eqtl_data_list = readRDS("results/SL1344/eqtl_data_list.rds")
 gene_id_name_map = dplyr::select(eqtl_data_list$gene_metadata, gene_id, gene_name)
 
@@ -39,10 +40,14 @@ gene_coords = dplyr::filter(eqtl_data_list$genepos, geneid %in%
 channel_marker_map = data_frame(channel = c("APC.A","PE.A","Pacific.Blue.A"), marker = c("CD206","CD16","CD14"))
 unique_lines = dplyr::select(line_medatada, line_id, donor, genotype_id) %>% unique()
 flow_data = dplyr::left_join(flow_purity, channel_marker_map, by = "channel") %>%
-  dplyr::left_join(unique_lines, by = "donor") %>%
   dplyr::mutate(donor = ifelse(donor == "fpdj", "nibo",donor)) %>% #fpdj and nibo are the same donors
+  dplyr::left_join(unique_lines, by = "donor") %>%
   dplyr::mutate(intensity = mean2-mean1) %>%
   dplyr::select(line_id, genotype_id, donor, flow_date, marker, purity, intensity)
+
+#Save flow genotypes list to disk
+write.table(unique(sort(flow_data$genotype_id)), "macrophage-gxe-study/data/sample_lists/flow_cytometry_gt_list.txt", 
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 #Import genotypes
 #Filter genotypes form large VCF files
@@ -50,16 +55,25 @@ flow_data = dplyr::left_join(flow_purity, channel_marker_map, by = "channel") %>
 #bcftools view -r 10:17309344-18309344 -S macrophage-gxe-study/data/sample_lists/flow_cytometry_gt_list.txt genotypes/GRCh38/imputed_20151005/hipsci.wec.gtarray.HumanCoreExome-12_v1_0.REL-2014-11.imputed_phased.INFO_0.4_filtered.20151005.genotypes.chr10.GRCh38.sorted.vcf.gz | bcftools filter -i 'MAF[0] >= 0.05' - | bcftools norm -m+both - | bcftools view -m2 -M2 - > CD206_cis.vcf
 
 #Import all genotypes
-#SNPRelate::snpgdsVCF2GDS("flow_cis_regions.vcf", "flow_cis_regions.gds",method = "copy.num.of.ref")
+SNPRelate::snpgdsVCF2GDS("flow/genotypes/flow_cis_regions.vcf", "flow/genotypes/flow_cis_regions.gds",method = "copy.num.of.ref")
 flow_cis_region = gdsToMatrix("flow/genotypes/flow_cis_regions.gds")
 
+#Extract the donors that have more than one replicate
+replicate_donors = dplyr::filter(flow_data, marker == "CD14") %>% 
+  group_by(donor) %>% 
+  dplyr::summarise(count = length(donor)) %>% 
+  dplyr::filter(count > 1)
+
 #### Estimate variance explained by donor ####
-#Analyse CD14 only
+#Prepare CD14 data
 cd14_geno_mat = as.data.frame(t(flow_cis_region$genotypes)) %>% 
   dplyr::mutate(genotype_id = colnames(flow_cis_region$genotypes))
-cd14_data = dplyr::filter(flow_data, marker == "CD14")
+cd14_data = dplyr::filter(flow_data, marker == "CD14") 
 cd14_model_data = dplyr::left_join(cd14_data, cd14_geno_mat, by = "genotype_id")
-cd14_model = lmer(intensity ~ (1|flow_date) + (1|donor), cd14_model_data)
+
+#Use only replicate measurements to estimate donor variance
+cd14_replicates = cd14_model_data %>% dplyr::semi_join(replicate_donors, by = "donor")
+cd14_model = lmer(intensity ~ (1|flow_date) + (1|donor), cd14_replicates)
 cd14_variance = seqUtils::varianceExplained(cd14_model)
 
 #Analyse CD16 only
@@ -67,11 +81,13 @@ cd16_geno_mat = as.data.frame(t(flow_cis_region$genotypes)) %>%
   dplyr::mutate(genotype_id = colnames(flow_cis_region$genotypes))
 cd16_data = dplyr::filter(flow_data, marker == "CD16")
 cd16_model_data = dplyr::left_join(cd16_data, cd16_geno_mat, by = "genotype_id")
-cd16_model = lmer(intensity ~ (1|flow_date) + (1|donor), cd16_model_data, REML = TRUE)
+
+cd16_replicates = cd16_model_data %>% dplyr::semi_join(replicate_donors, by = "donor")
+cd16_model = lmer(intensity ~ (1|flow_date) + (1|donor), cd16_model_data)
 cd16_variance = seqUtils::varianceExplained(cd16_model)
 
 #Analyse CD206 only
-cd206_data = dplyr::filter(flow_data, marker == "CD206")
+cd206_data = dplyr::filter(flow_data, marker == "CD206") 
 cd206_model = lmer(intensity ~ (1|flow_date) + (1|donor), cd206_data)
 cd206_variance = seqUtils::varianceExplained(cd206_model)
 
@@ -94,15 +110,19 @@ intensity_df = t(intensity_df[,-1])
 
 #Prepare gene positions
 genepos = dplyr::select(gene_coords, gene_name, chr, left, right) %>%
-  dplyr::rename(geneid = gene_name)
-genepos$geneid = c("CD14","CD206", "CD16","CD16")
+  dplyr::rename(geneid = gene_name) %>%
+  dplyr::mutate(geneid = ifelse(geneid == "FCGR3A", "CD16", geneid)) %>%
+  dplyr::mutate(geneid = ifelse(geneid == "FCGR3B", "CD16", geneid)) %>%
+  dplyr::mutate(geneid = ifelse(geneid == "MRC1", "CD206", geneid)) %>%
+  dplyr::group_by(geneid) %>%
+  dplyr::summarize(chr = min(chr), left = min(left), right = max(right)) %>%
+  as.data.frame()
 
 #Prepare genotype data
-genotype_donor_map = dplyr::select(flow_data, genotype_id, donor) %>% unique() %>% 
-  dplyr::filter(genotype_id != "HPSI0813i-fpdj_3")
+genotype_donor_map = dplyr::select(flow_data, genotype_id, donor) %>% unique()
 
 #### Perform QTL mapping for all markers at the same time ####
-qtl_df = mapFlowQTLs(intensity_df, genepos[1:3,], flow_cis_region, genotype_donor_map, cisDist = 2e5)
+qtl_df = mapFlowQTLs(intensity_df, genepos[1:3,], flow_cis_region, genotype_donor_map, cisDist = 5e5)
 
 #Perform QTL mapping with permutations
 perm_list = lapply(as.list(c(1:1000)), function(x){
@@ -152,7 +172,7 @@ cd14_variance_qtl = seqUtils::varianceExplained(cd14_model_qtl)
 write.table(cd14_variance_qtl, "results/flow/VarComp/CD14_variance_explained.txt", sep = "\t", row.names = FALSE, quote = FALSE)
 
 #### CD16 QTLS ####
-cd16_qtl_df = mapFlowQTLs(intensity_df, genepos[1:3,], CD16_cis_region, genotype_donor_map, cisDist = 2e5)
+cd16_qtl_df = dplyr::filter(qtl_df, gene == "CD16")
 cd16_manhattan = ggplot(cd16_qtl_df, aes(x = pos, y = log10_pvalue)) + geom_point()
 ggsave("results/flow/VarComp/CD16_manhattan_plot.pdf", plot = cd16_manhattan, width = 8, height = 6)
 
