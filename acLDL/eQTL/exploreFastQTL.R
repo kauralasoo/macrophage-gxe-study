@@ -36,3 +36,8 @@ joint_qtls = rbind(ctrl_hits, acldl_hits) %>% dplyr::select(gene_id, snp_id) %>%
 interactions = testMultipleInteractions(joint_qtls, eqtl_data_list, vcf_file)
 interaction_df = plyr::ldply(interactions, .id = "id")
 saveRDS(interactions, "results/acLDL/fastqtl/output/interactions.rds")
+
+#Make a plot of the LIPA qtl
+lipa_qtl = plotEQTL("ENSG00000107798", "rs1332329", eqtl_data_list$exprs_cqn, vcf_file$genotypes,
+         eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
+ggsave("results/acLDL/LIPA_qtl.pdf", lipa_qtl, width = 8, height = 6)

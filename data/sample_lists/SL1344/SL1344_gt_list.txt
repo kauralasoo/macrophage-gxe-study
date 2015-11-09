@@ -7,7 +7,6 @@ HPSI0713i-darw_2
 HPSI0513i-debk_7
 HPSI0813i-ffdm_3
 HPSI0813i-fpdl_1
-HPSI0813i-fpdj_3
 HPSI0613i-funp_3
 HPSI0613i-giuo_4
 HPSI0513i-golb_1
@@ -49,7 +48,6 @@ HPSI0913i-eika_2
 HPSI1213i-pahc_4
 HPSI0214i-wibj_2
 HPSI0613i-xucm_3
-HPSI1013i-mijn_2
 HPSI0613i-eojr_3
 HPSI0413i-sukz_1
 HPSI0114i-kolf_3

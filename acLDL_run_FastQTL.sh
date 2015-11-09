@@ -16,8 +16,8 @@ zcat results/acLDL/fastqtl/output/Ctrl_perm.chunk_*.txt.gz | bgzip > results/acL
 zcat results/acLDL/fastqtl/output/AcLDL_perm.chunk_*.txt.gz | bgzip > results/acLDL/fastqtl/output/AcLDL_permuted.txt.gz
 
 #Run on all SNPs 
-cat results/acLDL/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/runFastQTL.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.vcf.gz --bed results/acLDL/fastqtl/input/Ctrl.expression.txt.gz --cov results/acLDL/fastqtl/input/Ctrl.covariates.txt --W 500000 --out results/acLDL/fastqtl/output/Ctrl_full --execute True"
-cat results/acLDL/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/runFastQTL.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.vcf.gz --bed results/acLDL/fastqtl/input/AcLDL.expression.txt.gz --cov results/acLDL/fastqtl/input/AcLDL.covariates.txt --W 500000 --out results/acLDL/fastqtl/output/AcLDL_full --execute True"
+cat results/acLDL/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.vcf.gz --bed results/acLDL/fastqtl/input/Ctrl.expression.txt.gz --cov results/acLDL/fastqtl/input/Ctrl.covariates.txt --W 500000 --out results/acLDL/fastqtl/output/Ctrl_full --execute True"
+cat results/acLDL/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.vcf.gz --bed results/acLDL/fastqtl/input/AcLDL.expression.txt.gz --cov results/acLDL/fastqtl/input/AcLDL.covariates.txt --W 500000 --out results/acLDL/fastqtl/output/AcLDL_full --execute True"
 
 #Merge chunks into a single file
 zcat results/acLDL/fastqtl/output/Ctrl_full.chunk_*.txt.gz | bgzip > results/acLDL/fastqtl/output/Ctrl_pvalues.txt.gz
@@ -31,5 +31,5 @@ rm results/acLDL/fastqtl/output/Ctrl_full.chunk_*.txt.gz
 rm results/acLDL/fastqtl/output/AcLDL_full.chunk_*.txt.gz 
 
 #Add SNP coordinates
-echo hello | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.vcf.gz --fastqtl results/acLDL/fastqtl/output/Ctrl_pvalues.txt.gz | bgzip > results/acLDL/fastqtl/output/Ctrl_pvalues.coords.txt.gz"
-echo hello | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.vcf.gz --fastqtl results/acLDL/fastqtl/output/AcLDL_pvalues.txt.gz | bgzip > results/acLDL/fastqtl/output/AcLDL_pvalues.coords.txt.gz"
+echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.vcf.gz --fastqtl results/acLDL/fastqtl/output/Ctrl_pvalues.txt.gz | bgzip > results/acLDL/fastqtl/output/Ctrl_pvalues.coords.txt.gz"
+echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname run_fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.vcf.gz --fastqtl results/acLDL/fastqtl/output/AcLDL_pvalues.txt.gz | bgzip > results/acLDL/fastqtl/output/AcLDL_pvalues.coords.txt.gz"

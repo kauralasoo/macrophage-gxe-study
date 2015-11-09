@@ -25,6 +25,9 @@ design = dplyr::filter(expression_dataset$design, !(donor == "fpdj")) %>% tbl_df
 sample_meta = dplyr::left_join(design, line_metadata, by = c("donor", "replicate")) %>%
   dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg", "SL1344", "IFNg_SL1344")))
 
+#Save sample genotype list to disk
+write.table(unique(sample_meta$genotype_id), "macrophage-gxe-study/data/sample_lists/SL1344/SL1344_gt_list.txt", row.names = FALSE, col.names = FALSE, quote = FALSE)
+
 #Construct separate design matrices
 cond_A_design = dplyr::filter(sample_meta, condition == "A")
 cond_B_design = dplyr::filter(sample_meta, condition == "B")
