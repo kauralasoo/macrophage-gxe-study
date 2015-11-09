@@ -11,4 +11,4 @@ data_filtered = dplyr::select(data, sample_id, PERCENT_DUPLICATION) %>%
   dplyr::rename(percent_duplication = PERCENT_DUPLICATION) %>% 
   dplyr::mutate(percent_duplication = as.numeric(as.character(percent_duplication)))
 
-write.table(data_filtered, "results/ATAC/QC/ATAC_duplication_fraction.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(data_filtered, "macrophage-chromatin/data/SL1344/QC_measures/ATAC_duplication_fraction.txt", sep = "\t", quote = FALSE, row.names = FALSE)

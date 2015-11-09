@@ -2,7 +2,7 @@ library("rtracklayer")
 library("devtools")
 library("dplyr")
 library("gplots")
-load_all("../macrophage-gxe-study/macrophage-gxe-study/seqUtils/")
+load_all("../seqUtils/")
 
 #Import sample names
 sample_names = read.table("macrophage-chromatin/data/SL1344/ATAC_Salmonella_names.txt", sep ="\t",comment.char = "", stringsAsFactors = FALSE)[,1]

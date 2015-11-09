@@ -11,5 +11,5 @@ data_filtered = dplyr::select(data, sample_id, Assigned, Unassigned_Ambiguity, U
   dplyr::mutate(ambiguity_frac = Unassigned_Ambiguity/(Assigned + Unassigned_Ambiguity))
 
 #Save to disk
-write.table(data_filtered, "results/ATAC/QC/ATAC_assigned_fraction.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(data_filtered, "macrophage-chromatin/data/SL1344/QC_measures/ATAC_assigned_fraction.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 

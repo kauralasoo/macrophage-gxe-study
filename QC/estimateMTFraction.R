@@ -16,7 +16,7 @@ mt_fraction = as.data.frame(t(data_matrix[c("MT","*"),]/colSums(data_matrix, na.
 colnames(mt_fraction) = c("MT", "unmapped")
 mt_data = dplyr::mutate(mt_fraction, sample_id = rownames(mt_fraction)) %>%
   dplyr::select(sample_id, everything())
-write.table(mt_data, "results/ATAC/QC/ATAC_mitochondrial_fraction.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(mt_data, "macrophage-chromatin/data/SL1344/QC_measures/ATAC_mitochondrial_fraction.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 
 #Make histogram
 mt_fraction_plot = ggplot(mt_data, aes(x = MT)) + geom_histogram(binwidth = 0.05)
