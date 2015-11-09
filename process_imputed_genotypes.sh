@@ -58,20 +58,17 @@ bcftools index chr9.vcf.gz
 bcftools index chrX.vcf.gz
 
 #Merge VCF files
-bcftools concat -a chr10.vcf.gz chr11.vcf.gz chr12.vcf.gz chr13.vcf.gz chr14.vcf.gz chr15.vcf.gz chr16.vcf.gz chr17.vcf.gz chr18.vcf.gz chr19.vcf.gz chr1.vcf.gz chr20.vcf.gz chr21.vcf.gz chr22.vcf.gz chr2.vcf.gz chr3.vcf.gz chr4.vcf.gz chr5.vcf.gz chr6.vcf.gz chr7.vcf.gz chr8.vcf.gz chr9.vcf.gz chrX.vcf.gz > imputed.45_samples.vcf
+bcftools concat -a chr10.vcf.gz chr11.vcf.gz chr12.vcf.gz chr13.vcf.gz chr14.vcf.gz chr15.vcf.gz chr16.vcf.gz chr17.vcf.gz chr18.vcf.gz chr19.vcf.gz chr1.vcf.gz chr20.vcf.gz chr21.vcf.gz chr22.vcf.gz chr2.vcf.gz chr3.vcf.gz chr4.vcf.gz chr5.vcf.gz chr6.vcf.gz chr7.vcf.gz chr8.vcf.gz chr9.vcf.gz chrX.vcf.gz > imputed.69_samples.vcf
 
 #Sort VCF files
 #Sort genotypes (some chr1 snps went to chr9, GATK complains)
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q normal -M 1000 -o sortvcf.%J.jobout "~/software/vcflib/bin/vcfsort imputed.59_samples.vcf > imputed.59_samples.sorted.vcf"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q normal -M 1000 -o sortvcf.%J.jobout "~/software/vcflib/bin/vcfsort imputed.69_samples.vcf > imputed.69_samples.sorted.vcf"
 
-#Run through vcfuniq, because liftover might have led to duplicated entries
-~/software/vcflib/bin/vcfuniq imputed.59_samples.sorted.vcf > imputed.59_samples.sorted.uniq.vcf
+#Run through vcfuniq and get rid of multiallelic SNPs, because liftover might have led to duplicated entries
+~/software/vcflib/bin/vcfuniq imputed.69_samples.sorted.vcf | bcftools norm -m+any - | bcftools view -Oz -m2 -M2 - > imputed.69_samples.sorted.filtered.vcf.gz
 
-#Merge multi-allelic SNPs into single records
-bcftools norm -m+any imputed.59_samples.sorted.uniq.vcf > imputed.59_samples.sorted.uniq.multiallelic.vcf
-
-#Remove multi-allelic SNPs
- bcftools view -m2 -M2 imputed.59_samples.sorted.uniq.multiallelic.vcf > imputed.59_samples.sorted.uniq.not_multiallelic.vcf 
+#Filter by INFO score
+bcftools filter -i 'INFO[0] >= 0.8' -O z imputed.69_samples.sorted.filtered.vcf.gz > imputed.69_samples.snps_indels.INFO_08.vcf.gz 
 
 #Keep only SNPs
 bcftools view -v snps -O z imputed.59_samples.sorted.uniq.not_multiallelic.vcf > imputed.59_samples.snps_only.vcf.gz
