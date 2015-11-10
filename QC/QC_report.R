@@ -1,18 +1,23 @@
-#Merge QC data into one table
-mt_content = read.table("results/ATAC/QC/ATAC_mitochondrial_fraction.txt", header = TRUE, stringsAsFactors = FALSE)
-sn_ratio = read.table("results/ATAC/QC/ATAC_assigned_fraction.txt", header = TRUE, stringsAsFactors = FALSE)
-duplication_fraction = read.table("results/ATAC/QC/ATAC_duplication_fraction.txt", header = TRUE, stringsAsFactors = FALSE)
-sample_genotype_match = read.table("results/ATAC/QC/ATAC_sample_genotype_match.txt", header = TRUE, stringsAsFactors = FALSE)
+library("dplyr")
+library("ggplot2")
 
+#Merge QC data into one table
+mt_content = read.table("macrophage-chromatin/data/SL1344/QC_measures/ATAC_mitochondrial_fraction.txt", header = TRUE, stringsAsFactors = FALSE)
+sn_ratio = read.table("macrophage-chromatin/data/SL1344/QC_measures/ATAC_assigned_fraction.txt", header = TRUE, stringsAsFactors = FALSE)
+duplication_fraction = read.table("macrophage-chromatin/data/SL1344/QC_measures/ATAC_duplication_fraction.txt", header = TRUE, stringsAsFactors = FALSE)
+sample_genotype_match = read.table("macrophage-chromatin/data/SL1344/QC_measures/ATAC_sample_genotype_match.txt", header = TRUE, stringsAsFactors = FALSE)
+peak_counts = read.table("macrophage-chromatin/data/SL1344/QC_measures/macs2_peaks_counts.txt", header = TRUE, stringsAsFactors = FALSE)
+  
 #Join all tables together
 qc_report = dplyr::left_join(mt_content, sn_ratio, by = "sample_id") %>%
   dplyr::left_join(duplication_fraction, by = "sample_id") %>%
   dplyr::left_join(sample_genotype_match, by = "sample_id") %>%
-  dplyr::select(sample_id, genotype_id, MT, Assigned, assigned_frac, percent_duplication)
+  dplyr::left_join(peak_counts, by = "sample_id") %>%
+  dplyr::select(sample_id, genotype_id, MT, Assigned, assigned_frac, percent_duplication, peak_count)
 
 #Make histogram of signal-to-noise
 sn_plot = ggplot(qc_report, aes(x = assigned_frac)) + 
-  geom_histogram(binwidth = 0.02) +
+  geom_histogram(binwidth = 0.05) +
   xlab("Fraction of fragments within peaks") + 
   scale_x_continuous(limits = c(0,1))
 ggsave("results/ATAC/QC/ATAC_signal_to_noise.pdf", sn_plot, width = 6, height = 5)
@@ -26,9 +31,17 @@ ggsave("results/ATAC/QC/ATAC_percent_duplication.pdf", dup_plot, width = 6, heig
 
 #Make histogram of assigned fragments
 assigned_plot = ggplot(qc_report, aes(x = Assigned/1000000)) + 
-geom_histogram(binwidth = 1) +
+geom_histogram(binwidth = 2) +
   xlab("Millions of assigned fragments")
 ggsave("results/ATAC/QC/ATAC_assigned_fragments.pdf", assigned_plot, width = 6, height = 5)
+
+#Make histogram of MT fraction
+mt_fraction_plot = ggplot(qc_report, aes(x = MT)) + geom_histogram(binwidth = 0.05)
+ggsave("results/ATAC/QC/ATAC_mitochondrial_fraction_plot.pdf", mt_fraction_plot, width = 5, height = 5)
+
+#Make histogram of peak counts per sample
+peak_count_plot = ggplot(qc_report, aes(x = peak_count)) + geom_histogram(binwidth = 10000)
+ggsave("results/ATAC/QC/peak_count_plot.pdf", mt_fraction_plot, width = 5, height = 5)
 
 #### Analyse peak lengths ####
 atac_peaks = read.table("annotations/ATAC_Seq_joint_peaks.gff3")
