@@ -16,6 +16,7 @@ cat results/SL1344/fastqtl/input/chunk_table.txt | python ~/software/utils/submi
 cat results/SL1344/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz --bed results/SL1344/fastqtl/input/SL1344.expression.txt.gz --cov results/SL1344/fastqtl/input/SL1344.covariates.txt --W 500000 --permute '100 10000' --out results/SL1344/fastqtl/output/SL1344_perm --execute True"
 cat results/SL1344/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz --bed results/SL1344/fastqtl/input/IFNg_SL1344.expression.txt.gz --cov results/SL1344/fastqtl/input/IFNg_SL1344.covariates.txt --W 500000 --permute '100 10000' --out results/SL1344/fastqtl/output/IFNg_SL1344_perm --execute True"
 
+
 #Merge chunks into single files
 zcat results/SL1344/fastqtl/output/naive_perm.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output/naive_permuted.txt.gz
 zcat results/SL1344/fastqtl/output/IFNg_perm.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output/IFNg_permuted.txt.gz
@@ -24,3 +25,20 @@ zcat results/SL1344/fastqtl/output/IFNg_SL1344_perm.chunk_*.txt.gz | bgzip > res
 
 #Remove chunks
 rm results/SL1344/fastqtl/output/*.chunk_*
+
+#Get full p-values from fastQTL
+cat results/SL1344/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz --bed results/SL1344/fastqtl/input/naive.expression.txt.gz --cov results/SL1344/fastqtl/input/naive.covariates.txt --W 500000 --out results/SL1344/fastqtl/output/naive_full --execute True"
+cat results/SL1344/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz --bed results/SL1344/fastqtl/input/IFNg.expression.txt.gz --cov results/SL1344/fastqtl/input/IFNg.covariates.txt --W 500000 --out results/SL1344/fastqtl/output/IFNg_full --execute True"
+cat results/SL1344/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz --bed results/SL1344/fastqtl/input/SL1344.expression.txt.gz --cov results/SL1344/fastqtl/input/SL1344.covariates.txt --W 500000 --out results/SL1344/fastqtl/output/SL1344_full --execute True"
+cat results/SL1344/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz --bed results/SL1344/fastqtl/input/IFNg_SL1344.expression.txt.gz --cov results/SL1344/fastqtl/input/IFNg_SL1344.covariates.txt --W 500000 --out results/SL1344/fastqtl/output/IFNg_SL1344_full --execute True"
+
+
+#Merge chunks into single files
+zcat results/SL1344/fastqtl/output/naive_full.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output/naive_pvalues.txt.gz
+zcat results/SL1344/fastqtl/output/IFNg_full.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output/IFNg_pvalues.txt.gz
+zcat results/SL1344/fastqtl/output/SL1344_full.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output/SL1344_pvalues.txt.gz
+zcat results/SL1344/fastqtl/output/IFNg_SL1344_full.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output/IFNg_SL1344_pvalues.txt.gz
+
+#Remove chunks
+rm results/SL1344/fastqtl/output/*.chunk_*
+
