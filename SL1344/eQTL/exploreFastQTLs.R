@@ -15,7 +15,7 @@ SNPRelate::snpgdsVCF2GDS("results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08
                          "results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.gds", method = "copy.num.of.ref")
 vcf_file = gdsToMatrix("results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.gds")
 saveRDS(vcf_file, "results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.rds")
-vcf_file = readRDS("results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.no_dup.rds")
+vcf_file = readRDS("results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.rds")
 
 #Import permutation p-values
 naive_qtls = importFastQTLTable("results/SL1344/fastqtl/output/naive_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_id_name_map)
@@ -36,6 +36,8 @@ ggplot(naive_qtls, aes(x = p_expected, y = p_beta_log10)) +
 
 #Make some example plots
 cd14_plot = plotEQTL("ENSG00000170458", "rs778583", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
+                     eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
+ctsc_plot = plotEQTL("ENSG00000109861", "rs11019479", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
                      eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
 
 #Merge conditions together

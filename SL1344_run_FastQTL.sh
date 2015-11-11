@@ -42,3 +42,7 @@ zcat results/SL1344/fastqtl/output/IFNg_SL1344_full.chunk_*.txt.gz | bgzip > res
 #Remove chunks
 rm results/SL1344/fastqtl/output/*.chunk_*
 
+#Add SNP coordinates
+echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz --fastqtl results/SL1344/fastqtl/output/naive_pvalues.txt.gz | bgzip > results/acLDL/fastqtl/output/naive_pvalues.coords.txt.gz"
+
+
