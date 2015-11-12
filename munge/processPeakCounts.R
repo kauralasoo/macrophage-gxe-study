@@ -18,7 +18,8 @@ peak_coords = rtracklayer::import.gff3("annotations/ATAC_Seq_joint_peaks.gff3") 
 #Construct peak metadata
 peak_metadata = dplyr::select(atac_counts, gene_id, length) %>%
   dplyr::left_join(gc_content, by = "gene_id") %>% 
-  dplyr::left_join(peak_coords, by = "gene_id")
+  dplyr::left_join(peak_coords, by = "gene_id") %>%
+  dplyr::mutate(gene_name = gene_id)
 
 #Extract count matrix
 counts = dplyr::select(atac_counts, -gene_id, -length)
@@ -27,8 +28,16 @@ rownames(counts) = atac_counts$gene_id
 #Use CQN to normalize the counts
 atac_cqn = calculateCQN(counts, peak_metadata)
 
-#Construct a design matrix from the sample names
+#Extract donor to genotype mapping
+line_metadata = readRDS("../macrophage-gxe-study/macrophage-gxe-study/data/covariates/compiled_line_metadata.rds") #Line metadata
+donor_geno_map = dplyr::select(line_metadata, donor, genotype_id) %>% unique()
+
+#Construct sample metadata for atac
 design_matrix = constructDesignMatrix_ATAC(colnames(counts))
+atac_sample_meta = dplyr::left_join(design_matrix, donor_geno_map, by = "donor") %>% 
+  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344","IFNg_SL1344")))
+
+#Construct a design matrix from the sample names
 
 results_list = list(
   exprs_counts = counts,
