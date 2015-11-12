@@ -35,3 +35,7 @@ ctsc_enhancer_u1 = plotEQTL("ATAC_peak_55685", "rs11019479", atac_list$exprs_cqn
                           atac_sample_meta, atac_peak_meta)
 ggsave("results/SL1344/eQTLs/example_loci/CTSC/CTSC_ATAC_enhancer-1.pdf", ctsc_enhancer_u1, width = 7, height = 7)
 
+#Imprt raw p-values
+IFNg_pvalues = readr::read_delim("results/SL1344/fastqtl/output/IFNg_pvalues.txt.gz", delim = " ")
+
+
