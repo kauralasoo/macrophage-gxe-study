@@ -39,6 +39,8 @@ cd14_plot = plotEQTL("ENSG00000170458", "rs778583", eqtl_data_list$exprs_cqn, vc
                      eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
 ctsc_plot = plotEQTL("ENSG00000109861", "rs11019479", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
                      eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
+ccs_plot = plotEQTL("ENSG00000173992", "rs636128", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
+                     eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
 
 #Merge conditions together
 naive_hits = dplyr::filter(naive_qtls, qvalue < 0.1) %>% dplyr::select(gene_id, snp_id, qvalue)

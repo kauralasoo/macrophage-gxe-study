@@ -43,6 +43,12 @@ zcat results/SL1344/fastqtl/output/IFNg_SL1344_full.chunk_*.txt.gz | bgzip > res
 rm results/SL1344/fastqtl/output/*.chunk_*
 
 #Add SNP coordinates
-echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz --fastqtl results/SL1344/fastqtl/output/naive_pvalues.txt.gz | bgzip > results/acLDL/fastqtl/output/naive_pvalues.coords.txt.gz"
+echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz --fastqtl results/SL1344/fastqtl/output/naive_pvalues.txt.gz | bgzip > results/SL1344/fastqtl/output/naive_pvalues.coords.txt.gz"
+echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz --fastqtl results/SL1344/fastqtl/output/IFNg_pvalues.txt.gz | bgzip > results/SL1344/fastqtl/output/IFNg_pvalues.coords.txt.gz"
+echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz --fastqtl results/SL1344/fastqtl/output/SL1344_pvalues.txt.gz | bgzip > results/SL1344/fastqtl/output/SL1344_pvalues.coords.txt.gz"
+echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz --fastqtl results/SL1344/fastqtl/output/IFNg_SL1344_pvalues.txt.gz | bgzip > results/SL1344/fastqtl/output/IFNg_SL1344_pvalues.coords.txt.gz"
+
+#Extract p-value for a subset of genes
+echo "CHR BP SNP P\n" && zgrep ENSG00000109861 results/SL1344/fastqtl/output/IFNg_pvalues.coords.txt.gz | cut -f2,3,4,6 -d " " > results/SL1344/eQTLs/example_loci/CTSC/CTSC_pvalues.gwas
 
 
