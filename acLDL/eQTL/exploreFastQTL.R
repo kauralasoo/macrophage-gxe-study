@@ -31,7 +31,7 @@ dplyr::select(acLDL_qtls, gene_id, gene_name, snp_id, slope, p_nominal, p_beta, 
 naive_qtls = importFastQTLTable("results/SL1344/fastqtl/output/naive_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_id_name_map)
 
 #Calculate Pi1 between stimulated and unstimulated
-qtl_list = list(Ctrl = ctrl_qtls, AcLDL = acLDL_qtls, SL1344_naive = naive_qtls)
+qtl_list = list(Ctrl = ctrl_qtls, AcLDL = acLDL_qtls)
 pi1_matrix = calculatePairwisePi1(qtl_list)
 
 #Replication between the two studies is relatively low, BUT they individuals and variants tested do not overlap completely.
@@ -59,3 +59,11 @@ write.table(interaction_df, "results/acLDL/fastqtl/output/interaction_pvalues.tx
 
 plotEQTL("ENSG00000134697", "rs4535966", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
          eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
+
+interaction_df = plyr::ldply(interactions, .id = "id")
+saveRDS(interactions, "results/acLDL/fastqtl/output/interactions.rds")
+
+#Make a plot of the LIPA qtl
+lipa_qtl = plotEQTL("ENSG00000107798", "rs1332329", eqtl_data_list$exprs_cqn, vcf_file$genotypes,
+         eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
+ggsave("results/acLDL/LIPA_qtl.pdf", lipa_qtl, width = 8, height = 6)

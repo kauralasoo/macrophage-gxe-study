@@ -2,7 +2,8 @@ library("dplyr")
 library("ggplot2")
 library("tidyr")
 library("devtools")
-load_all("macrophage-gxe-study/seqUtils/")
+load_all("../seqUtils/")
+load_all("macrophage-gxe-study/housekeeping//")
 
 #Import Compiled metadata
 line_meta = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds")
@@ -17,5 +18,7 @@ gt_map = dplyr::left_join(acldl_design, gt_df, by = "donor") %>%
   unique()
 
 #Save map to disk
-write.table(gt_map, "genotypes/acLDL/acLDL_sample_genotype_map.txt", sep = "\t", 
+write.table(gt_map, "macrophage-gxe-study/data/sample_lists/acLDL/acLDL_sample_genotype_map.txt", sep = "\t", 
+            quote = FALSE, row.names = FALSE, col.names = FALSE)
+write.table(unique(gt_map$genotype_id), "macrophage-gxe-study/data/sample_lists/acLDL/acLDL_gt_list.txt", sep = "\t", 
             quote = FALSE, row.names = FALSE, col.names = FALSE)
