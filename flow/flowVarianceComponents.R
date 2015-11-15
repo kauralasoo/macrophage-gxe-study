@@ -23,6 +23,13 @@ mapFlowQTLs <- function(intensity_df, genepos, genotype_list, genotype_donor_map
   return(qtl_df)
 }
 
+tidyVarianceComponents <- function(df){
+  df = dplyr::select(df, -converged, -type)
+  dims = dim(df)
+  tidy_df = tidyr::gather(df, "component", "var_exp", 2:dims[2])
+  return(tidy_df)
+}
+
 #Import data
 flow_purity = readRDS("macrophage-gxe-study/data/covariates/flow_cytometry_purity.rds")
 line_medatada = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds")
@@ -64,42 +71,33 @@ replicate_donors = dplyr::filter(flow_data, marker == "CD14") %>%
   dplyr::summarise(count = length(donor)) %>% 
   dplyr::filter(count > 1)
 
-#### Estimate variance explained by donor ####
-#Prepare CD14 data
-cd14_geno_mat = as.data.frame(t(flow_cis_region$genotypes)) %>% 
+#### Prepare datasets for each mark ####
+geno_mat = as.data.frame(t(flow_cis_region$genotypes)) %>% 
   dplyr::mutate(genotype_id = colnames(flow_cis_region$genotypes))
-cd14_data = dplyr::filter(flow_data, marker == "CD14") 
-cd14_model_data = dplyr::left_join(cd14_data, cd14_geno_mat, by = "genotype_id")
 
-#Use only replicate measurements to estimate donor variance
+#Prepare CD14 data
+cd14_model_data = dplyr::filter(flow_data, marker == "CD14") %>%
+  dplyr::left_join(geno_mat, by = "genotype_id")
 cd14_replicates = cd14_model_data %>% dplyr::semi_join(replicate_donors, by = "donor")
-cd14_model = lmer(intensity ~ (1|flow_date) + (1|donor), cd14_replicates)
-cd14_variance = seqUtils::varianceExplained(cd14_model)
 
 #Analyse CD16 only
-cd16_geno_mat = as.data.frame(t(flow_cis_region$genotypes)) %>% 
-  dplyr::mutate(genotype_id = colnames(flow_cis_region$genotypes))
-cd16_data = dplyr::filter(flow_data, marker == "CD16")
-cd16_model_data = dplyr::left_join(cd16_data, cd16_geno_mat, by = "genotype_id")
-
+cd16_data = dplyr::filter(flow_data, marker == "CD16") %>% 
+  dplyr::left_join(geno_mat, by = "genotype_id")
 cd16_replicates = cd16_model_data %>% dplyr::semi_join(replicate_donors, by = "donor")
-cd16_model = lmer(intensity ~ (1|flow_date) + (1|donor), cd16_model_data)
-cd16_variance = seqUtils::varianceExplained(cd16_model)
+
+#There seems to be correlation between purity and CD16 intensity
+ggplot(cd16_model_data, aes(x = purity, y = intensity)) + geom_point()
 
 #Analyse CD206 only
-cd206_data = dplyr::filter(flow_data, marker == "CD206") 
-cd206_model = lmer(intensity ~ (1|flow_date) + (1|donor), cd206_data)
-cd206_variance = seqUtils::varianceExplained(cd206_model)
-
-variance_explained = dplyr::mutate(rbind(cd14_variance, cd16_variance, cd206_variance), marker = c("CD14","CD16","CD206")) %>% 
-  dplyr::select(marker, everything(), -type)
-write.table(variance_explained, "results/flow/VarComp/variance_explained.txt", sep = "\t", row.names = FALSE, quote = FALSE)
+cd206_model_data = dplyr::filter(flow_data, marker == "CD206") %>%
+  dplyr::left_join(geno_mat, by = "genotype_id")
+cd206_replicates = cd206_model_data %>% dplyr::semi_join(replicate_donors, by = "donor")
 
 #### QTL mapping ####
 ##### Make a single intensity data set #####
-cd14_mean = dplyr::group_by(cd14_data, donor) %>% summarise(CD14 = mean(intensity))
-cd16_mean = dplyr::group_by(cd16_data, donor) %>% summarise(CD16 = mean(intensity))
-cd206_mean = dplyr::group_by(cd206_data, donor) %>% summarise(CD206 = mean(intensity))
+cd14_mean = dplyr::group_by(cd14_model_data, donor) %>% summarise(CD14 = mean(intensity))
+cd16_mean = dplyr::group_by(cd16_model_data, donor) %>% summarise(CD16 = mean(intensity))
+cd206_mean = dplyr::group_by(cd206_model_data, donor) %>% summarise(CD206 = mean(intensity))
 
 #Prepare intensity data
 intensity_df = dplyr::left_join(cd14_mean, cd16_mean, by = "donor") %>% 
@@ -122,7 +120,7 @@ genepos = dplyr::select(gene_coords, gene_name, chr, left, right) %>%
 genotype_donor_map = dplyr::select(flow_data, genotype_id, donor) %>% unique()
 
 #### Perform QTL mapping for all markers at the same time ####
-qtl_df = mapFlowQTLs(intensity_df, genepos[1:3,], flow_cis_region, genotype_donor_map, cisDist = 5e5)
+qtl_df = mapFlowQTLs(intensity_df, genepos[1:3,], flow_cis_region, genotype_donor_map, cisDist = 2e5)
 
 #Perform QTL mapping with permutations
 perm_list = lapply(as.list(c(1:1000)), function(x){
@@ -152,8 +150,11 @@ cd206_qtl_df = dplyr::filter(qtl_df, gene == "CD206") %>%
 
 #CD14 analysis
 cd14_qtl_df = dplyr::filter(qtl_df, gene == "CD14")
-cd14_manhattan = ggplot(cd14_qtl_df, aes(x = pos, y = log10_pvalue)) + geom_point()
-ggsave("results/flow/VarComp/CD14_manhattan_plot.pdf", plot = cd14_manhattan, width = 8, height = 6)
+cd14_manhattan = ggplot(cd14_qtl_df, aes(x = pos, y = log10_pvalue)) + 
+  geom_point() + 
+  xlab("Position") + 
+  ylab("-log10 p-value")
+ggsave("results/flow/VarComp/CD14_manhattan_plot.pdf", plot = cd14_manhattan, width = 6, height = 5)
 
 #Make a QQ plot
 ggplot(cd14_qtl_df, aes(x = expected, y = log10_pvalue)) + 
@@ -163,29 +164,36 @@ ggplot(cd14_qtl_df, aes(x = expected, y = log10_pvalue)) +
 #Make a QTL plot
 cd14_qtl_plot = ggplot(cd14_model_data, aes(x = factor(rs2569177), y = intensity)) + 
   geom_boxplot(outlier.shape = NA) + 
-  geom_jitter(position = position_jitter(width = .1))
-ggsave("results/flow/VarComp/CD14_lead_QTL.pdf", plot = cd14_qtl_plot, width = 6, height = 6)
-
-#Perform VarComp analysis with the lead SNP
-cd14_model_qtl = lmer(intensity ~ (1|flow_date) + (1|donor) + (1|rs2569177), cd14_model_data)
-cd14_variance_qtl = seqUtils::varianceExplained(cd14_model_qtl)
-write.table(cd14_variance_qtl, "results/flow/VarComp/CD14_variance_explained.txt", sep = "\t", row.names = FALSE, quote = FALSE)
+  geom_jitter(position = position_jitter(width = .1)) + 
+  ggtitle("CD14")
+ggsave("results/flow/VarComp/CD14_lead_QTL.pdf", plot = cd14_qtl_plot, width = 5, height = 5)
 
 #### CD16 QTLS ####
 cd16_qtl_df = dplyr::filter(qtl_df, gene == "CD16")
-cd16_manhattan = ggplot(cd16_qtl_df, aes(x = pos, y = log10_pvalue)) + geom_point()
-ggsave("results/flow/VarComp/CD16_manhattan_plot.pdf", plot = cd16_manhattan, width = 8, height = 6)
+cd16_manhattan = ggplot(cd16_qtl_df, aes(x = pos, y = log10_pvalue)) + 
+  geom_point() +
+  xlab("Position") +
+  ylab("-log10 p-value")
+ggsave("results/flow/VarComp/CD16_manhattan_plot.pdf", plot = cd16_manhattan, width = 6, height = 5) 
 
 #Make a QQ plot
 ggplot(cd16_qtl_df, aes(x = expected, y = log10_pvalue)) + 
   geom_point() + 
   stat_abline(slope = 1, intercept = 0, color = "red")
 
-#Fit VarComp model again with four independent associations
-cd16_model_qtl = lmer(intensity ~ (1|flow_date) + (1|donor) + (1|rs10917809) + (1|rs4657019) + (1|rs2333845) + (1|rs4571943), cd16_model_data, REML = TRUE)
-cd16_variance_qtl = seqUtils::varianceExplained(cd16_model_qtl)
-anova(cd16_model_qtl, cd16_model)
-write.table(cd16_variance_qtl, "results/flow/VarComp/CD16_variance_explained.txt", sep = "\t", row.names = FALSE, quote = FALSE)
+#Make boxplots of two lead qtls
+cd16_qtl1 = ggplot(cd16_model_data, aes(x = factor(rs2333845), y = intensity)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(position = position_jitter(width = .1)) + 
+  ggtitle("CD16")
+ggsave("results/flow/VarComp/CD16_qtl1.pdf", plot = cd16_qtl1, width = 5, height = 5)
+
+cd16_qtl2 = ggplot(cd16_model_data, aes(x = factor(rs34166897), y = intensity)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(position = position_jitter(width = .1)) + 
+  ggtitle("CD16")
+ggsave("results/flow/VarComp/CD16_qtl2.pdf", plot = cd16_qtl2, width = 5, height = 5)
+
 
 #Test these four SNPs in a linear model
 cd16_lm = lm(intensity ~ 1,cd16_model_data)
@@ -243,5 +251,68 @@ cd16_boxplots = ggplot(combined_df, aes(x = factor(snp), y = expression)) +
   facet_grid(feature ~ genotype, scale = "free")
 ggsave("results/flow/VarComp/cd16_boxplots.pdf", plot = cd16_boxplots, width = 7, height = 7)
 
-#Map QTLs for CD206
-cd206_qtl_df = mapFlowQTLs(intensity_df, genepos[1:3,], CD206_cis_region, genotype_donor_map, cisDist = 2e5)
+#Focus on CD206
+cd206_qtl_df = dplyr::filter(qtl_df, gene == "CD206")
+ggplot(cd206_qtl_df, aes(x = expected, y = log10_pvalue)) + 
+  geom_point() + 
+  stat_abline(slope = 1, intercept = 0, color = "red")
+
+ggplot(cd206_qtl_df, aes(x = pos, y = log10_pvalue)) + 
+  geom_point() +
+  xlab("Position") +
+  ylab("-log10 p-value")
+
+ggplot(cd206_model_data, aes(x = factor(rs9418387), y = intensity)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(position = position_jitter(width = .1)) + 
+  ggtitle("CD206")
+
+
+#### Variance components ####
+
+#Make two lists of data
+full_data_list = list(CD14 = cd14_model_data, CD16 = cd16_model_data, C206 = cd206_model_data)
+replicates_data_list = list(CD14 = cd14_replicates, CD16 = cd16_replicates, C206 = cd206_replicates)
+
+#Perform variance component analysis with simple model
+simple_model <- function(data){
+  model = lmer(intensity ~ (1|flow_date) + (1|donor), data)
+  return(model)
+}
+
+var_comp_full = lapply(full_data_list, estimateVarianceExplained, simple_model) %>%
+  plyr::ldply(.id = "marker") %>%
+  tidyVarianceComponents()
+var_comp_replicates = lapply(replicates_data_list, estimateVarianceExplained, simple_model) %>%
+  plyr::ldply(.id = "marker") %>%
+  tidyVarianceComponents()
+
+
+#Perform VarComp analysis with the lead SNP
+snps_model <- function(data){
+  model = lmer(intensity ~ (1|flow_date) + (1|donor) + (1|rs34166897) + (1|rs2333845) + (1|rs2569177), data)
+  return(model)
+}
+
+var_comp_full_qtl = lapply(full_data_list, estimateVarianceExplained, snps_model) %>%
+  plyr::ldply(.id = "marker") %>%
+  tidyVarianceComponents()
+var_comp_replicates_qtl = lapply(replicates_data_list, estimateVarianceExplained, snps_model) %>%
+  plyr::ldply(.id = "marker") %>%
+  tidyVarianceComponents()
+
+#Make a boxplot of variance explained
+var_exp_plot = ggplot(var_comp_full, aes(x = marker, y = var_exp*100, fill = component)) + 
+  geom_bar(stat = "identity") + 
+  ylab("Variance explained (%)") + 
+  xlab("Surface marker")
+ggsave("results/flow/VarComp/variance_explained.pdf", var_exp_plot, width = 6, height = 5)
+
+var_exp_plot_qtl = ggplot(var_comp_full_qtl, aes(x = marker, y = var_exp*100, fill = component)) + 
+  geom_bar(stat = "identity") + 
+  ylab("Variance explained (%)") + 
+  xlab("Surface marker")
+ggsave("results/flow/VarComp/variance_explained_qtl.pdf", var_exp_plot_qtl, width = 6, height = 5)
+
+
+
