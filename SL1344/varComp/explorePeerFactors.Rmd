@@ -23,35 +23,52 @@ load_all("../../../../seqUtils/")
 load_all("../seqUtils/")
 ```
 
-Load expresison dataset preapred previously by processExpressionData.R script,
+Load eQTL dataset from disk and extract peer factors for different conditions
 ```{r}
-expression_dataset = readRDS("results/SL1344/combined_expression_data.rds") #expression data
-line_metadata = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds") #Line metadata
+data_list = readRDS("results/SL1344/eqtl_data_list.rds")
+naive_peer = data_list$covariates_list[[1]][4:13,]
+IFNg_peer = data_list$covariates_list[[2]][4:13,]
+SL1344_peer = data_list$covariates_list[[3]][4:13,]
+IFNg_SL1344_peer = data_list$covariates_list[[4]][4:13,]
+
 ```
 
-Filter the design matrix,
+Convert the PEER matrices into data frames
 ```{r}
-design = dplyr::filter(expression_dataset$design, !(donor == "fpdj")) %>% tbl_df() %>% #Remove all fpdj samples (same as nibo)
-  dplyr::filter(!(donor == "fpdl" & replicate == 2)) %>% #Remove second fpdl sample (ffdp)
-  dplyr::filter(!(donor == "ougl" & replicate == 2)) %>% #Remove second ougl sample (dium)
-  dplyr::filter(!(donor == "mijn")) #%>% #Remove mijn (wrong line from CGAP)
-  #dplyr::filter(!(donor == "jorr")) #Very strong outlier in PEER analysis
-sample_meta = dplyr::left_join(design, line_metadata, by = c("donor", "replicate"))
-line_meta = dplyr::filter(sample_meta, condition == "A")
+naive_peer_df = dplyr::mutate(as.data.frame(t(naive_peer)), donor = colnames(naive_peer))
+naive_df = dplyr::filter(data_list$sample_metadata, condition == "A") %>% dplyr::left_join(naive_peer_df,by = "donor")
+
 ```
 
-Import PEER results
+Focus on the relationship between purity and first PEER factor
 ```{r}
-peer_factors = read.table("results/SL1344/PEER/25_factors/factors.txt", sep =",")
-peer_factors = peer_factors[,2:ncol(peer_factors)]
-colnames(peer_factors) = paste("PEER_factor_", c(1:ncol(peer_factors)), sep = "")
+purity_df = dplyr::filter(naive_df, mean_purity_filtered > 0.90)
+peer1_plot = ggplot(purity_df, aes(x = mean_purity_filtered, y = PEER_factor_1)) + 
+  geom_point() +
+  xlab("Mean purity") + 
+  ylab("PEER factor 1")
+ggsave("results/SL1344/varComp/purity_vs_PEER_factor_1.pdf", peer1_plot, width = 5, height = 5)
+cor(purity_df$mean_purity_filtered, purity_df$PEER_factor_1, use = "complete.obs")
+
+
+peer1_plot_2 = ggplot(purity_df, aes(x = ng_ul_mean, y = PEER_factor_1)) + 
+  geom_point() +
+  xlab("Cell density (rna concentration)") + 
+  ylab("PEER factor 1")
+ggsave("results/SL1344/varComp/rna_concetration_vs_PEER_factor_1.pdf", peer1_plot_2, width = 5, height = 5)
+
 ```
 
-Add PEER results to the sample metadata
+Focus on the relationship between sequencing chemistry and first PEER factor
 ```{r}
-peer_factors_2 = dplyr::mutate(peer_factors, sample_id = line_meta$sample_id)
-expanded_meta = dplyr::left_join(line_meta, peer_factors_2, by = "sample_id")
-expanded_meta = dplyr::mutate(expanded_meta, RNAseq_auto = ifelse(chemistry == "V4_auto", "yes", "no"))
+chemistry_df = dplyr::mutate(naive_df, rna_auto = ifelse(chemistry == "V4_auto", "automatic", "manual"))
+peer2_plot = ggplot(chemistry_df, aes(x = rna_auto, y = PEER_factor_2)) + 
+  geom_boxplot(outlier.shape = NA) +
+   geom_jitter(position = position_jitter(width = .1)) + 
+  xlab("RNA sequening chemistry") + 
+  ylab("PEER factor 2")
+ggsave("results/SL1344/varComp/purity_vs_PEER_factor_2.pdf", peer2_plot, width = 5, height = 5)
+cor(as.numeric(factor(chemistry_df$rna_auto)) , chemistry_df$PEER_factor_2, use = "complete.obs")
 ```
 
 Look at the variation explained by each PEER factor,
@@ -63,7 +80,11 @@ plot(1/precisions_vec)
 
 Explore the correlation between PEER factors
 ```{r, fig.width = 8, fig.height = 8}
-heatmap.2(cor(peer_factors), margins = c(10,10))
+heatmap.2(abs(cor(t(naive_peer))), margins = c(10,10))
+heatmap.2(abs(cor(t(SL1344_peer))), margins = c(10,10))
+heatmap.2(abs(cor(t(IFNg_SL1344_peer))), margins = c(10,10))
+heatmap.2(abs(cor(t(IFNg_peer))), margins = c(10,10))
+
 ```
 
 Identify which factors are most correlated with PEER factors
