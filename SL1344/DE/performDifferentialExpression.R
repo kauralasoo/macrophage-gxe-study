@@ -9,21 +9,20 @@ library("gProfileR")
 load_all("../seqUtils/")
 
 #Load expression data from disk
-expression_list = readRDS("results/SL1344/combined_expression_data.rds")
+#expression_list = readRDS("results/SL1344/combined_expression_data.rds")
+eqtl_data_list = readRDS("results/SL1344/eqtl_data_list.rds")
 
 #Make heatmap
-expressed_genes = which(apply(expression_list$exprs_cqn, 1, mean) > 1)
-exprs_cqn_filtered = expression_list$exprs_cqn[expressed_genes, ]
-pdf("results/SL1344/diffExp/sample_heatmap.pdf", width = 10, height = 10)
-heatmap.2(cor(exprs_cqn_filtered, method = "spearman"), trace = "none")
-dev.off()
-
-#Calculate mean expression in each condition
-exprs_cqn_mean = calculateMean(expression_list$exprs_cqn, expression_list$design, "condition")
-exprs_cqn_mean = dplyr::mutate(exprs_cqn_mean, gene_id = rownames(exprs_cqn_mean)) %>% tbl_df()
+#Extract metadata for the heatmap command
+meta = as.data.frame(dplyr::select(eqtl_data_list$sample_metadata, condition_name))
+rownames(meta) = eqtl_data_list$sample_metadata$sample_id
+#
+pheatmap(cor(eqtl_data_list$exprs_cqn, method = "spearman"), annotation_row = meta, 
+         show_rownames = FALSE, show_colnames = FALSE,
+         filename = "results/SL1344/diffExp/sample_heatmap.pdf", width = 10, height = 8)
 
 #Perform PCA analysis
-pca_list = performPCA(exprs_cqn_filtered, design_matrix)
+pca_list = performPCA(eqtl_data_list$exprs_cqn, eqtl_data_list$sample_metadata)
 pca_plot = ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = condition_name, label = sample_id)) + 
   geom_text()
 ggsave("results/SL1344/diffExp/PCA_of_gene_expression.pdf", plot = pca_plot, width = 8.5, height = 6.5)
