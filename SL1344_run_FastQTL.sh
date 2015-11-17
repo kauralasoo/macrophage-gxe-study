@@ -48,7 +48,16 @@ echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_
 echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz --fastqtl results/SL1344/fastqtl/output/SL1344_pvalues.txt.gz | bgzip > results/SL1344/fastqtl/output/SL1344_pvalues.coords.txt.gz"
 echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz --fastqtl results/SL1344/fastqtl/output/IFNg_SL1344_pvalues.txt.gz | bgzip > results/SL1344/fastqtl/output/IFNg_SL1344_pvalues.coords.txt.gz"
 
-#Extract p-value for a subset of genes
+#Extract p-value for a subset of genes ENSG00000185245 ENSG00000079785 ENSG00000144228 ENSG00000173992
 echo "CHR BP SNP P\n" && zgrep ENSG00000109861 results/SL1344/fastqtl/output/IFNg_pvalues.coords.txt.gz | cut -f2,3,4,6 -d " " > results/SL1344/eQTLs/example_loci/CTSC/CTSC_pvalues.gwas
+printf "CHR BP SNP P\n" > results/SL1344/eQTLs/example_loci/CCDC9_pvalues.gwas && zgrep ENSG00000105321 results/SL1344/fastqtl/output/IFNg_pvalues.coords.txt.gz | cut -f2,3,4,6 -d " " >> results/SL1344/eQTLs/example_loci/CCDC9_pvalues.gwas
+printf "CHR BP SNP P\n" > results/SL1344/eQTLs/example_loci/ITGB3BP_pvalues.gwas && zgrep ENSG00000142856 results/SL1344/fastqtl/output/IFNg_pvalues.coords.txt.gz | cut -f2,3,4,6 -d " " >> results/SL1344/eQTLs/example_loci/ITGB3BP_pvalues.gwas
+printf "CHR BP SNP P\n" > results/SL1344/eQTLs/example_loci/FCGR3A_pvalues.gwas && zgrep ENSG00000203747 results/SL1344/fastqtl/output/naive_pvalues.coords.txt.gz | cut -f2,3,4,6 -d " " >> results/SL1344/eQTLs/example_loci/FCGR3A_pvalues.gwas
+printf "CHR BP SNP P\n" > results/SL1344/eQTLs/example_loci/FCGR3B_pvalues.gwas && zgrep ENSG00000162747 results/SL1344/fastqtl/output/naive_pvalues.coords.txt.gz | cut -f2,3,4,6 -d " " >> results/SL1344/eQTLs/example_loci/FCGR3B_pvalues.gwas
+printf "CHR BP SNP P\n" > results/SL1344/eQTLs/example_loci/GOLGA7_pvalues.gwas && zgrep ENSG00000147533 results/SL1344/fastqtl/output/IFNg_pvalues.coords.txt.gz | cut -f2,3,4,6 -d " " >> results/SL1344/eQTLs/example_loci/GOLGA7_pvalues.gwas
+printf "CHR BP SNP P\n" > results/SL1344/eQTLs/example_loci/GP1BA_pvalues.gwas && zgrep ENSG00000185245 results/SL1344/fastqtl/output/IFNg_pvalues.coords.txt.gz | cut -f2,3,4,6 -d " " >> results/SL1344/eQTLs/example_loci/GP1BA_pvalues.gwas
+printf "CHR BP SNP P\n" > results/SL1344/eQTLs/example_loci/DDX11_pvalues.gwas && zgrep ENSG00000013573 results/SL1344/fastqtl/output/IFNg_pvalues.coords.txt.gz | cut -f2,3,4,6 -d " " >> results/SL1344/eQTLs/example_loci/DDX11_pvalues.gwas
+printf "CHR BP SNP P\n" > results/SL1344/eQTLs/example_loci/SPOPL_pvalues.gwas && zgrep ENSG00000144228 results/SL1344/fastqtl/output/IFNg_pvalues.coords.txt.gz | cut -f2,3,4,6 -d " " >> results/SL1344/eQTLs/example_loci/SPOPL_pvalues.gwas
+printf "CHR BP SNP P\n" > results/SL1344/eQTLs/example_loci/CCS_pvalues.gwas && zgrep ENSG00000173992 results/SL1344/fastqtl/output/naive_pvalues.coords.txt.gz | cut -f2,3,4,6 -d " " >> results/SL1344/eQTLs/example_loci/CCS_pvalues.gwas
 
 

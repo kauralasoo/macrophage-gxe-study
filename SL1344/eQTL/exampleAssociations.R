@@ -9,8 +9,7 @@ atac_list = readRDS("../macrophage-chromatin/results/ATAC/ATAC_combined_accessib
 line_metadata = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds") #Line metadata
 donor_geno_map = dplyr::select(line_metadata, donor, genotype_id) %>% unique()
 atac_sample_meta = dplyr::left_join(atac_list$design, donor_geno_map, by = "donor") %>% 
-  dplyr::mutate(condition_name = factor(condition, levels = c("naive","IFNg","SL1344","IFNg_SL1344")))
-atac_peak_meta = dplyr::mutate(atac_list$gene_metadata, gene_name = gene_id)
+  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344","IFNg_SL1344")))
 
 #Import genotypes
 vcf_file = readRDS("results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.rds")
@@ -23,7 +22,7 @@ ggsave("results/SL1344/eQTLs/example_loci/CTSC/CTSC_eQTL.pdf", ctsc_plot, width 
 
 #Make a QTL plot for the ATAC peak
 ctsc_enhancer = plotEQTL("ATAC_peak_55686", "rs11019479", atac_list$exprs_cqn, vcf_file$genotypes, 
-         atac_sample_meta, atac_peak_meta)
+         atac_sample_meta, atac_list$gene_metadata)
 ggsave("results/SL1344/eQTLs/example_loci/CTSC/CTSC_ATAC_enhancer.pdf", ctsc_enhancer, width = 7, height = 7)
 
 #Downstream and upstream enhancers
@@ -38,4 +37,39 @@ ggsave("results/SL1344/eQTLs/example_loci/CTSC/CTSC_ATAC_enhancer-1.pdf", ctsc_e
 #Imprt raw p-values
 IFNg_pvalues = readr::read_delim("results/SL1344/fastqtl/output/IFNg_pvalues.txt.gz", delim = " ")
 
+#GP1BA
+gp1ba_enhancer = plotEQTL("ATAC_peak_113648", "rs238242", atac_list$exprs_cqn, vcf_file$genotypes, 
+         atac_sample_meta, atac_list$gene_metadata)
+ggsave("results/SL1344/eQTLs/example_loci/GP1BA/GP1BA_ATAC_enhancer.pdf", gp1ba_enhancer, width = 7, height = 7)
 
+plotEQTL("ENSG00000185245", "rs238242", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
+                     eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata) %>%
+ggsave("results/SL1344/eQTLs/example_loci/GP1BA/GP1BA_eQTL.pdf", ., width = 7, height = 7)
+
+
+#SPOPL
+plotEQTL("ATAC_peak_154955", "rs12621644", atac_list$exprs_cqn, vcf_file$genotypes, 
+         atac_sample_meta, atac_list$gene_metadata) %>%
+  ggsave("results/SL1344/eQTLs/example_loci/SPOPL/SPOPL_enhancer.pdf", ., width = 7, height = 7)
+
+plotEQTL("ATAC_peak_154957", "rs12621644", atac_list$exprs_cqn, vcf_file$genotypes, 
+         atac_sample_meta, atac_list$gene_metadata) %>%
+  ggsave("results/SL1344/eQTLs/example_loci/SPOPL/SPOPL_enhancer+2.pdf", ., width = 7, height = 7)
+
+plotEQTL("ATAC_peak_154958", "rs12621644", atac_list$exprs_cqn, vcf_file$genotypes, 
+         atac_sample_meta, atac_list$gene_metadata) %>%
+  ggsave("results/SL1344/eQTLs/example_loci/SPOPL/SPOPL_enhancer+3.pdf", ., width = 7, height = 7)
+
+plotEQTL("ENSG00000144228", "rs12621644", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
+         eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata) %>%
+  ggsave("results/SL1344/eQTLs/example_loci/SPOPL/SPOPL_eQTL.pdf", ., width = 7, height = 7)
+
+
+#CCS
+plotEQTL("ATAC_peak_52919", "rs566673", atac_list$exprs_cqn, vcf_file$genotypes, 
+         atac_sample_meta, atac_list$gene_metadata) %>%
+  ggsave("results/SL1344/eQTLs/example_loci/CCS/CCS_enhancer.pdf", ., width = 7, height = 7)
+
+plotEQTL("ENSG00000173992", "rs566673", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
+         eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata) %>%
+  ggsave("results/SL1344/eQTLs/example_loci/CCS/CCS_eQTL.pdf", ., width = 7, height = 7)

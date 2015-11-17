@@ -43,10 +43,10 @@ ccs_plot = plotEQTL("ENSG00000173992", "rs636128", eqtl_data_list$exprs_cqn, vcf
                      eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
 
 #Merge conditions together
-naive_hits = dplyr::filter(naive_qtls, qvalue < 0.1) %>% dplyr::select(gene_id, snp_id, qvalue)
-IFNg_hits = dplyr::filter(IFNg_qtls, qvalue < 0.1) %>% dplyr::select(gene_id, snp_id, qvalue)
-SL1344_hits = dplyr::filter(SL1344_qtls, qvalue < 0.1) %>% dplyr::select(gene_id, snp_id, qvalue)
-IFNg_SL1344_hits = dplyr::filter(IFNg_SL1344_qtls, qvalue < 0.1) %>% dplyr::select(gene_id, snp_id, qvalue)
+naive_hits = dplyr::filter(naive_qtls, qvalue < 0.01) %>% dplyr::select(gene_id, snp_id, p_beta, qvalue)
+IFNg_hits = dplyr::filter(IFNg_qtls, qvalue < 0.01) %>% dplyr::select(gene_id, snp_id, p_beta, qvalue)
+SL1344_hits = dplyr::filter(SL1344_qtls, qvalue < 0.01) %>% dplyr::select(gene_id, snp_id, p_beta, qvalue)
+IFNg_SL1344_hits = dplyr::filter(IFNg_SL1344_qtls, qvalue < 0.01) %>% dplyr::select(gene_id, snp_id, p_beta, qvalue)
 
 #Merge all of the hits together
 joint_df = dplyr::full_join(naive_hits, IFNg_hits, by = c("gene_id","snp_id")) %>%
@@ -54,8 +54,36 @@ joint_df = dplyr::full_join(naive_hits, IFNg_hits, by = c("gene_id","snp_id")) %
   dplyr::full_join(IFNg_SL1344_hits,c("gene_id","snp_id"))
 
 #Test for interaction
-interaction_pvalues = testMultipleInteractions(joint_df, eqtl_data_list, vcf_file)
+simple_model <- function(model_data){
+  model = lm(expression ~ genotype + condition_name + sex + ng_ul_mean + diff_days + PEER_factor_1 + PEER_factor_2 + PEER_factor_3 + PEER_factor_4, model_data)
+  return(model)
+}
+interaction_model <- function(model_data){
+  model = lm(expression~genotype + condition_name + condition_name:genotype + sex + ng_ul_mean + diff_days + PEER_factor_1 + PEER_factor_2 + PEER_factor_3 + PEER_factor_4, model_data)
+  return(model)
+}
+
+interaction_pvalues = testMultipleInteractions(joint_df, eqtl_data_list, vcf_file, simple_model, interaction_model)
 saveRDS(interaction_pvalues, "results/SL1344/interaction_pvalues.rds")
+
+interaction_df = plyr::ldply(interaction_pvalues, .id = "id") %>% 
+  tidyr::separate(id, into = c("gene_id", "snp_id"), sep = ":") %>%
+  dplyr::rename(pvalue = V2) %>% 
+  dplyr::left_join(gene_id_name_map, by = "gene_id") %>%
+  tbl_df() %>%
+  dplyr::select(gene_id, gene_name, snp_id, pvalue) %>%
+  dplyr::arrange(pvalue) %>%
+  dplyr::mutate(qvalue = qvalue(pvalue)$qvalues)
+
+interaction_filtered = dplyr::filter(interaction_df, qvalue < 0.1)
+
+plotEQTL("ENSG00000196735", "rs79617990", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
+         eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
+
+interaction_plots = makeMultiplePlots(interaction_df[1:200,],eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
+                                      eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
+
+savePlots(interaction_plots, "results/SL1344/eQTLs/interaction_plots/", width = 7, height = 7)
 
 multi_snp_genes = group_by(joint_df[,1:2], gene_id) %>% 
   dplyr::summarise(snp_count = length(gene_id)) %>% 
