@@ -43,10 +43,10 @@ ccs_plot = plotEQTL("ENSG00000173992", "rs636128", eqtl_data_list$exprs_cqn, vcf
                      eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
 
 #Merge conditions together
-naive_hits = dplyr::filter(naive_qtls, qvalue < 0.01) %>% dplyr::select(gene_id, snp_id, p_beta, qvalue)
-IFNg_hits = dplyr::filter(IFNg_qtls, qvalue < 0.01) %>% dplyr::select(gene_id, snp_id, p_beta, qvalue)
-SL1344_hits = dplyr::filter(SL1344_qtls, qvalue < 0.01) %>% dplyr::select(gene_id, snp_id, p_beta, qvalue)
-IFNg_SL1344_hits = dplyr::filter(IFNg_SL1344_qtls, qvalue < 0.01) %>% dplyr::select(gene_id, snp_id, p_beta, qvalue)
+naive_hits = dplyr::filter(naive_qtls, qvalue < 0.1) %>% dplyr::select(gene_id, snp_id, p_nominal, p_beta, qvalue)
+IFNg_hits = dplyr::filter(IFNg_qtls, qvalue < 0.1) %>% dplyr::select(gene_id, snp_id, p_nominal, p_beta, qvalue)
+SL1344_hits = dplyr::filter(SL1344_qtls, qvalue < 0.1) %>% dplyr::select(gene_id, snp_id, p_nominal, p_beta, qvalue)
+IFNg_SL1344_hits = dplyr::filter(IFNg_SL1344_qtls, qvalue < 0.1) %>% dplyr::select(gene_id, snp_id, p_nominal, p_beta, qvalue)
 
 #Merge all of the hits together
 joint_df = dplyr::full_join(naive_hits, IFNg_hits, by = c("gene_id","snp_id")) %>%
@@ -65,7 +65,9 @@ interaction_model <- function(model_data){
 
 interaction_pvalues = testMultipleInteractions(joint_df, eqtl_data_list, vcf_file, simple_model, interaction_model)
 saveRDS(interaction_pvalues, "results/SL1344/interaction_pvalues.rds")
+interaction_pvalues = readRDS("results/SL1344/interaction_pvalues.rds")
 
+#Reformat the interaction data frame
 interaction_df = plyr::ldply(interaction_pvalues, .id = "id") %>% 
   tidyr::separate(id, into = c("gene_id", "snp_id"), sep = ":") %>%
   dplyr::rename(pvalue = V2) %>% 
@@ -75,7 +77,19 @@ interaction_df = plyr::ldply(interaction_pvalues, .id = "id") %>%
   dplyr::arrange(pvalue) %>%
   dplyr::mutate(qvalue = qvalue(pvalue)$qvalues)
 
-interaction_filtered = dplyr::filter(interaction_df, qvalue < 0.1)
+#Keep the stronges interaction per gene
+interaction_filtered = dplyr::filter(interaction_df, qvalue < 0.1) %>% 
+  dplyr::group_by(gene_id) %>% 
+  dplyr::arrange(gene_id, qvalue) %>% 
+  dplyr::top_n(1) %>% 
+  dplyr::ungroup() %>% dplyr::arrange(qvalue)
+
+#Make a list of all QTLs
+qtl_list = list(naive = naive_hits, IFNg = IFNg_hits, SL1344 = SL1344_hits, 
+                IFNg_SL1344 = IFNg_SL1344_hits, interaction = interaction_filtered)
+saveRDS(qtl_list, "results/SL1344/eQTLs/fastqtl_call_set.rds")
+
+
 
 plotEQTL("ENSG00000196735", "rs79617990", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
          eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
