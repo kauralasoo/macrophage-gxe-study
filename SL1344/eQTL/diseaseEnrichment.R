@@ -5,6 +5,8 @@ load_all("../seqUtils/")
 #Load expression data
 eqtl_data_list = readRDS("results/SL1344/eqtl_data_list.rds")
 fastqtl_callset = readRDS("results/SL1344/fastqtl/output/fastqtl_call_set.rds")
+gene_id_name_map = dplyr::select(eqtl_data_list$gene_metadata, gene_id, gene_name)
+vcf_file = readRDS("results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.rds")
 
 #Load GWAS catalog
 gwas_catalog = importGwasCatalog("annotations/gwas_catalog_v1.0.1-downloaded_2015-11-19.tsv") %>%
@@ -15,46 +17,41 @@ assocation_count = group_by(gwas_catalog, mapped_trait) %>%
 gwas_catalog_df = dplyr::left_join(gwas_catalog, assocation_count, by = "mapped_trait") %>% 
   dplyr::filter(association_count > 10)
 
-#Import all p-values
-n_pval = readr::read_delim("results/SL1344/fastqtl/output/SL1344_pvalues.coords.txt.gz", delim = " ", col_names = FALSE)
-colnames(n_pval) = c("gene_id", "chr","pos", "snp_id", "distance", "pvalue", "effect_size")
+#Import gwas p-values
+naive_pvalues = importGwasPvalue("results/SL1344/fastqtl/output/naive_pvalues.coords.txt.gz", gwas_catalog_df)
+naive_enrichment = calculateEnrichment(gwas_catalog_df, naive_pvalues, fastqtl_callset$naive, 
+                                       gene_id_name_map, p_diff_thresh = 2)
 
-#For each trait-SNP pair find the most associated gene
-gwas_pvalues = dplyr::semi_join(n_pval, gwas_catalog_df, by = c("chr","pos"))
-genes_with_traits = dplyr::inner_join(gwas_pvalues, gwas_catalog_df, by = c("chr", "pos")) %>%
-  dplyr::select(gene_id, chr, pos, pvalue, trait, mapped_trait) %>% 
-  dplyr::group_by(chr, pos, mapped_trait) %>% 
-  dplyr::arrange(pvalue) %>% 
-  dplyr::filter(row_number() == 1) %>% 
-  dplyr::ungroup() %>% 
-  dplyr::select(gene_id, chr, pos, pvalue, mapped_trait) %>% 
-  dplyr::group_by(gene_id, mapped_trait) %>% 
-  dplyr::arrange(pvalue) %>%
-  dplyr::filter(row_number() == 1) %>%
-  dplyr::rename(trait_chr = chr, trait_pos = pos, trait_pvalue = pvalue)
+IFNg_pvalues = importGwasPvalue("results/SL1344/fastqtl/output/IFNg_pvalues.coords.txt.gz", gwas_catalog_df)
+IFNg_enrichment = calculateEnrichment(gwas_catalog_df, IFNg_pvalues, fastqtl_callset$IFNg,
+                                      gene_id_name_map, p_diff_thresh = 2)
 
-#Count the number of idendent genes per trait
-genes_per_trait = genes_with_traits %>% 
-  group_by(mapped_trait) %>% 
-  summarize(trait_gene_count = length(gene_id)) %>% 
-  arrange(-trait_gene_count)
-  
-#Join QTLs and GWAS hits
-trait_qtl_map = dplyr::inner_join(fastqtl_callset$SL1344, genes_with_traits, by = "gene_id") %>%
-  dplyr::mutate(pvalue_diff = -log10(p_nominal) +log10(trait_pvalue)) %>% 
-  dplyr::filter(pvalue_diff < 3) #Difference in eQTL pvalues at most 3 orders of magnitude
+SL1344_pvalues = importGwasPvalue("results/SL1344/fastqtl/output/SL1344_pvalues.coords.txt.gz", gwas_catalog_df)
+SL1344_enrichment = calculateEnrichment(gwas_catalog_df, SL1344_pvalues, fastqtl_callset$SL1344, 
+                                        gene_id_name_map, p_diff_thresh = 2)
 
-#Count the number QTL genes that overlap a trait
-trait_qtl_overlap = trait_qtl_map %>% 
-  group_by(mapped_trait) %>% 
-  dplyr::summarise(trait_qtl_overlap = length(gene_id)) %>% 
-  arrange(-trait_qtl_overlap)
+IFNg_SL1344_pvalues = importGwasPvalue("results/SL1344/fastqtl/output/IFNg_SL1344_pvalues.coords.txt.gz", gwas_catalog_df)
+IFNg_SL1344_enrichment = calculateEnrichment(gwas_catalog_df, IFNg_SL1344_pvalues, fastqtl_callset$IFNg_SL1344, 
+                                             gene_id_name_map, p_diff_thresh = 2)
 
-#Calculate odd-ratios of enrichment
-n_qtls = nrow(fastqtl_callset$naive)
-n_genes = nrow(eqtl_data_list$exprs_cqn)
-overlap_df = dplyr::left_join(genes_per_trait, trait_qtl_overlap, by = "mapped_trait") %>% 
-  dplyr::mutate(trait_qtl_overlap = ifelse(is.na(trait_qtl_overlap), 0, trait_qtl_overlap)) %>%
-  dplyr::mutate(OR = (trait_qtl_overlap/(n_qtls - trait_qtl_overlap)) / ((trait_gene_count-trait_qtl_overlap)/(n_genes-n_qtls))) %>%
-  dplyr::arrange(-OR) %>%
-  dplyr::filter(trait_gene_count > 20)
+write.table(naive_enrichment$enrichment, "results/SL1344/fastqtl/output/naive_enrichment.txt", quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(IFNg_enrichment$enrichment, "results/SL1344/fastqtl/output/IFNg_enrichment.txt", quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(SL1344_enrichment$enrichment, "results/SL1344/fastqtl/output/SL1344_enrichment.txt", quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(IFNg_SL1344_enrichment$enrichment, "results/SL1344/fastqtl/output/IFNg_SL1344_enrichment.txt", quote = FALSE, sep = "\t", row.names = FALSE)
+
+#Identify all genes that overlap disease loci
+overlap_genes = rbind(naive_enrichment$overlap, IFNg_enrichment$overlap, 
+                      SL1344_enrichment$overlap, IFNg_SL1344_enrichment$overlap) %>%
+  dplyr::arrange(qvalue)
+saveRDS(overlap_genes, "results/SL1344/fastqtl/output/disease_overlaps.rds")
+
+#Identify unique set of gene-SNP pairs
+disease_overlaps = dplyr::select(overlap_genes, gene_id, gene_name, snp_id, qvalue) %>% 
+  dplyr::arrange(qvalue) %>% unique() 
+interaction_disease_overlaps = dplyr::semi_join(disease_overlaps, fastqtl_callset$interaction, by = "gene_id") %>% 
+  arrange(qvalue)
+
+#Make plots and save them to disk
+disease_plots = makeMultiplePlots(interaction_disease_overlaps, eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
+                                      eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
+savePlots(disease_plots, "results/SL1344/eQTLs/disease_interaction_plots//", width = 7, height = 7)
