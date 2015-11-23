@@ -73,3 +73,42 @@ plotEQTL("ATAC_peak_52919", "rs566673", atac_list$exprs_cqn, vcf_file$genotypes,
 plotEQTL("ENSG00000173992", "rs566673", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
          eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata) %>%
   ggsave("results/SL1344/eQTLs/example_loci/CCS/CCS_eQTL.pdf", ., width = 7, height = 7)
+
+#RGS14
+plotEQTL("ATAC_peak_239461", "rs12654812", atac_list$exprs_cqn, vcf_file$genotypes, 
+         atac_sample_meta, atac_list$gene_metadata) %>%
+  ggsave("results/SL1344/eQTLs/example_loci/RGS14/RGS14_enhancer1.pdf", ., width = 7, height = 7)
+
+plotEQTL("ATAC_peak_239459", "rs12654812", atac_list$exprs_cqn, vcf_file$genotypes, 
+         atac_sample_meta, atac_list$gene_metadata) %>%
+  ggsave("results/SL1344/eQTLs/example_loci/RGS14/RGS14_enhancer2.pdf", ., width = 7, height = 7)
+
+plotEQTL("ATAC_peak_239457", "rs12654812", atac_list$exprs_cqn, vcf_file$genotypes, 
+         atac_sample_meta, atac_list$gene_metadata) %>%
+  ggsave("results/SL1344/eQTLs/example_loci/RGS14/RGS14_enhancer2-2.pdf", ., width = 7, height = 7)
+
+plotEQTL("ENSG00000169220", "rs12654812", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
+         eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata) %>%
+  ggsave("results/SL1344/eQTLs/example_loci/RGS14/RGS14_eQTL.pdf", ., width = 7, height = 7)
+
+plotEQTL("ENSG00000146094", "rs12654812", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
+         eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)  %>%
+  ggsave("results/SL1344/eQTLs/example_loci/RGS14/DOK3_eQTL.pdf", ., width = 7, height = 7)
+
+#TMEM229B
+plotEQTL("ATAC_peak_88584", "rs12878807", atac_list$exprs_cqn, vcf_file$genotypes, 
+         atac_sample_meta, atac_list$gene_metadata) %>%
+  ggsave("results/SL1344/eQTLs/example_loci/TMEM229B/TMEM229B_enhancer.pdf", ., width = 7, height = 7)
+
+plotEQTL("ATAC_peak_88585", "rs12878807", atac_list$exprs_cqn, vcf_file$genotypes, 
+         atac_sample_meta, atac_list$gene_metadata) %>%
+  ggsave("results/SL1344/eQTLs/example_loci/TMEM229B/TMEM229B_enhancer+1.pdf", ., width = 7, height = 7)
+
+
+plotEQTL("ENSG00000198133", "rs12878807", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
+         eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata) %>%
+  ggsave("results/SL1344/eQTLs/example_loci/TMEM229B/TMEM229B_eQTL.pdf", ., width = 7, height = 7)
+
+plotEQTL("ENSG00000054690", "rs12878807", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
+         eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata) %>%
+  ggsave("results/SL1344/eQTLs/example_loci/TMEM229B/PLEKHH1_eQTL.pdf", ., width = 7, height = 7)

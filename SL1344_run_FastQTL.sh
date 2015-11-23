@@ -59,5 +59,10 @@ printf "CHR BP SNP P\n" > results/SL1344/eQTLs/example_loci/GP1BA_pvalues.gwas &
 printf "CHR BP SNP P\n" > results/SL1344/eQTLs/example_loci/DDX11_pvalues.gwas && zgrep ENSG00000013573 results/SL1344/fastqtl/output/IFNg_pvalues.coords.txt.gz | cut -f2,3,4,6 -d " " >> results/SL1344/eQTLs/example_loci/DDX11_pvalues.gwas
 printf "CHR BP SNP P\n" > results/SL1344/eQTLs/example_loci/SPOPL_pvalues.gwas && zgrep ENSG00000144228 results/SL1344/fastqtl/output/IFNg_pvalues.coords.txt.gz | cut -f2,3,4,6 -d " " >> results/SL1344/eQTLs/example_loci/SPOPL_pvalues.gwas
 printf "CHR BP SNP P\n" > results/SL1344/eQTLs/example_loci/CCS_pvalues.gwas && zgrep ENSG00000173992 results/SL1344/fastqtl/output/naive_pvalues.coords.txt.gz | cut -f2,3,4,6 -d " " >> results/SL1344/eQTLs/example_loci/CCS_pvalues.gwas
+printf "CHR BP SNP P\n" > results/SL1344/eQTLs/example_loci/RGS14_pvalues.gwas && zgrep ENSG00000169220 results/SL1344/fastqtl/output/IFNg_SL1344_pvalues.coords.txt.gz | cut -f2,3,4,6 -d " " >> results/SL1344/eQTLs/example_loci/RGS14_pvalues.gwas
+printf "CHR BP SNP P\n" > results/SL1344/eQTLs/example_loci/TMEM229B_pvalues.gwas && zgrep ENSG00000198133 results/SL1344/fastqtl/output/IFNg_pvalues.coords.txt.gz | cut -f2,3,4,6 -d " " >> results/SL1344/eQTLs/example_loci/TMEM229B_pvalues.gwas
+printf "CHR BP SNP P\n" > results/SL1344/eQTLs/example_loci/TLR1_pvalues.gwas && zgrep ENSG00000174125 results/SL1344/fastqtl/output/SL1344_pvalues.coords.txt.gz | cut -f2,3,4,6 -d " " >> results/SL1344/eQTLs/example_loci/TLR1_pvalues.gwas
+
+
 
 
