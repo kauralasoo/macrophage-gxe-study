@@ -270,6 +270,23 @@ ggplot(cd206_model_data, aes(x = factor(rs9418387), y = intensity)) +
 
 #### Variance components ####
 
+#Explore CD14 data by donor and by date
+cd14_by_donor = ggplot(cd14_replicates, aes(x = donor, y = intensity)) + geom_point()
+ggsave("results/technical_report/CD14_by_donor.pdf", cd14_by_donor, width = 7, height = 5)
+
+cd14_by_date = ggplot(cd14_model_data, aes(x = flow_date, y = intensity)) + geom_point()
+ggsave("results/technical_report/CD14_by_date.pdf", cd14_by_date, width = 8, height = 5)
+
+#Count the number of replicates by donor
+reps = dplyr::group_by(cd14_model_data, donor) %>% dplyr::summarise(n_replicates = length(donor))
+rep_plot = ggplot(reps, aes(x = factor(n_replicates))) + geom_histogram() + xlab("Number of replicates")
+ggsave("results/technical_report/number_of_reps.pdf", rep_plot , width = 4, height = 5)
+
+#Count the number of samples by date
+samples_date = dplyr::group_by(cd14_model_data, flow_date) %>% dplyr::summarise(n_replicates = length(flow_date))
+samples_plot = ggplot(samples_date, aes(x = factor(n_replicates))) + geom_histogram() + xlab("Number of samples")
+ggsave("results/technical_report/number_of_samples.pdf", samples_plot , width = 6, height = 5)
+
 #Make two lists of data
 full_data_list = list(CD14 = cd14_model_data, CD16 = cd16_model_data, C206 = cd206_model_data)
 replicates_data_list = list(CD14 = cd14_replicates, CD16 = cd16_replicates, C206 = cd206_replicates)
