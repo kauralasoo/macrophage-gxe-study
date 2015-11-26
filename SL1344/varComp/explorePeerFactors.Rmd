@@ -73,9 +73,26 @@ cor(as.numeric(factor(chemistry_df$rna_auto)) , chemistry_df$PEER_factor_2, use 
 
 Look at the variation explained by each PEER factor,
 ```{r}
-precisions = read.table("results/SL1344/PEER/25_factors/precision.txt", sep = ",")
-precisions_vec = precisions$V1[2:nrow(precisions)]
-plot(1/precisions_vec)
+prec_naive = read.table("results/SL1344/PEER/naive_10/precision.txt", sep = ",")
+prec_ifng = read.table("results/SL1344/PEER/IFNg_10/precision.txt", sep = ",")
+prec_sl1344 = read.table("results/SL1344/PEER/SL1344_10//precision.txt", sep = ",")
+prec_ifng_sl1344 = read.table("results/SL1344/PEER/IFNg_SL1344_10//precision.txt", sep = ",")
+
+#Combine it all together
+precision_df = 1/cbind(prec_naive, prec_ifng, prec_sl1344, prec_ifng_sl1344)[-1,]
+colnames(precision_df) = c("Naive", "IFNg", "SL1344", "IFNg_SL1344")
+precision_df = dplyr::mutate(precision_df, factor = paste("PEER_factor_", c(1:10), sep = "")) %>% 
+  dplyr::mutate(factor = factor(factor, factor)) %>%
+  tidyr::gather(condition, sd, Naive:IFNg_SL1344)
+
+#Make a plot
+precision_plot = ggplot(precision_df, aes(x = factor, y = sd, color = condition, group = condition)) +
+  geom_point() + 
+  geom_line() +
+  ylab("1 / precision") + 
+  theme(axis.text.x = element_text(angle = 25))
+precision_plot
+ggsave("results/SL1344/varComp/PEER_explained.pdf", precision_plot, width = 7, height = 5)
 ```
 
 Explore the correlation between PEER factors

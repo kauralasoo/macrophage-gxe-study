@@ -1,6 +1,8 @@
 library("dplyr")
 library("devtools")
 load_all("../seqUtils/")
+library("ggplot2")
+library("tidyr")
 
 #Load expression data
 eqtl_data_list = readRDS("results/SL1344/eqtl_data_list.rds")
@@ -55,3 +57,27 @@ interaction_disease_overlaps = dplyr::semi_join(disease_overlaps, fastqtl_callse
 disease_plots = makeMultiplePlots(interaction_disease_overlaps, eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
                                       eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
 savePlots(disease_plots, "results/SL1344/eQTLs/disease_interaction_plots//", width = 7, height = 7)
+
+#Combine all enrichments
+dplyr::select(naive_pvalues, mapped_trait, OR_trait_qtls)
+
+naive_OR = dplyr::transmute(naive_enrichment$enrichment,mapped_trait, naive = OR_trait_qtls)
+ifng_OR = dplyr::transmute(IFNg_enrichment$enrichment,mapped_trait, IFNg = OR_trait_qtls)
+sl1344_OR = dplyr::transmute(SL1344_enrichment$enrichment,mapped_trait, SL1344 = OR_trait_qtls)
+ifng_sl1344_OR = dplyr::transmute(IFNg_SL1344_enrichment$enrichment,mapped_trait, IFNg_SL1344 = OR_trait_qtls)
+
+enrichment_table = dplyr::left_join(naive_OR, ifng_OR, by = "mapped_trait") %>% 
+  dplyr::left_join(sl1344_OR, by = "mapped_trait") %>% 
+  dplyr::left_join(ifng_sl1344_OR, by ="mapped_trait") %>% 
+  dplyr::rowwise() %>% 
+  dplyr::mutate(max_OR = max(naive, IFNg, SL1344, IFNg_SL1344)) %>% 
+  ungroup() %>% 
+  dplyr::arrange(-max_OR) %>%
+  dplyr::top_n(10) %>%
+  dplyr::mutate(mapped_trait = factor(mapped_trait, rev(mapped_trait))) %>%
+  tidyr::gather(key = condition, value = OR, naive:IFNg_SL1344)
+  
+trait_enrichment_plot = ggplot(enrichment_table, aes(x = OR, y = mapped_trait, color = condition)) + 
+  geom_point()
+ggsave("results/SL1344/eQTLs/disease_enrichments.pdf", trait_enrichment_plot, width = 8, height = 5)
+
