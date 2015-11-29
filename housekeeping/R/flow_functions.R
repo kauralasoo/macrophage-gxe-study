@@ -42,10 +42,10 @@ estimateSamplePurity <- function(sample_id, metadata, flowset, staining = "CD14+
 }
 
 changeFlowFrameNames <- function(flowframe, name_map){
-  old_names = colnames(flowframe)
-  map_names = left_join(data.frame(old_names = old_names, stringsAsFactors = FALSE), name_map, by = "old_names") %>% 
+  old_names = flowCore::colnames(flowframe)
+  map_names = dplyr::left_join(data.frame(old_names = old_names, stringsAsFactors = FALSE), name_map, by = "old_names") %>% 
     dplyr::mutate(new_names = ifelse(is.na(new_names), old_names, new_names))
-  colnames(flowframe) = map_names$new_names
+  flowCore::colnames(flowframe) = map_names$new_names
   return(flowframe)
 }
 

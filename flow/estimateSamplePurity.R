@@ -6,6 +6,8 @@ library("dplyr")
 library("openCyto")
 library("ggplot2")
 library("mclust")
+library("devtools")
+load_all("macrophage-gxe-study/housekeeping/")
 
 #Import flowSet from disk
 flowset = readRDS("flow/combined_flowSet.rds")
@@ -57,7 +59,7 @@ selected_df = dplyr::select(gated_df, name, APC.A, PE.A, Pacific.Blue.A) %>%
 
 #Make density plots for all channels
 plot = ggplot(selected_df, aes(x = intensity, color = staining, fill = staining, alpha = 0.5)) + geom_density() + facet_grid(sample~channel) 
-ggsave("results/flow/flow_density.pdf", plot = plot, width = 8, height = 115, limitsize = FALSE)
+ggsave("results/flow/flow_density.pdf", plot = plot, width = 8, height = 15, limitsize = FALSE)
 
 #Estimate the purity of all samples
 sample_names = unique(filtered_metadata$sample)
