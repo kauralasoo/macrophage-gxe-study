@@ -12,7 +12,7 @@ Assay Version,2.6
  
 Number of Samples Run,12
  
-Sample Name,dikuA
+Sample Name,diku_A
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -43,7 +43,7 @@ RNA Integrity Number (RIN):,9.7   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN: 9.70,
  
-Sample Name,dikuB
+Sample Name,diku_B
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -77,7 +77,7 @@ RNA Integrity Number (RIN):,9.7   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN: 9.70,
  
-Sample Name,dikuC
+Sample Name,diku_C
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -107,7 +107,7 @@ RNA Integrity Number (RIN):,10   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN:10,
  
-Sample Name,dikuD
+Sample Name,diku_D
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -136,7 +136,7 @@ RNA Integrity Number (RIN):,10   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN:10,
  
-Sample Name,iillA
+Sample Name,iill_A
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -167,7 +167,7 @@ RNA Integrity Number (RIN):,10   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN:10,
  
-Sample Name,iillB
+Sample Name,iill_B
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -194,7 +194,7 @@ RNA Integrity Number (RIN):,10   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN:10,
  
-Sample Name,iillC
+Sample Name,iill_C
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -228,7 +228,7 @@ RNA Integrity Number (RIN):,10   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN:10,
  
-Sample Name,iillD
+Sample Name,iill_D
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -259,7 +259,7 @@ RNA Integrity Number (RIN):,10   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN:10,
  
-Sample Name,zauiA
+Sample Name,zaui_A
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -286,7 +286,7 @@ RNA Integrity Number (RIN):,10   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN:10,
  
-Sample Name,zauiB
+Sample Name,zaui_B
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -313,7 +313,7 @@ RNA Integrity Number (RIN):,10   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN:10,
  
-Sample Name,zauiC
+Sample Name,zaui_C
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -339,7 +339,7 @@ RNA Integrity Number (RIN):,10   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN:10,
  
-Sample Name,zauiD
+Sample Name,zaui_D
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width

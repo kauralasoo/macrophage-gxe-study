@@ -12,7 +12,7 @@ Assay Version,2.6
  
 Number of Samples Run,12
  
-Sample Name,coyiA
+Sample Name,coyi_A
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -37,7 +37,7 @@ RNA Integrity Number (RIN):,9.6   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN: 9.60,
  
-Sample Name,coyiB
+Sample Name,coyi_B
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -63,7 +63,7 @@ RNA Integrity Number (RIN):,10   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN:10,
  
-Sample Name,coyiC
+Sample Name,coyi_C
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -86,7 +86,7 @@ RNA Integrity Number (RIN):,10   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN:10,
  
-Sample Name,coyiD
+Sample Name,coyi_D
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -109,7 +109,7 @@ RNA Integrity Number (RIN):,10   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN:10,
  
-Sample Name,fiktA
+Sample Name,fikt_A
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -137,7 +137,7 @@ RNA Integrity Number (RIN):,9.6   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN: 9.60,
  
-Sample Name,fiktB
+Sample Name,fikt_B
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -164,7 +164,7 @@ RNA Integrity Number (RIN):,10   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN:10,
  
-Sample Name,fiktC
+Sample Name,fikt_C
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -192,7 +192,7 @@ RNA Integrity Number (RIN):,10   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN:10,
  
-Sample Name,fiktD
+Sample Name,fikt_D
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -219,7 +219,7 @@ RNA Integrity Number (RIN):,10   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN:10,
  
-Sample Name,haytA
+Sample Name,hayt_A
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -255,7 +255,7 @@ RNA Integrity Number (RIN):,8.1   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN: 8.10,
  
-Sample Name,haytB
+Sample Name,hayt_B
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -283,7 +283,7 @@ RNA Integrity Number (RIN):,9.9   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN: 9.90,
  
-Sample Name,haytC
+Sample Name,hayt_C
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
@@ -309,7 +309,7 @@ RNA Integrity Number (RIN):,9.7   (B.02.08),
 Result Flagging Color:,16768991,
 Result Flagging Label:,RIN: 9.70,
  
-Sample Name,haytD
+Sample Name,hayt_D
  
 Peak Table
 Time corrected area,Area,Aligned Migration Time [s],Peak Height,Peak Width
