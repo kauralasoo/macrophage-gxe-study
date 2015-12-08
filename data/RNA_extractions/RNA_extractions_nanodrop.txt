@@ -11,6 +11,8 @@
 # ruyv_C concentration after clean-up, lost part of the sample (5/24/2015)
 # pelm 1 well per sample
 # hehd A,B only one well per condition
+# babk 1 well per condition
+# qaqx C,D one well per condition
 sample_name	sample_id	User ID	Date 	Time 	ng/ul 	A260 	A280 	260/280 	260/230 	Constant 	Cursor Pos.	Cursor abs.	340 raw
 peop A	peop_A	Default	6/6/2014	2:07 PM	72.10	1.803	0.870	2.07	2.24	40.00	230	0.803	0.011
 peop B	peop_B	Default	6/6/2014	2:09 PM	113.82	2.846	1.377	2.07	1.88	40.00	230	1.515	0.016
@@ -400,3 +402,11 @@ guss A	guss_A	Default	12/3/2015	5:54 PM	245.82	6.146	2.996	2.05	2.03	40.00	230	3
 guss B	guss_B	Default	12/3/2015	5:55 PM	282.44	7.061	3.470	2.03	2.05	40.00	230	3.446	-0.034
 guss C	guss_C	Default	12/3/2015	5:55 PM	160.32	4.008	1.963	2.04	1.94	40.00	230	2.070	-0.032
 guss D	guss_D	Default	12/3/2015	5:56 PM	202.75	5.069	2.496	2.03	1.93	40.00	230	2.631	-0.041
+qaqx A	qaqx_A	Default	12/7/2015	2:43 PM	570.55	14.264	6.892	2.07	2.11	40.00	229	6.766	-0.297
+qaqx B	qaqx_B	Default	12/7/2015	2:44 PM	607.60	15.190	7.410	2.05	2.11	40.00	229	7.198	-0.511
+qaqx C	qaqx_C	Default	12/7/2015	2:45 PM	238.70	5.967	2.885	2.07	1.94	40.00	229	3.080	0.018
+qaqx D	qaqx_D	Default	12/7/2015	2:46 PM	149.88	3.747	1.817	2.06	1.71	40.00	229	2.208	0.015
+babk A	babk_A	Default	12/7/2015	2:47 PM	27.66	0.691	0.347	1.99	1.19	40.00	229	0.589	0.110
+babk B	babk_B	Default	12/7/2015	2:48 PM	30.31	0.758	0.374	2.03	1.59	40.00	229	0.480	0.008
+babk C	babk_C	Default	12/7/2015	2:49 PM	24.43	0.611	0.303	2.02	1.35	40.00	229	0.458	0.044
+babk D	babk_D	Default	12/7/2015	2:50 PM	18.21	0.455	0.226	2.02	0.59	40.00	229	0.799	0.055
