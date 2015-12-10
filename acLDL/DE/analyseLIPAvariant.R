@@ -17,12 +17,15 @@ vcf_file = readRDS("results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.rds")
 
 #Extract counts
 total_counts = expression_data_list$exprs_counts[,eqtl_data_list$sample_metadata$sample_id]
+write.table(total_counts, "results/acLDL/macrophage_acLDL_read_counts.txt", sep ="\t", quote = FALSE)
 
 #Extract LIPA genotype
 LIPA_genotype = vcf_file$genotypes["rs1412444",]
 LIPA_geno_df = data_frame(genotype_id = names(LIPA_genotype), rs1412444 = LIPA_genotype)
-design = dplyr::left_join(eqtl_data_list$sample_metadata, LIPA_geno_df, by = "genotype_id") %>% as.data.frame()
+design = dplyr::left_join(eqtl_data_list$sample_metadata, LIPA_geno_df, by = "genotype_id") %>% as.data.frame() %>%
+  dplyr::select(sample_id, condition, genotype_id, rs1412444)
 rownames(design) = design$sample_id
+write.table(design,"results/acLDL/design_matrix.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 
 dds = DESeqDataSetFromMatrix(total_counts, design, ~condition + rs1412444 + condition:rs1412444)
 dds = DESeq(dds)
@@ -34,5 +37,5 @@ snp_res = results(dds, name = "rs1412444")
 snp_results = filterDESeqResults(snp_res,eqtl_data_list$gene_metadata, min_padj = 0.01, min_fc = 0)
 
 inter_res = results(dds, name = "conditionCtrl.rs1412444")
-inter_results = filterDESeqResults(snp_res,eqtl_data_list$gene_metadata, min_padj = 0.01, min_fc = 0)
+inter_results = filterDESeqResults(inter_res,eqtl_data_list$gene_metadata, min_padj = 0.01, min_fc = 0)
 
