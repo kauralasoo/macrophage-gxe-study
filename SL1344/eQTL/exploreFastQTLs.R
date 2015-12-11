@@ -155,3 +155,10 @@ ggplot(df, aes(x = factor(rs13141111), y = res)) + geom_boxplot() + geom_point()
 ggplot(df, aes(x = factor(rs6831024), y = res)) + geom_boxplot() + geom_point()
 
 
+#Plot IL2RA expression
+plotEQTL("ENSG00000134460", "rs7911500", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
+         eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
+plotEQTL("ENSG00000134460", "rs12722605", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
+         eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
+
+

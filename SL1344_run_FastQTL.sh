@@ -64,5 +64,13 @@ printf "CHR BP SNP P\n" > results/SL1344/eQTLs/example_loci/TMEM229B_pvalues.gwa
 printf "CHR BP SNP P\n" > results/SL1344/eQTLs/example_loci/TLR1_pvalues.gwas && zgrep ENSG00000174125 results/SL1344/fastqtl/output/SL1344_pvalues.coords.txt.gz | cut -f2,3,4,6 -d " " >> results/SL1344/eQTLs/example_loci/TLR1_pvalues.gwas
 
 
+python ~/software/utils/fastqtl/fastqtlExtractGenePvals.py --fastqtl results/SL1344/fastqtl/output/IFNg_pvalues.coords.txt.gz --gene_id ENSG00000144228 > SPOPL.gwas
+
+#IL2RA pvalues
+python ~/software/utils/fastqtl/fastqtlExtractGenePvals.py --fastqtl results/SL1344/fastqtl/output/IFNg_pvalues.coords.txt.gz --gene_id ENSG00000134460 > results/SL1344/eQTLs/example_loci/IL2RA_IFNg_pvalues.gwas
+python ~/software/utils/fastqtl/fastqtlExtractGenePvals.py --fastqtl results/SL1344/fastqtl/output/naive_pvalues.coords.txt.gz --gene_id ENSG00000134460 > results/SL1344/eQTLs/example_loci/IL2RA_naive_pvalues.gwas
+python ~/software/utils/fastqtl/fastqtlExtractGenePvals.py --fastqtl results/SL1344/fastqtl/output/SL1344_pvalues.coords.txt.gz --gene_id ENSG00000134460 > results/SL1344/eQTLs/example_loci/IL2RA_SL1344_pvalues.gwas
+python ~/software/utils/fastqtl/fastqtlExtractGenePvals.py --fastqtl results/SL1344/fastqtl/output/IFNg_SL1344_pvalues.coords.txt.gz --gene_id ENSG00000134460 > results/SL1344/eQTLs/example_loci/IL2RA_IFNg_SL1344_pvalues.gwas
+
 
 
