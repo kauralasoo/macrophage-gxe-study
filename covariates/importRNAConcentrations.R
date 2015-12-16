@@ -10,6 +10,14 @@ rna_df = dplyr::rename(rna_data, ng_ul = ng.ul, ratio_260_280 = X260.280, ratio_
   dplyr::select(sample_id, Date, ng_ul, ratio_260_280, ratio_260_230) %>% #Select only relevant columns
   dplyr::mutate(Date = as.Date(Date, "%m/%d/%Y"))
 
+#Import RIN values
+bioanalyser_rins = read.table("macrophage-gxe-study/data/bioanalyzer/bioanalyser_combined_results.txt",
+                              header = TRUE, stringsAsFactors = FALSE)
+illumina_rins = read.table("macrophage-gxe-study/data/bioanalyzer/bioanalyser_illumina_bespoke.txt",
+                           header = TRUE, stringsAsFactors = FALSE)
+rin_table = rbind(illumina_rins, bioanalyser_rins) %>%
+  dplyr::select(sample_id, RIN)
+
 #Deal with know artifacts in the data ruyv_C
 rna_sample_stats = dplyr::mutate(rna_df, ng_ul = ifelse(grepl("eofe_",sample_id), 2*ng_ul, ng_ul)) %>% #1 well per condition
   dplyr::mutate(ng_ul = ifelse(grepl("fpdl_",sample_id), 2*ng_ul, ng_ul)) %>% #1 well per condition
@@ -35,7 +43,8 @@ rna_line_stats = dplyr::filter(rna_sample_stats, sample_id != "aipt_A") %>%
   dplyr::ungroup() 
 
 #Combine line-level and sample-level stats
-rna_stats = dplyr::left_join(rna_sample_stats, rna_line_stats, by = c("donor", "replicate"))
+rna_stats = dplyr::left_join(rna_sample_stats, rna_line_stats, by = c("donor", "replicate")) %>%
+  dplyr::left_join(rin_table, by = "sample_id")
 saveRDS(rna_stats, "macrophage-gxe-study/data/covariates/rna_concentrations.rds")
 write.table(rna_stats, "macrophage-gxe-study/data/covariates/rna_concentrations.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 

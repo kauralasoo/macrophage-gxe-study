@@ -1,4 +1,4 @@
-line_id,replicate,macrophage_harvest,salmonella,rna_extraction,rna_submit,library_pool,chemistry,comment
+line_id,replicate,macrophage_harvest,salmonella_date,rna_extraction,rna_submit,library_pool,chemistry,comment
 peop_2,1,26/05/2014,03/06/2014,06/06/2014,18/11/2014,3226_RNA-1_191114,V4,
 ougl_3,1,26/05/2014,03/06/2014,09/06/2014,13/07/2014,3226_dUTP_160714_1,V3,
 fpdl_1,2,26/05/2014,03/06/2014,06/06/2014,13/07/2014,3226_dUTP_160714_1,V3,ffdp_3 -> fpdl_1 (sample swap)
