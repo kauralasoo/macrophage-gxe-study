@@ -26,7 +26,7 @@ atac_metadata = dplyr::mutate(atac_metadata,
             mean_purity_filtered = ifelse(as.numeric(flow_date - stimulation_date) > 14,NA,mean_purity))
 
 #Save results to disk
-saveRDS(line_data, "macrophage-chromatin/data/SL1344/compiled_atac_metadata.rds")
-write.table(line_data, "macrophage-chromatin/data/SL1344/compiled_atac_metadata.txt", 
+saveRDS(atac_metadata, "macrophage-chromatin/data/SL1344/compiled_atac_metadata.rds")
+write.table(atac_metadata, "macrophage-chromatin/data/SL1344/compiled_atac_metadata.txt", 
             row.names = FALSE, sep = "\t", quote = FALSE)
 
