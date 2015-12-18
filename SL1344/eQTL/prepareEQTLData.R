@@ -152,5 +152,5 @@ write.table(donor_genotype_map$genotype_id, "results/SL1344/fastqtl/input/genoty
 
 #Construct chunks table
 chunks_matrix = data.frame(chunk = seq(1:200), n = 200)
-write.table(chunks_matrix, "results/SL1344/fastqtl/input/chunk_table.txt", row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
+write.table(chunks_matrix, "results/ATAC/fastqtl/input/chunk_table.txt", row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
 

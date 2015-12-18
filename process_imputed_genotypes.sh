@@ -70,11 +70,13 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q norm
 #Filter by INFO score
 bcftools filter -i 'INFO[0] >= 0.8' -O z imputed.69_samples.sorted.filtered.vcf.gz > imputed.69_samples.snps_indels.INFO_08.vcf.gz 
 
-#Keep only SNPs
-bcftools view -v snps -O z imputed.59_samples.sorted.uniq.not_multiallelic.vcf > imputed.59_samples.snps_only.vcf.gz
-bcftools filter -i 'INFO[0] >= 0.8' -O z imputed.59_samples.snps_only.vcf.gz > imputed.59_samples.snps_only.INFO_08.vcf.gz 
+##### SNPS ONLY VCF for RASQUAL
+bcftools view -v snps -O z imputed.69_samples.sorted.filtered.vcf.gz | bcftools filter -i 'INFO[0] >= 0.8' -O z - > imputed.69_samples.snps_only.INFO_08.vcf.gz 
 
-#Compress all variants
-bcftools view -O z imputed.59_samples.sorted.uniq.not_multiallelic.vcf > imputed.59_samples.snps_indels.vcf.gz
-bcftools filter -i 'INFO[0] >= 0.8' -O z imputed.59_samples.snps_indels.vcf.gz > imputed.59_samples.snps_indels.INFO_08.vcf.gz 
+#Add unique names to unnamed SNPs and remove duplicate snps
+bcftools annotate --set-id +'%CHROM\_%POS\_%REF\_%FIRST_ALT' imputed.69_samples.snps_only.INFO_08.vcf.gz  | bcftools view -O z -e 'ID=@duplicate_snps.txt' - > imputed.69_samples.snps_only.INFO_08.named.vcf.gz
+
+#Extract SNP coords from a vcf file for RASQUAL
+zgrep -v "#" imputed.69_samples.snps_only.INFO_08.named.vcf.gz | cut -f 1,2,3 > imputed.69_samples.snp_coords.txt
+
 
