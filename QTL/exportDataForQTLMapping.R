@@ -26,11 +26,27 @@ saveFastqtlMatrices(fastql_cqn_list, "results/ATAC/fastqtl/input/", file_suffix 
 chunks_matrix = data.frame(chunk = seq(1:200), n = 200)
 write.table(chunks_matrix, "results/ATAC/fastqtl/input/chunk_table.txt", row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
 
-
 #### export data for RASQUAL ####
 counts_list = lapply(atac_conditions_renamed, function(x){x$counts})
 saveRasqualMatrices(counts_list, "results/ATAC/rasqual/input/", file_suffix = "expression")
 
-#Extract sample-genotype map
+#Extract sample-genotype map for each condition
 sg_map = lapply(atac_conditions_renamed, function(x){ dplyr::select(x$sample_metadata, sample_id, genotype_id) })
 saveFastqtlMatrices(sg_map,"results/ATAC/rasqual/input/", file_suffix = "sg_map", col_names = FALSE)
+
+#Count overlaps between SNPs and peaks
+snp_coords = read.table("results/ATAC/rasqual/input/imputed.69_samples.snp_coords.txt", stringsAsFactors = FALSE)
+colnames(snp_coords) = c("chr", "pos", "snp_id")
+peak_snp_count = seqUtils::countSnpsOverlapingPeaks(atac_list$gene_metadata, snp_coords, cis_window = 500000)
+peak_snp_count_2kb = seqUtils::countSnpsOverlapingPeaks(atac_list$gene_metadata, snp_coords, cis_window = 2000)
+write.table(peak_snp_count, "results/ATAC/rasqual/input/peak_snp_count_500kb.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(peak_snp_count_2kb, "results/ATAC/rasqual/input/peak_snp_count_2kb.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+#Extract sample offsests
+norm_factors_list = lapply(atac_conditions_renamed, rasqualSizeFactorsMatrix, "norm_factor")
+saveRasqualMatrices(norm_factors_list, "results/ATAC/rasqual/input/", file_suffix = "offsets")
+
+#Save peak names to disk
+peak_names = rownames(atac_list$counts)
+write.table(peak_names, "results/ATAC/rasqual/input/peak_names.txt", row.names = FALSE, col.names = FALSE, quote = FALSE)
+
