@@ -29,10 +29,31 @@ IFNg_SL1344_peer = importPEERFactors("results/ATAC/PEER/output/IFNg_SL1344_10/fa
 peer_factors = rbind(naive_peer, IFNg_peer, SL1344_peer, IFNg_SL1344_peer)
 sample_ids = peer_factors$sample_id
 covariates = t(peer_factors[,-1])
+colnames(covariates)= sample_ids
 covariates = covariates[,colnames(head(atac_list$counts))]
 
+#Use PCA to construct covariates for QTL mapping
+naive_PCA = performPCA(atac_conditions$naive$tpm, atac_conditions$naive$sample_metadata, n_pcs = 5)
+IFNg_PCA = performPCA(atac_conditions$IFNg$tpm, atac_conditions$IFNg$sample_metadata, n_pcs = 5)
+SL1344_PCA = performPCA(atac_conditions$SL1344$tpm, atac_conditions$SL1344$sample_metadata, n_pcs = 5)
+IFNg_SL1344_PCA = performPCA(atac_conditions$IFNg_SL1344$tpm, atac_conditions$IFNg_SL1344$sample_metadata, n_pcs = 5)
+
+#Plot variance explained
+plot(naive_PCA$var_exp)
+plot(IFNg_PCA$var_exp)
+plot(SL1344_PCA$var_exp)
+plot(IFNg_SL1344_PCA$var_exp)
+covariates = rbind(naive_PCA$pca_matrix, IFNg_PCA$pca_matrix, SL1344_PCA$pca_matrix, IFNg_SL1344_PCA$pca_matrix)
+
+#cov_matrix 
+cov_matrix = dplyr::select(covariates, sex, assigned_frac, short_long_ratio, PC1, PC2, PC3, PC4) %>%
+  dplyr::mutate(sex = ifelse(sex == "male", 0, 1))
+rownames(cov_matrix) = covariates$sample_id
+cov_matrix = cov_matrix[colnames(atac_list$counts),]
+
+
 #Add covariates to the ATAC list
-atac_list$covariates = covariates
+atac_list$covariates = t(cov_matrix)
 
 #Extract separate lists for each condition
 naive_list = extractConditionFromExpressionList(atac_list, "naive")
@@ -45,32 +66,32 @@ atac_conditions = list(naive = naive_list, IFNg = IFNg_list, SL1344 = SL1344_lis
 atac_conditions_renamed = lapply(atac_conditions, renameMatrixColumnsInExpressionList, "sample_id", "genotype_id")
 
 #### Export data for FastQTL ####
-cqn_list = lapply(atac_conditions_renamed, function(x){x$cqn})
+cqn_list = lapply(atac_conditions_renamed, function(x){x$tpm})
 fastqtl_genepos = constructFastQTLGenePos(naive_list$gene_metadata)
 fastql_cqn_list = lapply(cqn_list, prepareFastqtlMatrix, fastqtl_genepos)
 saveFastqtlMatrices(fastql_cqn_list, "results/ATAC/fastqtl/input/", file_suffix = "expression")
 
 #Extract chr21 only
-chr21_genes = dplyr::filter(atac_list$gene_metadata, chr == 21)$gene_id
-chr21_list = lapply(atac_conditions_renamed, extractGenesFromExpressionList, chr21_genes)
-fastqtl_genepos = constructFastQTLGenePos(chr21_list$naive$gene_metadata)
+chr11_genes = dplyr::filter(atac_list$gene_metadata, chr == 11)$gene_id
+chr11_list = lapply(atac_conditions_renamed, extractGenesFromExpressionList, chr11_genes)
+fastqtl_genepos = constructFastQTLGenePos(chr11_list$naive$gene_metadata)
 
 #Save expression data
-fastqtl_cqn_list = lapply(chr21_list, function(x){x$cqn}) %>%
+fastqtl_cqn_list = lapply(chr11_list, function(x){x$cqn}) %>%
   lapply(., prepareFastqtlMatrix, fastqtl_genepos)
 saveFastqtlMatrices(fastqtl_cqn_list, "results/ATAC/fastqtl/input/", file_suffix = "expression")
-fastqtl_tpm_list = lapply(chr21_list, function(x){x$tpm}) %>%
+fastqtl_tpm_list = lapply(chr11_list, function(x){x$tpm}) %>%
   lapply(., prepareFastqtlMatrix, fastqtl_genepos)
 saveFastqtlMatrices(fastqtl_tpm_list, "results/ATAC/fastqtl/input/", file_suffix = "expression_tpm")
 
 #Save covariates
-fastqtl_cov_list = lapply(chr21_list, function(x){x$covariates}) %>%
-  lapply(., prepareFastqtlCovariates, 1:5)
-saveFastqtlMatrices(fastqtl_cov_list, "results/ATAC/fastqtl/input/", file_suffix = "covariates_peer5")
+fastqtl_cov_list = lapply(chr11_list, function(x){x$covariates}) %>%
+  lapply(., prepareFastqtlCovariates, 1:7)
+saveFastqtlMatrices(fastqtl_cov_list, "results/ATAC/fastqtl/input/", file_suffix = "covariates_pc4")
 
-fastqtl_cov_list = lapply(chr21_list, function(x){x$covariates}) %>%
-  lapply(., prepareFastqtlCovariates, 1:3)
-saveFastqtlMatrices(fastqtl_cov_list, "results/ATAC/fastqtl/input/", file_suffix = "covariates_peer3")
+fastqtl_cov_list = lapply(chr11_list, function(x){x$covariates}) %>%
+  lapply(., prepareFastqtlCovariates, 1:6)
+saveFastqtlMatrices(fastqtl_cov_list, "results/ATAC/fastqtl/input/", file_suffix = "covariates_pc3")
 
 #Construct chunks table
 chunks_matrix = data.frame(chunk = seq(1:25), n = 25)
@@ -106,17 +127,17 @@ peak_names = rownames(atac_list$counts)
 write.table(peak_names, "results/ATAC/rasqual/input/peak_names.txt", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 #Save covariates to disk
-rasqual_cov_list = lapply(atac_conditions_renamed, function(x){t(x$covariates)[,1:5]})
-saveRasqualMatrices(rasqual_cov_list, "results/ATAC/rasqual/input/", file_suffix = "covariates5")
+rasqual_cov_list = lapply(atac_conditions_renamed, function(x){t(x$covariates)[,1:7]})
+saveRasqualMatrices(rasqual_cov_list, "results/ATAC/rasqual/input/", file_suffix = "covariates_pc4")
 
 #Construct batches
-chr21_batches = dplyr::filter(atac_list$gene_metadata, chr == 21) %>% 
+chr11_batches = dplyr::filter(atac_list$gene_metadata, chr == 11) %>% 
   dplyr::select(gene_id) %>%
-  dplyr::mutate(batch_number = splitIntoBatches(length(gene_id), 35)) %>%
+  dplyr::mutate(batch_number = splitIntoBatches(length(gene_id), 70)) %>%
   dplyr::mutate(batch_id = paste("batch", batch_number, sep = "_")) %>% 
   dplyr::group_by(batch_id) %>%
   dplyr::summarize(gene_ids = paste(gene_id, collapse = ","))
-write.table(chr21_batches, "results/ATAC/rasqual/input/peak_batches.txt", 
+write.table(chr11_batches, "results/ATAC/rasqual/input/peak_batches.txt", 
             row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
 
 
