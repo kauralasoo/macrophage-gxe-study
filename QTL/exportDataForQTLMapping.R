@@ -14,15 +14,35 @@ SL1344_list = extractConditionFromExpressionList(atac_list, "SL1344")
 IFNg_SL1344_list = extractConditionFromExpressionList(atac_list, "IFNg_SL1344")
 atac_conditions = list(naive = naive_list, IFNg = IFNg_list, SL1344 = SL1344_list, IFNg_SL1344 = IFNg_SL1344_list)
 
-#Rename column names to genotype ids
-atac_conditions_renamed = lapply(atac_conditions, renameMatrixColumnsInExpressionList, "sample_id", "genotype_id")
-
 #Save expression data for PEER and run PEER outside of R
-peer_cqn_list = lapply(atac_conditions_renamed, function(x){x$cqn})
+peer_cqn_list = lapply(atac_conditions, function(x){x$cqn})
 savePEERData(peer_cqn_list, "results/ATAC/PEER/input/")
 
-peer_tpm_list = lapply(atac_conditions_renamed, function(x){x$tpm})
+peer_tpm_list = lapply(atac_conditions, function(x){x$tpm})
 savePEERData(peer_cqn_list, "results/ATAC/PEER/input/",file_suffix = "exprs_tpm")
+
+#Import PEER factors back into R
+naive_peer = importPEERFactors("results/ATAC/PEER/output/naive_10/factors.txt", atac_conditions$naive$sample_metadata)
+IFNg_peer = importPEERFactors("results/ATAC/PEER/output/IFNg_10/factors.txt", atac_conditions$IFNg$sample_metadata)
+SL1344_peer = importPEERFactors("results/ATAC/PEER/output/SL1344_10/factors.txt", atac_conditions$SL1344$sample_metadata)
+IFNg_SL1344_peer = importPEERFactors("results/ATAC/PEER/output/IFNg_SL1344_10/factors.txt", atac_conditions$IFNg_SL1344$sample_metadata)
+peer_factors = rbind(naive_peer, IFNg_peer, SL1344_peer, IFNg_SL1344_peer)
+sample_ids = peer_factors$sample_id
+covariates = t(peer_factors[,-1])
+covariates = covariates[,colnames(head(atac_list$counts))]
+
+#Add covariates to the ATAC list
+atac_list$covariates = covariates
+
+#Extract separate lists for each condition
+naive_list = extractConditionFromExpressionList(atac_list, "naive")
+IFNg_list = extractConditionFromExpressionList(atac_list, "IFNg")
+SL1344_list = extractConditionFromExpressionList(atac_list, "SL1344")
+IFNg_SL1344_list = extractConditionFromExpressionList(atac_list, "IFNg_SL1344")
+atac_conditions = list(naive = naive_list, IFNg = IFNg_list, SL1344 = SL1344_list, IFNg_SL1344 = IFNg_SL1344_list)
+
+#Rename column names to genotype ids
+atac_conditions_renamed = lapply(atac_conditions, renameMatrixColumnsInExpressionList, "sample_id", "genotype_id")
 
 #### Export data for FastQTL ####
 cqn_list = lapply(atac_conditions_renamed, function(x){x$cqn})
@@ -34,12 +54,23 @@ saveFastqtlMatrices(fastql_cqn_list, "results/ATAC/fastqtl/input/", file_suffix 
 chr21_genes = dplyr::filter(atac_list$gene_metadata, chr == 21)$gene_id
 chr21_list = lapply(atac_conditions_renamed, extractGenesFromExpressionList, chr21_genes)
 fastqtl_genepos = constructFastQTLGenePos(chr21_list$naive$gene_metadata)
+
+#Save expression data
 fastqtl_cqn_list = lapply(chr21_list, function(x){x$cqn}) %>%
   lapply(., prepareFastqtlMatrix, fastqtl_genepos)
 saveFastqtlMatrices(fastqtl_cqn_list, "results/ATAC/fastqtl/input/", file_suffix = "expression")
 fastqtl_tpm_list = lapply(chr21_list, function(x){x$tpm}) %>%
   lapply(., prepareFastqtlMatrix, fastqtl_genepos)
 saveFastqtlMatrices(fastqtl_tpm_list, "results/ATAC/fastqtl/input/", file_suffix = "expression_tpm")
+
+#Save covariates
+fastqtl_cov_list = lapply(chr21_list, function(x){x$covariates}) %>%
+  lapply(., prepareFastqtlCovariates, 1:5)
+saveFastqtlMatrices(fastqtl_cov_list, "results/ATAC/fastqtl/input/", file_suffix = "covariates_peer5")
+
+fastqtl_cov_list = lapply(chr21_list, function(x){x$covariates}) %>%
+  lapply(., prepareFastqtlCovariates, 1:3)
+saveFastqtlMatrices(fastqtl_cov_list, "results/ATAC/fastqtl/input/", file_suffix = "covariates_peer3")
 
 #Construct chunks table
 chunks_matrix = data.frame(chunk = seq(1:25), n = 25)
@@ -74,6 +105,10 @@ saveRasqualMatrices(library_size_list, "results/ATAC/rasqual/input/", file_suffi
 peak_names = rownames(atac_list$counts)
 write.table(peak_names, "results/ATAC/rasqual/input/peak_names.txt", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
+#Save covariates to disk
+rasqual_cov_list = lapply(atac_conditions_renamed, function(x){t(x$covariates)[,1:5]})
+saveRasqualMatrices(rasqual_cov_list, "results/ATAC/rasqual/input/", file_suffix = "covariates5")
+
 #Construct batches
 chr21_batches = dplyr::filter(atac_list$gene_metadata, chr == 21) %>% 
   dplyr::select(gene_id) %>%
@@ -83,4 +118,5 @@ chr21_batches = dplyr::filter(atac_list$gene_metadata, chr == 21) %>%
   dplyr::summarize(gene_ids = paste(gene_id, collapse = ","))
 write.table(chr21_batches, "results/ATAC/rasqual/input/peak_batches.txt", 
             row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
+
 

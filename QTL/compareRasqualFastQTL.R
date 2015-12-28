@@ -4,6 +4,7 @@ load_all("../seqUtils/")
 #Load RASQUAL p-values
 rasqual_pvalues = seqUtils::importRasqualTable("results/ATAC/rasqual/output/naive_50kb.filtered.txt")
 rasqual_pvalues = seqUtils::importRasqualTable("results/ATAC/rasqual/output/naive_50kb_ls.txt.gz")
+rasqual_pvalues = seqUtils::importRasqualTable("results/ATAC/rasqual/output/naive_50kb_cov.txt.gz")
 
 rasqual_min_pvalues = dplyr::group_by(rasqual_pvalues, gene_id) %>%
   dplyr::arrange(p_nominal) %>% 
@@ -15,11 +16,9 @@ rasqual_min_pvalues = dplyr::group_by(rasqual_pvalues, gene_id) %>%
 rasqual_bonferroni_filtered = dplyr::filter(rasqual_min_pvalues, p_bonferroni < 0.05)
 
 #Load FastQTL p-values
-naive_perm_pvals = importFastQTLTable("results/ATAC/fastqtl/output/naive_50kb_tpm_permuted.txt.gz") %>% tbl_df()
+naive_perm_pvals = importFastQTLTable("results/ATAC/fastqtl/output/naive_50kb_permuted.txt.gz") %>% tbl_df()
 p_vals = dplyr::group_by(naive_perm_pvals, gene_id) %>% 
   dplyr::mutate(p_bonferroni = p.adjust(p_nominal, "bonferroni", n_cis_snps)) %>%
-  dplyr::filter(gene_id %in% rasqual_min_pvalues$gene_id) %>%
-  dplyr::filter(snp_id %in% unique(rasqual_pvalues$snp_id)) %>%
   ungroup() %>%
   dplyr::mutate(p_fdr = p.adjust(p_beta, "fdr"))
 
