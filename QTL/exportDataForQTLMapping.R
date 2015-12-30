@@ -51,7 +51,6 @@ cov_matrix = dplyr::select(covariates, sex, assigned_frac, short_long_ratio, PC1
 rownames(cov_matrix) = covariates$sample_id
 cov_matrix = cov_matrix[colnames(atac_list$counts),]
 
-
 #Add covariates to the ATAC list
 atac_list$covariates = t(cov_matrix)
 
@@ -66,12 +65,12 @@ atac_conditions = list(naive = naive_list, IFNg = IFNg_list, SL1344 = SL1344_lis
 atac_conditions_renamed = lapply(atac_conditions, renameMatrixColumnsInExpressionList, "sample_id", "genotype_id")
 
 #### Export data for FastQTL ####
-cqn_list = lapply(atac_conditions_renamed, function(x){x$tpm})
+tpm_list = lapply(atac_conditions_renamed, function(x){x$tpm})
 fastqtl_genepos = constructFastQTLGenePos(naive_list$gene_metadata)
-fastql_cqn_list = lapply(cqn_list, prepareFastqtlMatrix, fastqtl_genepos)
-saveFastqtlMatrices(fastql_cqn_list, "results/ATAC/fastqtl/input/", file_suffix = "expression")
+fastql_tpm_list = lapply(tpm_list, prepareFastqtlMatrix, fastqtl_genepos)
+saveFastqtlMatrices(fastql_tpm_list, "results/ATAC/fastqtl/input/", file_suffix = "tpm_exp_full")
 
-#Extract chr21 only
+#Extract chr11 only
 chr11_genes = dplyr::filter(atac_list$gene_metadata, chr == 11)$gene_id
 chr11_list = lapply(atac_conditions_renamed, extractGenesFromExpressionList, chr11_genes)
 fastqtl_genepos = constructFastQTLGenePos(chr11_list$naive$gene_metadata)
@@ -86,8 +85,8 @@ saveFastqtlMatrices(fastqtl_tpm_list, "results/ATAC/fastqtl/input/", file_suffix
 
 #Save covariates
 fastqtl_cov_list = lapply(chr11_list, function(x){x$covariates}) %>%
-  lapply(., prepareFastqtlCovariates, 1:7)
-saveFastqtlMatrices(fastqtl_cov_list, "results/ATAC/fastqtl/input/", file_suffix = "covariates_pc4")
+  lapply(., prepareFastqtlCovariates, 4:5)
+saveFastqtlMatrices(fastqtl_cov_list, "results/ATAC/fastqtl/input/", file_suffix = "covariates_pc2")
 
 fastqtl_cov_list = lapply(chr11_list, function(x){x$covariates}) %>%
   lapply(., prepareFastqtlCovariates, 1:6)
@@ -96,6 +95,9 @@ saveFastqtlMatrices(fastqtl_cov_list, "results/ATAC/fastqtl/input/", file_suffix
 #Construct chunks table
 chunks_matrix = data.frame(chunk = seq(1:25), n = 25)
 write.table(chunks_matrix, "results/ATAC/fastqtl/input/chunk_table.txt", row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
+
+chunks_matrix = data.frame(chunk = seq(1:200), n = 200)
+write.table(chunks_matrix, "results/ATAC/fastqtl/input/all_chunk_table.txt", row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
 
 
 #### export data for RASQUAL ####
@@ -117,27 +119,31 @@ write.table(peak_snp_count_2kb, "results/ATAC/rasqual/input/peak_snp_count_2kb.t
 write.table(peak_snp_count_50kb, "results/ATAC/rasqual/input/peak_snp_count_50kb.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 
 #Extract sample offsests
-norm_factors_list = lapply(atac_conditions_renamed, rasqualSizeFactorsMatrix, "norm_factor")
-saveRasqualMatrices(norm_factors_list, "results/ATAC/rasqual/input/", file_suffix = "offsets")
 library_size_list = lapply(atac_conditions_renamed, rasqualSizeFactorsMatrix, "library_size")
 saveRasqualMatrices(library_size_list, "results/ATAC/rasqual/input/", file_suffix = "library_size")
+
+# Correct for GC bias (Does not seem to improve QTL detection)
+gc_vector = atac_conditions_renamed$naive$gene_metadata$percentage_gc_content
+norm_gccor_list = lapply(counts_list, rasqualGcCorrection, gc_vector)
+saveRasqualMatrices(norm_gccor_list, "results/ATAC/rasqual/input/", file_suffix = "lib_size_gc")
 
 #Save peak names to disk
 peak_names = rownames(atac_list$counts)
 write.table(peak_names, "results/ATAC/rasqual/input/peak_names.txt", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 #Save covariates to disk
-rasqual_cov_list = lapply(atac_conditions_renamed, function(x){t(x$covariates)[,1:7]})
-saveRasqualMatrices(rasqual_cov_list, "results/ATAC/rasqual/input/", file_suffix = "covariates_pc4")
+rasqual_cov_list = lapply(atac_conditions_renamed, function(x){t(x$covariates)[,4:5]})
+saveRasqualMatrices(rasqual_cov_list, "results/ATAC/rasqual/input/", file_suffix = "covariates_pc2")
 
 #Construct batches
-chr11_batches = dplyr::filter(atac_list$gene_metadata, chr == 11) %>% 
-  dplyr::select(gene_id) %>%
-  dplyr::mutate(batch_number = splitIntoBatches(length(gene_id), 70)) %>%
-  dplyr::mutate(batch_id = paste("batch", batch_number, sep = "_")) %>% 
-  dplyr::group_by(batch_id) %>%
-  dplyr::summarize(gene_ids = paste(gene_id, collapse = ","))
+chr11_batches = dplyr::filter(atac_list$gene_metadata, chr == 11) %>%
+  seqUtils::rasqualConstructGeneBatches(70)
 write.table(chr11_batches, "results/ATAC/rasqual/input/peak_batches.txt", 
+            row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
+
+#Construct batches for all genes
+atac_batches = seqUtils::rasqualConstructGeneBatches(atac_list$gene_metadata, 150)
+write.table(atac_batches, "results/ATAC/rasqual/input/all_peak_batches.txt", 
             row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
 
 
