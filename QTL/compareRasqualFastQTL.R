@@ -1,6 +1,11 @@
 library("readr")
 load_all("../seqUtils/")
 
+#Import ATAC data
+atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
+peak_positions = dplyr::select(atac_list$gene_metadata, gene_id, start, end) %>%
+  dplyr::mutate(centre = start + floor((end - start)/2))
+
 #Load RASQUAL p-values
 rasqual_pvalues = seqUtils::importRasqualTable("results/ATAC/rasqual/output/naive_chr11_50kb.txt.gz")
 rasqual_pvalues_cov = seqUtils::importRasqualTable("results/ATAC/rasqual/output/naive_chr11_50kb_cov.txt.gz")
@@ -36,4 +41,18 @@ ggplot2::ggplot(d, aes(x = -log10(p_nominal.x), y=-log10(p_nominal.y) )) +
   geom_point() +
   scale_x_continuous(limits = c(0, 25)) +
   scale_y_continuous(limits = c(0, 25))
+
+#Compare 50kb vs 500kb cis windows
+rasqual_pvalues = seqUtils::importRasqualTable("results/ATAC/rasqual/output/naive_chr11_50kb.txt.gz")
+rasqual_min_pvalues = findMinimalSnpPvalues(rasqual_pvalues)
+rasqual_50kb_hits = dplyr::left_join(rasqual_min_pvalues, peak_positions, by = "gene_id") %>%
+  dplyr::mutate(distance = pos - centre)
+rasqual_fdr_filtered = dplyr::filter(rasqual_50kb_hits, p_fdr < 0.1)
+
+rasqual_pvalues_500kb = seqUtils::importRasqualTable("results/ATAC/rasqual/output/naive_chr11_500kb.txt.gz")
+rasqual_min_pvalues_500kb = findMinimalSnpPvalues(rasqual_pvalues_500kb)
+rasqual_500kb_hits = dplyr::left_join(rasqual_min_pvalues_500kb, peak_positions, by = "gene_id") %>%
+  dplyr::mutate(distance = pos - centre)
+rasqual_fdr_filtered_500kb = dplyr::filter(rasqual_500kb_hits, p_fdr < 0.1)
+
 
