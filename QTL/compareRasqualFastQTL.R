@@ -1,4 +1,6 @@
 library("readr")
+library("dplyr")
+library("devtools")
 load_all("../seqUtils/")
 
 #Import ATAC data
@@ -7,7 +9,7 @@ peak_positions = dplyr::select(atac_list$gene_metadata, gene_id, start, end) %>%
   dplyr::mutate(centre = start + floor((end - start)/2))
 
 #Load RASQUAL p-values
-rasqual_pvalues = seqUtils::importRasqualTable("results/ATAC/rasqual/output/naive_chr11_50kb.txt.gz")
+rasqual_pvalues = seqUtils::importRasqualTable("results/ATAC/rasqual/output/naive_chr11_50kb.txt")
 rasqual_pvalues_cov = seqUtils::importRasqualTable("results/ATAC/rasqual/output/naive_chr11_50kb_cov.txt.gz")
 rasqual_pvalues_cov_pc4 = seqUtils::importRasqualTable("results/ATAC/rasqual/output/naive_chr11_50kb_cov_pc4.txt.gz")
 rasqual_pvalues_gc = seqUtils::importRasqualTable("results/ATAC/rasqual/output/naive_chr11_50kb_gc.txt.gz")
