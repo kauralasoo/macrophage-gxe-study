@@ -12,4 +12,4 @@ min_pvalue_list = list(naive = naive_min_pvalues,
                        IFNg = ifng_min_pvalues,
                        SL1344 = sl1344_min_pvalues,
                        IFNg_SL1344 = ifng_sl1344_min_pvalues)
-saveRDS("results/ATAC/QTLs/rasqual_min_pvalues.txt")
+saveRDS(min_pvalue_list, "results/ATAC/QTLs/rasqual_min_pvalues.rds")
