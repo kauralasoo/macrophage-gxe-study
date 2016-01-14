@@ -22,9 +22,15 @@ ifng_sql <- src_sqlite("~/projects/macrophage-chromatin/IFNg_50kb.sqlite3") %>% 
 sl1344_sql <- src_sqlite("~/projects/macrophage-chromatin/SL1344_50kb.sqlite3") %>% tbl("rasqual")
 ifng_sl1344_sql <- src_sqlite("~/projects/macrophage-chromatin/IFNg_SL1344_50kb.sqlite3") %>% tbl("rasqual")
 
+#Extract all SNP-gene pairs
+min_pvalues_list = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
+min_pvalues_hits = lapply(min_pvalues_list, function(x){dplyr::filter(x, p_fdr < 0.1)})
+min_pvalues_df = ldply(min_pvalues_hits, .id = "condition_name")
+joint_pairs = dplyr::select(min_pvalues_df, gene_id, snp_id) %>% unique()
+
 
 #Extract p-values for all peaks that had significant QTLs
-gene_ids = as.vector(head(d)$gene_id)
+gene_ids = unique(joint_pairs$gene_id)
 naive_pvalues = fetchMultipleGenes(gene_ids, naive_sql)
 ifng_pvalues = fetchMultipleGenes(gene_ids, ifng_sql)
 sl1344_pvalues = fetchMultipleGenes(gene_ids, sl1344_sql)
@@ -33,4 +39,4 @@ selected_pvalue_list = list(naive = naive_pvalues,
                        IFNg = ifng_pvalues,
                        SL1344 = sl1344_pvalues,
                        IFNg_SL1344 = ifng_sl1344_pvalues)
-saveRDS(min_pvalue_list, "results/ATAC/QTLs/rasqual_selected_pvalues.rds")
+saveRDS(selected_pvalue_list, "results/ATAC/QTLs/rasqual_selected_pvalues.rds")
