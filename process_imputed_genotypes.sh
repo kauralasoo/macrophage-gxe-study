@@ -58,25 +58,26 @@ bcftools index chr9.vcf.gz
 bcftools index chrX.vcf.gz
 
 #Merge VCF files
-bcftools concat -a chr10.vcf.gz chr11.vcf.gz chr12.vcf.gz chr13.vcf.gz chr14.vcf.gz chr15.vcf.gz chr16.vcf.gz chr17.vcf.gz chr18.vcf.gz chr19.vcf.gz chr1.vcf.gz chr20.vcf.gz chr21.vcf.gz chr22.vcf.gz chr2.vcf.gz chr3.vcf.gz chr4.vcf.gz chr5.vcf.gz chr6.vcf.gz chr7.vcf.gz chr8.vcf.gz chr9.vcf.gz chrX.vcf.gz > imputed.69_samples.vcf
+bcftools concat -a chr10.vcf.gz chr11.vcf.gz chr12.vcf.gz chr13.vcf.gz chr14.vcf.gz chr15.vcf.gz chr16.vcf.gz chr17.vcf.gz chr18.vcf.gz chr19.vcf.gz chr1.vcf.gz chr20.vcf.gz chr21.vcf.gz chr22.vcf.gz chr2.vcf.gz chr3.vcf.gz chr4.vcf.gz chr5.vcf.gz chr6.vcf.gz chr7.vcf.gz chr8.vcf.gz chr9.vcf.gz chrX.vcf.gz > imputed.86_samples.vcf
 
 #Sort VCF files
 #Sort genotypes (some chr1 snps went to chr9, GATK complains)
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q normal -M 1000 -o sortvcf.%J.jobout "~/software/vcflib/bin/vcfsort imputed.69_samples.vcf > imputed.69_samples.sorted.vcf"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q normal -M 1000 -o sortvcf.%J.jobout "~/software/vcflib/bin/vcfsort imputed.86_samples.vcf > imputed.86_samples.sorted.vcf"
 
 #Run through vcfuniq and get rid of multiallelic SNPs, because liftover might have led to duplicated entries
-~/software/vcflib/bin/vcfuniq imputed.69_samples.sorted.vcf | bcftools norm -m+any - | bcftools view -Oz -m2 -M2 - > imputed.69_samples.sorted.filtered.vcf.gz
+~/software/vcflib/bin/vcfuniq imputed.86_samples.sorted.vcf | bcftools norm -m+any - | bcftools view -Oz -m2 -M2 - > imputed.86_samples.sorted.filtered.vcf.gz
+
+#Add unique names to unnamed SNPs and remove duplicate snps
+bcftools annotate --set-id +'%CHROM\_%POS\_%REF\_%FIRST_ALT' imputed.86_samples.sorted.filtered.vcf.gz | bcftools view -O z -e 'ID=@duplicate_snps.txt' - > imputed.86_samples.sorted.filtered.named.vcf.gz
+
+##### SNPS ONLY VCF for RASQUAL
+bcftools view -v snps -O z imputed.86_samples.sorted.filtered.named.vcf.gz > imputed.86_samples.snps_only.vcf.gz 
+
+#Extract SNP coords from a vcf file for RASQUAL
+zgrep -v "#" imputed.86_samples.sorted.filtered.named.vcf.gz | cut -f 1,2,3 > imputed.86_samples.snp_coords.txt
 
 #Filter by INFO score
 bcftools filter -i 'INFO[0] >= 0.8' -O z imputed.69_samples.sorted.filtered.vcf.gz > imputed.69_samples.snps_indels.INFO_08.vcf.gz 
 
-##### SNPS ONLY VCF for RASQUAL
-bcftools view -v snps -O z imputed.69_samples.sorted.filtered.vcf.gz | bcftools filter -i 'INFO[0] >= 0.8' -O z - > imputed.69_samples.snps_only.INFO_08.vcf.gz 
-
-#Add unique names to unnamed SNPs and remove duplicate snps
-bcftools annotate --set-id +'%CHROM\_%POS\_%REF\_%FIRST_ALT' imputed.69_samples.snps_only.INFO_08.vcf.gz  | bcftools view -O z -e 'ID=@duplicate_snps.txt' - > imputed.69_samples.snps_only.INFO_08.named.vcf.gz
-
-#Extract SNP coords from a vcf file for RASQUAL
-zgrep -v "#" imputed.69_samples.snps_only.INFO_08.named.vcf.gz | cut -f 1,2,3 > imputed.69_samples.snp_coords.txt
 
 

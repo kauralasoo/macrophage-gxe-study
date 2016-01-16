@@ -15,6 +15,7 @@ valid_gene_biotypes = c("lincRNA","protein_coding","IG_C_gene","IG_D_gene","IG_J
                         "3prime_overlapping_ncrna","known_ncrna", "processed_transcript",
                         "antisense","sense_intronic","sense_overlapping")
 metadata = readRDS("annotations/Homo_sapiens.GRCh38.79.transcript_data.rds")
+sample_metadata = readRDS("macrophage-gxe-study/data/covariates/compiled_salmonella_metadata.rds")
 
 #Filter annotations
 filtered_metadata = dplyr::filter(metadata,transcript_gencode_basic == "GENCODE basic") %>% 
@@ -34,16 +35,36 @@ counts = dplyr::select(filtered_data, -gene_id, -length)
 rownames(counts) = filtered_data$gene_id
 counts = counts[gene_metadata$gene_id,] #Reoder counts
 
-#Construct a design matrix from the sample names
-design_matrix = constructDesignMatrix_SL1344(sample_ids = colnames(counts))
+#Filter out some samples and discard replicates from the design_matrix
+design_matrix = constructDesignMatrix_SL1344(sample_ids = colnames(counts)) %>% #Construct a design matrix from the sample names
+  dplyr::filter(!(donor == "fpdj")) %>% tbl_df() %>% #Remove both fpdj samples (same as nibo)
+  dplyr::filter(!(donor == "fpdl" & replicate == 2)) %>% #Remove second fpdl sample (ffdp)
+  dplyr::filter(!(donor == "ougl" & replicate == 2)) %>% #Remove second ougl sample (dium)
+  dplyr::filter(!(donor == "mijn")) %>% #Remove mijn (wrong line from CGAP) 
+  dplyr::arrange(donor)
+
+#Add metadata to the design matrix
+sample_meta = dplyr::left_join(design_matrix, sample_metadata, by = c("donor","replicate"))
+
+#Filter counts to include only samples that are in the design matrix
+counts = counts[, design_matrix$sample_id]
 
 #cqn_normalize_data
 exprs_cqn = calculateCQN(counts, gene_metadata)
 
+#Normalize data using TPM
+exprs_tpm = calculateTPM(as.matrix(counts), as.data.frame(gene_metadata), fragment_length = 250)
+
+#Calculate normalization factors
+norm_factors = calculateNormFactors(counts, output = "normal", method = "RLE")
+
+#Combine everything into a list
 results_list = list(
-  exprs_counts = counts,
-  exprs_cqn = exprs_cqn,
-  design = design_matrix,
+  counts = counts,
+  cqn = exprs_cqn,
+  tpm = exprs_tpm,
+  norm_factors = norm_factors,
+  sample_metadata = sample_meta,
   gene_metadata = gene_metadata)
 
 saveRDS(results_list, "results/SL1344/combined_expression_data.rds")
