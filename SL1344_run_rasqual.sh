@@ -4,15 +4,21 @@ cat macrophage-gxe-study/data/sample_lists/SL1344/SL1344_sample_gt_map.txt | pyt
 #Index bams
 cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_sample_gt_map.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname index_bams --command  "python ~/software/utils/bam/index-bams.py --bamdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.RG.bam --execute True"
 
-#Use ASEReadCounter to count allele-specific expression
-cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_sample_gt_map.txt | head -n1 | python ~/software/utils/submitJobs.py --MEM 2000 --jobname bamCountASE --command "python ~/software/utils/bam/bamCountASE.py --indir STAR/SL1344 --outdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.RG.bam --reference ../../annotations/GRCh38/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sites genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_only.INFO_08.vcf.gz --execute True"
-cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_sample_gt_map.txt | tail -n251 | python ~/software/utils/submitJobs.py --MEM 2000 --jobname bamCountASE --command "python ~/software/utils/bam/bamCountASE.py --indir STAR/SL1344 --outdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.RG.bam --reference ../../annotations/GRCh38/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sites genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_only.INFO_08.vcf.gz --execute True"
+#Index the vcf file
+tabix -p vcf genotypes/SL1344/imputed_20151005/imputed.86_samples.snps_only.vcf.gz
+bcftools index genotypes/SL1344/imputed_20151005/imputed.86_samples.snps_only.vcf.gz
 
-#Merge ASE read counts per condition into one file:
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/mergeASEcounts.%J.jobout "python ~/software/utils/counts/mergeASECounts.py --sample_list rasqual/input/SL1344_sg_map_A.txt --indir STAR/SL1344 --suffix .ASEcounts > results/SL1344/ASE/SL1344_ASE_counts_condA.txt"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/mergeASEcounts.%J.jobout "python ~/software/utils/counts/mergeASECounts.py --sample_list rasqual/input/SL1344_sg_map_B.txt --indir STAR/SL1344 --suffix .ASEcounts > results/SL1344/ASE/SL1344_ASE_counts_condB.txt"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/mergeASEcounts.%J.jobout "python ~/software/utils/counts/mergeASECounts.py --sample_list rasqual/input/SL1344_sg_map_C.txt --indir STAR/SL1344 --suffix .ASEcounts > results/SL1344/ASE/SL1344_ASE_counts_condC.txt"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/mergeASEcounts.%J.jobout "python ~/software/utils/counts/mergeASECounts.py --sample_list rasqual/input/SL1344_sg_map_D.txt --indir STAR/SL1344 --suffix .ASEcounts > results/SL1344/ASE/SL1344_ASE_counts_condD.txt"
+#Use ASEReadCounter to count allele-specific expression
+cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_sample_gt_map.txt | head -n1 | python ~/software/utils/submitJobs.py --MEM 2000 --jobname bamCountASE --command "python ~/software/utils/rasqual/bamCountASE.py --indir STAR/SL1344 --outdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.RG.bam --reference ../../annotations/GRCh38/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sites genotypes/SL1344/imputed_20151005/imputed.86_samples.snps_only.vcf.gz --execute True"
+cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_sample_gt_map.txt | tail -n251 | python ~/software/utils/submitJobs.py --MEM 2000 --jobname bamCountASE --command "python ~/software/utils/rasqual/bamCountASE.py --indir STAR/SL1344 --outdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.RG.bam --reference ../../annotations/GRCh38/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sites genotypes/SL1344/imputed_20151005/imputed.86_samples.snps_only.vcf.gz --execute True"
+cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_sample_gt_map.txt | head -n 45 | tail -n 44 | python ~/software/utils/submitJobs.py --MEM 2000 --jobname bamCountASE --command "python ~/software/utils/rasqual/bamCountASE.py --indir STAR/SL1344 --outdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.RG.bam --reference ../../annotations/GRCh38/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sites genotypes/SL1344/imputed_20151005/imputed.86_samples.snps_only.vcf.gz --execute True"
+echo "pelm_A" | python ~/software/utils/submitJobs.py --MEM 2000 --jobname bamCountASE --command "python ~/software/utils/rasqual/bamCountASE.py --indir STAR/SL1344 --outdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.RG.bam --reference ../../annotations/GRCh38/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sites genotypes/SL1344/imputed_20151005/imputed.86_samples.snps_only.vcf.gz --execute True"
+
+#Construct a sample-sample map for meregeASECounts.py script
+cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_sample_gt_map.txt | awk -v OFS='\t' '{print $1, $1}' > results/SL1344/rasqual/input/sample_sample_map.txt
+
+#Merge all allele-specific counts into one matrix
+echo "mergeASECounts" | python ~/software/utils/submitJobs.py --MEM 18000 --jobname mergeASECounts --command "python ~/software/utils/rasqual/mergeASECounts.py --sample_list results/SL1344/rasqual/input/sample_sample_map.txt --indir processed/SL1344 --suffix .ASEcounts > results/SL1344/combined_ASE_counts.txt"
 
 #Construct genotype list
 cut -f1 rasqual/input/SL1344_sg_map_A.txt > rasqual/input/genotype_list.txt 
@@ -62,4 +68,6 @@ echo "ENSG00000109861" |  python ~/software/utils/submitJobs.py --MEM 1000 --job
 
 python ~/software/utils/rasqualToIGV.py --rasqualOut CTSC.cond_A.rasqual --geneid ENSG00000109861 > CTSC.cond_A.gwas
 python ~/software/utils/rasqualToIGV.py --rasqualOut CTSC.cond_B.rasqual --geneid ENSG00000109861 > CTSC.cond_B.gwas
+
+
 

@@ -3,36 +3,25 @@ library("dplyr")
 load_all("../seqUtils/")
 
 #Load the raw eQTL dataset
-expression_dataset = readRDS("results/SL1344/combined_expression_data.rds") #expression data
-line_metadata = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds") #Line metadata
-gene_id_name_map = dplyr::select(expression_dataset$gene_metadata, gene_id, gene_name)
+combined_expression_data = readRDS("results/SL1344/combined_expression_data.rds")
 
-#Filter out some samples and discard replicates
-design = dplyr::filter(expression_dataset$design, !(donor == "fpdj")) %>% tbl_df() %>% #Remove both fpdj samples (same as nibo)
-  dplyr::filter(!(donor == "fpdl" & replicate == 2)) %>% #Remove second fpdl sample (ffdp)
-  dplyr::filter(!(donor == "ougl" & replicate == 2)) %>% #Remove second ougl sample (dium)
-  dplyr::filter(!(donor == "mijn")) #%>% #Remove mijn (wrong line from CGAP)
-sample_meta = dplyr::left_join(design, line_metadata, by = c("donor", "replicate")) %>%
-  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg", "SL1344", "IFNg_SL1344")))
-
-#Save sample genotype list to disk
-write.table(unique(sample_meta$genotype_id), "macrophage-gxe-study/data/sample_lists/SL1344/SL1344_gt_list.txt", row.names = FALSE, col.names = FALSE, quote = FALSE)
-
-#Construct separate design matrices
-cond_A_design = dplyr::filter(sample_meta, condition == "A")
-cond_B_design = dplyr::filter(sample_meta, condition == "B")
-cond_C_design = dplyr::filter(sample_meta, condition == "C")
-cond_D_design = dplyr::filter(sample_meta, condition == "D")
-design_list = list(naive = cond_A_design, IFNg = cond_B_design, SL1344 = cond_C_design, IFNg_SL1344 = cond_D_design)
-  
-#### EXPRESSION ####
-#Filter expression data by samples
-exprs_cqn = expression_dataset$exprs_cqn[,design$sample_id]
-exprs_counts = expression_dataset$exprs_counts[,design$sample_id]
-
-#Define expressed genes
-mean_expression = calculateMean(exprs_cqn, as.data.frame(design), "condition_name")
+#Filter genes by expression level
+mean_expression = calculateMean(combined_expression_data$cqn, as.data.frame(combined_expression_data$sample_metadata), "condition_name")
 expressed_genes = names(which(apply(mean_expression, 1, max) > 0))
+not_Y_genes = dplyr::filter(combined_expression_data$gene_metadata, chromosome_name != "Y")$gene_id
+keep_genes = intersect(expressed_genes, not_Y_genes)
+rna_expressed = extractGenesFromExpressionList(combined_expression_data, keep_genes)
+
+#Extract separate lists for each condition
+condition_names = idVectorToList(c("naive","IFNg","SL1344","IFNg_SL1344"))
+rna_conditions = lapply(condition_names, extractConditionFromExpressionList, rna_expressed)
+
+#Rename column names to genotype ids
+rna_conditions_renamed = lapply(rna_conditions, renameMatrixColumnsInExpressionList, "sample_id", "genotype_id")
+
+#### export data for RASQUAL ####
+rasqual_input_folder = "results/SL1344/rasqual/input/"
+exportDataForRasqual(rna_conditions_renamed, rasqual_input_folder)
 
 #Set up the genepos data.frame
 genepos = dplyr::filter(expression_dataset$gene_metadata, gene_id %in% expressed_genes) %>% 
@@ -70,6 +59,7 @@ covariates = dplyr::mutate(sample_meta, sex = ifelse(gender == "male",1,0)) %>%
 
 #Save expression data for PEER and run PEER outside of R
 savePEERData(exprs_cqn_list, "results/SL1344/PEER/input/")
+
 #Run PEER .....
 
 #Import PEER results back into R
