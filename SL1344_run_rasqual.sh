@@ -25,25 +25,29 @@ cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_sample_gt_map.txt |
 #Merge all allele-specific counts into one matrix
 echo "mergeASECounts" | python ~/software/utils/submitJobs.py --MEM 18000 --jobname mergeASECounts --command "python ~/software/utils/rasqual/mergeASECounts.py --sample_list results/SL1344/rasqual/input/sample_sample_map.txt --indir STAR/SL1344 --suffix .ASEcounts > results/SL1344/combined_ASE_counts.txt"
 
+#Extract genotype ids for each condition
+cut -f2 results/SL1344/rasqual/input/naive.sg_map.txt > results/SL1344/rasqual/input/naive.genotypes.txt
+cut -f2 results/SL1344/rasqual/input/IFNg.sg_map.txt > results/SL1344/rasqual/input/IFNg.genotypes.txt
+cut -f2 results/SL1344/rasqual/input/SL1344.sg_map.txt > results/SL1344/rasqual/input/SL1344.genotypes.txt
+cut -f2 results/SL1344/rasqual/input/IFNg_SL1344.sg_map.txt > results/SL1344/rasqual/input/IFNg_SL1344.genotypes.txt
 
-#Construct genotype list
-cut -f1 rasqual/input/SL1344_sg_map_A.txt > rasqual/input/genotype_list.txt 
+#Extract samples from the global VCF file
+bcftools view -Oz -S results/SL1344/rasqual/input/naive.genotypes.txt genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.vcf.gz | bcftools filter -i 'MAF[0] >= 0.05' - > results/SL1344/rasqual/input/naive.vcf &
+bcftools view -Oz -S results/SL1344/rasqual/input/IFNg.genotypes.txt genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.vcf.gz | bcftools filter -i 'MAF[0] >= 0.05' - > results/SL1344/rasqual/input/IFNg.vcf &
+bcftools view -Oz -S results/SL1344/rasqual/input/SL1344.genotypes.txt genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.vcf.gz | bcftools filter -i 'MAF[0] >= 0.05' - > results/SL1344/rasqual/input/SL1344.vcf &
+bcftools view -Oz -S results/SL1344/rasqual/input/IFNg_SL1344.genotypes.txt genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.vcf.gz | bcftools filter -i 'MAF[0] >= 0.05' - > results/SL1344/rasqual/input/IFNg_SL1344.vcf &
 
-#Extract only relevant genotypes from the vcf file (in the correct order)
-bcftools view -S rasqual/input/genotype_list.txt genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_only.INFO_08.vcf.gz > genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_only.INFO_08.RASQUAL.vcf
-#echo "hipsci.wec.gtarray.HumanCoreExome-12_v1_0.858samples.20141111.genotypes.GRCh38.sorted" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname filterVCF --command "python ~/software/utils/vcf/filterVcf.py  --sampleList rasqual/input/genotype_list.txt --MAF 0.05 --indir genotypes/GRCh38/genotyped/ --outdir genotypes/SL1344/ --execute True  --vcfSuffix .vcf.gz"
+#Add ASE counts into the VCF file
+echo "vcfAddASE" | python ~/software/utils/submitJobs.py --MEM 32000 --jobname vcfAddASE --queue hugemem --command "python ~/software/utils/rasqual/vcfAddASE.py --ASEcounts results/SL1344/combined_ASE_counts.txt --ASESampleGenotypeMap results/SL1344/rasqual/input/naive.sg_map.txt --VCFfile results/SL1344/rasqual/input/naive.vcf | bgzip > results/SL1344/rasqual/input/naive.ASE.vcf.gz"
+echo "vcfAddASE" | python ~/software/utils/submitJobs.py --MEM 32000 --jobname vcfAddASE --queue hugemem --command "python ~/software/utils/rasqual/vcfAddASE.py --ASEcounts results/SL1344/combined_ASE_counts.txt --ASESampleGenotypeMap results/SL1344/rasqual/input/IFNg.sg_map.txt --VCFfile results/SL1344/rasqual/input/IFNg.vcf | bgzip > results/SL1344/rasqual/input/IFNg.ASE.vcf.gz"
+echo "vcfAddASE" | python ~/software/utils/submitJobs.py --MEM 32000 --jobname vcfAddASE --queue hugemem --command "python ~/software/utils/rasqual/vcfAddASE.py --ASEcounts results/SL1344/combined_ASE_counts.txt --ASESampleGenotypeMap results/SL1344/rasqual/input/SL1344.sg_map.txt --VCFfile results/SL1344/rasqual/input/SL1344.vcf | bgzip > results/SL1344/rasqual/input/SL1344.ASE.vcf.gz"
+echo "vcfAddASE" | python ~/software/utils/submitJobs.py --MEM 32000 --jobname vcfAddASE --queue hugemem --command "python ~/software/utils/rasqual/vcfAddASE.py --ASEcounts results/SL1344/combined_ASE_counts.txt --ASESampleGenotypeMap results/SL1344/rasqual/input/IFNg_SL1344.sg_map.txt --VCFfile results/SL1344/rasqual/input/IFNg_SL1344.vcf | bgzip > results/SL1344/rasqual/input/IFNg_SL1344.ASE.vcf.gz"
 
-#Add ASE counts to the VCF file
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/vcfAddASE.%J.jobout "python ~/software/utils/vcf/vcfAddASE.py --ASEcounts results/SL1344/ASE/SL1344_ASE_counts_condA.txt --VCFfile genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_only.INFO_08.RASQUAL.vcf | bgzip > rasqual/input/ASE/SL1344_ASE_counts_condA.vcf.gz"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/vcfAddASE.%J.jobout "python ~/software/utils/vcf/vcfAddASE.py --ASEcounts results/SL1344/ASE/SL1344_ASE_counts_condB.txt --VCFfile genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_only.INFO_08.RASQUAL.vcf | bgzip > rasqual/input/ASE/SL1344_ASE_counts_condB.vcf.gz"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/vcfAddASE.%J.jobout "python ~/software/utils/vcf/vcfAddASE.py --ASEcounts results/SL1344/ASE/SL1344_ASE_counts_condC.txt --VCFfile genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_only.INFO_08.RASQUAL.vcf | bgzip > rasqual/input/ASE/SL1344_ASE_counts_condC.vcf.gz"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/vcfAddASE.%J.jobout "python ~/software/utils/vcf/vcfAddASE.py --ASEcounts results/SL1344/ASE/SL1344_ASE_counts_condD.txt --VCFfile genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_only.INFO_08.RASQUAL.vcf | bgzip > rasqual/input/ASE/SL1344_ASE_counts_condD.vcf.gz"
-
-#Index the VCF files using tabix
-tabix -p vcf rasqual/input/ASE/SL1344_ASE_counts_condA.vcf.gz &
-tabix -p vcf rasqual/input/ASE/SL1344_ASE_counts_condB.vcf.gz &
-tabix -p vcf rasqual/input/ASE/SL1344_ASE_counts_condC.vcf.gz &
-tabix -p vcf rasqual/input/ASE/SL1344_ASE_counts_condD.vcf.gz &
+#Index VCF files using tabix
+tabix -p vcf results/SL1344/rasqual/input/naive.ASE.vcf.gz
+tabix -p vcf results/SL1344/rasqual/input/IFNg.ASE.vcf.gz
+tabix -p vcf results/SL1344/rasqual/input/SL1344.ASE.vcf.gz
+tabix -p vcf results/SL1344/rasqual/input/IFNg_SL1344.ASE.vcf.gz
 
 #Extract exon start-end coordinates from the Txdb
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>12000] rusage[mem=12000]" -q normal -M 12000 -o FarmOut/exonCoords.%J.jobout "/software/R-3.1.2/bin/Rscript macrophage-gxe-study/SL1344/eQTL/convertTxdbToCoords.R"

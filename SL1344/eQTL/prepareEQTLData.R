@@ -1,4 +1,5 @@
 library("devtools")
+library("plyr")
 library("dplyr")
 load_all("../seqUtils/")
 
@@ -8,7 +9,7 @@ combined_expression_data = readRDS("results/SL1344/combined_expression_data.rds"
 #Filter genes by expression level
 mean_expression = calculateMean(combined_expression_data$cqn, as.data.frame(combined_expression_data$sample_metadata), "condition_name")
 expressed_genes = names(which(apply(mean_expression, 1, max) > 0))
-not_Y_genes = dplyr::filter(combined_expression_data$gene_metadata, chromosome_name != "Y")$gene_id
+not_Y_genes = dplyr::filter(combined_expression_data$gene_metadata, !(chromosome_name %in% c("MT","Y")))$gene_id
 keep_genes = intersect(expressed_genes, not_Y_genes)
 rna_expressed = extractGenesFromExpressionList(combined_expression_data, keep_genes)
 
@@ -23,38 +24,31 @@ rna_conditions_renamed = lapply(rna_conditions, renameMatrixColumnsInExpressionL
 rasqual_input_folder = "results/SL1344/rasqual/input/"
 exportDataForRasqual(rna_conditions_renamed, rasqual_input_folder)
 
+#Import exon coordinates from disk
+union_exon_coords = read.table("annotations/Homo_sapiens.GRCh38.79.gene_exon_start_end.filtered_genes.txt", 
+                               stringsAsFactors = FALSE, header = TRUE) %>% dplyr::rename(chr = chromosome_name)
+filtered_coords = dplyr::semi_join(union_exon_coords, rna_conditions_renamed$naive$gene_metadata, by = "gene_id")
+snp_coords = readr::read_delim("genotypes/SL1344/imputed_20151005/imputed.86_samples.snp_coords.txt", 
+                               delim = "\t", col_types = "cdc", col_names = c("chr","pos","snp_id"))
 
+#Count the numer of overlapping SNPs
+exon_df = countSnpsOverlapingExons(filtered_coords, snp_coords, cis_window = 500000) %>% dplyr::arrange(chromosome_name, range_start)
+write.table(exon_df, file.path(rasqual_input_folder, "gene_snp_count_500kb.txt"), row.names = FALSE, sep = "\t", quote = FALSE)
 
+#Construct batches
+chr11_batches = dplyr::filter(exon_df, chromosome_name == "11") %>%
+  seqUtils::rasqualConstructGeneBatches(10)
+write.table(chr11_batches, file.path(rasqual_input_folder, "chr11_batches.txt"), 
+            row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
 
+library_size_list = lapply(rna_conditions_renamed, rasqualSizeFactorsMatrix, "library_size")
+b = library_size_list$naive
+c = b*a
 
-#Set up the genepos data.frame
-genepos = dplyr::filter(expression_dataset$gene_metadata, gene_id %in% expressed_genes) %>% 
-  dplyr::transmute(chr = chromosome_name, left = start_position, right = end_position, geneid = gene_id, score = 1000, strand) %>%
-  dplyr::mutate(strand = ifelse(strand == 1, "+","-")) %>%
-  as.data.frame() %>%
-  dplyr::filter( !(chr %in% c("MT","Y")) ) %>% #Remove genes on MT and Y chromosomes
-  dplyr::arrange(chr, left, right)
-
-#Filter expression data by min expression
-exprs_cqn = expression_dataset$exprs_cqn[genepos$geneid, design$sample_id]
-exprs_counts = expression_dataset$exprs_counts[genepos$geneid, design$sample_id]
-
-#Set up expression data for each condition
-condA_exp = extractSubset(dplyr::filter(sample_meta, condition == "A"), exprs_cqn)
-condB_exp = extractSubset(dplyr::filter(sample_meta, condition == "B"), exprs_cqn)
-condC_exp = extractSubset(dplyr::filter(sample_meta, condition == "C"), exprs_cqn)
-condD_exp = extractSubset(dplyr::filter(sample_meta, condition == "D"), exprs_cqn)
-exprs_cqn_list = list(naive = condA_exp, IFNg = condB_exp, SL1344 = condC_exp, IFNg_SL1344 = condD_exp)
-
-#### GENOTYPES ####
-#Remove two SNPs that have the same name for two different positions
-#duplicates_count = table(vcf_file$snpspos$snpid)
-#duplicate_ids = names(which(duplicates_count > 1))
-#vcf_file$snpspos = dplyr::filter(vcf_file$snpspos, !(snpid %in% duplicate_ids))
-#vcf_file$genotypes = vcf_file$genotypes[!(rownames(vcf_file$genotypes) %in% duplicate_ids),]
-
-#Filter genotype data
-#geno_data = extractSubset(dplyr::filter(sample_meta, condition == "A"), vcf_file$genotypes, old_column_names = "genotype_id")
+#Apply GC correction
+gc_vector = rna_conditions_renamed$naive$gene_metadata$percentage_gc_content
+naive_gc_corr = rasqualGcCorrection(rna_conditions_renamed$naive$counts, rna_conditions_renamed$naive$gene_metadata)
+norm_gccor_list = lapply(counts_list, rasqualGcCorrection, gc_vector)
 
 #### COVARIATES ####
 #Construct covariate matrix
