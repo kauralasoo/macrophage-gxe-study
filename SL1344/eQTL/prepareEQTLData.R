@@ -23,6 +23,10 @@ rna_conditions_renamed = lapply(rna_conditions, renameMatrixColumnsInExpressionL
 rasqual_input_folder = "results/SL1344/rasqual/input/"
 exportDataForRasqual(rna_conditions_renamed, rasqual_input_folder)
 
+
+
+
+
 #Set up the genepos data.frame
 genepos = dplyr::filter(expression_dataset$gene_metadata, gene_id %in% expressed_genes) %>% 
   dplyr::transmute(chr = chromosome_name, left = start_position, right = end_position, geneid = gene_id, score = 1000, strand) %>%
