@@ -35,6 +35,10 @@ snp_coords = readr::read_delim("genotypes/SL1344/imputed_20151005/imputed.86_sam
 exon_df = countSnpsOverlapingExons(filtered_coords, snp_coords, cis_window = 500000) %>% dplyr::arrange(chromosome_name, range_start)
 write.table(exon_df, file.path(rasqual_input_folder, "gene_snp_count_500kb.txt"), row.names = FALSE, sep = "\t", quote = FALSE)
 
+exon_df = countSnpsOverlapingExons(filtered_coords, snp_coords, cis_window = 100000) %>% dplyr::arrange(chromosome_name, range_start)
+write.table(exon_df, file.path(rasqual_input_folder, "gene_snp_count_100kb.txt"), row.names = FALSE, sep = "\t", quote = FALSE)
+
+
 #Construct batches
 chr11_batches = dplyr::filter(exon_df, chromosome_name == "11") %>%
   seqUtils::rasqualConstructGeneBatches(10)
