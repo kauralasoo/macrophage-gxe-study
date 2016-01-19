@@ -45,15 +45,6 @@ chr11_batches = dplyr::filter(exon_df, chromosome_name == "11") %>%
 write.table(chr11_batches, file.path(rasqual_input_folder, "chr11_batches.txt"), 
             row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
 
-library_size_list = lapply(rna_conditions_renamed, rasqualSizeFactorsMatrix, "library_size")
-b = library_size_list$naive
-c = b*a
-
-#Apply GC correction
-gc_vector = rna_conditions_renamed$naive$gene_metadata$percentage_gc_content
-naive_gc_corr = rasqualGcCorrection(rna_conditions_renamed$naive$counts, rna_conditions_renamed$naive$gene_metadata)
-norm_gccor_list = lapply(counts_list, rasqualGcCorrection, gc_vector)
-
 #### COVARIATES ####
 #Construct covariate matrix
 covariates = dplyr::mutate(sample_meta, sex = ifelse(gender == "male",1,0)) %>%
