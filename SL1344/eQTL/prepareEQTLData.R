@@ -2,25 +2,21 @@ library("devtools")
 library("plyr")
 library("dplyr")
 load_all("../seqUtils/")
+library("SNPRelate")
 
+
+#### Import data ####
 #Load the raw eQTL dataset
-combined_expression_data = readRDS("results/SL1344/combined_expression_data.rds")
-
-#Filter genes by expression level
-mean_expression = calculateMean(combined_expression_data$cqn, as.data.frame(combined_expression_data$sample_metadata), "condition_name")
-expressed_genes = names(which(apply(mean_expression, 1, max) > 0))
-not_Y_genes = dplyr::filter(combined_expression_data$gene_metadata, !(chromosome_name %in% c("MT","Y")))$gene_id
-keep_genes = intersect(expressed_genes, not_Y_genes)
-rna_expressed = extractGenesFromExpressionList(combined_expression_data, keep_genes)
+combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
 
 #Extract separate lists for each condition
 condition_names = idVectorToList(c("naive","IFNg","SL1344","IFNg_SL1344"))
-rna_conditions = lapply(condition_names, extractConditionFromExpressionList, rna_expressed)
+rna_conditions = lapply(condition_names, extractConditionFromExpressionList, combined_expression_data)
 
 #Rename column names to genotype ids
 rna_conditions_renamed = lapply(rna_conditions, renameMatrixColumnsInExpressionList, "sample_id", "genotype_id")
 
-#### export data for RASQUAL ####
+#### RASQUAL ####
 rasqual_input_folder = "results/SL1344/rasqual/input/"
 exportDataForRasqual(rna_conditions_renamed, rasqual_input_folder)
 
@@ -38,67 +34,11 @@ write.table(exon_df, file.path(rasqual_input_folder, "gene_snp_count_500kb.txt")
 exon_df = countSnpsOverlapingExons(filtered_coords, snp_coords, cis_window = 100000) %>% dplyr::arrange(chromosome_name, range_start)
 write.table(exon_df, file.path(rasqual_input_folder, "gene_snp_count_100kb.txt"), row.names = FALSE, sep = "\t", quote = FALSE)
 
-
 #Construct batches
 chr11_batches = dplyr::filter(exon_df, chromosome_name == "11") %>%
   seqUtils::rasqualConstructGeneBatches(10)
 write.table(chr11_batches, file.path(rasqual_input_folder, "chr11_batches.txt"), 
             row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
-
-#### COVARIATES ####
-#Construct covariate matrix
-covariates = dplyr::mutate(sample_meta, sex = ifelse(gender == "male",1,0)) %>%
-  dplyr::select(sample_id, sex, ng_ul_mean, diff_days)
-
-#Save expression data for PEER and run PEER outside of R
-savePEERData(exprs_cqn_list, "results/SL1344/PEER/input/")
-
-#Run PEER .....
-
-#Import PEER results back into R
-cond_A_factors = importPEERFactors("results/SL1344/PEER/naive_10/factors.txt", cond_A_design)
-cond_B_factors = importPEERFactors("results/SL1344/PEER/IFNg_10/factors.txt", cond_B_design)
-cond_C_factors = importPEERFactors("results/SL1344/PEER/SL1344_10/factors.txt", cond_C_design)
-cond_D_factors = importPEERFactors("results/SL1344/PEER/IFNg_SL1344_10/factors.txt", cond_D_design)
-peer_factors = rbind(cond_A_factors,cond_B_factors, cond_C_factors, cond_D_factors) %>%
-  dplyr::semi_join(design, by = "sample_id")
-
-#Merge PEER facotrs with covariates
-peer_covariates = dplyr::left_join(covariates, peer_factors, by = "sample_id") %>% as.data.frame()
-rownames(peer_covariates) = peer_covariates$sample_id
-peer_covariates = t(peer_covariates[,-1])
-
-#Set up covatiates for each conditon
-condA_covs = extractSubset(dplyr::filter(sample_meta, condition == "A"), peer_covariates)
-condB_covs = extractSubset(dplyr::filter(sample_meta, condition == "B"), peer_covariates)
-condC_covs = extractSubset(dplyr::filter(sample_meta, condition == "C"), peer_covariates)
-condD_covs = extractSubset(dplyr::filter(sample_meta, condition == "D"), peer_covariates)
-covariates_list = list(naive = condA_covs, IFNg = condB_covs, SL1344 = condC_covs, IFNg_SL1344 = condD_covs)
-
-#### Dataset object ####
-#Construct a single dataset object that can be reused by many different analysis
-eqtl_dataset = list(
-  exprs_cqn_list = exprs_cqn_list,
-  covariates_list = covariates_list,
-  genepos = genepos,
-  gene_metadata = expression_dataset$gene_metadata,
-  sample_metadata = sample_meta,
-  covariates = t(peer_covariates),
-  exprs_cqn = exprs_cqn
-  )
-saveRDS(eqtl_dataset, "results/SL1344/eqtl_data_list.rds")
-
-#### eqtlbma ####
-#Export eqtl dataset for analysis with eqtlbma
-#Use only the first 7 covariates
-eqtlbma_dataset = eqtl_dataset
-eqtlbma_dataset$covariates_list = lapply(eqtl_dataset$covariates_list, function(x){x[1:7,]})
-#Save data for eqtlbma
-saveEqtlbmaData(eqtlbma_dataset, "results/SL1344/eqtlbma/input/", 
-                project_root = "/nfs/users/nfs_k/ka8/group-scratch/kaur/projects/macrophage-gxe-study/")
-
-#### RASQUAL ####
-#export eqtl dataset for analysis with rasqual
 
 
 ### FastQTL ####
@@ -137,3 +77,20 @@ write.table(donor_genotype_map$genotype_id, "results/SL1344/fastqtl/input/genoty
 chunks_matrix = data.frame(chunk = seq(1:200), n = 200)
 write.table(chunks_matrix, "results/ATAC/fastqtl/input/chunk_table.txt", row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
 
+#### eigenMT ####
+SNPRelate::snpgdsVCF2GDS("genotypes/SL1344/imputed_20151005/chr11.vcf.gz", 
+                         "genotypes/SL1344/imputed_20151005/chr11.vcf.gds", method = "copy.num.of.ref")
+vcf_file = gdsToMatrix("genotypes/SL1344/imputed_20151005/chr11.vcf.gds")
+
+#Save SNP positions
+snp_pos_df = vcf_file$snpspos %>% dplyr::rename(snp = snpid, chr_snp = chr)
+write.table(snp_pos_df, "results/SL1344/eigenMT/snp_positions.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+#Save genotypes
+genotypes = dplyr::mutate(as.data.frame(vcf_file$genotypes), ID = rownames(vcf_file$genotypes)) %>% dplyr::select(ID, everything())
+write.table(genotypes, "results/SL1344/eigenMT/genotypes.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+#Save gene positions
+gene_data = dplyr::transmute(combined_expression_data$gene_metadata, gene_id, chrom_probe = chromosome_name, s1 = start_position, s2 = end_position) %>%
+  dplyr::arrange(chrom_probe, s1)
+write.table(gene_data, "results/SL1344/eigenMT/gene_positions.txt", sep = "\t", quote = FALSE, row.names = FALSE)
