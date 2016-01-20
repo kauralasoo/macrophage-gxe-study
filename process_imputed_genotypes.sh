@@ -68,16 +68,20 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q norm
 ~/software/vcflib/bin/vcfuniq imputed.86_samples.sorted.vcf | bcftools norm -m+any - | bcftools view -Oz -m2 -M2 - > imputed.86_samples.sorted.filtered.vcf.gz
 
 #Add unique names to unnamed SNPs and remove duplicate snps
-bcftools annotate --set-id +'%CHROM\_%POS\_%REF\_%FIRST_ALT' imputed.86_samples.sorted.filtered.vcf.gz | bcftools view -O z -e 'ID=@duplicate_snps.txt' - > imputed.86_samples.sorted.filtered.named.vcf.gz
+#bcftools annotate --set-id +'%CHROM\_%POS\_%REF\_%FIRST_ALT' imputed.86_samples.sorted.filtered.vcf.gz | bcftools view -O z -e 'ID=@duplicate_snps.txt' - > imputed.86_samples.sorted.filtered.named.vcf.gz
+bcftools annotate --set-id +'%CHROM\_%POS' imputed.86_samples.sorted.filtered.vcf.gz | bcftools view -O z -e 'ID=@duplicate_snps.txt' - > imputed.86_samples.sorted.filtered.named.vcf.gz &
 
 ##### SNPS ONLY VCF for RASQUAL
 bcftools view -v snps -O z imputed.86_samples.sorted.filtered.named.vcf.gz > imputed.86_samples.snps_only.vcf.gz &
 
 #Extract SNP coords from a vcf file for RASQUAL
 zgrep -v "#" imputed.86_samples.sorted.filtered.named.vcf.gz | cut -f 1,2,3 > imputed.86_samples.snp_coords.txt &
+zgrep -v "#" imputed.86_samples.snps_only.vcf.gz | cut -f 1,2,3 > imputed.86_samples.snps_only.snp_coords.txt &
 
 #Filter by INFO score
 bcftools filter -i 'INFO[0] >= 0.8' -O z imputed.69_samples.sorted.filtered.vcf.gz > imputed.69_samples.snps_indels.INFO_08.vcf.gz 
 
+#Split VCF file into chromosomes
+cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/vcf/vcfSplitByChromosome.py --vcf genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.vcf.gz --outdir genotypes/SL1344/imputed_20151005/chromosomes/ 
 
 

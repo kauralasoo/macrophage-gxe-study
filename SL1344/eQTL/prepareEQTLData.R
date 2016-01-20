@@ -78,9 +78,12 @@ chunks_matrix = data.frame(chunk = seq(1:200), n = 200)
 write.table(chunks_matrix, "results/ATAC/fastqtl/input/chunk_table.txt", row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
 
 #### eigenMT ####
-SNPRelate::snpgdsVCF2GDS("genotypes/SL1344/imputed_20151005/chr11.vcf.gz", 
-                         "genotypes/SL1344/imputed_20151005/chr11.vcf.gds", method = "copy.num.of.ref")
-vcf_file = gdsToMatrix("genotypes/SL1344/imputed_20151005/chr11.vcf.gds")
+SNPRelate::snpgdsVCF2GDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.vcf.gz", 
+                         "genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.gds", method = "copy.num.of.ref")
+vcf_file = gdsToMatrix("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.gds")
+saveRDS(vcf_file, "genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
+
+eigenMTExportGenotypes(vcf_file, combined_expression_data$gene_metadata, "results/SL1344/eigenMT/")
 
 #Save SNP positions
 snp_pos_df = vcf_file$snpspos %>% dplyr::rename(snp = snpid, chr_snp = chr)

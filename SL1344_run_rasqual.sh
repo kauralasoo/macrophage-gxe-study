@@ -44,10 +44,10 @@ echo "vcfAddASE" | python ~/software/utils/submitJobs.py --MEM 32000 --jobname v
 echo "vcfAddASE" | python ~/software/utils/submitJobs.py --MEM 32000 --jobname vcfAddASE --queue hugemem --command "python ~/software/utils/rasqual/vcfAddASE.py --ASEcounts results/SL1344/combined_ASE_counts.txt --ASESampleGenotypeMap results/SL1344/rasqual/input/IFNg_SL1344.sg_map.txt --VCFfile results/SL1344/rasqual/input/IFNg_SL1344.vcf | bgzip > results/SL1344/rasqual/input/IFNg_SL1344.ASE.vcf.gz"
 
 #Index VCF files using tabix
-tabix -p vcf results/SL1344/rasqual/input/naive.ASE.vcf.gz
-tabix -p vcf results/SL1344/rasqual/input/IFNg.ASE.vcf.gz
-tabix -p vcf results/SL1344/rasqual/input/SL1344.ASE.vcf.gz
-tabix -p vcf results/SL1344/rasqual/input/IFNg_SL1344.ASE.vcf.gz
+tabix -p vcf results/SL1344/rasqual/input/naive.ASE.vcf.gz &
+tabix -p vcf results/SL1344/rasqual/input/IFNg.ASE.vcf.gz &
+tabix -p vcf results/SL1344/rasqual/input/SL1344.ASE.vcf.gz &
+tabix -p vcf results/SL1344/rasqual/input/IFNg_SL1344.ASE.vcf.gz &
 
 #Extract exon start-end coordinates from the Txdb
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>12000] rusage[mem=12000]" -q normal -M 12000 -o FarmOut/exonCoords.%J.jobout "/software/R-3.1.2/bin/Rscript macrophage-gxe-study/SL1344/eQTL/convertTxdbToCoords.R"
