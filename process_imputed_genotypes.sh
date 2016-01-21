@@ -79,7 +79,8 @@ zgrep -v "#" imputed.86_samples.sorted.filtered.named.vcf.gz | cut -f 1,2,3 > im
 zgrep -v "#" imputed.86_samples.snps_only.vcf.gz | cut -f 1,2,3 > imputed.86_samples.snps_only.snp_coords.txt &
 
 #Filter by INFO score
-bcftools filter -i 'INFO[0] >= 0.8' -O z imputed.69_samples.sorted.filtered.vcf.gz > imputed.69_samples.snps_indels.INFO_08.vcf.gz 
+bcftools filter -i 'INFO[0] >= 0.7' -O z imputed.86_samples.sorted.filtered.named.vcf.gz > imputed.86_samples.sorted.filtered.named.INFO_07.vcf.gz
+zgrep -v "#" imputed.86_samples.sorted.filtered.named.INFO_07.vcf.gz | cut -f 1,2,3 > imputed.86_samples.snp_coords.INFO_07.txt &
 
 #Split VCF file into chromosomes
 cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/vcf/vcfSplitByChromosome.py --vcf genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.vcf.gz --outdir genotypes/SL1344/imputed_20151005/chromosomes/ 

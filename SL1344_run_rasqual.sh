@@ -52,11 +52,9 @@ tabix -p vcf results/SL1344/rasqual/input/IFNg_SL1344.ASE.vcf.gz &
 #Extract exon start-end coordinates from the Txdb
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>12000] rusage[mem=12000]" -q normal -M 12000 -o FarmOut/exonCoords.%J.jobout "/software/R-3.1.2/bin/Rscript macrophage-gxe-study/SL1344/eQTL/convertTxdbToCoords.R"
 
-#Extract SNP coords from a vcf file
-grep -v "#" genotypes/SL1344/autosomes.snps_only.no_replicates.vcf | cut -f 1,2,3 > genotypes/SL1344/snp_coords.txt
+#RASQUAL (4 PEER covariates + sex, library sizes + GC), 500kb
+cat results/SL1344/rasqual/input/gene_batches.txt | head -n 201 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname runRasqual_naive_500kb --command "python ~/software/utils/rasqual/runRasqual.py --readCounts results/SL1344/rasqual/input/naive.expression.bin  --offsets results/SL1344/rasqual/input/naive.gc_library_size.bin --n 69 --geneids results/SL1344/rasqual/input/feature_names.txt --vcf results/SL1344/rasqual/input/naive.ASE.vcf.gz --geneMetadata results/SL1344/rasqual/input/gene_snp_count_500kb.txt --outprefix results/SL1344/rasqual/output/naive_500kb --covariates results/SL1344/rasqual/input/naive.PEER_covariates_n3.bin --rasqualBin rasqual --parameters '\--force' --execute True"
 
-#Count SnpPerGene
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -q normal -M 5000 -o FarmOut/countSnpsPerGene.%J.jobout "/software/R-3.1.2/bin/Rscript ~/software/utils/vcf/countsSnpsPerGene.R -s genotypes/SL1344/snp_coords.txt -e annotations/Homo_sapiens.GRCh38.79.gene_exon_start_end.filtered_genes.txt -c genotypes/SL1344/snps_per_gene.txt"
 
 
 #Run RASQUAL on a subset of genes
