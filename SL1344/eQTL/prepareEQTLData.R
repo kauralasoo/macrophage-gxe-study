@@ -26,10 +26,10 @@ exportDataForRasqual(rna_conditions_renamed, rasqual_input_folder)
 union_exon_coords = read.table("annotations/Homo_sapiens.GRCh38.79.gene_exon_start_end.filtered_genes.txt", 
                                stringsAsFactors = FALSE, header = TRUE) %>% dplyr::rename(chr = chromosome_name)
 filtered_coords = dplyr::semi_join(union_exon_coords, rna_conditions_renamed$naive$gene_metadata, by = "gene_id")
-#snp_coords = readr::read_delim("genotypes/SL1344/imputed_20151005/imputed.86_samples.snp_coords.txt", 
-#                               delim = "\t", col_types = "cdc", col_names = c("chr","pos","snp_id"))
-snp_coords = readr::read_delim("genotypes/SL1344/imputed_20151005/imputed.86_samples.snp_coords.INFO_07.txt", 
+snp_coords = readr::read_delim("genotypes/SL1344/imputed_20151005/imputed.86_samples.snp_coords.txt", 
                                delim = "\t", col_types = "cdc", col_names = c("chr","pos","snp_id"))
+#snp_coords = readr::read_delim("genotypes/SL1344/imputed_20151005/imputed.86_samples.snp_coords.INFO_07.txt", 
+#                               delim = "\t", col_types = "cdc", col_names = c("chr","pos","snp_id"))
 
 #Count the numer of overlapping SNPs
 exon_df = countSnpsOverlapingExons(filtered_coords, snp_coords, cis_window = 500000) %>% dplyr::arrange(chromosome_name, range_start)
