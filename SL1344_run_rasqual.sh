@@ -54,7 +54,7 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>12000] rusage[mem=12000]" -q no
 
 #RASQUAL (4 PEER covariates + sex, library sizes + GC), 500kb
 cat results/SL1344/rasqual/input/gene_batches.txt | head -n 201 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname runRasqual_naive_500kb --command "python ~/software/utils/rasqual/runRasqual.py --readCounts results/SL1344/rasqual/input/naive.expression.bin  --offsets results/SL1344/rasqual/input/naive.gc_library_size.bin --n 69 --geneids results/SL1344/rasqual/input/feature_names.txt --vcf results/SL1344/rasqual/input/naive.ASE.vcf.gz --geneMetadata results/SL1344/rasqual/input/gene_snp_count_500kb.txt --outprefix results/SL1344/rasqual/output/naive_500kb --covariates results/SL1344/rasqual/input/naive.PEER_covariates_n3.bin --rasqualBin rasqual --parameters '\--force' --execute True"
-
+cat results/SL1344/rasqual/input/gene_batches.txt | tail -n 1000 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname runRasqual_naive_500kb --command "python ~/software/utils/rasqual/runRasqual.py --readCounts results/SL1344/rasqual/input/naive.expression.bin  --offsets results/SL1344/rasqual/input/naive.gc_library_size.bin --n 69 --geneids results/SL1344/rasqual/input/feature_names.txt --vcf results/SL1344/rasqual/input/naive.ASE.vcf.gz --geneMetadata results/SL1344/rasqual/input/gene_snp_count_500kb.txt --outprefix results/SL1344/rasqual/output/naive_500kb --covariates results/SL1344/rasqual/input/naive.PEER_covariates_n3.bin --rasqualBin rasqual --parameters '\--force' --execute True"
 
 
 #Run RASQUAL on a subset of genes
