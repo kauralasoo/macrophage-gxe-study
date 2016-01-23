@@ -15,32 +15,37 @@ python ~/software/utils/irods/irodsFetchMeta.py --irodsList fastq/acLDL_samples_
 cut -f1 fastq/acLDL_samples.txt | python ~/software/utils/irods/fetch-irods.py --dir fastq/acLDL/cram/ --suffix .cram
 cut -f1 fastq/acLDL_samples_2.txt | python ~/software/utils/irods/fetch-irods.py --dir fastq/acLDL/cram/ --suffix .cram
 cut -f1 fastq/acLDL_samples_3.txt | python ~/software/utils/irods/fetch-irods.py --dir fastq/acLDL/cram/ --suffix .cram
-cut -f1 macrophage-gxe-study/data/sample_lists/acLDL/acLDL_samples_4.txt | python ~/software/utils/irods/fetch-irods.py --dir fastq/acLDL/cram/ --suffix .cram
+cut -f1 macrophage-gxe-study/data/sample_lists/acLDL/acLDL_samples_5.txt | python ~/software/utils/irods/fetch-irods.py --dir fastq/acLDL/cram/ --suffix .cram
 
 #Convert cram files into fastq
 cut -f1 fastq/acLDL_samples.txt |  python ~/software/utils/submitJobs.py --MEM 1000 --jobname cramToFastq --command "python ~/software/utils/cramToFastq.py --inputDir fastq/acLDL/cram/ --outputDir fastq/acLDL/"
 cut -f1 fastq/acLDL_samples_2.txt |  python ~/software/utils/submitJobs.py --MEM 1000 --jobname cramToFastq --command "python ~/software/utils/cramToFastq.py --inputDir fastq/acLDL/cram/ --outputDir fastq/acLDL/"
 cat macrophage-gxe-study/data/sample_lists/acLDL/acLDL_samples_3.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname cramToFastq --command "python ~/software/utils/bam/cramToFastq.py --inputDir fastq/acLDL/cram/ --outputDir fastq/acLDL/cram/"
 cat macrophage-gxe-study/data/sample_lists/acLDL/acLDL_samples_4.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname cramToFastq --command "python ~/software/utils/bam/cramToFastq.py --inputDir fastq/acLDL/cram/ --outputDir fastq/acLDL/cram/"
+cat macrophage-gxe-study/data/sample_lists/acLDL/acLDL_samples_5.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname cramToFastq --command "python ~/software/utils/bam/cramToFastq.py --inputDir fastq/acLDL/cram/ --outputDir fastq/acLDL/cram/"
 
 #Merge split fastq into joint ones and rename
-cat fastq/acLDL_names.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname merge_bams --command "python ~/software/utils/merge-fastq.py --indir fastq/acLDL/ --outdir fastq/acLDL/ --suffix .1.fastq.gz"
-cat fastq/acLDL_names.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname merge_bams --command "python ~/software/utils/merge-fastq.py --indir fastq/acLDL/ --outdir fastq/acLDL/ --suffix .2.fastq.gz"
+cat fastq/acLDL_names.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname merge_bams --command "python ~/software/utils/fastq/merge-fastq.py --indir fastq/acLDL/ --outdir fastq/acLDL/ --suffix .1.fastq.gz"
+cat fastq/acLDL_names.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname merge_bams --command "python ~/software/utils/fastq/merge-fastq.py --indir fastq/acLDL/ --outdir fastq/acLDL/ --suffix .2.fastq.gz"
 
-cat fastq/acLDL_names_2.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname merge_bams --command "python ~/software/utils/merge-fastq.py --indir fastq/acLDL/ --outdir fastq/acLDL/ --suffix .1.fastq.gz"
-cat fastq/acLDL_names_2.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname merge_bams --command "python ~/software/utils/merge-fastq.py --indir fastq/acLDL/ --outdir fastq/acLDL/ --suffix .2.fastq.gz"
+cat fastq/acLDL_names_2.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname merge_bams --command "python ~/software/utils/fastq/merge-fastq.py --indir fastq/acLDL/ --outdir fastq/acLDL/ --suffix .1.fastq.gz"
+cat fastq/acLDL_names_2.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname merge_bams --command "python ~/software/utils/fastq/merge-fastq.py --indir fastq/acLDL/ --outdir fastq/acLDL/ --suffix .2.fastq.gz"
 
-cat macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_3.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname merge_bams --command "python ~/software/utils/merge-fastq.py --indir fastq/acLDL/cram/ --outdir fastq/acLDL/ --suffix .1.fastq.gz"
-cat macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_3.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname merge_bams --command "python ~/software/utils/merge-fastq.py --indir fastq/acLDL/cram/ --outdir fastq/acLDL/ --suffix .2.fastq.gz"
+cat macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_3.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname merge_bams --command "python ~/software/utils/fastq/merge-fastq.py --indir fastq/acLDL/cram/ --outdir fastq/acLDL/ --suffix .1.fastq.gz"
+cat macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_3.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname merge_bams --command "python ~/software/utils/fastq/merge-fastq.py --indir fastq/acLDL/cram/ --outdir fastq/acLDL/ --suffix .2.fastq.gz"
 
-cat macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_4.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname merge_bams --command "python ~/software/utils/merge-fastq.py --indir fastq/acLDL/cram/ --outdir fastq/acLDL/ --suffix .1.fastq.gz"
-cat macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_4.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname merge_bams --command "python ~/software/utils/merge-fastq.py --indir fastq/acLDL/cram/ --outdir fastq/acLDL/ --suffix .2.fastq.gz"
+cat macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_4.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname merge_bams --command "python ~/software/utils/fastq/merge-fastq.py --indir fastq/acLDL/cram/ --outdir fastq/acLDL/ --suffix .1.fastq.gz"
+cat macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_4.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname merge_bams --command "python ~/software/utils/fastq/merge-fastq.py --indir fastq/acLDL/cram/ --outdir fastq/acLDL/ --suffix .2.fastq.gz"
+
+cat macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_5.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname merge_bams --command "python ~/software/utils/fastq/merge-fastq.py --indir fastq/acLDL/cram/ --outdir fastq/acLDL/ --suffix .1.fastq.gz"
+cat macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_5.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname merge_bams --command "python ~/software/utils/fastq/merge-fastq.py --indir fastq/acLDL/cram/ --outdir fastq/acLDL/ --suffix .2.fastq.gz"
 
 #Align reads to the genome using STAR
 cut -f1 fastq/acLDL_names.txt | python ~/software/utils/submitJobs.py --MEM 32000 --jobname star_align --ncores 8 --queue hugemem --command "python ~/software/utils/align/STAR-align.py --outputDir STAR/acLDL/ --fastqDir fastq/acLDL/ --genomeDir ../../annotations/GRCh38/STAR_index_79/ --runThreadN 8"
 cut -f1 fastq/acLDL_names_2.txt | python ~/software/utils/submitJobs.py --MEM 32000 --jobname star_align --ncores 8 --queue hugemem --command "python ~/software/utils/align/STAR-align.py --outputDir STAR/acLDL/ --fastqDir fastq/acLDL/ --genomeDir ../../annotations/GRCh38/STAR_index_79/ --runThreadN 8"
 cut -f1 macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_3.txt | python ~/software/utils/submitJobs.py --MEM 32000 --jobname star_align --ncores 8 --queue hugemem --command "python ~/software/utils/align/STAR-align.py --outputDir STAR/acLDL/ --fastqDir fastq/acLDL/ --genomeDir ../../annotations/GRCh38/STAR_index_79/ --runThreadN 8"
 cut -f1 macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_4.txt | python ~/software/utils/submitJobs.py --MEM 35000 --jobname star_align_051115 --ncores 8 --queue hugemem --command "python ~/software/utils/align/STAR-align.py --outputDir STAR/acLDL/ --fastqDir fastq/acLDL/ --genomeDir ../../annotations/GRCh38/STAR_index_79/ --runThreadN 8"
+cut -f1 macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_5.txt | python ~/software/utils/submitJobs.py --MEM 35000 --jobname star_align_230116 --ncores 8 --queue hugemem --command "python ~/software/utils/align/STAR-align.py --outputDir STAR/acLDL/ --fastqDir fastq/acLDL/ --genomeDir ../../annotations/GRCh38/STAR_index_79/ --runThreadN 8"
 
 
 #Count reads overlaping GENCODE basic annotations

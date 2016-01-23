@@ -63,6 +63,9 @@ echo "merge" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname mergeR
 
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q normal -M 1000 -o eigenMT.%J.jobout "python ~/software/eigenMTwithTestData/eigenMT.py --CHROM 11 --QTL qtls_2.txt --GEN genotypes.txt --GENPOS snp_positions.txt --PHEPOS gene_positions.txt --OUT exampleOut.txt --cis_dist 1e5 --external"
 
+python ~/software/utils/rasqual/rasqualToEigenMT.py --rasqualOut results/SL1344/rasqual/output/chr11_naive_100kb_gc_PEER_n3.txt > results/SL1344/eigenMT/output/test_qtls.txt
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q normal -M 1000 -o eigenMT.%J.jobout "python ~/software/eigenMTwithTestData/eigenMT_fixed.py --CHROM 11 --QTL results/SL1344/eigenMT/output/test_qtls.txt --GEN results/SL1344/eigenMT/input/chr_11.genotypes.txt --GENPOS results/SL1344/eigenMT/input/chr_11.snp_positions.txt --PHEPOS results/SL1344/eigenMT/input/gene_positions.txt  --OUT results/SL1344/eigenMT/output/exampleOut_external.txt --external --cis_dist 1e5"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q normal -M 1000 -o eigenMT.%J.jobout "python ~/software/eigenMTwithTestData/eigenMT_fixed.py --CHROM 11 --QTL results/SL1344/eigenMT/output/test_qtls.txt --GEN results/SL1344/eigenMT/input/chr_11.genotypes.txt --GENPOS results/SL1344/eigenMT/input/chr_11.snp_positions.txt --PHEPOS results/SL1344/eigenMT/input/gene_positions.txt  --OUT results/SL1344/eigenMT/output/exampleOut.txt --cis_dist 1e5"
 
 
 #Compare to FastQTL

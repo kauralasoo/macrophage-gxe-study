@@ -2,7 +2,6 @@ library("devtools")
 library("plyr")
 library("dplyr")
 load_all("../seqUtils/")
-library("SNPRelate")
 
 
 #### Import data ####
@@ -60,18 +59,9 @@ chr11_input_folder = "results/SL1344/fastqtl/input_chr11/"
 exportDataForFastQTL(chr11_data, chr11_input_folder)
 
 #### eigenMT ####
-vcf_file = gdsToMatrix("genotypes/SL1344/imputed_20151005/chromosomes/chr_1.gds")
-eigenMTExportGenotypes(vcf_file, "results/SL1344/eigenMT/")
-
-#Save SNP positions
-snp_pos_df = vcf_file$snpspos %>% dplyr::rename(snp = snpid, chr_snp = chr)
-write.table(snp_pos_df, "results/SL1344/eigenMT/snp_positions.txt", sep = "\t", quote = FALSE, row.names = FALSE)
-
-#Save genotypes
-genotypes = dplyr::mutate(as.data.frame(vcf_file$genotypes), ID = rownames(vcf_file$genotypes)) %>% dplyr::select(ID, everything())
-write.table(genotypes, "results/SL1344/eigenMT/genotypes.txt", sep = "\t", quote = FALSE, row.names = FALSE)
-
-#Save gene positions
-gene_data = dplyr::transmute(combined_expression_data$gene_metadata, gene_id, chrom_probe = chromosome_name, s1 = start_position, s2 = end_position) %>%
-  dplyr::arrange(chrom_probe, s1)
-write.table(gene_data, "results/SL1344/eigenMT/gene_positions.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+#Export genotype data
+chromosome_list = scan("macrophage-gxe-study/data/sample_lists/chromosome_list.txt", what = "char")
+eigenMTExportGenotypesByChr(chromosome_list, "genotypes/SL1344/imputed_20151005/chromosomes/",
+                            "results/SL1344/eigenMT/input/", "chr_")
+#Export gene metadata
+eigenMTExportGeneMetadata(combined_expression_data$gene_metadata, "results/SL1344/eigenMT/input/")
