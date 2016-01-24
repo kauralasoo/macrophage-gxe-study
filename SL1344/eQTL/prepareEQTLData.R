@@ -61,7 +61,7 @@ exportDataForFastQTL(chr11_data, chr11_input_folder)
 #### eigenMT ####
 #Export genotype data
 chromosome_list = scan("macrophage-gxe-study/data/sample_lists/chromosome_list.txt", what = "char")
-eigenMTExportGenotypesByChr(chromosome_list, "genotypes/SL1344/imputed_20151005/chromosomes/",
+eigenMTExportGenotypesByChr(chromosome_list, "genotypes/SL1344/imputed_20151005/chromosomes_INFO_07//",
                             "results/SL1344/eigenMT/input/", "chr_")
 #Export gene metadata
 eigenMTExportGeneMetadata(combined_expression_data$gene_metadata, "results/SL1344/eigenMT/input/")
