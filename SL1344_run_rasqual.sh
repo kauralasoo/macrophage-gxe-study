@@ -58,15 +58,10 @@ cat results/SL1344/rasqual/input/gene_batches.txt | head -n 201 | python ~/softw
 cat results/SL1344/rasqual/input/gene_batches.txt | tail -n 1000 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname runRasqual_naive_500kb --command "python ~/software/utils/rasqual/runRasqual.py --readCounts results/SL1344/rasqual/input/naive.expression.bin  --offsets results/SL1344/rasqual/input/naive.gc_library_size.bin --n 69 --geneids results/SL1344/rasqual/input/feature_names.txt --vcf results/SL1344/rasqual/input/naive.ASE.vcf.gz --geneMetadata results/SL1344/rasqual/input/gene_snp_count_500kb.txt --outprefix results/SL1344/rasqual/output/naive_500kb --covariates results/SL1344/rasqual/input/naive.PEER_covariates_n3.bin --rasqualBin rasqual --parameters '\--force' --execute True"
 cp results/SL1344/rasqual/output/naive_500kb.batch_* results/SL1344/rasqual/output/naive_500kb/batches/
 
-#Merge QTL calls form differnet batches
+#Merge QTL calls form different batches
 echo "merge" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname mergeRasqualBatches --command "python ~/software/utils/rasqual/mergeRasqualBatches.py --prefix results/SL1344/rasqual/output/naive_500kb/batches/naive_500kb"
 
-#Convert rasqual output into format suitable for eigenMT
-echo "rasqualToEigenMT" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname rasqualToEigenMT --command "python ~/software/utils/rasqual/rasqualToEigenMT.py --rasqualOut results/SL1344/rasqual/output/naive_500kb/naive_500kb.txt > results/SL1344/rasqual/output/naive_500kb/naive_500kb.eigenMT_input.txt"
 
-#Run eigenMT chromosome-by-chromosme
-cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt 
-echo "11" | python ~/software/utils/submitJobs.py --MEM 2000 --jobname rasqualToEigenMT --command "python ~/software/utils/rasqual/eigenMTbyChromosome.py --metadata_dir results/SL1344/eigenMT/input/ --QTL results/SL1344/rasqual/output/naive_500kb/naive_500kb.eigenMT_input.txt --out_prefix results/SL1344/rasqual/output/naive_500kb/naive_500kb --cis_dist 5e5"
 
 mkdir results/SL1344/rasqual/output/naive_500kb
 mv results/SL1344/rasqual/output/naive_500kb.* results/SL1344/rasqual/output/naive_500kb/
@@ -84,10 +79,6 @@ cat results/SL1344/rasqual/input/gene_batches.txt | tail -n 1200 | python ~/soft
 cp results/SL1344/rasqual/output/IFNg_500kb.batch_* results/SL1344/rasqual/output/IFNg_500kb/batches/
 echo "merge" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname mergeRasqualBatches --command "python ~/software/utils/rasqual/mergeRasqualBatches.py --prefix results/SL1344/rasqual/output/IFNg_500kb/batches/IFNg_500kb"
 
-#Convert rasqual output into format suitable for eigenMT
-echo "rasqualToEigenMT" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname rasqualToEigenMT --command "python ~/software/utils/rasqual/rasqualToEigenMT.py --rasqualOut results/SL1344/rasqual/output/IFNg_500kb/IFNg_500kb.txt > results/SL1344/rasqual/output/IFNg_500kb/IFNg_500kb.eigenMT_input.txt"
-
-
 cat results/SL1344/rasqual/input/IFNg.failed_batches.txt | python ~/software/utils/submitJobs.py --MEM 500 --jobname runRasqual_IFNg_500kb_long --queue long --command "python ~/software/utils/rasqual/runRasqual.py --readCounts results/SL1344/rasqual/input/IFNg.expression.bin  --offsets results/SL1344/rasqual/input/IFNg.gc_library_size.bin --n 69 --geneids results/SL1344/rasqual/input/feature_names.txt --vcf results/SL1344/rasqual/input/IFNg.ASE.vcf.gz --geneMetadata results/SL1344/rasqual/input/gene_snp_count_500kb.txt --outprefix results/SL1344/rasqual/output/IFNg_500kb --covariates results/SL1344/rasqual/input/IFNg.PEER_covariates_n3.bin --rasqualBin rasqual --parameters '\--force' --execute True"
 
 #SL1344
@@ -98,10 +89,6 @@ cp results/SL1344/rasqual/output/SL1344_500kb.batch_* results/SL1344/rasqual/out
 #Merge QTL calls form differnet batches
 echo "merge" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname mergeRasqualBatches --command "python ~/software/utils/rasqual/mergeRasqualBatches.py --prefix results/SL1344/rasqual/output/SL1344_500kb/batches/SL1344_500kb"
 mv results/SL1344/rasqual/output/SL1344_500kb/batches/SL1344_500kb.txt results/SL1344/rasqual/output/SL1344_500kb/
-
-#Convert rasqual output into format suitable for eigenMT
-echo "rasqualToEigenMT" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname rasqualToEigenMT --command "python ~/software/utils/rasqual/rasqualToEigenMT.py --rasqualOut results/SL1344/rasqual/output/SL1344_500kb/SL1344_500kb.txt > results/SL1344/rasqual/output/SL1344_500kb/SL1344_500kb.eigenMT_input.txt"
-
 
 
 cat results/SL1344/rasqual/input/SL1344.failed_batches.txt | python ~/software/utils/submitJobs.py --MEM 500 --jobname runRasqual_SL1344_500kb_long --queue long --command "python ~/software/utils/rasqual/runRasqual.py --readCounts results/SL1344/rasqual/input/SL1344.expression.bin  --offsets results/SL1344/rasqual/input/SL1344.gc_library_size.bin --n 69 --geneids results/SL1344/rasqual/input/feature_names.txt --vcf results/SL1344/rasqual/input/SL1344.ASE.vcf.gz --geneMetadata results/SL1344/rasqual/input/gene_snp_count_500kb.txt --outprefix results/SL1344/rasqual/output/SL1344_500kb --covariates results/SL1344/rasqual/input/SL1344.PEER_covariates_n3.bin --rasqualBin rasqual --parameters '\--force' --execute True"
@@ -114,13 +101,35 @@ cp results/SL1344/rasqual/output/IFNg_SL1344_500kb.batch_* results/SL1344/rasqua
 #Merge QTL calls form differnet batches
 echo "merge" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname mergeRasqualBatches --command "python ~/software/utils/rasqual/mergeRasqualBatches.py --prefix results/SL1344/rasqual/output/IFNg_SL1344_500kb/batches/IFNg_SL1344_500kb"
 
-#Convert rasqual output into format suitable for eigenMT
-echo "rasqualToEigenMT" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname rasqualToEigenMT --command "python ~/software/utils/rasqual/rasqualToEigenMT.py --rasqualOut results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.txt > results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.eigenMT_input.txt"
-
 
 #Rerun failed genes in the long queue
 cat results/SL1344/rasqual/input/IFNg_SL1344.failed_batches.txt | python ~/software/utils/submitJobs.py --MEM 500 --jobname runRasqual_IFNg_SL1344_500kb_long --queue long --command "python ~/software/utils/rasqual/runRasqual.py --readCounts results/SL1344/rasqual/input/IFNg_SL1344.expression.bin  --offsets results/SL1344/rasqual/input/IFNg_SL1344.gc_library_size.bin --n 69 --geneids results/SL1344/rasqual/input/feature_names.txt --vcf results/SL1344/rasqual/input/IFNg_SL1344.ASE.vcf.gz --geneMetadata results/SL1344/rasqual/input/gene_snp_count_500kb.txt --outprefix results/SL1344/rasqual/output/IFNg_SL1344_500kb --covariates results/SL1344/rasqual/input/IFNg_SL1344.PEER_covariates_n3.bin --rasqualBin rasqual --parameters '\--force' --execute True"
 
+### eigenMT ####
+#Split vcf into chromosomes
+cat ../../../macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/vcf/vcfSplitByChromosome.py --vcf imputed.86_samples.sorted.filtered.named.INFO_07.vcf.gz --outdir chromosomes_INFO_07/ --execute False
+
+#Convert vcfs to GDS
+/software/R-3.1.2/bin/Rscript ~/software/utils/vcf/vcfToGds.R --vcf-directory chromosomes_IFNO_07 --chr-list ../../../macrophage-gxe-study/data/sample_lists/chromosome_list.txt
+
+#Convert rasqual output into format suitable for eigenMT
+echo "rasqualToEigenMT" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname rasqualToEigenMT --command "python ~/software/utils/rasqual/rasqualToEigenMT.py --rasqualOut results/SL1344/rasqual/output/naive_500kb/naive_500kb.txt > results/SL1344/rasqual/output/naive_500kb/naive_500kb.eigenMT_input.txt"
+echo "rasqualToEigenMT" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname rasqualToEigenMT --command "python ~/software/utils/rasqual/rasqualToEigenMT.py --rasqualOut results/SL1344/rasqual/output/IFNg_500kb/IFNg_500kb.txt > results/SL1344/rasqual/output/IFNg_500kb/IFNg_500kb.eigenMT_input.txt"
+echo "rasqualToEigenMT" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname rasqualToEigenMT --command "python ~/software/utils/rasqual/rasqualToEigenMT.py --rasqualOut results/SL1344/rasqual/output/SL1344_500kb/SL1344_500kb.txt > results/SL1344/rasqual/output/SL1344_500kb/SL1344_500kb.eigenMT_input.txt"
+echo "rasqualToEigenMT" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname rasqualToEigenMT --command "python ~/software/utils/rasqual/rasqualToEigenMT.py --rasqualOut results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.txt > results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.eigenMT_input.txt"
+
+#Run eigenMT chromosome-by-chromosme
+cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/submitJobs.py --MEM 2000 --jobname eigenMTbyChromosome --command "python ~/software/utils/rasqual/eigenMTbyChromosome.py --metadata_dir results/SL1344/eigenMT/input/ --QTL results/SL1344/rasqual/output/naive_500kb/naive_500kb.eigenMT_input.txt --out_prefix results/SL1344/rasqual/output/naive_500kb/naive_500kb --cis_dist 5e5 --eigenMT_path ~/software/utils/rasqual/eigenMT.py"
+cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/submitJobs.py --MEM 2000 --jobname eigenMTbyChromosome --command "python ~/software/utils/rasqual/eigenMTbyChromosome.py --metadata_dir results/SL1344/eigenMT/input/ --QTL results/SL1344/rasqual/output/IFNg_500kb/IFNg_500kb.eigenMT_input.txt --out_prefix results/SL1344/rasqual/output/IFNg_500kb/IFNg_500kb --cis_dist 5e5 --eigenMT_path ~/software/utils/rasqual/eigenMT.py"
+cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/submitJobs.py --MEM 2000 --jobname eigenMTbyChromosome --command "python ~/software/utils/rasqual/eigenMTbyChromosome.py --metadata_dir results/SL1344/eigenMT/input/ --QTL results/SL1344/rasqual/output/SL1344_500kb/SL1344_500kb.eigenMT_input.txt --out_prefix results/SL1344/rasqual/output/SL1344_500kb/SL1344_500kb --cis_dist 5e5 --eigenMT_path ~/software/utils/rasqual/eigenMT.py"
+cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/submitJobs.py --MEM 2000 --jobname eigenMTbyChromosome --command "python ~/software/utils/rasqual/eigenMTbyChromosome.py --metadata_dir results/SL1344/eigenMT/input/ --QTL results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.eigenMT_input.txt --out_prefix results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb --cis_dist 5e5 --eigenMT_path ~/software/utils/rasqual/eigenMT.py"
+
+
+#Convert rasqual output into a SQLite database
+echo "sqlite" | python ~/software/utils/submitJobs.py --MEM 2000 --jobname convertToSQLite --command "python ~/software/utils/rasqual/rasqualToSQLite.py --indir results/SL1344/rasqual/output/naive_500kb/ --outdir results/SL1344/rasqual/output/naive_500kb/  --prefix naive_500kb --sqlite3_bin /software/ensembl/central/bin/sqlite3"
+echo "sqlite" | python ~/software/utils/submitJobs.py --MEM 2000 --jobname convertToSQLite --command "python ~/software/utils/rasqual/rasqualToSQLite.py --indir results/SL1344/rasqual/output/IFNg_500kb/ --outdir results/SL1344/rasqual/output/IFNg_500kb/  --prefix IFNg_500kb --sqlite3_bin /software/ensembl/central/bin/sqlite3"
+echo "sqlite" | python ~/software/utils/submitJobs.py --MEM 2000 --jobname convertToSQLite --command "python ~/software/utils/rasqual/rasqualToSQLite.py --indir results/SL1344/rasqual/output/SL1344_500kb/ --outdir results/SL1344/rasqual/output/SL1344_500kb/  --prefix SL1344_500kb --sqlite3_bin /software/ensembl/central/bin/sqlite3"
+echo "sqlite" | python ~/software/utils/submitJobs.py --MEM 2000 --jobname convertToSQLite --command "python ~/software/utils/rasqual/rasqualToSQLite.py --indir results/SL1344/rasqual/output/IFNg_SL1344_500kb/ --outdir results/SL1344/rasqual/output/IFNg_SL1344_500kb/  --prefix IFNg_SL1344_500kb --sqlite3_bin /software/ensembl/central/bin/sqlite3"
 
 
 #Run RASQUAL on a subset of genes

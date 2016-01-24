@@ -85,4 +85,6 @@ zgrep -v "#" imputed.86_samples.sorted.filtered.named.INFO_07.vcf.gz | cut -f 1,
 #Split VCF file into chromosomes
 cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/vcf/vcfSplitByChromosome.py --vcf genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.vcf.gz --outdir genotypes/SL1344/imputed_20151005/chromosomes/ 
 
+#Convert vcfs to GDS
+/software/R-3.1.2/bin/Rscript ~/software/utils/vcf/vcfToGds.R --vcf-directory chromosomes_IFNO_07 --chr-list 
 
