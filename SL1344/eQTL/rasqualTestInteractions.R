@@ -3,6 +3,8 @@ library("plyr")
 library("dplyr")
 load_all("../seqUtils/")
 library("MatrixEQTL")
+load_all("macrophage-gxe-study/housekeeping/")
+library("ggplot2")
 
 
 #### Import data ####
@@ -29,23 +31,28 @@ genotypes = vcf_file$genotypes[unique(joint_pairs$snp_id),]
 snps_pos = dplyr::filter(vcf_file$snpspos, snpid %in% rownames(genotypes))
 filtered_vcf = list(snpspos = snps_pos, genotypes = genotypes)
 
+#Prune SNPs
+filtered_pairs = filterHitsR2(joint_pairs, filtered_vcf$genotypes, .8)
+filtered_pairs = dplyr::filter(filtered_pairs, !is.na(gene_id))
+
 #Naive vs IFNg
 covariate_names = c("sex_binary", "ng_ul_mean","macrophage_diff_days","rna_auto", "max_purity_filtered", "harvest_stimulation_days",
                     "PEER_factor_1", "PEER_factor_2", "PEER_factor_3","PEER_factor_4", "PEER_factor_5","PEER_factor_6")
-
-
-#Calculate all pairwise interactions
-ifng_interactions = testInterctionsBetweenPairs(c("naive", "IFNg"), rasqual_min_hits, combined_expression_data, covariate_names, filtered_vcf) %>%
-  dplyr::filter(abs_beta_min <= 0.59, abs(beta_diff) >= 0.59)
-sl1344_interactions = testInterctionsBetweenPairs(c("naive", "SL1344"), rasqual_min_hits, combined_expression_data, covariate_names,filtered_vcf) %>%
-  dplyr::filter(abs_beta_min <= 0.59, abs(beta_diff) >= 0.59)
-ifng_sl1344_interactions = testInterctionsBetweenPairs(c("naive", "IFNg_SL1344"), rasqual_min_hits, combined_expression_data, covariate_names, filtered_vcf) %>%
-  dplyr::filter(abs_beta_min <= 0.59, abs(beta_diff) >= 0.59)
-all_interactions = rbind(ifng_sl1344_interactions, sl1344_interactions, ifng_interactions) %>%
-  dplyr::select(gene_id, snp_id) %>% unique()
+formula_qtl = as.formula(paste("expression ~ genotype + condition_name ", paste(covariate_names, collapse = " + "), sep = "+ "))
+formula_interaction = as.formula(paste("expression ~ genotype + condition_name + condition_name:genotype ", 
+                                      paste(covariate_names, collapse = " + "), sep = "+ "))
+#Test for interactions
+interaction_results = testMultipleInteractions(filtered_pairs, combined_expression_data, filtered_vcf, formula_qtl, formula_interaction)
+interaction_df = plyr::ldply(interaction_results, .id = "id") %>% 
+  tidyr::separate(id, into = c("gene_id", "snp_id"), sep = ":") %>%
+  dplyr::rename(p_nominal = V2) %>% tbl_df() %>%
+  dplyr::select(gene_id, snp_id, p_nominal) %>%
+  dplyr::mutate(p_fdr = qvalue::qvalue(p_nominal)$qvalues) %>%
+  dplyr::arrange(p_nominal)
+interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 
 #Extract effect sizes for all gene-snp pairs from RASQUAL data
-beta_matrix = extractBetasFromList(all_interactions, rasqual_selected_pvalues) %>% ungroup()
+beta_matrix = extractBetasFromList(dplyr::select(interaction_hits, gene_id, snp_id), rasqual_selected_pvalues) %>% ungroup()
 
 #Calculate maximum absolute diff in betas between conditions
 beta_diff_matrix = dplyr::select(beta_matrix, -gene_id, -snp_id)
