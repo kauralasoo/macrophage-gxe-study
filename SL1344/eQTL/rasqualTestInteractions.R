@@ -85,10 +85,7 @@ ggsave("results/SL1344/eQTLs/properties/eQTLs_appear_kmeans.pdf",appear_plot, wi
 #Calculate mean effect size in each cluster and condition
 appear_cluster_means = dplyr::group_by(appear_clusters, cluster_id, condition_name) %>% 
   dplyr::summarise(beta_mean = mean(beta), beta_sd = sd(beta))
-cluster_sizes = dplyr::select(appear_clusters, cluster_id, condition_name) %>% 
-  dplyr::filter(condition_name == "naive") %>% 
-  dplyr::group_by(cluster_id) %>% 
-  dplyr::summarise(count = length(cluster_id), condition_name = condition_name[1])
+cluster_sizes = calculateClusterSizes(appear_clusters)
 
 appear_means_plot = ggplot(appear_cluster_means, aes(x = condition_name, y = beta_mean, group = cluster_id)) + 
   geom_point() + geom_line() + facet_wrap(~cluster_id) + 
@@ -109,6 +106,14 @@ disappear_plot = ggplot(disappear_clusters, aes(x = condition_name, y = abs(beta
 ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_kmeans.pdf",disappear_plot, width = 10, height = 10)
 
 
+#Extract most associated peaks for each of the eQTL genes
+
+#Make database connections
+naive_sql <- src_sqlite("/Volumes/JetDrive/ATAC/naive_50kb.sqlite3") %>% tbl("rasqual")
+ifng_sql <- src_sqlite("/Volumes/JetDrive/ATAC/IFNg_50kb.sqlite3") %>% tbl("rasqual")
+
+sl1344_sql <- src_sqlite("~/projects/macrophage-gxe-study/databases/SL1344_500kb.sqlite3") %>% tbl("rasqual")
+ifng_sl1344_sql <- src_sqlite("~/projects/macrophage-gxe-study/databases/IFNg_SL1344_500kb.sqlite3") %>% tbl("rasqual")
 
 
 #Make plots
