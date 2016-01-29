@@ -36,7 +36,8 @@ filtered_pairs = filterHitsR2(joint_pairs, filtered_vcf$genotypes, .8)
 #Naive vs IFNg
 covariate_names = c("sex_binary", "ng_ul_mean","macrophage_diff_days","rna_auto", "max_purity_filtered", "harvest_stimulation_days",
                     "PEER_factor_1", "PEER_factor_2", "PEER_factor_3","PEER_factor_4", "PEER_factor_5","PEER_factor_6")
-formula_qtl = as.formula(paste("expression ~ genotype + condition_name ", paste(covariate_names, collapse = " + "), sep = "+ "))
+formula_qtl = as.formula(paste("expression ~ genotype + condition_name ", 
+                               paste(covariate_names, collapse = " + "), sep = "+ "))
 formula_interaction = as.formula(paste("expression ~ genotype + condition_name + condition_name:genotype ", 
                                       paste(covariate_names, collapse = " + "), sep = "+ "))
 #Test for interactions
@@ -55,13 +56,7 @@ beta_diff_matrix = cbind(beta_matrix[,c("gene_id", "snp_id")], beta_diff_matrix)
   
 #Convert Beta matrix into a df and revert signs to the sign of the maximal effect size
 beta_df = tidyr::gather(beta_matrix, condition_name, beta, naive:IFNg_SL1344)
-max_sign = dplyr::group_by(beta_df, gene_id, snp_id) %>% 
-  dplyr::arrange(-abs(beta)) %>% dplyr::filter(row_number() == 1) %>%
-  dplyr::mutate(max_sign = sign(beta)) %>% 
-  dplyr::select(gene_id, snp_id, max_sign)
-beta_correct_sign = dplyr::left_join(beta_df, max_sign, by = c("gene_id", "snp_id")) %>%
-  dplyr::arrange(gene_id, snp_id) %>% 
-  dplyr::transmute(gene_id, snp_id, condition_name, beta = beta*max_sign)
+beta_correct_sign = betaCorrectSign(beta_df)
 
 #Convert to matrix
 beta_correct_sign_matrix = tidyr::spread(beta_correct_sign, condition_name, beta)
@@ -83,8 +78,7 @@ appear_plot = ggplot(appear_clusters, aes(x = condition_name, y = beta, group = 
 ggsave("results/SL1344/eQTLs/properties/eQTLs_appear_kmeans.pdf",appear_plot, width = 10, height = 10)
 
 #Calculate mean effect size in each cluster and condition
-appear_cluster_means = dplyr::group_by(appear_clusters, cluster_id, condition_name) %>% 
-  dplyr::summarise(beta_mean = mean(beta), beta_sd = sd(beta))
+appear_cluster_means = calculateClusterMeans(appear_clusters)
 cluster_sizes = calculateClusterSizes(appear_clusters)
 
 appear_means_plot = ggplot(appear_cluster_means, aes(x = condition_name, y = beta_mean, group = cluster_id)) + 
@@ -105,13 +99,25 @@ disappear_plot = ggplot(disappear_clusters, aes(x = condition_name, y = abs(beta
   geom_line() + facet_wrap(~cluster_id)
 ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_kmeans.pdf",disappear_plot, width = 10, height = 10)
 
+#Calculate mean effect size in each cluster and condition
+disappear_cluster_sizes = calculateClusterSizes(disappear_clusters, selected_condition = "IFNg_SL1344") %>% 
+  dplyr::filter(count > 10)
+disappear_cluster_means = calculateClusterMeans(disappear_clusters) %>%
+  dplyr::semi_join(disappear_cluster_sizes, by = "cluster_id")
+
+disappear_means_plot = ggplot(disappear_cluster_means, aes(x = condition_name, y = beta_mean, group = cluster_id)) + 
+  geom_point() + geom_line() + facet_wrap(~cluster_id) + 
+  geom_errorbar(aes(ymin = beta_mean - beta_sd, ymax = beta_mean + beta_sd, width = .2)) + 
+  geom_text(aes(label = paste("n = ", count, sep = ""), x = condition_name, y = 1.5), data = disappear_cluster_sizes) +
+  xlab("Condition") + 
+  ylab("Log2 fold-change")
+ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_cluster_means.pdf",disappear_means_plot, width = 6, height = 6)
 
 #Extract most associated peaks for each of the eQTL genes
 
 #Make database connections
 naive_sql <- src_sqlite("/Volumes/JetDrive/ATAC/naive_50kb.sqlite3") %>% tbl("rasqual")
 ifng_sql <- src_sqlite("/Volumes/JetDrive/ATAC/IFNg_50kb.sqlite3") %>% tbl("rasqual")
-
 sl1344_sql <- src_sqlite("~/projects/macrophage-gxe-study/databases/SL1344_500kb.sqlite3") %>% tbl("rasqual")
 ifng_sl1344_sql <- src_sqlite("~/projects/macrophage-gxe-study/databases/IFNg_SL1344_500kb.sqlite3") %>% tbl("rasqual")
 
