@@ -5,13 +5,12 @@ load_all("../seqUtils/")
 
 #Import atac data list
 atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
-atac_list$sample_metadata = dplyr::mutate(atac_list$sample_metadata, genotype_id = ifelse(genotype_id == "HPSI1213i-nusw_2", "HPSI1213i-nusw_1", genotype_id)) #Fix this temportary bug in genotypes vcf file
 
 #Extract separate lists for each condition
-naive_list = extractConditionFromExpressionList(atac_list, "naive")
-IFNg_list = extractConditionFromExpressionList(atac_list, "IFNg")
-SL1344_list = extractConditionFromExpressionList(atac_list, "SL1344")
-IFNg_SL1344_list = extractConditionFromExpressionList(atac_list, "IFNg_SL1344")
+naive_list = extractConditionFromExpressionList("naive", atac_list)
+IFNg_list = extractConditionFromExpressionList("IFNg", atac_list)
+SL1344_list = extractConditionFromExpressionList("SL1344", atac_list)
+IFNg_SL1344_list = extractConditionFromExpressionList("IFNg_SL1344", atac_list)
 atac_conditions = list(naive = naive_list, IFNg = IFNg_list, SL1344 = SL1344_list, IFNg_SL1344 = IFNg_SL1344_list)
 
 #Save expression data for PEER and run PEER outside of R
@@ -55,10 +54,10 @@ cov_matrix = cov_matrix[colnames(atac_list$counts),]
 atac_list$covariates = t(cov_matrix)
 
 #Extract separate lists for each condition
-naive_list = extractConditionFromExpressionList(atac_list, "naive")
-IFNg_list = extractConditionFromExpressionList(atac_list, "IFNg")
-SL1344_list = extractConditionFromExpressionList(atac_list, "SL1344")
-IFNg_SL1344_list = extractConditionFromExpressionList(atac_list, "IFNg_SL1344")
+naive_list = extractConditionFromExpressionList("naive", atac_list)
+IFNg_list = extractConditionFromExpressionList("IFNg", atac_list)
+SL1344_list = extractConditionFromExpressionList("SL1344", atac_list)
+IFNg_SL1344_list = extractConditionFromExpressionList("IFNg_SL1344", atac_list)
 atac_conditions = list(naive = naive_list, IFNg = IFNg_list, SL1344 = SL1344_list, IFNg_SL1344 = IFNg_SL1344_list)
 
 #Rename column names to genotype ids
@@ -109,23 +108,21 @@ sg_map = lapply(atac_conditions_renamed, function(x){ dplyr::select(x$sample_met
 saveFastqtlMatrices(sg_map,"results/ATAC/rasqual/input/", file_suffix = "sg_map", col_names = FALSE)
 
 #Count overlaps between SNPs and peaks
-snp_coords = read.table("results/ATAC/rasqual/input/imputed.69_samples.snp_coords.txt", stringsAsFactors = FALSE)
+snp_coords = read.table("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.snp_coords.txt", stringsAsFactors = FALSE)
 colnames(snp_coords) = c("chr", "pos", "snp_id")
 peak_snp_count = seqUtils::countSnpsOverlapingPeaks(atac_list$gene_metadata, snp_coords, cis_window = 500000)
 peak_snp_count_2kb = seqUtils::countSnpsOverlapingPeaks(atac_list$gene_metadata, snp_coords, cis_window = 2000)
 peak_snp_count_50kb = seqUtils::countSnpsOverlapingPeaks(atac_list$gene_metadata, snp_coords, cis_window = 50000)
+peak_snp_count_100kb = seqUtils::countSnpsOverlapingPeaks(atac_list$gene_metadata, snp_coords, cis_window = 100000)
+
 write.table(peak_snp_count, "results/ATAC/rasqual/input/peak_snp_count_500kb.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 write.table(peak_snp_count_2kb, "results/ATAC/rasqual/input/peak_snp_count_2kb.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 write.table(peak_snp_count_50kb, "results/ATAC/rasqual/input/peak_snp_count_50kb.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(peak_snp_count_100kb, "results/ATAC/rasqual/input/peak_snp_count_100kb.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 
-#Extract sample offsests
-library_size_list = lapply(atac_conditions_renamed, rasqualSizeFactorsMatrix, "library_size")
-saveRasqualMatrices(library_size_list, "results/ATAC/rasqual/input/", file_suffix = "library_size")
-
-# Correct for GC bias (Does not seem to improve QTL detection)
-gc_vector = atac_conditions_renamed$naive$gene_metadata$percentage_gc_content
-norm_gccor_list = lapply(counts_list, rasqualGcCorrection, gc_vector)
-saveRasqualMatrices(norm_gccor_list, "results/ATAC/rasqual/input/", file_suffix = "lib_size_gc")
+#Export GC-corrected library sizes
+gc_library_size_list = lapply(counts_list, rasqualCalculateSampleOffsets, atac_conditions_renamed[[1]]$gene_metadata)
+saveRasqualMatrices(gc_library_size_list, "results/ATAC/rasqual/input/", file_suffix = "gc_library_size")
 
 #Save peak names to disk
 peak_names = rownames(atac_list$counts)
