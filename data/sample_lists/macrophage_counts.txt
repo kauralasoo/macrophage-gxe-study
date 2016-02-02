@@ -256,12 +256,12 @@ fpdl_1
 | 17/09/14 | No |  |  |
 | Missing dates? | No |  |  |
 | 06/10/14 | Yes | 0.6e6| 4w@150k for Salmonella |
-| 21/10/14 | Yes | ~1e6| 1x10cm for flow. Terminated. |
+| 21/10/14 | Yes | 1e6| 1x10cm for flow. Terminated. |
 ffdm_3
 | 12/09/14 |  |  | Commence Week1 - Only 2x10cm |
 | 06/10/14 | Yes | 5.9e6 | 8w@150k for Salmonella |
 | 15/10/14 |  |  |  |
-| 21/10/14 | Yes | 2.5e6 (from 1 plate)| 1x10cm for flow. Terminated. |
+| 21/10/14 | Yes | 5e6| 1x10cm for flow. Terminated. |
 oeoo_2
 | 16/08/14 |  |  | Commence Week1  |
 | 22/08/14 | No |  |  |
@@ -271,6 +271,7 @@ oeoo_2
 | 06/10/14 | Yes | 7.5e6 | 8w@150k for Salmonella |
 | 28/10/14 | No |  | Terminated |
 giuo_4
+| 10/10/14 |  |  | Commence Week1 |
 | 16/10/14 | No |  |   |
 | 21/10/14 | No |  |  |
 | 25/10/14 | No |  |   |
@@ -278,7 +279,7 @@ giuo_4
 | 04/11/14 | Yes |  5.825e6  | 4w + 2x10cm |
 | 13/11/14 |  |  | Terminated  |
 oarz_2
-| /09/14 | | | Commence Week1.  |
+| 06/10/14 | | | Commence Week1  |
 | 15/10/14 | No |  |   |
 | 20/10/14 | No |  |    |
 | 25/10/14 | No |  |   |
@@ -286,10 +287,11 @@ oarz_2
 | 04/11/14 | Yes |  7.4e6  | 4w + 2x10cm |
 | 13/11/14 |  |  | Terminated  |
 golb_1
+| 12/09/14 | | | Commence Week1 | 
 | 06/10/14 | No |  |  |
 | 11/10/14 | No |  |      |
-| 15/10/14 | Yes | 3.47*e6 | 8w@150k for Salmonella |
-| 21/10/14 | Yes | 4.68*e6 | 1x10cm@1M for flow |
+| 15/10/14 | Yes | 3.47e6 | 8w@150k for Salmonella |
+| 21/10/14 | Yes | 4.68e6 | 1x10cm@1M for flow |
 | 25/10/14 | No |  |   |
 | 30/10/14 | No |  |  |
 | 04/11/14 | Yes |  1.875e6  | 4w + 1x10cm |
@@ -299,13 +301,14 @@ gomv_3
 | 16/09/14 |  |  | Commence Week1  |
 | 06/10/14 | No |  |  |
 | 11/10/14 | No |  |      |
-| 15/10/14 | Yes | 2.15*e6 | 8w@150k for Salmonella |
-| 21/10/14 | Yes | 5.26*e6 | 1x10cm@1M for flow |
+| 15/10/14 | Yes | 2.15e6 | 8w@150k for Salmonella |
+| 21/10/14 | Yes | 5.26e6 | 1x10cm@1M for flow |
 | 25/10/14 | No |  | |
 | 30/10/14 | No |  |  |
 | 04/11/14 | Yes |  6.525e6  | 4w + 1x10cm |
 | 14/11/14 |  |  | Terminated  |
 cuau_2
+| 27/09/14 | | | Commence Week1 | 
 | 3/10/14 | No  |  |   |
 | 8/10/14 | No | | |
 | 12/10/14 | No |  |  |
@@ -344,6 +347,7 @@ zuta_1
 | 14/11/14 | Yes  | 6.275e6 | Plated 8w  |
 | 25/11/14 | |  | Terminated  |
 cehw_3
+| 11/10/14 | | | Commence Week1 | 
 | 15/10/14 | No |  |   |
 | 20/10/14 | No |  |    |
 | 25/10/14 | No |  | Lots of dead cells. |
@@ -355,6 +359,7 @@ cehw_3
 | 19/11/14 |Yes | 5.875e6 | Plated 8w  |
 | 27/11/14 |   |  | Terminated  |
 coio_2
+| 11/10/14 | | | Commence Week1 | 
 | 15/10/14 | No |  |   |
 | 20/10/14 | No |  |    |
 | 25/10/14 | No |  | Lots of dead cells. |
@@ -474,7 +479,7 @@ piun_3
 | 24/11/14 | No |    |  |
 | 28/11/14 | Yes | 1.125e6   | Plated 1x10cm |
 | 19/12/14 | No |    | Terminated |
-piun_3 repeat
+piun_3
 | 31/01/15 | | | Commence Week1 |
 | 06/02/15 | No |   |  |
 | 13/02/15 | No |  |  |
@@ -533,7 +538,7 @@ nusw_2
 | 25/03/15 | Yes  | 1.73e6  |  Plated 8w @ 150k/well |
 | 31/03/15 | Yes | 3.875e6 |Plated  |
 | 07/04/15 | No |  |  |
-| 10/04/15 | Yes | 3.025e6 | Given to Subho |
+| 10/04/15 | Yes | 3.025e6 | Given to Subho. Terminated |
 cups_3
 | 27/02/15 | | | Commence Week1 |
 | 05/03/15 | No |   |  |
@@ -555,7 +560,7 @@ bubh_1
 | 30/03/15 | No |   |  |
 | 02/04/15 | No |   |  |
 | 07/04/15 | Yes | 1.45e6  | Plated 1x10cm for flow |
-| 10/04/15 | Yes | 3.075e6  | Plated 4w for ATAC; Given to Subho  |
+| 10/04/15 | Yes | 3.075e6  | Plated 4w for ATAC; Given to Subho. Terminated. |
 uimo_1
 | 24/02/15 | | | Commence Week1 |
 | 02/03/15 | No |  |  |
@@ -567,7 +572,7 @@ uimo_1
 | 30/03/15 | No |   |  |
 | 02/04/15 | No |   |  |
 | 07/04/15 | Yes | 13.575e6  | Plated 1x10cm for flow  |
-| 10/04/15 | Yes | 7.35e6  | Plated 4w for ATAC; Given to Subho |
+| 10/04/15 | Yes | 7.35e6  | Plated 4w for ATAC; Given to Subho. Terminated. |
 ruyv_1
 | 02/03/15 | | | Commence Week1 |
 | 09/03/15 | No |   |  |
@@ -990,7 +995,7 @@ fikt_3
 | 23/10/15 | No |  |   |
 | 28/10/15 | Yes | 8.55e6 | Plated for KA + JR + flow  |
 | 05/11/15 | No |  | Terminated. Given to Subho  |
-| 11/11/15 | Yes | 920000 | Plated 2w to repeat ATAC. Given back to Subho  |
+| 11/11/15 | Yes | 920000 | Plated 2w to repeat ATAC. Given back to Subho. |
 coyi_3
 | 30/09/15 | | | Commence Week1 |
 | 05/10/15 | No |   |  |
@@ -1105,7 +1110,7 @@ leeh_3
 | 08/09/14 | Yes |   | Not able to count - plated 2w |
 | 12/09/14 | No |  | Dead cells>Progenitors |
 | 06/10/14 | No |  | Terminated |
-leeh_3 repeat
+leeh_3
 | 02/02/15 | | | Commence Week1 |
 | 08/02/15 | No |   |  |
 | 13/02/15 | No |  |  |
@@ -1120,7 +1125,7 @@ koun_2
 | 11/09/14 | No |  |  |
 | 17/09/14 | No |  |  |
 | 11/10/14 | No |  | Terminated |
-koun_2 repeat
+koun_2
 | 31/01/15 | | | Commence Week1 |
 | 06/02/15 | No |   |  |
 | 13/02/15 | No |  |  |
@@ -1138,7 +1143,7 @@ vopm_2
 | 06/10/14 | Yes | 1.04e6 | 6w@150k for Salmomella |
 | 11/10/14 | No |  |      |
 | 21/10/14 | No |  | Terminated. Too few cells to perform assays.  |
-vopm_2 repeat
+vopm_2
 | 30/01/15 | | | Commence Week1 |
 | 04/02/15 | No |   |  |
 | 10/02/15 | No |  |  |
@@ -1162,6 +1167,7 @@ uahf_3
 | 24/11/14 | Yes | 460k | Didn't plate. |
 | 28/11/14 | Yes | 500k   | Didn't plate. Terminated. |
 focm_1
+| 11/10/14 | |  | Commence Week1 |
 | 15/10/14 | No |  |   |
 | 20/10/14 | No |  |    |
 | 25/10/14 | No |  | Lots of dead cells. |
@@ -1172,7 +1178,7 @@ focm_1
 | 14/11/14 | No  |  |   |
 | 19/11/14 | No  |  |   |
 | 27/11/14 |   |  | Terminated  |
-focm_1 repeat
+focm_1
 | 30/01/15 | | | Commence Week1 |
 | 04/02/15 | No |   |  |
 | 10/02/15 | No |  |  |
@@ -1417,3 +1423,36 @@ uofv_1
 | 27/10/15 | No |  |   |
 | 02/11/15 | No |  |   |
 | 05/11/15 | Yes |  |  Mostly dead cells - didn't plate. Terminated  |
+eiwy_1
+| 23/10/15 | | | Commence Week1 |
+| 28/10/15 | No |   |  |
+| 02/11/15 | No |  |   |
+| 06/11/15 | No |  |   |
+| 11/11/15 | No |  |   |
+| 16/11/15 | No |  |   |
+| 20/11/15 | Yes | 2.675e6 | Plated 4w + 2x10cm  |
+| 25/11/15 | Yes | 5.025e6 | Plated 12w |
+| 04/12/15 | Yes | 10.075e6 | Plated 1x10cm. Terminated  |
+babk_2
+| 29/10/14 | | | Commence Week1.  |
+| 04/11/14 | No |  |   |
+| 10/11/14 | No |  |   |
+| 14/11/14 | No  |  | |
+| 19/11/14 | No  |  |   |
+| 24/11/14 | No |    |  |
+| 27/11/14 | No |    |  |
+| 01/12/14 | Yes |    | Plated 4w@150k + 1x10cm |
+| 19/12/14 | No |    | Terminated |
+zaui_3
+| 11/10/15 | | | Commence Week1 |
+| 16/10/15 | No |   |  |
+| 21/10/15 | No |  |  |
+| 27/10/15 | No |  |   |
+| 30/10/15 | No |  |  |
+| 05/11/15 | No |  |   |
+| 11/11/15 | Yes | 1.9e6 | Plated 12w for KA  |
+| 16/11/15 | No |  |   |
+| 20/11/15 | Yes | 3.1e6 | Plated 4w + 2x10cm  |
+| 25/11/15 | Yes | 4.45e6 | Plated 12w |
+| 04/12/15 | No |  | Terminated  |
+
