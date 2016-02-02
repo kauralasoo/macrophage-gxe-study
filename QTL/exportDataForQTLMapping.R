@@ -2,6 +2,7 @@ library("devtools")
 library("cqn")
 library("dplyr")
 load_all("../seqUtils/")
+library("readr")
 
 #Import atac data list
 atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
@@ -143,4 +144,19 @@ atac_batches = seqUtils::rasqualConstructGeneBatches(atac_list$gene_metadata, 15
 write.table(atac_batches, "results/ATAC/rasqual/input/all_peak_batches.txt", 
             row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
 
+#Make new batches of failed peaks
+naive_failed_batches = readr::read_csv("results/ATAC/rasqual/output/naive_100kb/naive_100kb.completed_ids.txt", col_names = "gene_id") %>%
+  dplyr::anti_join(peak_snp_count_100kb, ., by = "gene_id") %>%
+  rasqualOptimisedGeneBatches(c(10,10,1,1))
+write.table(naive_failed_batches, "results/ATAC/rasqual/input/naive_failed_batches.txt", 
+            row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
 
+IFNg_failed_batches = readr::read_csv("results/ATAC/rasqual/output/IFNg_100kb/IFNg_100kb.completed_ids.txt", col_names = "gene_id") %>%
+  dplyr::anti_join(peak_snp_count_100kb, ., by = "gene_id") %>%
+  rasqualOptimisedGeneBatches(c(10,10,1,1))
+write.table(IFNg_failed_batches, "results/ATAC/rasqual/input/IFNg_failed_batches.txt", 
+            row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
+
+IFNg_failed_batches = readr::read_csv("results/ATAC/rasqual/output/SL1344_100kb/SL1344_100kb.completed_ids.txt", col_names = "gene_id") %>%
+  dplyr::anti_join(peak_snp_count_100kb, ., by = "gene_id") %>%
+  rasqualOptimisedGeneBatches(c(10,10,1,1))
