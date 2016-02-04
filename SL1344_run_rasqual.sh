@@ -125,7 +125,7 @@ cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/softwa
 cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/submitJobs.py --MEM 2000 --jobname eigenMTbyChromosome --command "python ~/software/utils/rasqual/eigenMTbyChromosome.py --metadata_dir results/SL1344/eigenMT/input/ --QTL results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.eigenMT_input.txt --out_prefix results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb --cis_dist 5e5 --eigenMT_path ~/software/utils/rasqual/eigenMT.py"
 
 #Concat all eigenMT outputs
-cat results/SL1344/rasqual/output/naive_500kb/naive_500kb.chr_*.eigenMT.txt | tail -n -1 > results/SL1344/rasqual/output/naive_500kb/naive_500kb.eigenMT.txt
+cat results/SL1344/rasqual/output/naive_500kb/naive_500kb.chr_*.eigenMT.txt > results/SL1344/rasqual/output/naive_500kb/naive_500kb.eigenMT.txt
 cat results/SL1344/rasqual/output/IFNg_500kb/IFNg_500kb.chr_*.eigenMT.txt > results/SL1344/rasqual/output/IFNg_500kb/IFNg_500kb.eigenMT.txt
 cat results/SL1344/rasqual/output/SL1344_500kb/SL1344_500kb.chr_*.eigenMT.txt > results/SL1344/rasqual/output/SL1344_500kb/SL1344_500kb.eigenMT.txt
 cat results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.chr_*.eigenMT.txt > results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.eigenMT.txt

@@ -115,12 +115,46 @@ ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_cluster_means.pdf",disap
 
 #Extract most associated peaks for each of the eQTL genes
 
-#Make database connections
-naive_sql <- src_sqlite("/Volumes/JetDrive/ATAC/naive_50kb.sqlite3") %>% tbl("rasqual")
-ifng_sql <- src_sqlite("/Volumes/JetDrive/ATAC/IFNg_50kb.sqlite3") %>% tbl("rasqual")
-sl1344_sql <- src_sqlite("~/projects/macrophage-gxe-study/databases/SL1344_500kb.sqlite3") %>% tbl("rasqual")
-ifng_sl1344_sql <- src_sqlite("~/projects/macrophage-gxe-study/databases/IFNg_SL1344_500kb.sqlite3") %>% tbl("rasqual")
+gene_name_map =  dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name)
+appear_hits = dplyr::left_join(appear_qtls, gene_name_map, by = "gene_id")
 
+#Make database connections
+naive_sql <- src_sqlite("~/projects/macrophage-chromatin/naive_100kb.sqlite3") %>% tbl("rasqual")
+ifng_sql <- src_sqlite("~/projects/macrophage-chromatin/IFNg_100kb.sqlite3") %>% tbl("rasqual")
+sl1344_sql <- src_sqlite("~/projects/macrophage-chromatin/SL1344_100kb.sqlite3") %>% tbl("rasqual")
+ifng_sl1344_sql <- src_sqlite("~/projects/macrophage-chromatin/IFNg_SL1344_100kb.sqlite3") %>% tbl("rasqual")
+
+
+#naive_sql <- src_sqlite("/Volumes/JetDrive/ATAC/naive_50kb.sqlite3") %>% tbl("rasqual")
+#ifng_sql <- src_sqlite("/Volumes/JetDrive/ATAC/IFNg_50kb.sqlite3") %>% tbl("rasqual")
+
+#Fetch p-value for all SNPs
+naive_hits = fetchMultipleSNPs(appear_qtls, naive_sql)
+IFNg_hits = fetchMultipleSNPs(appear_qtls, ifng_sql)
+
+ifng_qtls = dplyr::filter(appear_clusters, cluster_id %in% c(4,5)) %>% dplyr::select(gene_id, snp_id) %>% unique()
+
+ifng_effect_sizes = dplyr::semi_join(IFNg_hits, ifng_qtls, by = "snp_id") %>% tbl_df() %>% 
+  dplyr::group_by(snp_id) %>% dplyr::arrange(desc(chisq)) %>% 
+  dplyr::filter(row_number() == 1) %>% dplyr::select(gene_id, snp_id, p_nominal, beta) %>% ungroup() %>%
+  dplyr::mutate(p_fdr = p.adjust(p_nominal, "fdr")) %>%
+  dplyr::filter(p_nominal < 1e-4) %>%
+  dplyr::mutate(condition_name = "naive")
+naive_effect_sizes = dplyr::semi_join(naive_hits, ifng_effect_sizes, by = c("gene_id", "snp_id")) %>%
+  dplyr::select(gene_id, snp_id, p_nominal, beta) %>%
+  dplyr::mutate(p_fdr = p_nominal, condition_name = "IFNg")
+
+a = dplyr::left_join(naive_effect_sizes, ifng_effect_sizes, by = c("gene_id", "snp_id"))
+a = dplyr::left_join(naive_effect_sizes, ifng_effect_sizes, by = c("gene_id", "snp_id"))
+plot(a$beta.x, a$beta.y)
+
+a = rbind(naive_effect_sizes, ifng_effect_sizes) %>% dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg")))
+ggplot(a, aes(x = condition_name, y = abs(beta), group = snp_id)) + geom_point() + geom_line()
+
+ifng_qtls1 = dplyr::filter(appear_clusters, cluster_id %in% c(4,5)) %>%
+  dplyr::filter(condition_name %in% c("naive","IFNg")) %>%
+  dplyr::semi_join(a, by = "snp_id")
+ggplot(ifng_qtls1, aes(x = condition_name, y = abs(beta), group = snp_id)) + geom_point() + geom_line()
 
 #Make plots
 makeMultiplePlots(ifng_interactions, combined_expression_data$cqn,filtered_vcf$genotypes,combined_expression_data$sample_metadata,combined_expression_data$gene_metadata) %>%
