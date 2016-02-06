@@ -30,7 +30,7 @@ joint_pairs = dplyr::select(min_pvalues_df, gene_id, snp_id) %>% unique()
 
 
 #Extract p-values for all peaks that had significant QTLs
-naive_pvalues = fetchMultipleGeneSNPPairs(joint_pairs[1,], naive_sql)
+naive_pvalues = fetchMultipleGeneSNPPairs(joint_pairs, naive_sql)
 naive_pvalues = fetchMultipleGenes(joint_pairs[1,], naive_sql)
 
 ifng_pvalues = fetchMultipleGenes(joint_pairs, ifng_sql)
