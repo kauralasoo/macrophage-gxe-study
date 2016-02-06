@@ -43,8 +43,8 @@ line_data = dplyr::mutate(line_data, harvest_stimulation_days = as.numeric(salmo
 
 #Remove flow purity for samples were flow was done more than 2 weeks after RNA extraction
 line_data = dplyr::mutate(line_data, 
-              max_purity_filtered = ifelse(as.numeric(line_data$flow_date - line_data$salmonella) > 14, NA, max_purity),
-              mean_purity_filtered = ifelse(as.numeric(line_data$flow_date - line_data$salmonella) > 14,NA,mean_purity)) %>%
+              max_purity_filtered = ifelse(as.numeric(line_data$flow_date - line_data$salmonella_date) > 14, NA, max_purity),
+              mean_purity_filtered = ifelse(as.numeric(line_data$flow_date - line_data$salmonella_date) > 14,NA,mean_purity)) %>%
   dplyr::mutate(purity_bins = ifelse(max_purity < 0.98, "low", "high"))
 
 #Save results to disk

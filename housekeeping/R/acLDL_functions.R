@@ -3,7 +3,7 @@ constructDesignMatrix_acLDL <- function(sample_ids){
   
   design = data.frame(sample_id = sample_ids, stringsAsFactors = FALSE)
   design = design %>% 
-    tidyr::separate(sample_id, into = c("donor", "time_point", "condition"), remove = FALSE) %>% 
+    tidyr::separate(sample_id, into = c("donor", "time_point", "condition"), remove = FALSE, extra = "merge") %>% 
     dplyr::mutate(donor = tolower(donor))
   rownames(design)= design$sample_id
   return(design)
