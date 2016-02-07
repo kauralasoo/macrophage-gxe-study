@@ -1,6 +1,6 @@
 library("devtools")
 library("dplyr")
-load_all("macrophage-gxe-study/seqUtils/")
+load_all("../seqUtils/")
 
 #Load verifyBamId results from disk
 sample_names = read.table("macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_all.txt", sep ="\t",comment.char = "", stringsAsFactors = FALSE)[,1]
