@@ -9,27 +9,16 @@ load_all("../seqUtils/")
 #Load processed expression data from disk
 dataset = readRDS("results/acLDL/acLDL_combined_expression_data.rds")
 
-#Load gene metadata
-metadata = readRDS("annotations/Homo_sapiens.GRCh38.79.transcript_data.rds")
-gene_data = dplyr::select(metadata, ensembl_gene_id, external_gene_name, gene_biotype) %>% unique() %>%
-  dplyr::rename(gene_id = ensembl_gene_id, gene_name = external_gene_name)
-
-#Remove outlier samples xegx and nusw
-filtered_design = dplyr::filter(dataset$design, !(donor %in% c("xegx")))
-rownames(filtered_design) = filtered_design$sample_id
-filtered_exprs_cqn = dataset$exprs_cqn[,filtered_design$sample_id]
-filtered_counts = dataset$exprs_counts[,filtered_design$sample_id]
-
 #Find expressed genes
-cqn_expressed_genes = names(which(rowMeans(filtered_exprs_cqn) > 0))
-cqn_expressed = filtered_exprs_cqn[cqn_expressed_genes,]
+cqn_expressed_genes = names(which(rowMeans(dataset$cqn) > 0))
+cqn_expressed = dataset$cqn[cqn_expressed_genes,]
 
 #Make heatmap of gene expression
 cor_matrix = cor(cqn_expressed, method = "spearman")
 heatmap.2(cor_matrix, margins = c(12,12))
 
 #Perform PCA
-pca_list = performPCA(cqn_expressed, dataset$design)
+pca_list = performPCA(cqn_expressed, dataset$sample_metadata)
 ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = condition, label = sample_id)) + 
   geom_point() +
   geom_text()

@@ -37,7 +37,6 @@ HPSI0114i-joxm_1
 HPSI0713i-kaks_3
 HPSI1013i-kuxp_1
 HPSI0813i-meqo_3
-HPSI1013i-mijn_2
 HPSI0713i-nemb_1
 HPSI1113i-nibo_2
 HPSI0613i-nukw_1
@@ -64,7 +63,6 @@ HPSI0114i-vass_1
 HPSI0513i-veqz_6
 HPSI0813i-voas_2
 HPSI0613i-vorx_1
-HPSI0513i-xegx_2
 HPSI0613i-xucm_3
 HPSI0314i-xugn_1
 HPSI1013i-yemz_1

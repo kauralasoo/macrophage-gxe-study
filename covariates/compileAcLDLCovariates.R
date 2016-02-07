@@ -16,7 +16,8 @@ acLDL_dat = read.csv("macrophage-gxe-study/data/sample_lists/acLDL/acLDL_line_da
 #Join tables together
 line_data = dplyr::left_join(line_data, acLDL_dat, by = c("line_id", "replicate")) %>% 
   dplyr::filter(!is.na(acLDL_date)) %>%
-  dplyr::arrange(line_id)
+  dplyr::arrange(line_id) %>%
+  dplyr::select(-comment)
 
 #Calculate duration of differentiation and make bins of 10 days
 line_data = dplyr::mutate(line_data, macrophage_diff_days = as.numeric(acLDL_date - EB_formation)) %>%
@@ -27,14 +28,10 @@ line_data = dplyr::mutate(line_data, macrophage_diff_days = as.numeric(acLDL_dat
 line_data = dplyr::mutate(line_data, 
                           max_purity_filtered = ifelse(as.numeric(line_data$flow_date - line_data$acLDL_date) > 14, NA, max_purity),
                           mean_purity_filtered = ifelse(as.numeric(line_data$flow_date - line_data$acLDL_date) > 14,NA,mean_purity)) %>%
-  dplyr::mutate(purity_bins = ifelse(max_purity < 0.98, "low", "high"))
+  dplyr::mutate(purity_bins = ifelse(max_purity_filtered < 0.98, "low", "high"))
 
 #Save results to disk
 saveRDS(line_data, "macrophage-gxe-study/data/covariates/compiled_acLDL_metadata.rds")
 write.table(line_data, "macrophage-gxe-study/data/covariates/compiled_acLDL_metadata.txt", row.names = FALSE, sep = "\t", quote = FALSE)
-
-#Save genotype list to disk
-write.table(line_data$genotype_id, "macrophage-gxe-study/data/sample_lists/acLDL/acLDL_gt_list.txt", 
-            quote = FALSE, row.names = FALSE, col.names = FALSE)
 
 

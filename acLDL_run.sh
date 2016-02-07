@@ -102,4 +102,18 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python ~/software/utils/runPEER.py --input results/acLDL/PEER/input//AcLDL.exprs.txt --outdir results/acLDL/PEER/AcLDL_10/ --n_factors 10"
 
 
+#### Count ASE ####
+#Add read group to the BAM files to make them work with GATK
+cat macrophage-gxe-study/data/sample_lists/acLDL/acLDL_sample_gt_map.txt | head -n 100 | tail -n 99 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bamAddRG --command "python ~/software/utils/bam/bamAddRG.py --indir STAR/acLDL --outdir STAR/acLDL --insuffix .Aligned.sortedByCoord.out.bam --outsuffix .Aligned.sortedByCoord.RG.bam --execute True"
+cat macrophage-gxe-study/data/sample_lists/acLDL/acLDL_sample_gt_map.txt | tail -n 50 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bamAddRG --command "python ~/software/utils/bam/bamAddRG.py --indir STAR/acLDL --outdir STAR/acLDL --insuffix .Aligned.sortedByCoord.out.bam --outsuffix .Aligned.sortedByCoord.RG.bam --execute True"
+#Index bams
+cut -f1 macrophage-gxe-study/data/sample_lists/acLDL/acLDL_sample_gt_map.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname index_bams --command  "python ~/software/utils/bam/index-bams.py --bamdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.RG.bam --execute True"
+
+#Index the vcf file
+tabix -p vcf genotypes/acLDL/imputed_20151005/imputed.70_samples.snps_only.vcf.gz
+bcftools index genotypes/acLDL/imputed_20151005/imputed.70_samples.snps_only.vcf.gz
+
+#Use ASEReadCounter to count allele-specific expression
+cut -f1 macrophage-gxe-study/data/sample_lists/acLDL/acLDL_sample_gt_map.txt | python ~/software/utils/submitJobs.py --MEM 10000 --jobname bamCountASE --command "python ~/software/utils/rasqual/bamCountASE.py --indir STAR/SL1344 --outdir STAR/SL1344 --insuffix .Aligned.sortedByCoord.RG.bam --reference ../../annotations/GRCh38/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sites genotypes/SL1344/imputed_20151005/imputed.86_samples.snps_only.vcf.gz --execute True --Xmx 8g"
+
 
