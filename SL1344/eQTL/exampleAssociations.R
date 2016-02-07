@@ -1,6 +1,12 @@
 #Import expression data
-eqtl_data_list = readRDS("results/SL1344/eqtl_data_list.rds")
-gene_id_name_map = dplyr::select(eqtl_data_list$gene_metadata, gene_id, gene_name)
+combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
+combined_expression_data$gene_metadata = dplyr::rename(combined_expression_data$gene_metadata, 
+                                                       chr = chromosome_name, start = start_position, end = end_position)
+combined_expression_data$sample_metadata$condition_name = factor(combined_expression_data$sample_metadata$condition_name, 
+                                                                 levels = c("naive", "IFNg", "SL1344", "IFNg_SL1344"))
+
+gene_id_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name)
+
 
 #Import ATAC data
 atac_list = readRDS("../macrophage-chromatin/results/ATAC/ATAC_combined_accessibility_data.rds")
@@ -12,12 +18,12 @@ atac_sample_meta = dplyr::left_join(atac_list$design, donor_geno_map, by = "dono
   dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344","IFNg_SL1344")))
 
 #Import genotypes
-vcf_file = readRDS("results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.rds")
+vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
 #### Focus on the CTSC locus ####
 #Make a QTL plot for the gene
-ctsc_plot = plotEQTL("ENSG00000109861", "rs11019479", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
-                     eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
+ctsc_plot = plotEQTL("ENSG00000144227", "rs12621644", combined_expression_data$cqn, vcf_file$genotypes, 
+                     combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
 ggsave("results/SL1344/eQTLs/example_loci/CTSC/CTSC_eQTL.pdf", ctsc_plot, width = 7, height = 7)
 
 #Make a QTL plot for the ATAC peak
