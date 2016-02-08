@@ -2,6 +2,14 @@ library("plyr")
 library("dplyr")
 library("devtools")
 load_all("../seqUtils/")
+library("Rsamtools")
+
+#Import data
+atac_list = readRDS("../macrophage-chromatin/results/ATAC/ATAC_combined_accessibility_data.rds")
+
+#Import SNP coordinates
+snp_coords = read.table("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.snp_coords.txt", stringsAsFactors = FALSE)
+colnames(snp_coords) = c("chr", "pos", "snp_id")
 
 #Extract minimal p-value for each condition
 naive_eigen_pvalue = eigenMTImportResults("results/ATAC/rasqual/output/naive_100kb/naive_50kb.eigenMT.txt")
@@ -41,3 +49,17 @@ selected_pvalue_list = list(naive = naive_pvalues,
                        SL1344 = sl1344_pvalues,
                        IFNg_SL1344 = ifng_sl1344_pvalues)
 saveRDS(selected_pvalue_list, "results/ATAC/QTLs/rasqual_selected_pvalues.rds")
+
+#Use Rsamtools to extract 
+granges = constructGeneRanges(top_hits, atac_list$gene_metadata, cis_window = 100000)
+pvalues = tabixFetchGenes(granges, tabix_file)
+
+#Construct credible sets for associations
+naive_credible_set = lapply(pvalues, function(x, n, thresh){ addAssociationPosterior(x, n) %>% constructCredibleSet(thresh)}, 27, 0.99)
+
+#Find credible sets for these peaks
+ifng_granges = constructGeneRanges(ifng_effect_sizes, atac_list$gene_metadata, cis_window = 100000)
+ifng_pvalues = tabixFetchGenes(ifng_granges, naive_tabix)
+ifng_credible_set = lapply(ifng_pvalues, function(x, n, thresh){ addAssociationPosterior(x, n) %>% constructCredibleSet(thresh)}, 27, 0.99) %>%
+  plyr::ldply(.id = NULL) %>% tbl_df()
+
