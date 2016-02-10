@@ -77,7 +77,7 @@ bcftools filter -i 'INFO[0] >= 0.7' -O z imputed.70_samples.sorted.filtered.name
 zgrep -v "#" imputed.70_samples.sorted.filtered.named.INFO_07.vcf.gz | cut -f 1,2,3 > imputed.70_samples.snp_coords.INFO_07.txt &
 
 #Split VCF file into chromosomes
-cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/vcf/vcfSplitByChromosome.py --vcf genotypes/SL1344/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.vcf.gz --outdir genotypes/SL1344/imputed_20151005/chromosomes/ 
+cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/vcf/vcfSplitByChromosome.py --vcf genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.vcf.gz --outdir genotypes/acLDL/imputed_20151005/chromosomes_INFO_07/ 
 
 #Convert vcfs to GDS
 /software/R-3.1.2/bin/Rscript ~/software/utils/vcf/vcfToGds.R --vcf-directory chromosomes_IFNO_07 --chr-list 
