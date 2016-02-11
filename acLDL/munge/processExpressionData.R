@@ -25,10 +25,17 @@ filtered_metadata = dplyr::filter(metadata,transcript_gencode_basic == "GENCODE 
   dplyr::filter(gene_biotype %in% valid_gene_biotypes, chromosome_name %in% valid_chromosomes) %>%
   dplyr::rename(gene_id = ensembl_gene_id, gene_name = external_gene_name)
 
+#Add exon start and end coordinates
+union_exon_coords = read.table("annotations/Homo_sapiens.GRCh38.79.gene_exon_start_end.filtered_genes.txt", 
+                               stringsAsFactors = FALSE, header = TRUE) %>% dplyr::rename(chr = chromosome_name)
+filtered_coords = dplyr::semi_join(union_exon_coords, filtered_metadata, by = "gene_id") %>%
+  dplyr::select(gene_id, exon_starts, exon_ends)
+
 #Add gene length to the metadata
 length_df = dplyr::select(data, gene_id, length)
 gene_metadata = dplyr::left_join(filtered_metadata, length_df, by = "gene_id") %>% tbl_df() %>%
-  dplyr::rename(chr = chromosome_name, start = start_position, end = end_position)
+  dplyr::rename(chr = chromosome_name, start = start_position, end = end_position) %>%
+  dplyr::left_join(filtered_coords, by = "gene_id")
 
 #Process counts
 filtered_data = dplyr::filter(data, gene_id %in% gene_metadata$gene_id)

@@ -1,92 +1,43 @@
 library("devtools")
+library("plyr")
 library("dplyr")
 load_all("../seqUtils/")
-library("SNPRelate")
 
 #Import data
-expression_dataset = readRDS("results/acLDL/acLDL_combined_expression_data.rds") #expression data
-line_metadata = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds") #Line metadata
-acLDL_meta = read.table("macrophage-gxe-study/data/sample_lists/acLDL_line_data.csv", sep = ",", header = TRUE, stringsAsFactors = FALSE) %>%
-  dplyr::select(line_id, replicate) %>%
-  tidyr::separate(line_id, c("donor"), remove = FALSE, extra ="drop") %>%
-  unique()
-gene_id_name_map = dplyr::select(expression_dataset$gene_metadata, gene_id, gene_name)
+combined_expression_data = readRDS("results/acLDL/acLDL_combined_expression_data_covariates.rds")
 
-#Filter out some samples and discard replicates
-design = dplyr::filter(expression_dataset$design, !(donor == "mijn")) %>% tbl_df() %>% #Should not have received from cGAP
-  dplyr::filter(!(donor == "xegx")) %>% #Very strong outlier on the heatmap
-  dplyr::left_join(acLDL_meta, by = "donor")
-sample_meta = dplyr::left_join(design, line_metadata, by = c("donor", "replicate", "line_id")) %>%
-  dplyr::mutate(condition_name = factor(condition, levels = c("AcLDL","Ctrl")))
+#Extract separate lists for each condition
+condition_names = idVectorToList(c("Ctrl","AcLDL"))
+rna_conditions = lapply(condition_names, extractConditionFromExpressionList, combined_expression_data)
 
-#Construct separate design matrices
-cond_A_design = dplyr::filter(sample_meta, condition == "Ctrl")
-cond_B_design = dplyr::filter(sample_meta, condition == "AcLDL")
-design_list = list(Ctrl = cond_A_design, AcLDL = cond_B_design)
+#Rename column names to genotype ids
+rna_conditions_renamed = lapply(rna_conditions, renameMatrixColumnsInExpressionList, "sample_id", "genotype_id")
 
-#### EXPRESSION ####
-#Filter expression data by samples
-exprs_cqn = expression_dataset$exprs_cqn[,design$sample_id]
-exprs_counts = expression_dataset$exprs_counts[,design$sample_id]
+#### RASQUAL ####
+rasqual_input_folder = "results/acLDL/rasqual/input/"
+exportDataForRasqual(rna_conditions_renamed, rasqual_input_folder)
 
-#Define expressed genes
-mean_expression = calculateMean(exprs_cqn, as.data.frame(sample_meta), "condition_name")
-expressed_genes = names(which(apply(mean_expression, 1, max) > 0))
+#Count SNPs overlapping genes
+snp_coords = readr::read_delim("genotypes/acLDL/imputed_20151005/imputed.70_samples.snp_coords.txt", 
+                               delim = "\t", col_types = "cdc", col_names = c("chr","pos","snp_id"))
+exon_df = countSnpsOverlapingExons(rna_conditions_renamed$Ctrl$gene_metadata, snp_coords, cis_window = 500000) %>% 
+  dplyr::arrange(chromosome_name, range_start)
+write.table(exon_df, file.path(rasqual_input_folder, "gene_snp_count_500kb.txt"), row.names = FALSE, sep = "\t", quote = FALSE)
 
-#Set up the genepos data.frame
-genepos = dplyr::filter(expression_dataset$gene_metadata, gene_id %in% expressed_genes) %>% 
-  dplyr::transmute(chr = chromosome_name, left = start_position, right = end_position, geneid = gene_id, score = 1000, strand) %>%
-  dplyr::mutate(strand = ifelse(strand == 1, "+","-")) %>%
-  as.data.frame() %>%
-  dplyr::filter( !(chr %in% c("MT","Y")) ) %>% #Remove genes on MT and Y chromosomes
-  dplyr::arrange(chr, left, right)
+exon_df = countSnpsOverlapingExons(rna_conditions_renamed$Ctrl$gene_metadata, snp_coords, cis_window = 100000) %>% 
+  dplyr::arrange(chromosome_name, range_start)
+write.table(exon_df, file.path(rasqual_input_folder, "gene_snp_count_100kb.txt"), row.names = FALSE, sep = "\t", quote = FALSE)
 
-#Filter expression data by min expression
-exprs_cqn = expression_dataset$exprs_cqn[genepos$geneid, design$sample_id]
-exprs_counts = expression_dataset$exprs_counts[genepos$geneid, design$sample_id]
+#Construct batches
+chr11_batches = dplyr::filter(exon_df, chromosome_name == "11") %>%
+  seqUtils::rasqualConstructGeneBatches(10)
+write.table(chr11_batches, file.path(rasqual_input_folder, "chr11_batches.txt"), 
+            row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
 
-#Set up expression data for each condition
-condA_exp = extractSubset(dplyr::filter(sample_meta, condition == "Ctrl"), exprs_cqn)
-condB_exp = extractSubset(dplyr::filter(sample_meta, condition == "AcLDL"), exprs_cqn)
-exprs_cqn_list = list(Ctrl = condA_exp, AcLDL = condB_exp)
-
-#### COVARIATES ####
-#Construct covariate matrix
-covariates = dplyr::mutate(sample_meta, sex = ifelse(gender == "male",1,0)) %>%
-  dplyr::select(sample_id, sex)
-
-#Save expression data for PEER and run PEER outside of R
-savePEERData(exprs_cqn_list, "results/acLDL/PEER/input/")
-#Run PEER .....
-
-#Import PEER results back into R
-cond_A_factors = importPEERFactors("results/acLDL/PEER/Ctrl_10/factors.txt", cond_A_design)
-cond_B_factors = importPEERFactors("results/acLDL/PEER/AcLDL_10/factors.txt", cond_B_design)
-peer_factors = rbind(cond_A_factors,cond_B_factors) %>%
-  dplyr::semi_join(design, by = "sample_id")
-
-#Merge PEER facotrs with covariates
-peer_covariates = dplyr::left_join(covariates, peer_factors, by = "sample_id") %>% as.data.frame()
-rownames(peer_covariates) = peer_covariates$sample_id
-peer_covariates = t(peer_covariates[,-1])
-
-#Set up covatiates for each conditon
-condA_covs = extractSubset(dplyr::filter(sample_meta, condition == "Ctrl"), peer_covariates)
-condB_covs = extractSubset(dplyr::filter(sample_meta, condition == "AcLDL"), peer_covariates)
-covariates_list = list(Ctrl = condA_covs, AcLDL = condB_covs)
-
-#### Dataset object ####
-#Construct a single dataset object that can be reused by many different analysis
-eqtl_dataset = list(
-  exprs_cqn_list = exprs_cqn_list,
-  covariates_list = covariates_list,
-  genepos = genepos,
-  gene_metadata = expression_dataset$gene_metadata,
-  sample_metadata = sample_meta,
-  covariates = t(peer_covariates),
-  exprs_cqn = exprs_cqn
-)
-saveRDS(eqtl_dataset, "results/acLDL/acLDL_eqtl_data_list.rds")
+#Split genes into batches based on how many cis and feature SNPs they have
+batches = rasqualOptimisedGeneBatches(exon_df, c(20,8,3,1))
+write.table(batches, file.path(rasqual_input_folder, "gene_batches.txt"), 
+            row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
 
 
 ### FastQTL ####

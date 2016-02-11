@@ -98,8 +98,8 @@ cut -f1 macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_5.txt | python 
 
 #### PEER ####
 #Run PEER on each condition separately using only expressed genes
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python ~/software/utils/runPEER.py --input results/acLDL/PEER/input//Ctrl.exprs.txt --outdir results/acLDL/PEER/Ctrl_10/ --n_factors 10"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python ~/software/utils/runPEER.py --input results/acLDL/PEER/input//AcLDL.exprs.txt --outdir results/acLDL/PEER/AcLDL_10/ --n_factors 10"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python ~/software/utils/runPEER.py --input results/acLDL/PEER/input//Ctrl.exprs.txt --outdir results/acLDL/PEER/output/Ctrl --n_factors 10"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python ~/software/utils/runPEER.py --input results/acLDL/PEER/input//AcLDL.exprs.txt --outdir results/acLDL/PEER/output/AcLDL --n_factors 10"
 
 
 #### Count ASE ####
@@ -122,5 +122,39 @@ cut -f1 macrophage-gxe-study/data/sample_lists/acLDL/acLDL_sample_gt_map.txt | a
 
 #Merge all allele-specific counts into one matrix
 echo "mergeASECounts" | python ~/software/utils/submitJobs.py --MEM 32000 --jobname mergeASECounts --queue hugemem --command "python ~/software/utils/rasqual/mergeASECounts.py --sample_list results/acLDL/rasqual/input/sample_sample_map.txt --indir STAR/acLDL --suffix .ASEcounts > results/acLDL/combined_ASE_counts.txt"
+
+#Extract genotype ids for each condition
+cut -f2 results/acLDL/rasqual/input/Ctrl.sg_map.txt > results/acLDL/rasqual/input/Ctrl.genotypes.txt
+cut -f2 results/acLDL/rasqual/input/AcLDL.sg_map.txt > results/acLDL/rasqual/input/AcLDL.genotypes.txt
+
+#Extract samples from the global VCF file
+bcftools view -Oz -S results/acLDL/rasqual/input/AcLDL.genotypes.txt genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.vcf.gz | bcftools filter -i 'MAF[0] >= 0.05' - > results/acLDL/rasqual/input/AcLDL.vcf &
+bcftools view -Oz -S results/acLDL/rasqual/input/Ctrl.genotypes.txt genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.vcf.gz | bcftools filter -i 'MAF[0] >= 0.05' - > results/acLDL/rasqual/input/Ctrl.vcf &
+
+#Add ASE counts into the VCF file
+echo "vcfAddASE" | python ~/software/utils/submitJobs.py --MEM 32000 --jobname vcfAddASE --queue hugemem --command "python ~/software/utils/rasqual/vcfAddASE.py --ASEcounts results/acLDL/combined_ASE_counts.txt --ASESampleGenotypeMap results/acLDL/rasqual/input/Ctrl.sg_map.txt --VCFfile results/acLDL/rasqual/input/Ctrl.vcf | bgzip > results/acLDL/rasqual/input/Ctrl.ASE.vcf.gz"
+echo "vcfAddASE" | python ~/software/utils/submitJobs.py --MEM 32000 --jobname vcfAddASE --queue hugemem --command "python ~/software/utils/rasqual/vcfAddASE.py --ASEcounts results/acLDL/combined_ASE_counts.txt --ASESampleGenotypeMap results/acLDL/rasqual/input/AcLDL.sg_map.txt --VCFfile results/acLDL/rasqual/input/AcLDL.vcf | bgzip > results/acLDL/rasqual/input/AcLDL.ASE.vcf.gz"
+
+#Index VCF files
+tabix -p vcf results/acLDL/rasqual/input/Ctrl.ASE.vcf.gz 
+tabix -p vcf results/acLDL/rasqual/input/AcLDL.ASE.vcf.gz 
+
+#RASQUAL (no covariates, library sizes + GC), 100kb
+cat results/acLDL/rasqual/input/chr11_batches.txt | python ~/software/utils/submitJobs.py --MEM 500 --jobname runRasqual_all --command "python ~/software/utils/rasqual/runRasqual.py --readCounts results/acLDL/rasqual/input/Ctrl.expression.bin  --offsets results/acLDL/rasqual/input/Ctrl.gc_library_size.bin --n 70 --geneids results/acLDL/rasqual/input/feature_names.txt --vcf results/acLDL/rasqual/input/Ctrl.ASE.vcf.gz --geneMetadata results/acLDL/rasqual/input/gene_snp_count_100kb.txt --outprefix results/acLDL/rasqual/output/chr11_naive_100kb_gc --execute True"
+
+#RASQUAL (SVD covariates, library sizes + GC), 100kb
+cat results/acLDL/rasqual/input/chr11_batches.txt | python ~/software/utils/submitJobs.py --MEM 500 --jobname runRasqual_all --command "python ~/software/utils/rasqual/runRasqual.py --readCounts results/acLDL/rasqual/input/Ctrl.expression.bin  --offsets results/acLDL/rasqual/input/Ctrl.gc_library_size.bin --n 70 --geneids results/acLDL/rasqual/input/feature_names.txt --vcf results/acLDL/rasqual/input/Ctrl.ASE.vcf.gz --geneMetadata results/acLDL/rasqual/input/gene_snp_count_100kb.txt --outprefix results/acLDL/rasqual/output/chr11_naive_100kb_gc_svd --covariates results/acLDL/rasqual/input/Ctrl.svd_covariates.bin --execute True"
+
+#RASQUAL (4 PEER covariates, library sizes + GC), 100kb
+cat results/acLDL/rasqual/input/chr11_batches.txt | python ~/software/utils/submitJobs.py --MEM 500 --jobname runRasqual_all --command "python ~/software/utils/rasqual/runRasqual.py --readCounts results/acLDL/rasqual/input/Ctrl.expression.bin  --offsets results/acLDL/rasqual/input/Ctrl.gc_library_size.bin --n 70 --geneids results/acLDL/rasqual/input/feature_names.txt --vcf results/acLDL/rasqual/input/Ctrl.ASE.vcf.gz --geneMetadata results/acLDL/rasqual/input/gene_snp_count_100kb.txt --outprefix results/acLDL/rasqual/output/chr11_naive_100kb_gc_PEER --covariates results/acLDL/rasqual/input/Ctrl.PEER_covariates.bin --execute True"
+
+
+### eigenMT ####
+#Split vcf into chromosomes
+cat ../../../macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/vcf/vcfSplitByChromosome.py --vcf imputed.86_samples.sorted.filtered.named.INFO_07.vcf.gz --outdir chromosomes_INFO_07/ --execute False
+
+#Convert vcfs to GDS
+/software/R-3.1.2/bin/Rscript ~/software/utils/vcf/vcfToGds.R --vcf-directory chromosomes_INFO_07 --chr-list ../../../macrophage-gxe-study/data/sample_lists/chromosome_list.txt
+
 
 
