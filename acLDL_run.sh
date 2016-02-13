@@ -141,13 +141,39 @@ tabix -p vcf results/acLDL/rasqual/input/AcLDL.ASE.vcf.gz
 
 #RASQUAL (no covariates, library sizes + GC), 100kb
 cat results/acLDL/rasqual/input/chr11_batches.txt | python ~/software/utils/submitJobs.py --MEM 500 --jobname runRasqual_all --command "python ~/software/utils/rasqual/runRasqual.py --readCounts results/acLDL/rasqual/input/Ctrl.expression.bin  --offsets results/acLDL/rasqual/input/Ctrl.gc_library_size.bin --n 70 --geneids results/acLDL/rasqual/input/feature_names.txt --vcf results/acLDL/rasqual/input/Ctrl.ASE.vcf.gz --geneMetadata results/acLDL/rasqual/input/gene_snp_count_100kb.txt --outprefix results/acLDL/rasqual/output/chr11_naive_100kb_gc --execute True"
+echo "merge" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname mergeRasqualBatches --command "python ~/software/utils/rasqual/mergeRasqualBatches.py --prefix results/acLDL/rasqual/output/chr11_naive_100kb_gc"
 
 #RASQUAL (SVD covariates, library sizes + GC), 100kb
 cat results/acLDL/rasqual/input/chr11_batches.txt | python ~/software/utils/submitJobs.py --MEM 500 --jobname runRasqual_all --command "python ~/software/utils/rasqual/runRasqual.py --readCounts results/acLDL/rasqual/input/Ctrl.expression.bin  --offsets results/acLDL/rasqual/input/Ctrl.gc_library_size.bin --n 70 --geneids results/acLDL/rasqual/input/feature_names.txt --vcf results/acLDL/rasqual/input/Ctrl.ASE.vcf.gz --geneMetadata results/acLDL/rasqual/input/gene_snp_count_100kb.txt --outprefix results/acLDL/rasqual/output/chr11_naive_100kb_gc_svd --covariates results/acLDL/rasqual/input/Ctrl.svd_covariates.bin --execute True"
+echo "merge" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname mergeRasqualBatches --command "python ~/software/utils/rasqual/mergeRasqualBatches.py --prefix results/acLDL/rasqual/output/chr11_naive_100kb_gc_svd"
 
 #RASQUAL (4 PEER covariates, library sizes + GC), 100kb
 cat results/acLDL/rasqual/input/chr11_batches.txt | python ~/software/utils/submitJobs.py --MEM 500 --jobname runRasqual_all --command "python ~/software/utils/rasqual/runRasqual.py --readCounts results/acLDL/rasqual/input/Ctrl.expression.bin  --offsets results/acLDL/rasqual/input/Ctrl.gc_library_size.bin --n 70 --geneids results/acLDL/rasqual/input/feature_names.txt --vcf results/acLDL/rasqual/input/Ctrl.ASE.vcf.gz --geneMetadata results/acLDL/rasqual/input/gene_snp_count_100kb.txt --outprefix results/acLDL/rasqual/output/chr11_naive_100kb_gc_PEER --covariates results/acLDL/rasqual/input/Ctrl.PEER_covariates.bin --execute True"
+echo "merge" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname mergeRasqualBatches --command "python ~/software/utils/rasqual/mergeRasqualBatches.py --prefix results/acLDL/rasqual/output/chr11_naive_100kb_gc_PEER"
 
+#RASQUAL (2 PEER covariates + sex, library sizes + GC), 500kb
+cat results/acLDL/rasqual/input/gene_batches.txt | python ~/software/utils/submitJobs.py --MEM 500 --jobname runRasqual_Ctrl --command "python ~/software/utils/rasqual/runRasqual.py --readCounts results/acLDL/rasqual/input/Ctrl.expression.bin  --offsets results/acLDL/rasqual/input/Ctrl.gc_library_size.bin --n 70 --geneids results/acLDL/rasqual/input/feature_names.txt --vcf results/acLDL/rasqual/input/Ctrl.ASE.vcf.gz --geneMetadata results/acLDL/rasqual/input/gene_snp_count_500kb.txt --outprefix results/acLDL/rasqual/output/Ctrl_500kb/batches/Ctrl_500kb --covariates results/acLDL/rasqual/input/Ctrl.PEER_covariates_n3.bin --rasqualBin rasqual --parameters '\--force' --execute True"
+
+cat results/acLDL/rasqual/input/gene_batches.txt | python ~/software/utils/submitJobs.py --MEM 500 --jobname runRasqual_AcLDL --command "python ~/software/utils/rasqual/runRasqual.py --readCounts results/acLDL/rasqual/input/AcLDL.expression.bin  --offsets results/acLDL/rasqual/input/AcLDL.gc_library_size.bin --n 70 --geneids results/acLDL/rasqual/input/feature_names.txt --vcf results/acLDL/rasqual/input/AcLDL.ASE.vcf.gz --geneMetadata results/acLDL/rasqual/input/gene_snp_count_500kb.txt --outprefix results/acLDL/rasqual/output/AcLDL_500kb/batches/AcLDL_500kb --covariates results/acLDL/rasqual/input/AcLDL.PEER_covariates_n3.bin --rasqualBin rasqual --parameters '\--force' --execute True"
+
+#Rerun failed samples
+cat results/acLDL/rasqual/input/ctrl_failed_batches.txt | python ~/software/utils/submitJobs.py --MEM 500 --queue long --jobname runRasqual_Ctrl2 --command "python ~/software/utils/rasqual/runRasqual.py --readCounts results/acLDL/rasqual/input/Ctrl.expression.bin  --offsets results/acLDL/rasqual/input/Ctrl.gc_library_size.bin --n 70 --geneids results/acLDL/rasqual/input/feature_names.txt --vcf results/acLDL/rasqual/input/Ctrl.ASE.vcf.gz --geneMetadata results/acLDL/rasqual/input/gene_snp_count_500kb.txt --outprefix results/acLDL/rasqual/output/Ctrl_500kb/batches/Ctrl_500kb --covariates results/acLDL/rasqual/input/Ctrl.PEER_covariates_n3.bin --rasqualBin rasqual --parameters '\--force' --execute True"
+
+cat results/acLDL/rasqual/input/acldl_failed_batches.txt | python ~/software/utils/submitJobs.py --MEM 500 --queue long --jobname runRasqual_AcLDL2 --command "python ~/software/utils/rasqual/runRasqual.py --readCounts results/acLDL/rasqual/input/AcLDL.expression.bin  --offsets results/acLDL/rasqual/input/AcLDL.gc_library_size.bin --n 70 --geneids results/acLDL/rasqual/input/feature_names.txt --vcf results/acLDL/rasqual/input/AcLDL.ASE.vcf.gz --geneMetadata results/acLDL/rasqual/input/gene_snp_count_500kb.txt --outprefix results/acLDL/rasqual/output/AcLDL_500kb/batches/AcLDL_500kb --covariates results/acLDL/rasqual/input/AcLDL.PEER_covariates_n3.bin --rasqualBin rasqual --parameters '\--force' --execute True"
+
+#Run Rasqual on multiple threads
+echo -e 'batch_4_9\tENSG00000185567' | python ~/software/utils/rasqual/runRasqual.py --readCounts results/acLDL/rasqual/input/AcLDL.expression.bin  --offsets results/acLDL/rasqual/input/AcLDL.gc_library_size.bin --n 70 --geneids results/acLDL/rasqual/input/feature_names.txt --vcf results/acLDL/rasqual/input/AcLDL.ASE.vcf.gz --geneMetadata results/acLDL/rasqual/input/gene_snp_count_500kb.txt --outprefix results/acLDL/rasqual/output/test --covariates results/acLDL/rasqual/input/AcLDL.PEER_covariates_n3.bin --rasqualBin rasqual --parameters '\--force --n-threads 3 --imputation-quality-fsnp 0.7' --execute False
+
+#Merge batches
+echo "merge" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname mergeRasqualBatches --command "python ~/software/utils/rasqual/mergeRasqualBatches.py --prefix results/acLDL/rasqual/output/Ctrl_500kb/batches/Ctrl_500kb"
+echo "merge" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname mergeRasqualBatches --command "python ~/software/utils/rasqual/mergeRasqualBatches.py --prefix results/acLDL/rasqual/output/AcLDL_500kb/batches/AcLDL_500kb"
+
+#Move merged file to parent dir
+mv results/acLDL/rasqual/output/Ctrl_500kb/batches/Ctrl_500kb.txt results/acLDL/rasqual/output/Ctrl_500kb/
+mv results/acLDL/rasqual/output/AcLDL_500kb/batches/AcLDL_500kb.txt results/acLDL/rasqual/output/AcLDL_500kb/
+
+cut -f1 results/acLDL/rasqual/output/Ctrl_500kb/Ctrl_500kb.txt | uniq > results/acLDL/rasqual/output/Ctrl_500kb/Ctrl_500kb.completed_ids.txt
+cut -f1 results/acLDL/rasqual/output/AcLDL_500kb/AcLDL_500kb.txt | uniq > results/acLDL/rasqual/output/AcLDL_500kb/AcLDL_500kb.completed_ids.txt
 
 ### eigenMT ####
 #Split vcf into chromosomes

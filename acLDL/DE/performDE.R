@@ -7,19 +7,20 @@ library("tidyr")
 load_all("../seqUtils/")
 
 #Load processed expression data from disk
-dataset = readRDS("results/acLDL/acLDL_combined_expression_data.rds")
+expression_data = readRDS("results/acLDL/acLDL_combined_expression_data.rds")
 
 #Find expressed genes
-cqn_expressed_genes = names(which(rowMeans(dataset$cqn) > 0))
-cqn_expressed = dataset$cqn[cqn_expressed_genes,]
+mean_expression = seqUtils::calculateMean(expression_data$cqn, as.data.frame(expression_data$sample_metadata), "condition_name")
+expressed_genes = names(which(apply(mean_expression, 1, max) > 0.5))
+expressed_data = extractGenesFromExpressionList(expression_data, expressed_genes)
 
 #Make heatmap of gene expression
-cor_matrix = cor(cqn_expressed, method = "spearman")
+cor_matrix = cor(expressed_data$cqn, method = "spearman")
 heatmap.2(cor_matrix, margins = c(12,12))
 
 #Perform PCA
-pca_list = performPCA(cqn_expressed, dataset$sample_metadata)
-ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = condition, label = sample_id)) + 
+pca_list = performPCA(expressed_data$cqn, expressed_data$sample_metadata)
+ggplot(pca_list$pca_matrix, aes(x = PC4, y = PC5, color = condition, label = sample_id)) + 
   geom_point() +
   geom_text()
 

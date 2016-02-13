@@ -52,3 +52,12 @@ plot(-log(b$p_nominal.x,10), -log(b$p_nominal.y,10), xlim = c(0,70), ylim = c(0,
 eigen_res = eigenMTImportResults("results/SL1344/eigenMT/output/exampleOut.txt")
 eigen_res_external = eigenMTImportResults("results/SL1344/eigenMT/output/test_out.txt")
 
+
+#AcLDL dataset
+lib_size_gc = importRasqualTable("results/acLDL/rasqual/output/chr11_naive_100kb_gc.txt") %>% findMinimalSnpPvalues() %>%
+  dplyr::filter(p_fdr < 0.1)
+lib_size_gc_PEER = importRasqualTable("results/acLDL/rasqual/output/chr11_naive_100kb_gc_PEER.txt") %>% findMinimalSnpPvalues() %>%
+  dplyr::filter(p_fdr < 0.1)
+lib_size_gc_svd = importRasqualTable("results/acLDL/rasqual/output/chr11_naive_100kb_gc_svd.txt") %>% findMinimalSnpPvalues() %>%
+  dplyr::filter(p_fdr < 0.1)
+
