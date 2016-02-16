@@ -43,12 +43,12 @@ write.table(batches, file.path(rasqual_input_folder, "gene_batches.txt"),
 #Rerun failed batches
 ctrl_failed_batches = readr::read_csv("results/acLDL/rasqual/output/Ctrl_500kb/Ctrl_500kb.completed_ids.txt", col_names = "gene_id") %>%
   dplyr::anti_join(exon_df, ., by = "gene_id") %>%
-  rasqualOptimisedGeneBatches(c(10,10,1,1))
+  rasqualOptimisedGeneBatches(c(10,10,1,1), batch_prefix = "batch_5")
 write.table(ctrl_failed_batches, "results/acLDL/rasqual/input/ctrl_failed_batches.txt", 
             row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
 acldl_failed_batches = readr::read_csv("results/acLDL/rasqual/output/AcLDL_500kb/AcLDL_500kb.completed_ids.txt", col_names = "gene_id") %>%
   dplyr::anti_join(exon_df, ., by = "gene_id") %>%
-  rasqualOptimisedGeneBatches(c(10,10,1,1))
+  rasqualOptimisedGeneBatches(c(10,10,1,1), batch_prefix = "batch_5")
 write.table(acldl_failed_batches, "results/acLDL/rasqual/input/acldl_failed_batches.txt", 
             row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
 

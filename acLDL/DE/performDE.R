@@ -24,26 +24,46 @@ ggplot(pca_list$pca_matrix, aes(x = PC4, y = PC5, color = condition, label = sam
   geom_point() +
   geom_text()
 
+#Extract gene metadata
+gene_data = dplyr::select(expressed_data$gene_metadata, gene_id, gene_name, gene_biotype)
+
+### AcLDL vs Ctrl DE ###
+#Construct design matrix
+ctrl_vs_acldl_design = dplyr::filter(expressed_data$sample_metadata, condition_name %in% c("AcLDL","Ctrl"))
+rownames(ctrl_vs_acldl_design) = ctrl_vs_acldl_design$sample_id
+filtered_counts = expressed_data$counts[,ctrl_vs_acldl_design$sample_id]
+
 #Peform differential expression analysis
-dds = DESeqDataSetFromMatrix(filtered_counts, filtered_design, ~condition)
+dds = DESeqDataSetFromMatrix(filtered_counts, ctrl_vs_acldl_design, ~condition)
 dds = DESeq(dds)
 res = results(dds) #Extract DE results
 de_results = res %>%
   as.data.frame() %>% #Convert to data.frame
   dplyr::mutate(gene_id = rownames(res)) %>% #Add gene id as a column
   dplyr::left_join(gene_data, by = "gene_id") %>% #AD
-  tbl_df %>% #Convert to a convenient dplyr class
-  dplyr::filter(padj < 0.05, abs(log2FoldChange) > 1) %>% 
-  dplyr::arrange(desc(log2FoldChange))
+  tbl_df() %>% #Convert to a convenient dplyr class
+  dplyr::arrange(padj) %>%
+  dplyr::select(gene_id, gene_name, everything())
+write.table(de_results, "results/acLDL/DE/ctrl_vs_acldl_DE_genes.txt", sep= "\t", quote = FALSE, row.names = FALSE)
 
-#Don't apply any fold-change filtering
-de_results_unfiltered = res %>%
-  as.data.frame() %>% #Convert to data.frame
-  dplyr::mutate(gene_id = rownames(res)) %>% #Add gene id as a column
-  dplyr::left_join(gene_data, by = "gene_id") %>% #AD
-  tbl_df()
+#Filter by p-value and fold-change
+de_results_filtered = dplyr::filter(de_results, padj < 0.05, abs(log2FoldChange) > 0.58) %>%
+  arrange(desc(log2FoldChange))
+write.table(de_results_filtered, "results/acLDL/DE/ctrl_vs_acldl_DE_genes_filtered.txt", sep= "\t", quote = FALSE, row.names = FALSE)
 
-#Save results to disk
-write.table(de_results, "results/acLDL/DE/DE_genes.txt", sep= "\t", quote = FALSE, row.names = FALSE)
-write.table(de_results_unfiltered, "results/acLDL/DE/DE_genes_unfiltered.txt", sep= "\t", quote = FALSE, row.names = FALSE)
-write.table(filtered_exprs_cqn, "results/acLDL/expression_cqn_normalised.txt", sep = "\t", quote = FALSE)
+#Test for interaction between LAL and AcLDL
+lal_design = dplyr::semi_join(expressed_data$sample_metadata, 
+                 dplyr::filter(expressed_data$sample_metadata, condition_name %in% c("LAL")), by = "donor") %>%
+  dplyr::select(sample_id, donor, condition_name) %>%
+  dplyr::mutate(AcLDL = ifelse(condition_name %in% c("AcLDL","LAL_AcLDL"), "yes", "no")) %>%
+  dplyr::mutate(LAL = ifelse(condition_name %in% c("LAL","LAL_AcLDL"), "yes","no"))
+rownames(lal_design) = lal_design$sample_id
+
+lal_counts = expressed_data$counts[,lal_design$sample_id]
+
+#Test DE
+dds = DESeqDataSetFromMatrix(lal_counts, lal_design, ~AcLDL + LAL + AcLDL*LAL)
+dds = DESeq(dds)
+results(dds, name = "AcLDLyes.LALyes") %>% as.data.frame() %>% dplyr::filter(padj < 0.1)
+results(dds, name = "AcLDL_yes_vs_no") %>% as.data.frame() %>% dplyr::filter(padj < 0.05)
+results(dds, name = "LAL_yes_vs_no") %>% as.data.frame() %>% dplyr::filter(padj < 0.05)
