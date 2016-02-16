@@ -1,3 +1,6 @@
+#Construct STAR index (Ensembl 79) from the fasta and GTF file
+bsub -G team170 -n4 -R "span[hosts=1] select[mem>40000] rusage[mem=40000]" -q hugemem -M 40000 -o star_index.%J.jobout "STAR --runThreadN 4 --runMode genomeGenerate --genomeDir STAR_index_79/ --genomeFastaFiles dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sjdbGTFfile genes/Homo_sapiens.GRCh38.79.gtf --sjdbOverhang 74"
+
 #Fetch all file names from iRODS
 python ~/software/utils/irods/irodsGetSamplesInStudy.py --studyName "Genetics of gene expression in human macrophage response to Salmonella" |  cut -f1 -d "." | uniq > fastq/SL1344_samples_4.txt
 

@@ -89,5 +89,12 @@ write.table(donor_genotype_map$genotype_id, "results/acLDL/fastqtl/input/genotyp
 chunks_matrix = data.frame(chunk = seq(1:200), n = 200)
 write.table(chunks_matrix, "results/acLDL/fastqtl/input/chunk_table.txt", row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
 
+#### eigenMT ####
+#Export genotype data
+chromosome_list = scan("macrophage-gxe-study/data/sample_lists/chromosome_list.txt", what = "char")
+eigenMTExportGenotypesByChr(chromosome_list, "genotypes/acLDL/imputed_20151005/chromosomes_INFO_07/",
+                            "genotypes/acLDL/imputed_20151005/chromosomes_INFO_07/", "chr_")
+#Export gene metadata
+eigenMTExportGeneMetadata(rna_conditions_renamed$Ctrl$gene_metadata, rasqual_input_folder)
 
 
