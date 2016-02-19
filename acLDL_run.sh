@@ -123,6 +123,11 @@ cut -f1 macrophage-gxe-study/data/sample_lists/acLDL/acLDL_sample_gt_map.txt | a
 #Merge all allele-specific counts into one matrix
 echo "mergeASECounts" | python ~/software/utils/submitJobs.py --MEM 32000 --jobname mergeASECounts --queue hugemem --command "python ~/software/utils/rasqual/mergeASECounts.py --sample_list results/acLDL/rasqual/input/sample_sample_map.txt --indir STAR/acLDL --suffix .ASEcounts > results/acLDL/combined_ASE_counts.txt"
 
+#Sort and index the ASE counts file
+(zcat results/acLDL/combined_ASE_counts.txt.gz | head -n1 && zcat results/acLDL/combined_ASE_counts.txt.gz | tail -n+2 | sort -k1,1 -k2,2n) | bgzip > results/acLDL/combined_ASE_counts.sorted.txt.gz
+tabix -s 1 -b 2 -e 2 -S 1 results/acLDL/combined_ASE_counts.sorted.txt.gz 
+
+
 #Extract genotype ids for each condition
 cut -f2 results/acLDL/rasqual/input/Ctrl.sg_map.txt > results/acLDL/rasqual/input/Ctrl.genotypes.txt
 cut -f2 results/acLDL/rasqual/input/AcLDL.sg_map.txt > results/acLDL/rasqual/input/AcLDL.genotypes.txt

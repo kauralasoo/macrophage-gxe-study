@@ -31,7 +31,7 @@ filtered_vcf = list(snpspos = snps_pos, genotypes = genotypes)
 #Test intetactions between 
 filtered_pairs = filterHitsR2(joint_pairs, filtered_vcf$genotypes, .3)
 
-#Naive vs IFNg
+#Ctrl vs AcLDL
 covariate_names = c("sex_binary","macrophage_diff_days", "max_purity_filtered",
                     "PEER_factor_1", "PEER_factor_2", "PEER_factor_3","PEER_factor_4", "PEER_factor_5","PEER_factor_6")
 formula_qtl = as.formula(paste("expression ~ genotype + condition_name ", 
@@ -48,10 +48,16 @@ write.table(interaction_hits, "results/acLDL/eQTLs/significant_interactions.txt"
 makeMultiplePlots(interaction_hits, acldl_list$cqn, filtered_vcf$genotypes, acldl_list$sample_metadata, acldl_list$gene_metadata) %>%
   savePlots("results/acLDL/eQTLs/interaction_plots/", 7,7)
 
-#Calculate Pi1 statistic from the fastqtl results
-fastqtl_min_pvalues = readRDS("results/acLDL/eQTLs/acLDL_fastqtl_min_pvalues.rds")
-fastqtl_min_hits = lapply(fastqtl_min_pvalues, function(x){dplyr::filter(x, p_fdr < 0.1)})
-pi1_1 = calculatePi1(fastqtl_min_pvalues$Ctrl, fastqtl_min_pvalues$AcLDL, qvalue_thresh = 0.1)
-pi1_2 = calculatePi1(fastqtl_min_pvalues$AcLDL, fastqtl_min_pvalues$Ctrl, qvalue_thresh = 0.1)
 
+gene_snp_pair = dplyr::filter(filtered_pairs, gene_id == "ENSG00000166750")
+sample_meta = dplyr::select(acldl_list$sample_metadata, sample_id, condition_name, genotype_id)
+ase_data = fetchGeneASEData(gene_snp_pair, "results/acLDL/combined_ASE_counts.sorted.txt.gz", vcf_file$genotypes, sample_meta, acldl_list$gene_metadata)
 
+#Make plot
+plotting_data = filterASEforPlotting(ase_data) %>% dplyr::filter(total_count > 10)
+ggplot(plotting_data, aes(x = feature_snp_id, y = ratio)) + 
+  facet_wrap(~condition_name) +
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(position = position_jitter(width = .1)) +
+  xlab("Feature SNP id") + 
+  ylab("Reference allele ratio")

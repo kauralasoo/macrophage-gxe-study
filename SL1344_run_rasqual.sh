@@ -23,7 +23,11 @@ echo "jorr_A" | python ~/software/utils/submitJobs.py --MEM 10000 --jobname bamC
 cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_sample_gt_map.txt | awk -v OFS='\t' '{print $1, $1}' > results/SL1344/rasqual/input/sample_sample_map.txt
 
 #Merge all allele-specific counts into one matrix
-echo "mergeASECounts" | python ~/software/utils/submitJobs.py --MEM 18000 --jobname mergeASECounts --command "python ~/software/utils/rasqual/mergeASECounts.py --sample_list results/SL1344/rasqual/input/sample_sample_map.txt --indir STAR/SL1344 --suffix .ASEcounts > results/SL1344/combined_ASE_counts.txt"
+echo "mergeASECounts" | python ~/software/utils/submitJobs.py --MEM 18000 --jobname mergeASECounts --command "python ~/software/utils/rasqual/mergeASECounts.py --sample_list results/SL1344/rasqual/input/sample_sample_map.txt --indir STAR/SL1344 --suffix .ASEcounts | bgzip > results/SL1344/combined_ASE_counts.txt"
+
+#Sort and index the ASE counts file
+(zcat results/SL1344/combined_ASE_counts.txt.gz | head -n1 && zcat results/SL1344/combined_ASE_counts.txt.gz | tail -n+2 | sort -k1,1 -k2,2n) | bgzip > combined_ASE_counts.sorted.txt.gz
+tabix -s 1 -b 2 -e 2 -S 1 combined_ASE_counts.sorted.txt.gz 
 
 #Extract genotype ids for each condition
 cut -f2 results/SL1344/rasqual/input/naive.sg_map.txt > results/SL1344/rasqual/input/naive.genotypes.txt
