@@ -4,20 +4,20 @@ bcftools view -S results/acLDL/fastqtl/input/genotype_list.txt genotypes/acLDL/i
 tabix -p vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.vcf.gz 
 
 #Compress and index expression files
-bgzip results/acLDL/fastqtl/input/Ctrl.expression.txt && tabix -p bed results/acLDL/fastqtl/input/Ctrl.expression.txt.gz
-bgzip results/acLDL/fastqtl/input/AcLDL.expression.txt && tabix -p bed results/acLDL/fastqtl/input/AcLDL.expression.txt.gz
+bgzip results/acLDL/fastqtl/input/Ctrl.cqn_expression.txt && tabix -p bed results/acLDL/fastqtl/input/Ctrl.cqn_expression.txt.gz
+bgzip results/acLDL/fastqtl/input/AcLDL.cqn_expression.txt && tabix -p bed results/acLDL/fastqtl/input/AcLDL.cqn_expression.txt.gz
 
 #Run FastQTL on each condition
-cat results/acLDL/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.vcf.gz --bed results/acLDL/fastqtl/input/Ctrl.expression.txt.gz --cov results/acLDL/fastqtl/input/Ctrl.covariates.txt --W 500000 --permute '100 10000' --out results/acLDL/fastqtl/output/Ctrl_perm --execute True"
-cat results/acLDL/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.vcf.gz --bed results/acLDL/fastqtl/input/AcLDL.expression.txt.gz --cov results/acLDL/fastqtl/input/AcLDL.covariates.txt --W 500000 --permute '100 10000' --out results/acLDL/fastqtl/output/AcLDL_perm --execute True"
+cat results/acLDL/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.vcf.gz --bed results/acLDL/fastqtl/input/Ctrl.cqn_expression.txt.gz --cov results/acLDL/fastqtl/input/Ctrl.covariates.txt --W 500000 --permute '100 10000' --out results/acLDL/fastqtl/output/Ctrl_perm --execute True"
+cat results/acLDL/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.vcf.gz --bed results/acLDL/fastqtl/input/AcLDL.cqn_expression.txt.gz --cov results/acLDL/fastqtl/input/AcLDL.covariates.txt --W 500000 --permute '100 10000' --out results/acLDL/fastqtl/output/AcLDL_perm --execute True"
 
 #Merge chunks into single files
 zcat results/acLDL/fastqtl/output/Ctrl_perm.chunk_*.txt.gz | bgzip > results/acLDL/fastqtl/output/Ctrl_permuted.txt.gz
 zcat results/acLDL/fastqtl/output/AcLDL_perm.chunk_*.txt.gz | bgzip > results/acLDL/fastqtl/output/AcLDL_permuted.txt.gz
 
 #Run on all SNPs 
-cat results/acLDL/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.vcf.gz --bed results/acLDL/fastqtl/input/Ctrl.expression.txt.gz --cov results/acLDL/fastqtl/input/Ctrl.covariates.txt --W 500000 --out results/acLDL/fastqtl/output/Ctrl_full --execute True"
-cat results/acLDL/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.vcf.gz --bed results/acLDL/fastqtl/input/AcLDL.expression.txt.gz --cov results/acLDL/fastqtl/input/AcLDL.covariates.txt --W 500000 --out results/acLDL/fastqtl/output/AcLDL_full --execute True"
+cat results/acLDL/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.vcf.gz  --bed results/acLDL/fastqtl/input/Ctrl.cqn_expression.txt.gz --cov results/acLDL/fastqtl/input/Ctrl.covariates.txt --W 500000 --out results/acLDL/fastqtl/output/Ctrl_full --execute True"
+cat results/acLDL/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.vcf.gz  --bed results/acLDL/fastqtl/input/AcLDL.cqn_expression.txt.gz --cov results/acLDL/fastqtl/input/AcLDL.covariates.txt --W 500000 --out results/acLDL/fastqtl/output/AcLDL_full --execute True"
 
 #Merge chunks into a single file
 zcat results/acLDL/fastqtl/output/Ctrl_full.chunk_*.txt.gz | bgzip > results/acLDL/fastqtl/output/Ctrl_pvalues.txt.gz

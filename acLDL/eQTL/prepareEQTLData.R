@@ -52,8 +52,11 @@ acldl_failed_batches = readr::read_csv("results/acLDL/rasqual/output/AcLDL_500kb
 write.table(acldl_failed_batches, "results/acLDL/rasqual/input/acldl_failed_batches.txt", 
             row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
 
-
 ### FastQTL ####
+fastqtl_input_folder = "results/acLDL/fastqtl/input/"
+exportDataForFastQTL(rna_conditions_renamed, fastqtl_input_folder)
+
+
 #Export expression data for fastQTL analysis
 eqtl_dataset = readRDS("results/acLDL/acLDL_eqtl_data_list.rds")
 

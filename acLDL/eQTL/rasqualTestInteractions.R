@@ -42,8 +42,16 @@ formula_interaction = as.formula(paste("expression ~ genotype + condition_name +
 interaction_results = testMultipleInteractions(filtered_pairs, acldl_list, filtered_vcf, formula_qtl, formula_interaction)
 interaction_df = postProcessInteractionPvalues(interaction_results)
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
+write.table(interaction_hits, "results/acLDL/eQTLs/significant_interactions.txt", quote = FALSE, row.names = FALSE)
 
 #Plot interactions
 makeMultiplePlots(interaction_hits, acldl_list$cqn, filtered_vcf$genotypes, acldl_list$sample_metadata, acldl_list$gene_metadata) %>%
   savePlots("results/acLDL/eQTLs/interaction_plots/", 7,7)
+
+#Calculate Pi1 statistic from the fastqtl results
+fastqtl_min_pvalues = readRDS("results/acLDL/eQTLs/acLDL_fastqtl_min_pvalues.rds")
+fastqtl_min_hits = lapply(fastqtl_min_pvalues, function(x){dplyr::filter(x, p_fdr < 0.1)})
+pi1_1 = calculatePi1(fastqtl_min_pvalues$Ctrl, fastqtl_min_pvalues$AcLDL, qvalue_thresh = 0.1)
+pi1_2 = calculatePi1(fastqtl_min_pvalues$AcLDL, fastqtl_min_pvalues$Ctrl, qvalue_thresh = 0.1)
+
 

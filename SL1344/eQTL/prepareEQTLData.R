@@ -48,7 +48,7 @@ write.table(batches, file.path(rasqual_input_folder, "gene_batches.txt"),
 
 ### FastQTL ####
 fastqtl_input_folder = "results/SL1344/fastqtl/input/"
-exportDataForFastQTL(rna_conditions_renamed, fastqtl_input_folder)
+exportDataForFastQTL(rna_conditions_renamed, fastqtl_input_folder, n_chunks = 200)
 
 #Export chr11 data only
 chr11_genes = dplyr::filter(combined_expression_data$gene_metadata, chr == 11)$gene_id

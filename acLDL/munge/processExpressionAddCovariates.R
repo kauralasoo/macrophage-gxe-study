@@ -37,7 +37,7 @@ peer_factors = rbind(ctrl_factors, acldl_factors) %>%
   dplyr::semi_join(combined_expression_data$sample_metadata, by = "sample_id")
 
 #Construct covariates
-covariates = dplyr::left_join(combined_expression_data$sample_metadata, peer_factors, by = "sample_id") %>%
+covariates = dplyr::left_join(rna_expressed$sample_metadata, peer_factors, by = "sample_id") %>%
   dplyr::mutate(sex_binary = ifelse(sex == "male", 0, 1))
 rna_expressed$sample_metadata = covariates
 saveRDS(rna_expressed, "results/acLDL/acLDL_combined_expression_data_covariates.rds")
