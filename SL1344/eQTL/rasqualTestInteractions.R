@@ -9,11 +9,8 @@ library("ggplot2")
 #### Import data ####
 #Load the raw eQTL dataset
 combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
-combined_expression_data$gene_metadata = dplyr::rename(combined_expression_data$gene_metadata, 
-                                                       chr = chromosome_name, start = start_position, end = end_position)
 combined_expression_data$sample_metadata$condition_name = factor(combined_expression_data$sample_metadata$condition_name, 
                                                   levels = c("naive", "IFNg", "SL1344", "IFNg_SL1344"))
-
 #Load p-values from disk
 rasqual_min_pvalues = readRDS("results/SL1344/eQTLs/rasqual_min_pvalues.rds")
 rasqual_min_hits = lapply(rasqual_min_pvalues, function(x){dplyr::filter(x, p_fdr < 0.1)})
@@ -139,7 +136,7 @@ IFNg_tabix = "~/projects/macrophage-chromatin/IFNg_100kb.sorted.unskipped.txt.gz
 naive_hits = tabixFetchSNPs(selected_snps, naive_tabix)
 IFNg_hits = tabixFetchSNPs(selected_snps, IFNg_tabix)
 
-ifng_qtls = dplyr::filter(appear_clusters, cluster_id %in% c(1,3,5)) %>% 
+ifng_qtls = dplyr::filter(appear_clusters, cluster_id %in% c(1,4,5)) %>% 
   dplyr::select(gene_id, snp_id) %>% unique() %>%
   dplyr::left_join(beta_summaries_matrix, by = c("gene_id", "snp_id")) %>%
   dplyr::mutate(diff = IFNg - naive) %>% 
@@ -201,6 +198,14 @@ ifng_qtls1 = dplyr::filter(appear_clusters, cluster_id %in% c(4,5)) %>%
   dplyr::semi_join(a, by = "snp_id")
 ggplot(ifng_qtls1, aes(x = condition_name, y = abs(beta), group = snp_id)) + geom_point() + geom_line()
 
+a = tidyr::gather(all_effects, "condition_name", "beta", naive:IFNg)
+arranged_snps = dplyr::filter(a, phenotype == "ATAC") %>% arrange(diff) %>% dplyr::select(snp_id, diff) %>% unique()
+a$snp_id = factor(a$snp_id, levels = arranged_snps$snp_id)
+a = group_by(a, snp_id) %>% dplyr::mutate(beta_corr = (beta - mean(beta))/sd(beta))
+effect_size_heatmap = ggplot(a, aes(x = condition_name, y = snp_id, fill = beta_corr)) + facet_wrap(~phenotype) + geom_tile() + 
+  scale_fill_gradient(space = "Lab", low = "white", high = scales::muted("blue"), name = "Beta") 
+ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_IFNg_heatmap.pdf", effect_size_heatmap, width = 5, height = 7)
+
 #Make plots
 makeMultiplePlots(ifng_interactions, combined_expression_data$cqn,filtered_vcf$genotypes,combined_expression_data$sample_metadata,combined_expression_data$gene_metadata) %>%
   savePlots("results/SL1344/eQTLs/interaction_plots/naive_vs_IFNg/", 7,7)
@@ -210,5 +215,20 @@ makeMultiplePlots(ifng_sl1344_interactions, combined_expression_data$cqn,filtere
   savePlots("results/SL1344/eQTLs/interaction_plots/naive_vs_IFNg_SL1344/", 7,7)
 
 
+#Fetch ASE data from disk
+exon_ranges = constructExonRanges("ENSG00000144228", "rs12621644", combined_expression_data$gene_metadata)
+sample_meta = dplyr::select(combined_expression_data$sample_metadata, sample_id, condition_name, genotype_id)
+ase_data = fetchGeneASEData(exon_ranges, "results/SL1344/combined_ASE_counts.sorted.txt.gz", sample_meta) %>%
+  aseDataAddGenotypes(vcf_file$genotypes)
+
+
+#Make plot
+plotting_data = filterASEforPlotting(ase_data) %>% dplyr::filter(total_count > 10) %>% dplyr::filter(lead_snp_value == 1)
+ggplot(plotting_data, aes(x = factor(lead_snp_value), y = abs(0.5-ratio))) + 
+  facet_grid(feature_snp_id~condition_name) +
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(position = position_jitter(width = .1)) +
+  xlab("Feature SNP id") + 
+  ylab("Reference allele ratio")
 
 
