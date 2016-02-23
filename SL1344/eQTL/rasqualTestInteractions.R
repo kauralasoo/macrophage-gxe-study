@@ -11,6 +11,8 @@ library("ggplot2")
 combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
 combined_expression_data$sample_metadata$condition_name = factor(combined_expression_data$sample_metadata$condition_name, 
                                                   levels = c("naive", "IFNg", "SL1344", "IFNg_SL1344"))
+gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name)
+
 #Load p-values from disk
 rasqual_min_pvalues = readRDS("results/SL1344/eQTLs/rasqual_min_pvalues.rds")
 rasqual_min_hits = lapply(rasqual_min_pvalues, function(x){dplyr::filter(x, p_fdr < 0.1)})
@@ -43,33 +45,13 @@ interaction_df = postProcessInteractionPvalues(interaction_results)
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 
 #Extract effect sizes for all gene-snp pairs from RASQUAL data
-beta_matrix = extractBetasFromList(dplyr::select(interaction_hits, gene_id, snp_id), rasqual_selected_pvalues) %>% ungroup()
-
-#Calculate maximum absolute diff in betas between conditions
-beta_diff_matrix = dplyr::select(beta_matrix, -gene_id, -snp_id)
-beta_diff_matrix = beta_diff_matrix - beta_diff_matrix$naive
-beta_diff_matrix$max_abs_diff = apply(abs(beta_diff_matrix), 1, max)
-beta_diff_matrix = cbind(beta_matrix[,c("gene_id", "snp_id")], beta_diff_matrix)
-  
-#Convert Beta matrix into a df and revert signs to the sign of the maximal effect size
-beta_df = tidyr::gather(beta_matrix, condition_name, beta, naive:IFNg_SL1344)
-beta_correct_sign = betaCorrectSign(beta_df)
-
-#Convert to matrix
-beta_correct_sign_matrix = tidyr::spread(beta_correct_sign, condition_name, beta)
-
-#Merge summary stats
-beta_summaries = dplyr::group_by(beta_correct_sign, gene_id, snp_id) %>% 
-  dplyr::summarise(max_abs_beta = max(abs(beta)), min_abs_beta = min(abs(beta)))%>%
-  ungroup() %>%
-  dplyr::left_join(dplyr::select(beta_diff_matrix, gene_id, snp_id, max_abs_diff), by = c("gene_id","snp_id"))
-beta_summaries_matrix = dplyr::left_join(beta_correct_sign_matrix, beta_summaries, by = c("gene_id","snp_id"))
+beta_list = extractAndProcessBetas(dplyr::select(interaction_hits, gene_id, snp_id), rasqual_selected_pvalues, "naive")
 
 #Find QTLs that appear
-appear_qtls = dplyr::filter(beta_summaries_matrix, abs(naive) <= 0.59, max_abs_diff >= 0.59, max_abs_beta >= 0.59)
-appear_betas = dplyr::semi_join(beta_correct_sign_matrix, appear_qtls, by = c("gene_id", "snp_id"))
+appear_qtls = dplyr::filter(beta_list$beta_summaries, abs(naive) <= 0.59, max_abs_diff >= 0.59, max_abs_beta >= 0.59)
+appear_betas = dplyr::semi_join(beta_list$beta_summaries[,1:6], appear_qtls, by = c("gene_id", "snp_id"))
 appear_clusters = clusterBetasKmeans(appear_betas, 6) %>% dplyr::select(gene_id, snp_id, cluster_id) %>%
-  dplyr::left_join(beta_correct_sign, by = c("gene_id", "snp_id"))
+  dplyr::left_join(beta_list$beta_df, by = c("gene_id", "snp_id"))
 appear_plot = ggplot(appear_clusters, aes(x = condition_name, y = beta, group = paste(gene_id, snp_id))) + 
   geom_line() + facet_wrap(~cluster_id)
 ggsave("results/SL1344/eQTLs/properties/eQTLs_appear_kmeans.pdf",appear_plot, width = 10, height = 10)
@@ -88,10 +70,10 @@ ggsave("results/SL1344/eQTLs/properties/eQTLs_appear_cluster_means.pdf",appear_m
 
 #Find QTLs that disappear
 #Look for QTLs that disappear after stimulation
-disappear_qtls = dplyr::filter(beta_summaries_matrix, abs(naive) > 0.59, max_abs_diff >= 0.59, min_abs_beta <= 0.59)
-disappear_betas = dplyr::semi_join(beta_correct_sign_matrix, disappear_qtls, by = c("gene_id", "snp_id"))
+disappear_qtls = dplyr::filter(beta_list$beta_summaries, abs(naive) > 0.59, max_abs_diff >= 0.59, min_abs_beta <= 0.59)
+disappear_betas = dplyr::semi_join(beta_list$beta_summaries[,1:6], disappear_qtls, by = c("gene_id", "snp_id"))
 disappear_clusters = clusterBetasKmeans(disappear_betas, 7) %>% dplyr::select(gene_id, snp_id, cluster_id) %>%
-  dplyr::left_join(beta_correct_sign, by = c("gene_id", "snp_id"))
+  dplyr::left_join(beta_list$beta_df, by = c("gene_id", "snp_id"))
 disappear_plot = ggplot(disappear_clusters, aes(x = condition_name, y = abs(beta), group = paste(gene_id, snp_id))) + 
   geom_line() + facet_wrap(~cluster_id)
 ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_kmeans.pdf",disappear_plot, width = 10, height = 10)
@@ -110,101 +92,115 @@ disappear_means_plot = ggplot(disappear_cluster_means, aes(x = condition_name, y
   ylab("Log2 fold-change")
 ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_cluster_means.pdf",disappear_means_plot, width = 6, height = 6)
 
-#Extract most associated peaks for each of the eQTL genes
 
-gene_name_map =  dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name)
+
+
+#### Find most associated peaks for each gene ####
+rna_betas = extractAndProcessBetas(dplyr::select(interaction_hits, gene_id, snp_id), rasqual_selected_pvalues, "naive")
+rna_appear_qtls = dplyr::filter(rna_betas$beta_summaries, abs(naive) <= 0.59, max_abs_diff >= 0.59, max_abs_beta >= 0.59)
+
+#Extract most associated peaks for each of the eQTL genes
 appear_hits = dplyr::left_join(appear_qtls, gene_name_map, by = "gene_id")
 
-#Import ATAC data
-atac_list = readRDS("../macrophage-chromatin/results/ATAC/ATAC_combined_accessibility_data.rds")
-
-#Load ATAC QTL hits
-#Extract all SNP-gene pairs
-min_pvalues_list = readRDS("../macrophage-chromatin/results/ATAC/QTLs/rasqual_min_pvalues.rds")
-min_pvalues_hits = lapply(min_pvalues_list, function(x){dplyr::filter(x, p_fdr < 0.1)})
-
 #Construct GRanges object of SNP positions
-selected_snps = dplyr::semi_join(filtered_vcf$snpspos, appear_hits, by = c("snpid" = "snp_id")) %>%
+selected_snps = dplyr::semi_join(filtered_vcf$snpspos, rna_appear_qtls, by = c("snpid" = "snp_id")) %>%
   dplyr::transmute(snp_id = snpid, seqnames = chr, start = pos, end = pos, strand = "*") %>%
   dataFrameToGRanges()
 
-#Make database connections
-naive_tabix = "~/projects/macrophage-chromatin/naive_100kb.sorted.unskipped.txt.gz"
-IFNg_tabix = "~/projects/macrophage-chromatin/IFNg_100kb.sorted.unskipped.txt.gz"
+#Import ATAC data
+atac_list = readRDS("../macrophage-chromatin/results/ATAC/ATAC_combined_accessibility_data.rds")
+min_pvalues_list = readRDS("../macrophage-chromatin/results/ATAC/QTLs/rasqual_min_pvalues.rds")
+min_pvalues_hits = lapply(min_pvalues_list, function(x){dplyr::filter(x, p_fdr < 0.1)})
 
-#Fetch p-values
-naive_hits = tabixFetchSNPs(selected_snps, naive_tabix)
-IFNg_hits = tabixFetchSNPs(selected_snps, IFNg_tabix)
+#Fetch corresponding SNPs from ATAC data
+atac_tabix_list = list(naive = "~/projects/macrophage-chromatin/naive_100kb.sorted.unskipped.txt.gz",
+                       IFNg = "~/projects/macrophage-chromatin/IFNg_100kb.sorted.unskipped.txt.gz",
+                       SL1344 = "~/projects/macrophage-chromatin/SL1344_100kb.sorted.unskipped.txt.gz",
+                       IFNg_SL1344 = "~/projects/macrophage-chromatin/IFNg_SL1344_100kb.sorted.unskipped.txt.gz")
+atac_snp_tables = lapply(atac_tabix_list, function(tabix, snps) tabixFetchSNPs(snps, tabix), selected_snps)
 
-ifng_qtls = dplyr::filter(appear_clusters, cluster_id %in% c(1,4,5)) %>% 
-  dplyr::select(gene_id, snp_id) %>% unique() %>%
-  dplyr::left_join(beta_summaries_matrix, by = c("gene_id", "snp_id")) %>%
-  dplyr::mutate(diff = IFNg - naive) %>% 
-  dplyr::filter(diff >= 0.59, IFNg >= 0.59) %>%
+#Identify QTLs that appeat after specific stimuli
+ifng_appear_qtls = dplyr::filter(rna_appear_qtls, abs(IFNg) >= 0.59, abs(IFNg_diff) >= 0.59) %>%
   dplyr::group_by(gene_id) %>% dplyr::arrange(-max_abs_beta) %>%
   dplyr::filter(row_number() == 1) %>% 
   dplyr::ungroup()
+sl1344_appear_qtls = dplyr::filter(rna_appear_qtls, abs(SL1344) >= 0.59, abs(SL1344_diff) >= 0.59) %>%
+  dplyr::group_by(gene_id) %>% dplyr::arrange(-max_abs_beta) %>%
+  dplyr::filter(row_number() == 1) %>% 
+  dplyr::ungroup()
+ifng_sl1344_appear_qtls = dplyr::filter(appear_clusters, cluster_id == 1) %>% 
+  dplyr::select(gene_id, snp_id) %>% unique() %>% 
+  dplyr::left_join(rna_appear_qtls, by = c("gene_id","snp_id"))
 
 #Find candidate ATAC peaks that overlap with condition-specific eQTLs
-ifng_effect_sizes = dplyr::semi_join(IFNg_hits, ifng_qtls, by = "snp_id") %>% 
-  dplyr::group_by(snp_id) %>% dplyr::arrange(desc(chisq)) %>% 
-  dplyr::filter(row_number() == 1) %>% dplyr::select(gene_id, snp_id, p_nominal, beta) %>% ungroup() %>%
-  dplyr::semi_join(min_pvalues_hits$IFNg, by = "gene_id") %>%
-  dplyr::mutate(condition_name = "IFNg") 
+ifng_peaks = findMostAssociatedPeakPerSNP(ifng_appear_qtls, atac_snp_tables$IFNg) %>% dplyr::filter(p_fdr < 0.1)
+sl1344_peaks = findMostAssociatedPeakPerSNP(sl1344_appear_qtls, atac_snp_tables$SL1344) %>% dplyr::filter(p_fdr < 0.1)
+ifng_sl1344_peaks = findMostAssociatedPeakPerSNP(ifng_sl1344_appear_qtls, atac_snp_tables$IFNg_SL1344) %>% dplyr::filter(p_fdr < 0.1)
 
-naive_effect_sizes = dplyr::semi_join(naive_hits, ifng_effect_sizes, by = c("gene_id", "snp_id")) %>%
-  dplyr::select(gene_id, snp_id, p_nominal, beta) %>%
-  dplyr::mutate(condition_name = "naive")
+#Extract effect sizes
+atac_ifng_betas = extractAndProcessBetas(dplyr::select(ifng_peaks, gene_id, snp_id), atac_snp_tables, baseline_column = "naive")
+ifng_joint_effects = mergeATACandRNAEffects(atac_ifng_betas$beta_df, ifng_appear_qtls, rna_betas$beta_df) %>%
+  dplyr::left_join(gene_name_map, by = "gene_id")
 
-a = dplyr::left_join(naive_effect_sizes, ifng_effect_sizes, by = c("gene_id", "snp_id"))
-a = dplyr::left_join(naive_effect_sizes, ifng_effect_sizes, by = c("gene_id", "snp_id"))
-plot(a$beta.x, a$beta.y)
+#Extract ranking for genes
+peak_gene_match = dplyr::left_join(atac_ifng_betas$beta_summaries, dplyr::select(ifng_joint_effects, peak_id, gene_name, snp_id) %>% unique(), by = c("gene_id" = "peak_id", "snp_id"))
+gene_levels = unique(peak_gene_match$gene_name[order(peak_gene_match$IFNg_diff, decreasing = TRUE)])
 
-#Join both together
-joint_effects = rbind(naive_effect_sizes, ifng_effect_sizes) %>% 
-  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg"))) %>%
-  betaCorrectSign()
-joint_effects_matrix = tidyr::spread(joint_effects, condition_name, beta) %>%
-  dplyr::mutate(diff = IFNg - naive) %>%
-  dplyr::mutate(phenotype = "ATAC")
-
-#Extract the effect sizes for RNA as well
-rna_effects = dplyr::semi_join(ifng_qtls, joint_effects_matrix, by = "snp_id") %>%
-  dplyr::transmute(gene_id, snp_id, naive, IFNg, diff, phenotype = "RNA")
-
-#All effects
-all_effects = rbind(joint_effects_matrix, rna_effects)
-
-#Make plot of effect size differences
-plot = ggplot(all_effects, aes(x = diff)) + geom_histogram(binwidth = 0.15) + 
-  facet_wrap(~phenotype, ncol = 1) + 
-  geom_vline(xintercept = 0, colour = "red") +
-  xlab("Effect size difference (IFNg - naive)")
-ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_diff.pdf", plot, width = 6, height = 6)
-
-#Effect size in IFNg condition
-effect_plot = ggplot(all_effects, aes(x = IFNg)) + geom_histogram(binwidth = 0.15) + 
-  facet_wrap(~phenotype, ncol = 1) + 
-  geom_vline(xintercept = 0, colour = "red") +
-  xlab("QTL effect size (IFNg)")
-ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_IFNg.pdf", effect_plot, width = 6, height = 6)
-
-ggplot(joint_effects, aes(x = condition_name, y = beta, group = snp_id)) + geom_point() + geom_line()
-ggplot(a, aes(x = condition_name, y = abs(beta))) + geom_violin()
-
-
-ifng_qtls1 = dplyr::filter(appear_clusters, cluster_id %in% c(4,5)) %>%
+mod_effects = dplyr::mutate(ifng_joint_effects, gene_name = factor(gene_name, levels = gene_levels)) %>%
   dplyr::filter(condition_name %in% c("naive","IFNg")) %>%
-  dplyr::semi_join(a, by = "snp_id")
-ggplot(ifng_qtls1, aes(x = condition_name, y = abs(beta), group = snp_id)) + geom_point() + geom_line()
+  dplyr::group_by(snp_id, peak_id, gene_id) %>% 
+  dplyr::mutate(beta_std = (beta - mean(beta))/sd(beta), beta_scaled = beta/max(beta)) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(beta_binary = ifelse(beta >= 0.59, 1, 0))
 
-a = tidyr::gather(all_effects, "condition_name", "beta", naive:IFNg)
-arranged_snps = dplyr::filter(a, phenotype == "ATAC") %>% arrange(diff) %>% dplyr::select(snp_id, diff) %>% unique()
-a$snp_id = factor(a$snp_id, levels = arranged_snps$snp_id)
-a = group_by(a, snp_id) %>% dplyr::mutate(beta_corr = (beta - mean(beta))/sd(beta))
-effect_size_heatmap = ggplot(a, aes(x = condition_name, y = snp_id, fill = beta_corr)) + facet_wrap(~phenotype) + geom_tile() + 
+effect_size_heatmap = ggplot(mod_effects, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + facet_wrap(~phenotype) + geom_tile() + 
   scale_fill_gradient(space = "Lab", low = "white", high = scales::muted("blue"), name = "Beta") 
 ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_IFNg_heatmap.pdf", effect_size_heatmap, width = 5, height = 7)
+
+
+
+
+#Extract effect sizes
+atac_ifng_betas = extractAndProcessBetas(dplyr::select(ifng_sl1344_peaks, gene_id, snp_id), atac_snp_tables, baseline_column = "naive")
+ifng_joint_effects = mergeATACandRNAEffects(atac_ifng_betas$beta_df, ifng_sl1344_appear_qtls, rna_betas$beta_df) %>%
+  dplyr::left_join(gene_name_map, by = "gene_id")
+
+#Extract ranking for genes
+peak_gene_match = dplyr::left_join(atac_ifng_betas$beta_summaries, dplyr::select(ifng_joint_effects, peak_id, gene_name, snp_id) %>% unique(), by = c("gene_id" = "peak_id", "snp_id"))
+gene_levels = unique(peak_gene_match$gene_name[order(peak_gene_match$IFNg_SL1344_diff, decreasing = TRUE)])
+
+mod_effects = dplyr::mutate(ifng_joint_effects, gene_name = factor(gene_name, levels = gene_levels)) %>%
+  #dplyr::filter(condition_name %in% c("naive","SL1344")) %>%
+  dplyr::group_by(snp_id, peak_id, gene_id) %>% 
+  dplyr::mutate(beta_std = (beta - mean(beta))/sd(beta), beta_scaled = beta/max(beta)) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(beta_binary = ifelse(beta >= 0.59, 1, 0))
+
+effect_size_heatmap = ggplot(mod_effects, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + facet_wrap(~phenotype) + geom_tile() + 
+  scale_fill_gradient(space = "Lab", low = "white", high = scales::muted("blue"), name = "Beta") 
+ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_SL1344_heatmap.pdf", effect_size_heatmap, width = 5, height = 7)
+
+
+#Extract effect sizes
+atac_ifng_betas = extractAndProcessBetas(dplyr::select(sl1344_peaks, gene_id, snp_id), atac_snp_tables, baseline_column = "naive")
+ifng_joint_effects = mergeATACandRNAEffects(atac_ifng_betas$beta_df, sl1344_appear_qtls, rna_betas$beta_df) %>%
+  dplyr::left_join(gene_name_map, by = "gene_id")
+
+#Extract ranking for genes
+peak_gene_match = dplyr::left_join(atac_ifng_betas$beta_summaries, dplyr::select(ifng_joint_effects, peak_id, gene_name, snp_id) %>% unique(), by = c("gene_id" = "peak_id", "snp_id"))
+gene_levels = unique(peak_gene_match$gene_name[order(peak_gene_match$SL1344_diff, decreasing = TRUE)])
+
+mod_effects = dplyr::mutate(ifng_joint_effects, gene_name = factor(gene_name, levels = gene_levels)) %>%
+  dplyr::filter(condition_name %in% c("naive","SL1344")) %>%
+  dplyr::group_by(snp_id, peak_id, gene_id) %>% 
+  dplyr::mutate(beta_std = (beta - mean(beta))/sd(beta), beta_scaled = beta/max(beta)) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(beta_binary = ifelse(beta >= 0.59, 1, 0))
+
+effect_size_heatmap = ggplot(mod_effects, aes(x = condition_name, y = gene_name, fill = beta_std)) + facet_wrap(~phenotype) + geom_tile() + 
+  scale_fill_gradient(space = "Lab", low = "white", high = scales::muted("blue"), name = "Beta") 
+ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_SL1344_heatmap.pdf", effect_size_heatmap, width = 5, height = 7)
+
 
 #Make plots
 makeMultiplePlots(ifng_interactions, combined_expression_data$cqn,filtered_vcf$genotypes,combined_expression_data$sample_metadata,combined_expression_data$gene_metadata) %>%
