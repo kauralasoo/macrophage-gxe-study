@@ -137,6 +137,8 @@ ifng_peaks = findMostAssociatedPeakPerSNP(ifng_appear_qtls, atac_snp_tables[["IF
 sl1344_peaks = findMostAssociatedPeakPerSNP(sl1344_appear_qtls, atac_snp_tables$SL1344) %>% dplyr::filter(p_fdr < 0.1)
 ifng_sl1344_peaks = findMostAssociatedPeakPerSNP(ifng_sl1344_appear_qtls, atac_snp_tables$IFNg_SL1344) %>% dplyr::filter(p_fdr < 0.1)
 
+ifng_peaks = findAllAssociatedPeaksPerSNP(ifng_appear_qtls, atac_snp_tables[["IFNg"]])
+
 #IFNg
 ifng_effects = prepareBetasDf(ifng_appear_qtls, rna_betas, atac_rasqual_list, gene_name_map, 
                               appear_condition = "IFNg", rank_by = "IFNg_diff") %>%
@@ -175,6 +177,9 @@ effect_size_heatmap = ggplot(ifng_sl1344_effects, aes(x = condition_name, y = ge
   scale_fill_gradient2(space = "Lab", low = scales::muted("red"), mid = "white", high = scales::muted("blue"), name = "Beta", midpoint = 0) 
 ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_IFNg_SL1344_heatmap.pdf", effect_size_heatmap, width = 5, height = 4)
 
+#Count the number of peaks per SNP
+ifng_peaks_ifng = findAllAssociatedPeaksPerSNP(ifng_appear_qtls, atac_snp_tables[["IFNg"]]) %>% dplyr::filter(p_bonferroni < 0.1) %>% dplyr::group_by(snp_id) %>% dplyr::summarise(peak_count = length(gene_id))
+ifng_peaks_naive = findAllAssociatedPeaksPerSNP(ifng_appear_qtls, atac_snp_tables[["naive"]]) %>% dplyr::filter(p_bonferroni < 0.1) %>% dplyr::group_by(snp_id) %>% dplyr::summarise(peak_count = length(gene_id))
 
 #Make plots
 makeMultiplePlots(ifng_interactions, combined_expression_data$cqn,filtered_vcf$genotypes,combined_expression_data$sample_metadata,combined_expression_data$gene_metadata) %>%
