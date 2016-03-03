@@ -11,7 +11,7 @@ gene_id_name_map = dplyr::select(eqtl_data_list$gene_metadata, gene_id, gene_nam
 vcf_file = readRDS("results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.rds")
 
 #Load GWAS catalog
-gwas_catalog = importGwasCatalog("annotations/gwas_catalog_v1.0.1-downloaded_2015-11-19.tsv") %>%
+gwas_catalog = importGwasCatalog("annotations/gwas_catalog_v1.0.1-downloaded_2016-03-02.tsv") %>%
   dplyr::filter(is_european == TRUE, sample_size > 1000)
 #Count associations per trait
 assocation_count = group_by(gwas_catalog, mapped_trait) %>%
