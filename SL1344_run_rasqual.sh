@@ -134,32 +134,16 @@ cat results/SL1344/rasqual/output/IFNg_500kb/IFNg_500kb.chr_*.eigenMT.txt | grep
 cat results/SL1344/rasqual/output/SL1344_500kb/SL1344_500kb.chr_*.eigenMT.txt | grep -v snps > results/SL1344/rasqual/output/SL1344_500kb/SL1344_500kb.eigenMT.txt
 cat results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.chr_*.eigenMT.txt | grep -v snps > results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.eigenMT.txt
 
-#Convert rasqual output into a SQLite database
-echo "sqlite" | python ~/software/utils/submitJobs.py --MEM 2000 --jobname convertToSQLite --command "python ~/software/utils/rasqual/rasqualToSQLite.py --indir results/SL1344/rasqual/output/naive_500kb/ --outdir results/SL1344/rasqual/output/naive_500kb/  --prefix naive_500kb --sqlite3_bin /software/ensembl/central/bin/sqlite3"
-echo "sqlite" | python ~/software/utils/submitJobs.py --MEM 2000 --jobname convertToSQLite --command "python ~/software/utils/rasqual/rasqualToSQLite.py --indir results/SL1344/rasqual/output/IFNg_500kb/ --outdir results/SL1344/rasqual/output/IFNg_500kb/  --prefix IFNg_500kb --sqlite3_bin /software/ensembl/central/bin/sqlite3"
-echo "sqlite" | python ~/software/utils/submitJobs.py --MEM 2000 --jobname convertToSQLite --command "python ~/software/utils/rasqual/rasqualToSQLite.py --indir results/SL1344/rasqual/output/SL1344_500kb/ --outdir results/SL1344/rasqual/output/SL1344_500kb/  --prefix SL1344_500kb --sqlite3_bin /software/ensembl/central/bin/sqlite3"
-echo "sqlite" | python ~/software/utils/submitJobs.py --MEM 2000 --jobname convertToSQLite --command "python ~/software/utils/rasqual/rasqualToSQLite.py --indir results/SL1344/rasqual/output/IFNg_SL1344_500kb/ --outdir results/SL1344/rasqual/output/IFNg_SL1344_500kb/  --prefix IFNg_SL1344_500kb --sqlite3_bin /software/ensembl/central/bin/sqlite3"
+# Sort and filter merged p-values
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/sortRasqual.%J.jobout "grep -v SKIPPED results/SL1344/rasqual/output/naive_500kb/naive_500kb.txt | sort -k3,3 -k4,4n | bgzip > results/SL1344/rasqual/output/naive_500kb/naive_500kb.sorted.txt.gz"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/sortRasqual.%J.jobout "grep -v SKIPPED results/SL1344/rasqual/output/IFNg_500kb/IFNg_500kb.txt | sort -k3,3 -k4,4n | bgzip > results/SL1344/rasqual/output/IFNg_500kb/IFNg_500kb.sorted.txt.gz"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/sortRasqual.%J.jobout "grep -v SKIPPED results/SL1344/rasqual/output/SL1344_500kb/SL1344_500kb.txt | sort -k3,3 -k4,4n | bgzip > results/SL1344/rasqual/output/SL1344_500kb/SL1344_500kb.sorted.txt.gz"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/sortRasqual.%J.jobout "grep -v SKIPPED results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.txt | sort -k3,3 -k4,4n | bgzip > results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.sorted.txt.gz"
 
-
-#Run RASQUAL on a subset of genes
-echo "ENSG00000170458,ENSG00000166750,ENSG00000104689,ENSG00000109861" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname runRasqual --command  "python ~/software/utils/runRasqual.py --readCounts rasqual/input/counts/cond_A_counts.bin --offsets rasqual/input/counts/cond_A_factors.bin --n 59 --geneids rasqual/input/counts/gene_id_list.txt --vcf rasqual/input/ASE/SL1344_ASE_counts_condA.vcf.gz --geneMetadata rasqual/input/snp_counts.txt --featureCoords annotations/Homo_sapiens.GRCh38.79.gene_exon_start_end.txt > rasqual.out"
-
-echo "ENSG00000170458" | python ~/software/utils/runRasqual.py --readCounts rasqual/input/counts/cond_A_counts.bin --offsets rasqual/input/counts/cond_A_factors.bin --n 59 --geneids rasqual/input/counts/gene_id_list.txt --vcf rasqual/input/ASE/SL1344_ASE_counts_condA.vcf.gz --geneMetadata genotypes/SL1344/snps_per_gene.txt --execute True > rasqual.out3
-
-#VCAM1
-echo "ENSG00000162692" | python ~/software/utils/runRasqual.py --readCounts rasqual/input/counts/cond_A_counts.bin --offsets rasqual/input/counts/cond_A_factors.bin --n 59 --geneids rasqual/input/counts/gene_id_list.txt --vcf rasqual/input/ASE/SL1344_ASE_counts_condA.vcf.gz --geneMetadata genotypes/SL1344/snps_per_gene.txt --execute True > VCAM1.cond_A.rasqual
-echo "ENSG00000162692" | python ~/software/utils/runRasqual.py --readCounts rasqual/input/counts/cond_B_counts.bin --offsets rasqual/input/counts/cond_B_factors.bin --n 59 --geneids rasqual/input/counts/gene_id_list.txt --vcf rasqual/input/ASE/SL1344_ASE_counts_condB.vcf.gz --geneMetadata genotypes/SL1344/snps_per_gene.txt --execute True > VCAM1.cond_B.rasqual
-
-python ~/software/utils/rasqualToIGV.py --rasqualOut VCAM1.cond_A.rasqual --geneid ENSG00000162692 > VCAM1.cond_A.gwas
-python ~/software/utils/rasqualToIGV.py --rasqualOut VCAM1.cond_B.rasqual --geneid ENSG00000162692 > VCAM1.cond_B.gwas
-
-
-#CTSC
-echo "ENSG00000109861" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname runRasqual --command "python ~/software/utils/runRasqual.py --readCounts rasqual/input/counts/cond_A_counts.bin --offsets rasqual/input/counts/cond_A_factors.bin --n 59 --geneids rasqual/input/counts/gene_id_list.txt --vcf rasqual/input/ASE/SL1344_ASE_counts_condA.vcf.gz --geneMetadata genotypes/SL1344/snps_per_gene.txt --execute True > CTSC.cond_A.rasqual"
-echo "ENSG00000109861" |  python ~/software/utils/submitJobs.py --MEM 1000 --jobname runRasqual --command "python ~/software/utils/runRasqual.py --readCounts rasqual/input/counts/cond_B_counts.bin --offsets rasqual/input/counts/cond_B_factors.bin --n 59 --geneids rasqual/input/counts/gene_id_list.txt --vcf rasqual/input/ASE/SL1344_ASE_counts_condB.vcf.gz --geneMetadata genotypes/SL1344/snps_per_gene.txt --execute True > CTSC.cond_B.rasqual"
-
-python ~/software/utils/rasqualToIGV.py --rasqualOut CTSC.cond_A.rasqual --geneid ENSG00000109861 > CTSC.cond_A.gwas
-python ~/software/utils/rasqualToIGV.py --rasqualOut CTSC.cond_B.rasqual --geneid ENSG00000109861 > CTSC.cond_B.gwas
-
+#Index the output files using Tabix
+tabix -s3 -b4 -e4 -f results/SL1344/rasqual/output/naive_500kb/naive_500kb.sorted.txt.gz
+tabix -s3 -b4 -e4 -f results/SL1344/rasqual/output/IFNg_500kb/IFNg_500kb.sorted.txt.gz
+tabix -s3 -b4 -e4 -f results/SL1344/rasqual/output/SL1344_500kb/SL1344_500kb.sorted.txt.gz
+tabix -s3 -b4 -e4 -f results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.sorted.txt.gz
 
 
