@@ -5,6 +5,7 @@ library("gplots")
 library("ggplot2")
 library("tidyr")
 load_all("../seqUtils/")
+library("pheatmap")
 
 #Load processed expression data from disk
 expression_data = readRDS("results/acLDL/acLDL_combined_expression_data.rds")
@@ -21,29 +22,42 @@ expressed_data_2 = extractConditionFromExpressionList(c("Ctrl","AcLDL"), express
 strong_responders_meta = dplyr::filter(expressed_data$sample_metadata, donor %in% strong_responder_donors)
 weak_responders_meta = dplyr::filter(expressed_data$sample_metadata, !(donor %in% strong_responder_donors))
 
+#Create purity df
+purity = dplyr::select(expressed_data$sample_metadata, sample_id, mean_purity) %>% as.data.frame()
+rownames(purity) = purity$sample_id
+purity = dplyr::select(purity, -sample_id)
+
 #Make heatmap of gene expression
-cor_matrix = cor(expressed_data$cqn[,strong_responders_meta$sample_id], method = "spearman")
-heatmap.2(cor_matrix, margins = c(12,12))
+cor_matrix = cor(expressed_data$cqn, method = "spearman")
+pheatmap(cor_matrix, annotation_col = purity)
+pheatmap(cor_matrix, annotation_col = purity, filename = "results/acLDL/DE/expressed_genes_heatmap.pdf", width = 16, height = 14)
 
 #Perform PCA
-pca_list = performPCA(expressed_data$cqn, expressed_data$sample_metadata)
-ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = condition, label = sample_id)) + 
+pca_list = performPCA(expressed_data$cqn[de_results_filtered$gene_id,], expressed_data$sample_metadata)
+pca_plot = ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = condition, label = sample_id)) + 
   geom_point() +
   geom_text()
+ggsave("results/acLDL/DE/expressed_genes_PCA.pdf", pca_plot, width = 12, height = 10)
 
+#Perform PCA on AcLDL condition only
+acLDL_samples = dplyr::filter(expressed_data$sample_metadata, condition_name == "AcLDL")
+pca_list = performPCA(expressed_data$cqn[de_results_filtered$gene_id,acLDL_samples$sample_id], acLDL_samples)
+pca_plot = ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = condition, label = sample_id)) + 
+  geom_point() +
+  geom_text()
 #Extract gene metadata
 gene_data = dplyr::select(expressed_data$gene_metadata, gene_id, gene_name, gene_biotype)
 
 ### AcLDL vs Ctrl DE ###
 #Construct design matrix
-ctrl_vs_acldl_design = dplyr::filter(expressed_data$sample_metadata, condition_name %in% c("AcLDL","Ctrl"))
+ctrl_vs_acldl_design = dplyr::filter(expressed_data$sample_metadata, condition_name %in% c("AcLDL","Ctrl"), !(donor %in% c("piun")))
 rownames(ctrl_vs_acldl_design) = ctrl_vs_acldl_design$sample_id
 filtered_counts = expressed_data$counts[,ctrl_vs_acldl_design$sample_id]
 
 #Peform differential expression analysis together with response groups
-dds = DESeqDataSetFromMatrix(filtered_counts, ctrl_vs_acldl_design, ~condition + response_group + condition*response_group)
-dds = DESeq(dds)
-res = results(dds) #Extract DE results
+#dds = DESeqDataSetFromMatrix(filtered_counts, ctrl_vs_acldl_design, ~condition + response_group + condition*response_group)
+#dds = DESeq(dds)
+#res = results(dds) #Extract DE results
 
 #Peform differential expression analysis
 dds = DESeqDataSetFromMatrix(filtered_counts, ctrl_vs_acldl_design, ~condition)
@@ -63,11 +77,18 @@ de_results_filtered = dplyr::filter(de_results, padj < 0.05, abs(log2FoldChange)
   arrange(desc(log2FoldChange))
 write.table(de_results_filtered, "results/acLDL/DE/ctrl_vs_acldl_DE_genes_filtered.txt", sep= "\t", quote = FALSE, row.names = FALSE)
 
-#Make heatmap with DE genes only
-de_results_filtered$gene_id
+#Make heatmap with DE genes only (1.5 fold)
+cor_matrix = cor(expressed_data$cqn[de_results_filtered$gene_id,rownames(ctrl_vs_acldl_design)], method = "pearson")
+pheatmap(cor_matrix, annotation_col = purity)
+pheatmap(cor_matrix, annotation_col = purity, filename = "results/acLDL/DE/DE_genes_1,5fold_heatmap.pdf", width = 16, height = 14)
 
-cor_matrix = cor(expressed_data$cqn[de_results_filtered$gene_id,weak_responders_meta$sample_id ], method = "pearson")
-heatmap.2(cor_matrix, margins = c(12,12))
+#2-fold change in DE
+de_results_filtered = dplyr::filter(de_results, padj < 0.05, abs(log2FoldChange) > 1) %>%
+  arrange(desc(log2FoldChange))
+cor_matrix = cor(expressed_data$cqn[de_results_filtered$gene_id,rownames(ctrl_vs_acldl_design)], method = "pearson")
+pheatmap(cor_matrix, annotation_col = purity)
+pheatmap(cor_matrix, annotation_col = purity, filename = "results/acLDL/DE/DE_genes_2fold_heatmap.pdf", width = 16, height = 14)
+
 
 #Test for interaction between LAL and AcLDL
 lal_design = dplyr::semi_join(expressed_data$sample_metadata, 
@@ -85,4 +106,6 @@ dds = DESeq(dds)
 results(dds, name = "AcLDLyes.LALyes") %>% as.data.frame() %>% dplyr::filter(padj < 0.1)
 results(dds, name = "AcLDL_yes_vs_no") %>% as.data.frame() %>% dplyr::filter(padj < 0.05)
 results(dds, name = "LAL_yes_vs_no") %>% as.data.frame() %>% dplyr::filter(padj < 0.05)
+
+
 

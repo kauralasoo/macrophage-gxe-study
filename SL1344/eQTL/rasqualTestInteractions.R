@@ -16,7 +16,7 @@ gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, g
 #Load p-values from disk
 rasqual_min_pvalues = readRDS("results/SL1344/eQTLs/rasqual_min_pvalues.rds")
 rasqual_min_hits = lapply(rasqual_min_pvalues, function(x){dplyr::filter(x, p_fdr < 0.1)})
-min_pvalue_df = ldply(rasqual_min_hits, .id = "condition_name")
+min_pvalue_df = plyr::ldply(rasqual_min_hits, .id = "condition_name")
 joint_pairs = dplyr::select(min_pvalue_df, gene_id, snp_id) %>% unique() 
 
 rasqual_selected_pvalues = readRDS("results/SL1344/eQTLs/rasqual_selected_pvalues.rds")
@@ -42,6 +42,8 @@ formula_interaction = as.formula(paste("expression ~ genotype + condition_name +
 #Test for interactions
 interaction_results = testMultipleInteractions(filtered_pairs, combined_expression_data, filtered_vcf, formula_qtl, formula_interaction)
 interaction_df = postProcessInteractionPvalues(interaction_results)
+saveRDS(interaction_df, "results/SL1344/eQTLs/SL1344_interaction_pvalues.rds")
+interaction_df = readRDS("results/SL1344/eQTLs/SL1344_interaction_pvalues.rds")
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 
 #Extract effect sizes for all gene-snp pairs from RASQUAL data
@@ -91,8 +93,6 @@ disappear_means_plot = ggplot(disappear_cluster_means, aes(x = condition_name, y
   xlab("Condition") + 
   ylab("Log2 fold-change")
 ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_cluster_means.pdf",disappear_means_plot, width = 6, height = 6)
-
-
 
 
 #### Find most associated peaks for each gene ####
@@ -205,5 +205,28 @@ ggplot(plotting_data, aes(x = factor(lead_snp_value), y = abs(0.5-ratio))) +
   geom_jitter(position = position_jitter(width = .1)) +
   xlab("Feature SNP id") + 
   ylab("Reference allele ratio")
+
+
+#Find overlaps with the GWAS catalog
+snp_positions = vcf_file$snpspos %>% tbl_df() %>% dplyr::rename(snp_id = snpid)
+
+#Import GWAS catalog
+filtered_catalog = readRDS("annotations/gwas_catalog_v1.0.1-downloaded_2016-03-02.filtered.rds")
+
+#GWAS overlaps for QTLs that appear
+qtl_table = dplyr::select(appear_qtls, gene_id, snp_id)
+interaction_olaps = findGWASOverlaps(qtl_table, filtered_catalog, vcf_file)
+interaction_gwas_hits = dplyr::left_join(interaction_olaps, gene_name_map, by = "gene_id") %>%
+  dplyr::select(gene_name, snp_id, gwas_snp_id, R2, trait, gwas_pvalue)
+write.table(interaction_gwas_hits, "results/SL1344/eQTLs/appear_gwas_overlaps.txt", row.names = FALSE, sep = "\t", quote = FALSE)
+
+#All GWAS overlaps
+all_olaps = findGWASOverlaps(filtered_pairs, filtered_catalog, vcf_file)
+all_gwas_hits = dplyr::left_join(all_olaps, gene_name_map, by = "gene_id") %>%
+  dplyr::select(gene_name, snp_id, gwas_snp_id, R2, trait, gwas_pvalue)
+write.table(all_gwas_hits, "results/SL1344/eQTLs/all_gwas_overlaps.txt", row.names = FALSE, sep = "\t", quote = FALSE)
+
+
+
 
 
