@@ -6,16 +6,21 @@ library("SNPRelate")
 load_all("../seqUtils/")
 load_all("macrophage-gxe-study/housekeeping/")
 
-#Import data
-eqtl_data_list = readRDS("results/SL1344/eqtl_data_list.rds")
-gene_id_name_map = dplyr::select(eqtl_data_list$gene_metadata, gene_id, gene_name)
+#Load the raw eQTL dataset
+combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
+combined_expression_data$sample_metadata$condition_name = factor(combined_expression_data$sample_metadata$condition_name, 
+                                                                 levels = c("naive", "IFNg", "SL1344", "IFNg_SL1344"))
+gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name)
 
 #Import genotypes
-SNPRelate::snpgdsVCF2GDS("results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz", 
-                         "results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.gds", method = "copy.num.of.ref")
-vcf_file = gdsToMatrix("results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.gds")
-saveRDS(vcf_file, "results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.rds")
-vcf_file = readRDS("results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.rds")
+#SNPRelate::snpgdsVCF2GDS("results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz", 
+#                         "results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.gds", method = "copy.num.of.ref")
+#vcf_file = gdsToMatrix("results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.gds")
+#saveRDS(vcf_file, "results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.rds")
+#vcf_file = readRDS("results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.rds")
+
+#Import the VCF file
+vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
 #Import permutation p-values
 naive_qtls = importFastQTLTable("results/SL1344/fastqtl/output/naive_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_id_name_map)
@@ -126,10 +131,15 @@ plot(ld_mat$ld*ld_mat$ld, ld_mat2$ld*ld_mat2$ld)
 
 #Regress on lead SNP to find alternatives
 #Example SEL1L3 gene
-plotEQTL("ENSG00000091490", "rs13141111", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
-         eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
-plotEQTL("ENSG00000091490", "rs6831024", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
-         eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
+plotEQTL("ENSG00000091490", "rs7695852", combined_expression_data$cqn, vcf_file$genotypes, 
+         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+plotEQTL("ENSG00000091490", "rs12645153", combined_expression_data$cqn, vcf_file$genotypes, 
+         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+
+#Fetch p-values from rasqual output
+gene_df = data_frame(gene_id = "ENSG00000091490")
+gene_ranges = constructGeneRanges(gene_df, combined_expression_data$gene_metadata, cis_window = 5e5)
+tabix_data = tabixFetchGenes(gene_ranges, "databases/SL1344/IFNg_SL1344_500kb.sorted.txt.gz")
 
 #Set up covariates
 covariates = eqtl_data_list$covariates_list$IFNg_SL1344[1:7,]

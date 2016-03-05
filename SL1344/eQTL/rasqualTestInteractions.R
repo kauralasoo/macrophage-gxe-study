@@ -58,6 +58,18 @@ appear_plot = ggplot(appear_clusters, aes(x = condition_name, y = beta, group = 
   geom_line() + facet_wrap(~cluster_id)
 ggsave("results/SL1344/eQTLs/properties/eQTLs_appear_kmeans.pdf",appear_plot, width = 10, height = 10)
 
+#Make heatmap of effect sizes
+appear_betas = appear_clusters %>% dplyr::group_by(gene_id, snp_id) %>% dplyr::mutate(beta_scaled = beta/max(beta)) %>%
+  dplyr::left_join(gene_name_map, by = "gene_id")
+effect_size_heatmap = ggplot(appear_betas, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + 
+  facet_grid(cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
+  scale_x_discrete(expand = c(0, 0)) +
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_fill_gradient2(space = "Lab", low = scales::muted("red"), mid = "white", high = scales::muted("blue"), name = "Beta", midpoint = 0) +
+  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
+ggsave("results/SL1344/eQTLs/properties/eQTLs_appear_kmeans_heatmap.pdf",effect_size_heatmap, width = 7, height = 10)
+
+
 #Calculate mean effect size in each cluster and condition
 appear_cluster_means = calculateClusterMeans(appear_clusters)
 cluster_sizes = calculateClusterSizes(appear_clusters)
