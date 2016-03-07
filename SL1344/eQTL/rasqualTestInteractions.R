@@ -65,9 +65,9 @@ effect_size_heatmap = ggplot(appear_betas, aes(x = condition_name, y = gene_name
   facet_grid(cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
-  scale_fill_gradient2(space = "Lab", low = scales::muted("red"), mid = "white", high = scales::muted("blue"), name = "Beta", midpoint = 0) +
+  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) +
   theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
-ggsave("results/SL1344/eQTLs/properties/eQTLs_appear_kmeans_heatmap.pdf",effect_size_heatmap, width = 7, height = 10)
+ggsave("results/SL1344/eQTLs/properties/eQTLs_appear_kmeans_heatmap.pdf",effect_size_heatmap, width = 5, height = 7)
 
 
 #Calculate mean effect size in each cluster and condition
@@ -92,11 +92,24 @@ disappear_plot = ggplot(disappear_clusters, aes(x = condition_name, y = abs(beta
   geom_line() + facet_wrap(~cluster_id)
 ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_kmeans.pdf",disappear_plot, width = 10, height = 10)
 
+
 #Calculate mean effect size in each cluster and condition
 disappear_cluster_sizes = calculateClusterSizes(disappear_clusters, selected_condition = "IFNg_SL1344") %>% 
   dplyr::filter(count > 10)
 disappear_cluster_means = calculateClusterMeans(disappear_clusters) %>%
   dplyr::semi_join(disappear_cluster_sizes, by = "cluster_id")
+
+disappear_betas = disappear_clusters %>% dplyr::group_by(gene_id, snp_id) %>% dplyr::mutate(beta_scaled = beta/max(beta)) %>%
+  dplyr::left_join(gene_name_map, by = "gene_id") %>%
+  dplyr::semi_join(disappear_cluster_sizes, by = "cluster_id")
+dis_effect_size_heatmap = ggplot(disappear_betas, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + 
+  facet_grid(cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
+  scale_x_discrete(expand = c(0, 0)) +
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) +
+  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
+ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_kmeans_heatmap.pdf",dis_effect_size_heatmap, width = 5, height = 5)
+
 
 disappear_means_plot = ggplot(disappear_cluster_means, aes(x = condition_name, y = beta_mean, group = cluster_id)) + 
   geom_point() + geom_line() + facet_wrap(~cluster_id) + 
@@ -125,11 +138,11 @@ min_pvalues_list = readRDS("../macrophage-chromatin/results/ATAC/QTLs/rasqual_mi
 min_pvalues_hits = lapply(min_pvalues_list, function(x){dplyr::filter(x, p_fdr < 0.1)})
 
 #Fetch corresponding SNPs from ATAC data
-atac_tabix_list = list(naive = "~/projects/macrophage-chromatin/naive_100kb.sorted.unskipped.txt.gz",
-                       IFNg = "~/projects/macrophage-chromatin/IFNg_100kb.sorted.unskipped.txt.gz",
-                       SL1344 = "~/projects/macrophage-chromatin/SL1344_100kb.sorted.unskipped.txt.gz",
-                       IFNg_SL1344 = "~/projects/macrophage-chromatin/IFNg_SL1344_100kb.sorted.unskipped.txt.gz")
-atac_rasqual_list = lapply(atac_tabix_list, function(tabix, snps) tabixFetchSNPs(snps, tabix), selected_snps)
+atac_tabix_list = list(naive = "databases/ATAC/naive_100kb.sorted.unskipped.txt.gz",
+                       IFNg = "databases/ATAC/IFNg_100kb.sorted.unskipped.txt.gz",
+                       SL1344 = "databases/ATAC/SL1344_100kb.sorted.unskipped.txt.gz",
+                       IFNg_SL1344 = "databases/ATAC/IFNg_SL1344_100kb.sorted.unskipped.txt.gz")
+atac_snp_tables = lapply(atac_tabix_list, function(tabix, snps) tabixFetchSNPs(snps, tabix), selected_snps)
 
 #Identify QTLs that appeat after specific stimuli
 ifng_appear_qtls = dplyr::filter(rna_appear_qtls, abs(IFNg) >= 0.59, abs(IFNg_diff) >= 0.59) %>%
@@ -161,7 +174,7 @@ ifng_effects = prepareBetasDf(ifng_appear_qtls, rna_betas, atac_rasqual_list, ge
   dplyr::mutate(beta_binary = ifelse(beta >= 0.59, 1, 0))
 
 effect_size_heatmap = ggplot(ifng_effects, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + facet_wrap(~phenotype) + geom_tile() + 
-  scale_fill_gradient2(space = "Lab", low = scales::muted("red"), mid = "white", high = scales::muted("blue"), name = "Beta", midpoint = 0) 
+  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) 
 ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_IFNg_heatmap.pdf", effect_size_heatmap, width = 5, height = 7)
 
 #SL1344
@@ -174,7 +187,7 @@ sl1344_effects = prepareBetasDf(sl1344_appear_qtls, rna_betas, atac_rasqual_list
   dplyr::mutate(beta_binary = ifelse(beta >= 0.59, 1, 0))
 
 effect_size_heatmap = ggplot(sl1344_effects, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + facet_wrap(~phenotype) + geom_tile() + 
-  scale_fill_gradient2(space = "Lab", low = scales::muted("red"), mid = "white", high = scales::muted("blue"), name = "Beta", midpoint = 0) 
+  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) 
 ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_SL1344_heatmap.pdf", effect_size_heatmap, width = 5, height = 7)
 
 #SL1344
@@ -186,8 +199,8 @@ ifng_sl1344_effects = prepareBetasDf(ifng_sl1344_appear_qtls, rna_betas, atac_ra
   dplyr::mutate(beta_binary = ifelse(beta >= 0.59, 1, 0))
 
 effect_size_heatmap = ggplot(ifng_sl1344_effects, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + facet_wrap(~phenotype) + geom_tile() + 
-  scale_fill_gradient2(space = "Lab", low = scales::muted("red"), mid = "white", high = scales::muted("blue"), name = "Beta", midpoint = 0) 
-ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_IFNg_SL1344_heatmap.pdf", effect_size_heatmap, width = 5, height = 4)
+  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) 
+ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_IFNg_SL1344_heatmap.pdf", effect_size_heatmap, width = 8, height = 4)
 
 #Count the number of peaks per SNP
 ifng_peaks_ifng = findAllAssociatedPeaksPerSNP(ifng_appear_qtls, atac_snp_tables[["IFNg"]]) %>% dplyr::filter(p_bonferroni < 0.1) %>% dplyr::group_by(snp_id) %>% dplyr::summarise(peak_count = length(gene_id))
@@ -241,4 +254,44 @@ write.table(all_gwas_hits, "results/SL1344/eQTLs/all_gwas_overlaps.txt", row.nam
 
 
 
+#Explore multiple SNPs per gene
+#Fetch p-values from rasqual output
+gene_df = data_frame(gene_id = "ENSG00000091490")
+gene_ranges = constructGeneRanges(gene_df, combined_expression_data$gene_metadata, cis_window = 5e5)
+tabix_data = tabixFetchGenes(gene_ranges, "databases/SL1344/IFNg_500kb.sorted.txt.gz")[[1]] %>%
+  dplyr::arrange(p_nominal) %>%
+  addAssociationPosterior(86) %>%
+  dplyr::filter(lABF > max(lABF)/3)
+unique_snps = filterGeneR2(tabix_data, vcf_file$genotypes, 0.2)
+plot(tabix_data$pos, tabix_data$lABF)
+
+
+
+tabix_files = list(naive = "databases/SL1344/naive_500kb.sorted.txt.gz", IFNg = "databases/SL1344/IFNg_500kb.sorted.txt.gz",
+                   SL1344 = "databases/SL1344/SL1344_500kb.sorted.txt.gz", IFNg_SL1344 = "databases/SL1344/IFNg_SL1344_500kb.sorted.txt.gz")
+coords = lapply(tabix_files, function(x, gene_ranges) {
+  tabixFetchGenes(gene_ranges, x)[[1]]
+}, gene_ranges)
+beta_list1 = extractAndProcessBetas(dplyr::select(unique_snps, gene_id, snp_id), coords, "naive")
+beta_list2 = extractAndProcessBetas(dplyr::select(head(tabix_data,4), gene_id, snp_id), coords, "naive")
+
+
+gene_df = data_frame(gene_id = "ENSG00000178209")
+gene_ranges = constructGeneRanges(gene_df, combined_expression_data$gene_metadata, cis_window = 5e5)
+tabix_data = tabixFetchGenes(gene_ranges, "databases/SL1344/IFNg_SL1344_500kb.sorted.txt.gz")[[1]] %>%
+  dplyr::arrange(p_nominal) %>%
+  addAssociationPosterior(86) %>%
+  dplyr::filter(lABF > max(lABF)/3)
+
+unique_snps = filterGeneR2(tabix_data, vcf_file$genotypes, 0.2)
+
+
+
+tabix_files = list(naive = "databases/SL1344/naive_500kb.sorted.txt.gz", IFNg = "databases/SL1344/IFNg_500kb.sorted.txt.gz",
+                   SL1344 = "databases/SL1344/SL1344_500kb.sorted.txt.gz", IFNg_SL1344 = "databases/SL1344/IFNg_SL1344_500kb.sorted.txt.gz")
+coords = lapply(tabix_files, function(x, gene_ranges) {
+  tabixFetchGenes(gene_ranges, x)[[1]]
+}, gene_ranges)
+beta_list1 = extractAndProcessBetas(dplyr::select(unique_snps, gene_id, snp_id), coords, "naive")
+beta_list2 = extractAndProcessBetas(dplyr::select(head(tabix_data,4), gene_id, snp_id), coords, "naive")
 

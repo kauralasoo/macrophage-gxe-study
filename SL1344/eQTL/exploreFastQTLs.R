@@ -140,6 +140,15 @@ plotEQTL("ENSG00000091490", "rs12645153", combined_expression_data$cqn, vcf_file
 gene_df = data_frame(gene_id = "ENSG00000091490")
 gene_ranges = constructGeneRanges(gene_df, combined_expression_data$gene_metadata, cis_window = 5e5)
 tabix_data = tabixFetchGenes(gene_ranges, "databases/SL1344/IFNg_SL1344_500kb.sorted.txt.gz")
+a = tabix_data[[1]]
+plot(a$pos, a$chisq)
+
+gene_df = data_frame(gene_id = "ENSG00000091490")
+gene_ranges = constructGeneRanges(gene_df, combined_expression_data$gene_metadata, cis_window = 5e5)
+tabix_data = tabixFetchGenes(gene_ranges, "databases/SL1344/IFNg_500kb.sorted.txt.gz")
+a = tabix_data[[1]]
+plot(a$pos, a$chisq)
+
 
 #Set up covariates
 covariates = eqtl_data_list$covariates_list$IFNg_SL1344[1:7,]
