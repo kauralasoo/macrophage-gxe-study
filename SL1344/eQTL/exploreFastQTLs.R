@@ -131,24 +131,32 @@ plot(ld_mat$ld*ld_mat$ld, ld_mat2$ld*ld_mat2$ld)
 
 #Regress on lead SNP to find alternatives
 #Example SEL1L3 gene
-plotEQTL("ENSG00000091490", "rs7695852", combined_expression_data$cqn, vcf_file$genotypes, 
+plotEQTL("ENSG00000091490", "rs10006078", combined_expression_data$cqn, vcf_file$genotypes, 
          combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
-plotEQTL("ENSG00000091490", "rs12645153", combined_expression_data$cqn, vcf_file$genotypes, 
+plotEQTL("ENSG00000091490", "rs6831024", combined_expression_data$cqn, vcf_file$genotypes, 
          combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
 
 #Fetch p-values from rasqual output
 gene_df = data_frame(gene_id = "ENSG00000091490")
 gene_ranges = constructGeneRanges(gene_df, combined_expression_data$gene_metadata, cis_window = 5e5)
 tabix_data = tabixFetchGenes(gene_ranges, "databases/SL1344/IFNg_SL1344_500kb.sorted.txt.gz")
-a = tabix_data[[1]]
+cond1 = tabix_data[[1]] %>% dplyr::filter(p_nominal < 0.01)
 plot(a$pos, a$chisq)
 
 gene_df = data_frame(gene_id = "ENSG00000091490")
 gene_ranges = constructGeneRanges(gene_df, combined_expression_data$gene_metadata, cis_window = 5e5)
 tabix_data = tabixFetchGenes(gene_ranges, "databases/SL1344/IFNg_500kb.sorted.txt.gz")
-a = tabix_data[[1]]
+cond2 = tabix_data[[1]] %>% dplyr::filter(p_nominal < 0.01)
 plot(a$pos, a$chisq)
+fisher.r2z <- function(r) { 0.5 * (log(1+r) - log(1-r)) }
+cond2$z = fisher.r2z(sqrt(cond2$chisq/69)*sign(cond2$beta))
 
+#Export effect sizes
+write.table(dplyr::select(cond1, snp_id, beta), "SEL1L3/ifng_sl1344_log2FC.z", row.names = FALSE, col.names = FALSE, quote = FALSE, sep = " ")
+write.table(dplyr::select(cond1, snp_id, beta), "SEL1L3/ifng_log2FC.z", row.names = FALSE, col.names = FALSE, quote = FALSE, sep = " ")
+
+snp_correlation_matrix = cor(t(vcf_file$genotypes[cond1$snp_id,]))
+write.table(snp_correlation_matrix, "SEL1L3/ifng_log2FC.ld", row.names = FALSE, col.names = FALSE, quote = FALSE, sep = " ")
 
 #Set up covariates
 covariates = eqtl_data_list$covariates_list$IFNg_SL1344[1:7,]
