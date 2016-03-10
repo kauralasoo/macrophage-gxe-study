@@ -87,7 +87,8 @@ diff_exp_heatmap = ggplot(cluster_plot_data %>% dplyr::sample_frac(0.4), aes(x =
   scale_y_discrete(expand = c(0, 0)) +
   scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Expression", midpoint = 0) +
   theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
-ggsave("results/SL1344/SL1344_DE_clusters.pdf",diff_exp_heatmap, width = 5, height = 7)
+ggsave("results/SL1344/DE/DE_clusters.pdf",diff_exp_heatmap, width = 5, height = 7)
+ggsave("results/SL1344/DE/DE_clusters.png",diff_exp_heatmap, width = 5, height = 7)
 
 #Perform GO analysis
 clusters = dplyr::select(cluster_plot_data, new_cluster_id, gene_id) %>% unique() %>%
