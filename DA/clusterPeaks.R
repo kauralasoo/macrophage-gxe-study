@@ -81,28 +81,15 @@ ggplot(cluster_plot_data, aes(x = condition_name, y = expression)) +
 final_clusters = dplyr::select(cluster_plot_data, gene_id, MEM.SHIP, new_cluster_id) %>% unique()
 saveRDS(final_clusters, "results/ATAC/DA/peak_clusters.rds")
 
-#export bed files with clusters
-synergisitic_peaks = dplyr::semi_join(atac_list$gene_metadata, dplyr::filter(final_clusters, new_cluster_id == 1), by = "gene_id") %>% tbl_df()
-salmonella_peaks = dplyr::semi_join(atac_list$gene_metadata, dplyr::filter(final_clusters, new_cluster_id == 2), by = "gene_id") %>% tbl_df()
-inflammatory_peaks = dplyr::semi_join(atac_list$gene_metadata, dplyr::filter(final_clusters, new_cluster_id == 3), by = "gene_id") %>% tbl_df()
-ifng_peaks = dplyr::semi_join(atac_list$gene_metadata, dplyr::filter(final_clusters, new_cluster_id == 4), by = "gene_id") %>% tbl_df()
-ifng_down_peaks = dplyr::semi_join(atac_list$gene_metadata, dplyr::filter(final_clusters, new_cluster_id == 5), by = "gene_id") %>% tbl_df()
-inflammatory_down_peaks = dplyr::semi_join(atac_list$gene_metadata, dplyr::filter(final_clusters, new_cluster_id == 6), by = "gene_id") %>% tbl_df()
+#Add coordinates to each cluster
+cluster_names = data_frame(new_cluster_id = c(1:6), name = c("IFNg_SL1344_up", "SL1344_up", "inflammatory_up", "IFNg_up", "IFNg_down", "SL1344_down"))
 
-savePeaks <- function(peak_df, path){
-  dplyr::rename(peak_df, seqnames = chr) %>% 
-    dataFrameToGRanges() %>% 
-    export.bed(path)
-}
-
-#Save all peaks into different files
-savePeaks(synergisitic_peaks, "results/ATAC/DA/ATAC_peak_lists/synergisitic.bed")
-savePeaks(inflammatory_peaks, "results/ATAC/DA/ATAC_peak_lists/inflammatory.bed")
-savePeaks(salmonella_peaks, "results/ATAC/DA/ATAC_peak_lists/salmonella.bed")
-savePeaks(ifng_peaks, "results/ATAC/DA/ATAC_peak_lists/ifng.bed")
-savePeaks(ifng_down_peaks, "results/ATAC/DA/ATAC_peak_lists/ifng_down.bed")
-savePeaks(inflammatory_down_peaks, "results/ATAC/DA/ATAC_peak_lists/inflammatory_down.bed")
-savePeaks(atac_list$gene_metadata, "results/ATAC/DA/ATAC_peak_lists/all_peaks.bed")
+#Export all clusters as a single bed file
+cluster_ranges = dplyr::left_join(final_clusters, cluster_names, by = "new_cluster_id") %>% 
+  dplyr::ungroup() %>% 
+  dplyr::left_join(atac_list$gene_metadata) %>% 
+  dplyr::transmute(gene_id, name, seqnames = chr, start, end, strand)
+export.bed(dataFrameToGRanges(cluster_ranges), "results/ATAC/DA/ATAC_clustered_peaks.bed")
 
 #Export ChIP peaks
 chip_peaks = readRDS("results/ATAC/DA/Chip_peak_lists.rds")
