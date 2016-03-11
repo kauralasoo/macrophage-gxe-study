@@ -67,7 +67,7 @@ cluster_plot_data = dplyr::left_join(cluster_exp, cluster_order, by = "cluster_i
   dplyr::group_by(new_cluster_id)
 
 #Make a heatmap
-ggplot(cluster_plot_data %>% dplyr::sample_frac(0.1), aes(x = condition_name, y = gene_id, fill = expression)) + 
+ggplot(cluster_plot_data %>% dplyr::sample_frac(0.5), aes(x = condition_name, y = gene_id, fill = expression)) + 
   facet_grid(new_cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +

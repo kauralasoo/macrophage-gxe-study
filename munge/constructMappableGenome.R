@@ -1,8 +1,7 @@
 
 #Import blacklist and change chromosome names
 blacklist = read.table("../../annotations/blacklists/wgEncodeDacMapabilityConsensusExcludable.hg38.bed")
-chr_map = read.table("../macrophage-gxe-study/macrophage-gxe-study/data/liftOver_genotypes/Hg38ToGRCh38_chromosome_map.txt")
-colnames(chr_map) = c("V1", "V7")
+chrcolnames(chr_map) = c("V1", "V7")
 blacklist_new_names = dplyr::filter(blacklist, V1 %in% chr_map$V1) %>%
   dplyr::left_join(chr_map, by = "V1") %>% 
   dplyr::select(-V1) %>%
