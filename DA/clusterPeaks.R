@@ -8,6 +8,7 @@ library("edgeR")
 library("Biobase")
 library("Mfuzz")
 library("ggplot2")
+library("pheatmap")
 
 #Import atac data list
 atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
@@ -67,19 +68,21 @@ cluster_plot_data = dplyr::left_join(cluster_exp, cluster_order, by = "cluster_i
   dplyr::group_by(new_cluster_id)
 
 #Make a heatmap
-ggplot(cluster_plot_data %>% dplyr::sample_frac(0.5), aes(x = condition_name, y = gene_id, fill = expression)) + 
+chromatin_clusters_heatmap = ggplot(cluster_plot_data %>% dplyr::sample_frac(0.5), aes(x = condition_name, y = gene_id, fill = expression)) + 
   facet_grid(new_cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
   scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Expression", midpoint = 0) +
   theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
+ggsave("results/ATAC/DA/ATAC_DA_clusters.png",chromatin_clusters_heatmap, width = 5, height = 7)
 
 ggplot(cluster_plot_data, aes(x = condition_name, y = expression)) + 
-  facet_grid(new_cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_boxplot()
+  facet_grid(new_cluster_id ~ .,  scales = "free_y", space = "free_y") + stat_summary(fun.y = mean, geom="point")
 
 #Save clusters to disk
 final_clusters = dplyr::select(cluster_plot_data, gene_id, MEM.SHIP, new_cluster_id) %>% unique()
 saveRDS(final_clusters, "results/ATAC/DA/peak_clusters.rds")
+final_clusters = readRDS("results/ATAC/DA/peak_clusters.rds")
 
 #Add coordinates to each cluster
 cluster_names = data_frame(new_cluster_id = c(1:6), name = c("IFNg_SL1344_up", "SL1344_up", "inflammatory_up", "IFNg_up", "IFNg_down", "SL1344_down"))
