@@ -153,19 +153,12 @@ sl1344_appear_qtls = dplyr::filter(rna_appear_qtls, abs(SL1344) >= 0.59, abs(SL1
   dplyr::group_by(gene_id) %>% dplyr::arrange(-max_abs_beta) %>%
   dplyr::filter(row_number() == 1) %>% 
   dplyr::ungroup()
-ifng_sl1344_appear_qtls = dplyr::filter(appear_clusters, cluster_id == 6) %>% 
+ifng_sl1344_appear_qtls = dplyr::filter(appear_clusters, cluster_id == 4) %>% 
   dplyr::select(gene_id, snp_id) %>% unique() %>% 
   dplyr::left_join(rna_appear_qtls, by = c("gene_id","snp_id"))
 
-#Find candidate ATAC peaks that overlap with condition-specific eQTLs
-ifng_peaks = findMostAssociatedPeakPerSNP(ifng_appear_qtls, atac_snp_tables[["IFNg"]]) %>% dplyr::filter(p_fdr < 0.1)
-sl1344_peaks = findMostAssociatedPeakPerSNP(sl1344_appear_qtls, atac_snp_tables$SL1344) %>% dplyr::filter(p_fdr < 0.1)
-ifng_sl1344_peaks = findMostAssociatedPeakPerSNP(ifng_sl1344_appear_qtls, atac_snp_tables$IFNg_SL1344) %>% dplyr::filter(p_fdr < 0.1)
-
-ifng_peaks = findAllAssociatedPeaksPerSNP(ifng_appear_qtls, atac_snp_tables[["IFNg"]])
-
-#IFNg
-ifng_effects = prepareBetasDf(ifng_appear_qtls, rna_betas, atac_rasqual_list, gene_name_map, 
+#IFNg - find corresponding ATAC peaks
+ifng_effects = prepareBetasDf(ifng_appear_qtls, rna_betas, atac_snp_tables, gene_name_map, 
                               appear_condition = "IFNg", rank_by = "IFNg_diff") %>%
   dplyr::filter(condition_name %in% c("naive","IFNg")) %>%
   dplyr::group_by(snp_id, peak_id, gene_id, phenotype) %>% 
@@ -177,8 +170,8 @@ effect_size_heatmap = ggplot(ifng_effects, aes(x = condition_name, y = gene_name
   scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) 
 ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_IFNg_heatmap.pdf", effect_size_heatmap, width = 5, height = 7)
 
-#SL1344
-sl1344_effects = prepareBetasDf(sl1344_appear_qtls, rna_betas, atac_rasqual_list, gene_name_map, 
+#SL1344 - find corresponding ATAC peaks
+sl1344_effects = prepareBetasDf(sl1344_appear_qtls, rna_betas, atac_snp_tables, gene_name_map, 
                               appear_condition = "SL1344", rank_by = "SL1344_diff") %>%
   dplyr::filter(condition_name %in% c("naive","SL1344")) %>%
   dplyr::group_by(snp_id, peak_id, gene_id, phenotype) %>% 
@@ -190,8 +183,8 @@ effect_size_heatmap = ggplot(sl1344_effects, aes(x = condition_name, y = gene_na
   scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) 
 ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_SL1344_heatmap.pdf", effect_size_heatmap, width = 5, height = 7)
 
-#SL1344
-ifng_sl1344_effects = prepareBetasDf(ifng_sl1344_appear_qtls, rna_betas, atac_rasqual_list, gene_name_map, 
+#IFNg_SL1344 - find corresponding ATAC peaks
+ifng_sl1344_effects = prepareBetasDf(ifng_sl1344_appear_qtls, rna_betas, atac_snp_tables, gene_name_map, 
                                 appear_condition = "IFNg_SL1344", rank_by = "IFNg_SL1344_diff") %>%
   dplyr::group_by(snp_id, peak_id, gene_id, phenotype) %>% 
   dplyr::mutate(beta_std = (beta - mean(beta))/sd(beta), beta_scaled = beta/max(beta)) %>%
@@ -203,8 +196,14 @@ effect_size_heatmap = ggplot(ifng_sl1344_effects, aes(x = condition_name, y = ge
 ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_IFNg_SL1344_heatmap.pdf", effect_size_heatmap, width = 8, height = 4)
 
 #Count the number of peaks per SNP
-ifng_peaks_ifng = findAllAssociatedPeaksPerSNP(ifng_appear_qtls, atac_snp_tables[["IFNg"]]) %>% dplyr::filter(p_bonferroni < 0.1) %>% dplyr::group_by(snp_id) %>% dplyr::summarise(peak_count = length(gene_id))
-ifng_peaks_naive = findAllAssociatedPeaksPerSNP(ifng_appear_qtls, atac_snp_tables[["naive"]]) %>% dplyr::filter(p_bonferroni < 0.1) %>% dplyr::group_by(snp_id) %>% dplyr::summarise(peak_count = length(gene_id))
+ifng_peaks_ifng = findAllAssociatedPeaksPerSNP(ifng_appear_qtls, atac_snp_tables[["IFNg"]]) %>% 
+  dplyr::filter(p_bonferroni < 0.1) %>% dplyr::group_by(snp_id) %>% dplyr::summarise(ifng_peak_count = length(gene_id))
+ifng_peaks_naive = findAllAssociatedPeaksPerSNP(ifng_appear_qtls, atac_snp_tables[["naive"]]) %>% 
+  dplyr::filter(p_bonferroni < 0.1) %>% dplyr::group_by(snp_id) %>% dplyr::summarise(naive_peak_count = length(gene_id))
+peak_count_comparison = dplyr::left_join(ifng_peaks_ifng, ifng_peaks_naive, by = "snp_id") %>% 
+  dplyr::mutate(naive_peak_count = ifelse(is.na(naive_peak_count),0, naive_peak_count))
+peak_count_diff = dplyr::mutate(peak_count_comparison, diff = ifng_peak_count - naive_peak_count) %>% dplyr::arrange(-diff)
+write.table(peak_count_diff, "results/SL1344/eQTLs/naive_ifng_ATAC_peak_count_diff.txt")
 
 #Make plots
 makeMultiplePlots(ifng_interactions, combined_expression_data$cqn,filtered_vcf$genotypes,combined_expression_data$sample_metadata,combined_expression_data$gene_metadata) %>%
@@ -215,23 +214,8 @@ makeMultiplePlots(ifng_sl1344_interactions, combined_expression_data$cqn,filtere
   savePlots("results/SL1344/eQTLs/interaction_plots/naive_vs_IFNg_SL1344/", 7,7)
 
 
-#Fetch ASE data from disk
-exon_ranges = constructExonRanges("ENSG00000144228", "rs12621644", combined_expression_data$gene_metadata)
-sample_meta = dplyr::select(combined_expression_data$sample_metadata, sample_id, condition_name, genotype_id)
-ase_data = fetchGeneASEData(exon_ranges, "results/SL1344/combined_ASE_counts.sorted.txt.gz", sample_meta) %>%
-  aseDataAddGenotypes(vcf_file$genotypes)
 
-
-#Make plot
-plotting_data = filterASEforPlotting(ase_data) %>% dplyr::filter(total_count > 10) %>% dplyr::filter(lead_snp_value == 1)
-ggplot(plotting_data, aes(x = factor(lead_snp_value), y = abs(0.5-ratio))) + 
-  facet_grid(feature_snp_id~condition_name) +
-  geom_boxplot(outlier.shape = NA) + 
-  geom_jitter(position = position_jitter(width = .1)) +
-  xlab("Feature SNP id") + 
-  ylab("Reference allele ratio")
-
-
+#### GWAS overlaps ####
 #Find overlaps with the GWAS catalog
 snp_positions = vcf_file$snpspos %>% tbl_df() %>% dplyr::rename(snp_id = snpid)
 
@@ -239,18 +223,33 @@ snp_positions = vcf_file$snpspos %>% tbl_df() %>% dplyr::rename(snp_id = snpid)
 filtered_catalog = readRDS("annotations/gwas_catalog_v1.0.1-downloaded_2016-03-02.filtered.rds")
 
 #GWAS overlaps for QTLs that appear
-qtl_table = dplyr::select(appear_qtls, gene_id, snp_id)
+qtl_table = dplyr::select(interaction_hits, gene_id, snp_id)
 interaction_olaps = findGWASOverlaps(qtl_table, filtered_catalog, vcf_file)
 interaction_gwas_hits = dplyr::left_join(interaction_olaps, gene_name_map, by = "gene_id") %>%
   dplyr::select(gene_name, snp_id, gwas_snp_id, R2, trait, gwas_pvalue)
 write.table(interaction_gwas_hits, "results/SL1344/eQTLs/appear_gwas_overlaps.txt", row.names = FALSE, sep = "\t", quote = FALSE)
 
 #All GWAS overlaps
-all_olaps = findGWASOverlaps(filtered_pairs, filtered_catalog, vcf_file)
+all_olaps = findGWASOverlaps(filtered_pairs, filtered_catalog, vcf_file, min_r2 = 0.8)
 all_gwas_hits = dplyr::left_join(all_olaps, gene_name_map, by = "gene_id") %>%
   dplyr::select(gene_name, snp_id, gwas_snp_id, R2, trait, gwas_pvalue)
 write.table(all_gwas_hits, "results/SL1344/eQTLs/all_gwas_overlaps.txt", row.names = FALSE, sep = "\t", quote = FALSE)
 
+#Count the number of SNPs per trait
+all_trait_sizes = dplyr::select(filtered_catalog, snp_id, trait) %>% 
+  dplyr::group_by(trait)  %>% dplyr::summarise(trait_size = length(trait))
+
+#Count the number of overlaps per trait
+trait_counts_overlap = dplyr::group_by(all_gwas_hits, trait) %>%
+  dplyr::select(gwas_snp_id, trait) %>% unique() %>% 
+  summarise(overlap_size = length(trait)) %>% 
+  arrange(-overlap_size)
+
+#Calculate relative overlap
+relative_overlap = dplyr::left_join(trait_counts_overlap, all_trait_sizes, by = "trait") %>% 
+  dplyr::mutate(fraction = overlap_size/trait_size) %>% dplyr::filter(overlap_size > 5) %>% 
+  arrange(-fraction)
+write.table(relative_overlap, "results/SL1344/eQTLs/relative_gwas_overlaps.txt", row.names = FALSE, sep = "\t", quote = FALSE)
 
 
 
@@ -294,4 +293,22 @@ coords = lapply(tabix_files, function(x, gene_ranges) {
 }, gene_ranges)
 beta_list1 = extractAndProcessBetas(dplyr::select(unique_snps, gene_id, snp_id), coords, "naive")
 beta_list2 = extractAndProcessBetas(dplyr::select(head(tabix_data,4), gene_id, snp_id), coords, "naive")
+
+
+
+#Fetch ASE data from disk
+exon_ranges = constructExonRanges("ENSG00000144228", "rs12621644", combined_expression_data$gene_metadata)
+sample_meta = dplyr::select(combined_expression_data$sample_metadata, sample_id, condition_name, genotype_id)
+ase_data = fetchGeneASEData(exon_ranges, "results/SL1344/combined_ASE_counts.sorted.txt.gz", sample_meta) %>%
+  aseDataAddGenotypes(vcf_file$genotypes)
+
+
+#Make plot
+plotting_data = filterASEforPlotting(ase_data) %>% dplyr::filter(total_count > 10) %>% dplyr::filter(lead_snp_value == 1)
+ggplot(plotting_data, aes(x = factor(lead_snp_value), y = abs(0.5-ratio))) + 
+  facet_grid(feature_snp_id~condition_name) +
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(position = position_jitter(width = .1)) +
+  xlab("Feature SNP id") + 
+  ylab("Reference allele ratio")
 
