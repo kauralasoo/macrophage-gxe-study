@@ -92,32 +92,6 @@ cluster_ranges = dplyr::left_join(final_clusters, cluster_names, by = "new_clust
   dplyr::ungroup() %>% 
   dplyr::left_join(atac_list$gene_metadata) %>% 
   dplyr::transmute(gene_id, name, seqnames = chr, start, end, strand)
+
+#Save clusters into a BED file for downstream analyis with GAT
 export.bed(dataFrameToGRanges(cluster_ranges), "results/ATAC/DA/ATAC_clustered_peaks.bed")
-
-#Export ChIP peaks
-chip_peaks = readRDS("results/ATAC/DA/Chip_peak_lists.rds")
-export.bed(chip_peaks$Ivashkiv$STAT1_rep1_B, "results/ATAC/DA/ChIP_peak_lists/STAT1_rep1_B.bed")
-export.bed(chip_peaks$Ivashkiv$STAT1_rep1_D, "results/ATAC/DA/ChIP_peak_lists/STAT1_rep1_D.bed")
-export.bed(chip_peaks$Ivashkiv$IRF1_B, "results/ATAC/DA/ChIP_peak_lists/IRF1_B.bed")
-export.bed(chip_peaks$Rehli$MAC_PU1, "results/ATAC/DA/ChIP_peak_lists/MAC_PU1.bed")
-export.bed(chip_peaks$Rehli$MAC_CEBPbeta, "results/ATAC/DA/ChIP_peak_lists/MAC_CEBPbeta.bed")
-
-
-gat-run.py --ignore-segment-tracks --segments=ChIP_peak_lists/STAT1_rep1_D.bed --annotations=ATAC_peak_lists/synergisitic.bed --workspace=../../../../../annotations/blacklists/GRCh38_filtered_gapped_genome.bed --num-samples=10 --log=gat.log > gat_salmonella.out
-gat-compare
-
-
-#Perform motif enrichment
-db <- CisBP.extdata("Homo_sapiens")
-tfs <- tfbs.createFromCisBP(db)
-
-#Agnes clustering
-tfs1 <- tfbs.clusterMotifs(tfs, method="agnes", group.k=100, pdf.heatmap="agnes.hm.pdf")
-#AP clustering
-tfs2 <- tfbs.clusterMotifs(tfs, method="apcluster", pdf.heatmap= "apcluster.hm.pdf")
-
-# Draw motif logos with one group of TF per page
-tfbs.drawLogosForClusters(tfs1, file.pdf="agnes.logos.pdf");
-tfbs.drawLogosForClusters(tfs2, file.pdf="apcluster.logos.pdf")
-
-
