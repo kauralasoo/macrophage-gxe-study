@@ -50,6 +50,12 @@ interaction_df = postProcessInteractionPvalues(interaction_results)
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 write.table(interaction_hits, "results/acLDL/eQTLs/significant_interactions.txt", quote = FALSE, row.names = FALSE)
 
+#Estimate parameters for top hits
+interaction_params = testMultipleInteractions(dplyr::select(interaction_hits, gene_id, snp_id), acldl_list,filtered_vcf,
+                         formula_qtl,formula_interaction, return = "full")
+coef_matrix = lapply(interaction_params, function(x) x$interaction_model$coefficients) %>% ldply(.id = "gene_snp_pair")
+write.table(coef_matrix, "results/acLDL/eQTLs/interaction_coefficients.txt", quote = FALSE, row.names = FALSE)
+
 #Plot interactions
 makeMultiplePlots(interaction_hits, acldl_list$cqn, filtered_vcf$genotypes, acldl_list$sample_metadata, acldl_list$gene_metadata) %>%
   savePlots("results/acLDL/eQTLs/interaction_plots/", 7,7)
