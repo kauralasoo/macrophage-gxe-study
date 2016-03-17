@@ -45,4 +45,17 @@ elementMetadata(all_peaks) = metadata
 rtracklayer::export.bed(all_peaks, "annotations/H3K27Ac_joint_peaks.bed")
 rtracklayer::export.gff3(all_peaks, "annotations/H3K27Ac_joint_peaks.gff3")
 
+#Process STAT1 peaks
+stat1_B_peaks = c("STAT1_rep1_B","STAT1_rep2_B")
+stat1_B_narrowPeaks = loadNarrowPeaks("results/Ivashkiv/peak_calls", stat1_B_peaks, sub_dir = FALSE) %>% filterOverlaps(minOverlapCount = 2) %>% listUnion() 
+
+stat1_D_peaks = c("STAT1_rep1_D","STAT1_rep2_D")
+stat1_D_narrowPeaks = loadNarrowPeaks("results/Ivashkiv/peak_calls", stat1_D_peaks, sub_dir = FALSE) %>% filterOverlaps(minOverlapCount = 2) %>% listUnion() 
+stat1_union_peaks = union(stat1_D_narrowPeaks, stat1_B_narrowPeaks)
+stat1_union_peaks = keepSeqlevels(stat1_union_peaks, c(1:22, "X","Y"))
+stat1_metadata = data_frame(type = "exon", gene_id = paste("STAT1_peak_", c(1:length(stat1_union_peaks)), sep = ""))
+elementMetadata(stat1_union_peaks) = stat1_metadata
+  
+rtracklayer::export.bed(stat1_union_peaks, "results/Ivashkiv/peak_calls/STAT1_joint_peaks.bed")
+rtracklayer::export.gff3(stat1_union_peaks, "results/Ivashkiv/peak_calls/STAT1_joint_peaks.gff3")
 
