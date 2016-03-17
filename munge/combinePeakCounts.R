@@ -18,7 +18,7 @@ write.table(irf_counts, "results/Ivashkiv/IRF1_combined_counts.txt", sep = "\t",
 saveRDS(irf_counts, "results/Ivashkiv/IRF1_combined_counts.rds")
 
 #STAT1
-stat1_names = c("STAT1_rep1_A","STAT1_rep1_B","STAT1_rep1_C","STAT1_rep1_D")
+stat1_names = c("STAT1_rep1_A","STAT1_rep1_B","STAT1_rep1_C","STAT1_rep1_D","STAT1_rep2_B","STAT1_rep2_D")
 stat_counts = loadCounts("processed/Ivashkiv/", stat1_names, counts_suffix = ".STAT1_joint_peaks.counts.txt")
 write.table(stat_counts, "results/Ivashkiv/STAT1_combined_counts.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 saveRDS(stat_counts, "results/Ivashkiv/STAT1_combined_counts.rds")
