@@ -59,3 +59,12 @@ elementMetadata(stat1_union_peaks) = stat1_metadata
 rtracklayer::export.bed(stat1_union_peaks, "results/Ivashkiv/peak_calls/STAT1_joint_peaks.bed")
 rtracklayer::export.gff3(stat1_union_peaks, "results/Ivashkiv/peak_calls/STAT1_joint_peaks.gff3")
 
+#Process IRF1 peaks
+irf1_samples = c("IRF1_A", "IRF1_B", "IRF1_E", "IRF1_F")
+irf1_narrowPeaks = loadNarrowPeaks("results/Ivashkiv/peak_calls", irf1_samples, sub_dir = FALSE) 
+irf1_union_peaks = irf1_narrowPeaks %>% filterOverlaps(minOverlapCount = 2) %>% listUnion() 
+irf1_union_peaks = keepSeqlevels(irf1_union_peaks, c(1:22, "X","Y"))
+
+rtracklayer::export.bed(irf1_union_peaks, "results/Ivashkiv/peak_calls/IRF1_joint_peaks.bed")
+rtracklayer::export.gff3(irf1_union_peaks, "results/Ivashkiv/peak_calls/IRF1_joint_peaks.gff3")
+

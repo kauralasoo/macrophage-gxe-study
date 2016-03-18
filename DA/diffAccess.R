@@ -1,4 +1,3 @@
-library("modules")
 library("dplyr")
 library("DESeq2")
 load_all("macrophage-chromatin/housekeeping/")
