@@ -45,8 +45,16 @@ data(PWMLogn.hg19.MotifDb.Hsap)
 res = motifEnrichment(DNAString("TGCATCAAGTGTGTAGTGCAAGTGAGTGATGAGTAGAAGTTGAGTGAGGTAGATGC"), PWMLogn.hg19.MotifDb.Hsap)
 groupReport(res)
 
+library(Biostrings)
+library("TFBSTools")
+data(MA0003.2)
+data(MA0004.1)
 
+pwmList = PWMatrixList(MA0003.2=toPWM(MA0003.2), MA0004.1=toPWM(MA0004.1),
+                       use.names=TRUE)
+subject = DNAString("GAATTCTCTCTTGTTGTAGTCTCTTGACAAAATG")
 
+siteset = searchSeq(pwmList, subject, seqname="seq1", min.score="60%", strand="*")
 
 
 #Play around with TFBS_DB
@@ -62,3 +70,5 @@ tfs2 <- tfbs.clusterMotifs(tfs, method="apcluster", pdf.heatmap= "apcluster.hm.p
 # Draw motif logos with one group of TF per page
 tfbs.drawLogosForClusters(tfs1, file.pdf="agnes.logos.pdf");
 tfbs.drawLogosForClusters(tfs2, file.pdf="apcluster.logos.pdf")
+
+
