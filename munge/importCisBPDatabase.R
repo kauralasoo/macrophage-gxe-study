@@ -15,3 +15,6 @@ unique_motifs = dplyr::select(TF_information, Motif_ID, gene_id, TF_Name) %>% dp
 read.table("~/annotations/CisBP/Homo_sapiens_2016_03_10_11-59_am/pwms_all_motifs/M0082_1.02.txt", header = TRUE)
 
 a = cisBPImportMotif("M0082_1.02","~/annotations/CisBP/Homo_sapiens_2016_03_10_11-59_am/pwms_all_motifs/")
+
+
+motif_record = unique_motifs[10,]
