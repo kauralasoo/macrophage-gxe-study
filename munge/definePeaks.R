@@ -47,6 +47,10 @@ cond_D_peak_count = lapply(cond_D_peaks, length) %>%
 cond_D_filtered = filterOverlaps(cond_D_peaks, 2)
 cond_D_union = listUnion(cond_D_filtered)
 
+#Make peak list
+peak_list = c(naive = cond_A_peaks, IFNg = cond_B_peaks, SL1344 = cond_C_peaks, IFNg_SL1344 = cond_D_peaks)
+saveRDS(peak_list, "results/ATAC/ATAC_peak_list.rds")
+
 #Join all peaks together
 all_peaks = listUnion(list(cond_A_union, cond_B_union, cond_C_union, cond_D_union))
 metadata = data_frame(type = "exon", gene_id = paste("ATAC_peak_", c(1:length(all_peaks)), sep = ""))
