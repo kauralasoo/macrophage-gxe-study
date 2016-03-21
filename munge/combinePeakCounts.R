@@ -6,7 +6,6 @@ load_all("../seqUtils/")
 
 #Import sample names
 sample_names = read.table("macrophage-chromatin/data/SL1344/ATAC_Salmonella_names.txt", sep ="\t",comment.char = "", stringsAsFactors = FALSE)[,1]
-
 atac_counts = loadCounts("processed/SL1344/", sample_names, counts_suffix = ".consensus_peaks.counts.txt")
 
 #Make heatmap

@@ -13,6 +13,9 @@ design_matrix = constructDesignMatrix_ATAC(sample_names)
 fragment_lengths = seqUtils::loadFragmentLengths("processed/SL1344/",sample_names)
 normalised_fragment_lengths = dplyr::group_by(fragment_lengths,sample_id) %>%
   dplyr::mutate(frequency = count/sum(count))
+saveRDS(normalised_fragment_lengths, "results/ATAC/QC/frgment_length_data.rds")
+
+#Make plot of fragment lengths
 fragment_length_plot = dplyr::filter(normalised_fragment_lengths, fragment_length < 350) %>% 
   ggplot(aes(x = fragment_length, y = frequency)) + 
   geom_line() + facet_wrap(~sample_id,ncol = 6)
