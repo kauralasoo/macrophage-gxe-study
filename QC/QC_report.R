@@ -14,6 +14,7 @@ qc_report = dplyr::left_join(mt_content, sn_ratio, by = "sample_id") %>%
   dplyr::left_join(sample_genotype_match, by = "sample_id") %>%
   dplyr::left_join(peak_counts, by = "sample_id") %>%
   dplyr::select(sample_id, genotype_id, MT, Assigned, assigned_frac, percent_duplication, peak_count)
+write.table(qc_report, "macrophage-chromatin/data/SL1344/QC_measures/QC_report.txt", row.names = FALSE, sep ="\t")
 
 #Make histogram of signal-to-noise
 sn_plot = ggplot(qc_report, aes(x = assigned_frac)) + 
@@ -44,10 +45,10 @@ peak_count_plot = ggplot(qc_report, aes(x = peak_count)) + geom_histogram(binwid
 ggsave("results/ATAC/QC/peak_count_plot.pdf", mt_fraction_plot, width = 5, height = 5)
 
 #### Analyse peak lengths ####
-atac_peaks = read.table("annotations/ATAC_Seq_joint_peaks.gff3")
-peak_length = data.frame(peak_length = atac_peaks$V3-atac_peaks$V2)
+atac_peaks = import.gff3("annotations/ATAC_consensus_peaks.gff3")
+
 #Total peak length
-sum(peak_length$peak_length)
+sum(width(atac_peaks))
 
 h3k27ac_peaks = read.table("annotations/H3K27Ac_joint_peaks.bed")
 h3k27ac_length = data_frame(peak_length = h3k27ac_peaks$V3-h3k27ac_peaks$V2) %>% dplyr::filter(peak_length < 50000)

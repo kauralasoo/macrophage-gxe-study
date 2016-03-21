@@ -7,11 +7,15 @@ load_all("macrophage-chromatin/housekeeping/")
 
 #Import raw peak counts
 atac_counts = readRDS("results/ATAC/ATAC_combined_counts.rds")
-gc_content = read.table("annotations/ATAC_Seq_joint_peaks.GC_content.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE) %>%
+gc_content = read.table("annotations/ATAC_consensus_peaks.GC_content.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE) %>%
   dplyr::rename(gene_id = X9_usercol, percentage_gc_content = X11_pct_gc)
 
+#Remove low quality samples
+failed_sample_list = c("fikt_B_ATAC", "qaqx_A_ATAC", "qaqx_B_ATAC", "uaqe_A_ATAC", "uaqe_B_ATAC")
+atac_counts = atac_counts[,colnames(atac_counts)[!colnames(atac_counts) %in% failed_sample_list]]
+
 #Import peak coordinates
-peak_coords = rtracklayer::import.gff3("annotations/ATAC_Seq_joint_peaks.gff3") %>% 
+peak_coords = rtracklayer::import.gff3("annotations/ATAC_consensus_peaks.gff3") %>% 
   GenomicRanges::as.data.frame() %>% tbl_df() %>% 
   dplyr::select(gene_id, seqnames, start, end) %>% 
   dplyr::rename(chr = seqnames) %>%
@@ -55,3 +59,4 @@ results_list = list(
 
 #Save processed data to disk
 saveRDS(results_list, "results/ATAC/ATAC_combined_accessibility_data.rds")
+
