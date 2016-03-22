@@ -27,6 +27,9 @@ names(sel.pwms) = c("bcd", "gt", "Kr")
 scores = motifScores(sequence, sel.pwms, raw.scores=TRUE)
 plotMotifScores(scores, cols=c("green", "red", "blue"))
 
+saveRDS(pwmatrix_list, "results/ATAC/cisBP_PWMatrixList.rds")
+
+
 #Look for enrichmen in multiple sequences
 # load the pre-compiled lognormal background
 data(PWMLogn.dm3.MotifDb.Dmel)
@@ -35,15 +38,20 @@ sequences = readDNAStringSet(system.file(package="PWMEnrich",
 res = motifEnrichment(sequences, PWMLogn.dm3.MotifDb.Dmel)
 report = groupReport(res)
 
-#Import ATAC peak sequences from disk
-sequences = readDNAStringSet("annotations/ATAC_Seq_joint_peaks.fasta")
-peak_ids = strsplit(names(sequences), "=") %>% lapply(function(x) x[2]) %>% unlist()
-names(sequences) = peak_ids
 
 #Human data
 data(PWMLogn.hg19.MotifDb.Hsap)
 res = motifEnrichment(DNAString("TGCATCAAGTGTGTAGTGCAAGTGAGTGATGAGTAGAAGTTGAGTGAGGTAGATGC"), PWMLogn.hg19.MotifDb.Hsap)
 groupReport(res)
+
+#Import CisBP motifs
+motifs = readRDS("results/ATAC/cisBP_PFMatrixList.rds")
+motifs_list = lapply(motifs, Matrix)
+
+
+
+
+
 
 library(Biostrings)
 library("TFBSTools")
@@ -70,5 +78,17 @@ tfs2 <- tfbs.clusterMotifs(tfs, method="apcluster", pdf.heatmap= "apcluster.hm.p
 # Draw motif logos with one group of TF per page
 tfbs.drawLogosForClusters(tfs1, file.pdf="agnes.logos.pdf");
 tfbs.drawLogosForClusters(tfs2, file.pdf="apcluster.logos.pdf")
+
+#Perform analysis with TFBSTools
+cisbp_pwm_list = readRDS("results/ATAC/cisBP_PWMatrixList.rds")
+
+#Import ATAC peak sequences from disk
+sequences = readDNAStringSet("annotations/ATAC_consensus_peaks.fasta")
+peak_ids = strsplit(names(sequences), "=") %>% lapply(function(x) x[2]) %>% unlist()
+names(sequences) = peak_ids
+
+#Search for matches
+sitesetList = searchSeq(cisbp_pwm_list, a[1:2], min.score="80%", strand="*")
+b = as.data.frame(sitesetList)
 
 
