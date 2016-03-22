@@ -46,7 +46,7 @@ atac_metadata = readRDS("macrophage-chromatin/data/SL1344/compiled_atac_metadata
   dplyr::filter(sample_id %in% colnames(counts))
 
 #Calculate normalization factors
-norm_factors = calculateNormFactors(counts, output = "normal", method = "RLE")
+norm_factors = calculateNormFactors(counts, method = "RLE")
 
 #Combine everything into a list
 results_list = list(

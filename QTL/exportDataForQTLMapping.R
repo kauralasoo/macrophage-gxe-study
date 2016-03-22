@@ -3,7 +3,8 @@ library("cqn")
 library("dplyr")
 load_all("../seqUtils/")
 library("readr")
-
+library("rasqualTools")
+load_all("~/software/rasqual/rasqualTools/")
 #Import atac data list
 atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
 
@@ -18,7 +19,7 @@ atac_conditions = list(naive = naive_list, IFNg = IFNg_list, SL1344 = SL1344_lis
 peer_cqn_list = lapply(atac_conditions, function(x){x$cqn})
 savePEERData(peer_cqn_list, "results/ATAC/PEER/input/")
 
-peer_tpm_list = lapply(atac_conditions, function(x){x$tpm})
+peer_tpm_list = lapply(atac_conditions, function(x){log(x$tpm + 0.01, 2)})
 savePEERData(peer_cqn_list, "results/ATAC/PEER/input/",file_suffix = "exprs_tpm")
 
 #Import PEER factors back into R
@@ -33,26 +34,23 @@ colnames(covariates)= sample_ids
 covariates = covariates[,colnames(head(atac_list$counts))]
 
 #Use PCA to construct covariates for QTL mapping
-naive_PCA = performPCA(atac_conditions$naive$tpm, atac_conditions$naive$sample_metadata, n_pcs = 5)
-IFNg_PCA = performPCA(atac_conditions$IFNg$tpm, atac_conditions$IFNg$sample_metadata, n_pcs = 5)
-SL1344_PCA = performPCA(atac_conditions$SL1344$tpm, atac_conditions$SL1344$sample_metadata, n_pcs = 5)
-IFNg_SL1344_PCA = performPCA(atac_conditions$IFNg_SL1344$tpm, atac_conditions$IFNg_SL1344$sample_metadata, n_pcs = 5)
+naive_PCA = performPCA(log(atac_conditions$naive$tpm + 0.01, 2), atac_conditions$naive$sample_metadata, n_pcs = 5)
+IFNg_PCA = performPCA(log(atac_conditions$IFNg$tpm + 0.01, 2), atac_conditions$IFNg$sample_metadata, n_pcs = 5)
+SL1344_PCA = performPCA(log(atac_conditions$SL1344$tpm + 0.01, 2), atac_conditions$SL1344$sample_metadata, n_pcs = 5)
+IFNg_SL1344_PCA = performPCA(log(atac_conditions$IFNg_SL1344$tpm + 0.01, 2), atac_conditions$IFNg_SL1344$sample_metadata, n_pcs = 5)
 
 #Plot variance explained
 plot(naive_PCA$var_exp)
 plot(IFNg_PCA$var_exp)
 plot(SL1344_PCA$var_exp)
 plot(IFNg_SL1344_PCA$var_exp)
-covariates = rbind(naive_PCA$pca_matrix, IFNg_PCA$pca_matrix, SL1344_PCA$pca_matrix, IFNg_SL1344_PCA$pca_matrix)
 
-#cov_matrix 
-cov_matrix = dplyr::select(covariates, sex, assigned_frac, short_long_ratio, PC1, PC2, PC3, PC4) %>%
-  dplyr::mutate(sex = ifelse(sex == "male", 0, 1))
-rownames(cov_matrix) = covariates$sample_id
-cov_matrix = cov_matrix[colnames(atac_list$counts),]
-
-#Add covariates to the ATAC list
-atac_list$covariates = t(cov_matrix)
+#Add PCs into the sample metadata df
+covariates = rbind(naive_PCA$pca_matrix, IFNg_PCA$pca_matrix, SL1344_PCA$pca_matrix, IFNg_SL1344_PCA$pca_matrix) %>% 
+  tbl_df() %>%
+  dplyr::mutate(sex_binary = ifelse(sex == "male",0,1))
+new_sample_metadata = dplyr::select(atac_list$sample_metadata, sample_id) %>% dplyr::left_join(covariates, by = "sample_id")
+atac_list$sample_metadata = new_sample_metadata
 
 #Extract separate lists for each condition
 naive_list = extractConditionFromExpressionList("naive", atac_list)
@@ -109,29 +107,25 @@ sg_map = lapply(atac_conditions_renamed, function(x){ dplyr::select(x$sample_met
 saveFastqtlMatrices(sg_map,"results/ATAC/rasqual/input/", file_suffix = "sg_map", col_names = FALSE)
 
 #Count overlaps between SNPs and peaks
-snp_coords = read.table("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.snp_coords.txt", stringsAsFactors = FALSE)
-colnames(snp_coords) = c("chr", "pos", "snp_id")
-peak_snp_count = seqUtils::countSnpsOverlapingPeaks(atac_list$gene_metadata, snp_coords, cis_window = 500000)
-peak_snp_count_2kb = seqUtils::countSnpsOverlapingPeaks(atac_list$gene_metadata, snp_coords, cis_window = 2000)
-peak_snp_count_50kb = seqUtils::countSnpsOverlapingPeaks(atac_list$gene_metadata, snp_coords, cis_window = 50000)
-peak_snp_count_100kb = seqUtils::countSnpsOverlapingPeaks(atac_list$gene_metadata, snp_coords, cis_window = 100000)
-
-write.table(peak_snp_count, "results/ATAC/rasqual/input/peak_snp_count_500kb.txt", sep = "\t", quote = FALSE, row.names = FALSE)
-write.table(peak_snp_count_2kb, "results/ATAC/rasqual/input/peak_snp_count_2kb.txt", sep = "\t", quote = FALSE, row.names = FALSE)
-write.table(peak_snp_count_50kb, "results/ATAC/rasqual/input/peak_snp_count_50kb.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+snp_coords = readr::read_delim("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.snp_coords.txt", 
+                               delim = "\t", col_types = "cdc", col_names = c("chr","pos","snp_id"))
+peak_snp_count_100kb = rasqualTools::countSnpsOverlapingPeaks(atac_list$gene_metadata, snp_coords, cis_window = 100000)
 write.table(peak_snp_count_100kb, "results/ATAC/rasqual/input/peak_snp_count_100kb.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 
 #Export GC-corrected library sizes
 gc_library_size_list = lapply(counts_list, rasqualCalculateSampleOffsets, atac_conditions_renamed[[1]]$gene_metadata)
-saveRasqualMatrices(gc_library_size_list, "results/ATAC/rasqual/input/", file_suffix = "gc_library_size")
+rasqualTools::saveRasqualMatrices(gc_library_size_list, "results/ATAC/rasqual/input/", file_suffix = "gc_library_size")
 
 #Save peak names to disk
 peak_names = rownames(atac_list$counts)
 write.table(peak_names, "results/ATAC/rasqual/input/peak_names.txt", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 #Save covariates to disk
-rasqual_cov_list = lapply(atac_conditions_renamed, function(x){t(x$covariates)[,4:5]})
-saveRasqualMatrices(rasqual_cov_list, "results/ATAC/rasqual/input/", file_suffix = "covariates_pc2")
+covariate_names = c("genotype_id", "PC1", "PC2", "PC3", "sex_binary")
+rasqual_cov_list = lapply(atac_conditions_renamed, function(x, covariate_names){
+  rasqualMetadataToCovariates(x$sample_metadata[,covariate_names])
+  }, covariate_names)
+saveRasqualMatrices(rasqual_cov_list, "results/ATAC/rasqual/input/", file_suffix = "covariates")
 
 #Construct batches
 chr11_batches = dplyr::filter(atac_list$gene_metadata, chr == 11) %>%
@@ -140,9 +134,10 @@ write.table(chr11_batches, "results/ATAC/rasqual/input/peak_batches.txt",
             row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
 
 #Construct batches for all genes
-atac_batches = seqUtils::rasqualConstructGeneBatches(atac_list$gene_metadata, 150)
+atac_batches = rasqualTools::rasqualOptimisedGeneBatches(peak_snp_count_100kb, batch_sizes = c(150, 20, 3,1))
 write.table(atac_batches, "results/ATAC/rasqual/input/all_peak_batches.txt", 
             row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
+
 
 #Make new batches of failed peaks
 naive_failed_batches = readr::read_csv("results/ATAC/rasqual/output/naive_100kb/naive_100kb.completed_ids.txt", col_names = "gene_id") %>%
