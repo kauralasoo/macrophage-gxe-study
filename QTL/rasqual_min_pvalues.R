@@ -12,10 +12,10 @@ snp_coords = read.table("../macrophage-gxe-study/genotypes/SL1344/imputed_201510
 colnames(snp_coords) = c("chr", "pos", "snp_id")
 
 #Extract minimal p-value for each condition
-naive_eigen_pvalue = eigenMTImportResults("results/ATAC/rasqual/output/naive_100kb/naive_50kb.eigenMT.txt")
-ifng_eigen_pvalue = eigenMTImportResults("results/ATAC/rasqual/output/IFNg_100kb/IFNg_50kb.eigenMT.txt")
-sl1344_eigen_pvalue = eigenMTImportResults("results/ATAC/rasqual/output/SL1344_100kb/SL1344_50kb.eigenMT.txt")
-ifng_sl1344_eigen_pvalue = eigenMTImportResults("results/ATAC/rasqual/output/IFNg_SL1344_100kb/IFNg_SL1344_50kb.eigenMT.txt")
+naive_eigen_pvalue = eigenMTImportResults("results/ATAC/rasqual/output/naive_100kb/naive_50kb.eigenMT.txt.gz")
+ifng_eigen_pvalue = eigenMTImportResults("results/ATAC/rasqual/output/IFNg_100kb/IFNg_50kb.eigenMT.txt.gz")
+sl1344_eigen_pvalue = eigenMTImportResults("results/ATAC/rasqual/output/SL1344_100kb/SL1344_50kb.eigenMT.txt.gz")
+ifng_sl1344_eigen_pvalue = eigenMTImportResults("results/ATAC/rasqual/output/IFNg_SL1344_100kb/IFNg_SL1344_50kb.eigenMT.txt.gz")
 
 min_pvalue_list = list(naive = naive_eigen_pvalue,
                        IFNg = ifng_eigen_pvalue,
@@ -35,9 +35,9 @@ IFNg_sql <- src_sqlite("/Volumes/JetDrive/ATAC_sqlite/IFNg_100kb.sqlite3") %>% t
 
 
 #Extract all SNP-gene pairs
-min_pvalues_list = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
-min_pvalues_hits = lapply(min_pvalues_list, function(x){dplyr::filter(x, p_fdr < 0.1)})
-min_pvalues_df = ldply(min_pvalues_hits, .id = "condition_name")
+min_pvalue_list = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
+min_pvalue_hits = lapply(min_pvalue_list, function(x){dplyr::filter(x, p_fdr < 0.1)})
+min_pvalues_df = ldply(min_pvalue_hits, .id = "condition_name")
 joint_pairs = dplyr::select(min_pvalues_df, gene_id, snp_id) %>% unique()
 
 #Extract p-values for all peaks that had significant QTLs

@@ -160,7 +160,7 @@ write.table(SL1344_failed_batches, "results/ATAC/rasqual/input/SL1344_failed_bat
 
 IFNg_SL1344_failed_batches = readr::read_csv("results/ATAC/rasqual/output/IFNg_SL1344_100kb/IFNg_SL1344_100kb.completed_ids.txt", col_names = "gene_id") %>%
   dplyr::anti_join(peak_snp_count_100kb, ., by = "gene_id") %>%
-  rasqualOptimisedGeneBatches(c(10,10,1,1))
+  rasqualOptimisedGeneBatches(c(10,10,1,1), batch_prefix = "batch_5")
 write.table(IFNg_SL1344_failed_batches, "results/ATAC/rasqual/input/IFNg_SL1344_failed_batches.txt", 
             row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
 
