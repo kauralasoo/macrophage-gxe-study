@@ -3,8 +3,8 @@ library("cqn")
 library("dplyr")
 load_all("../seqUtils/")
 library("readr")
-library("rasqualTools")
 load_all("~/software/rasqual/rasqualTools/")
+
 #Import atac data list
 atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
 
@@ -63,11 +63,25 @@ atac_conditions = list(naive = naive_list, IFNg = IFNg_list, SL1344 = SL1344_lis
 atac_conditions_renamed = lapply(atac_conditions, renameMatrixColumnsInExpressionList, "sample_id", "genotype_id")
 
 #### Export data for FastQTL ####
-tpm_list = lapply(atac_conditions_renamed, function(x){x$tpm})
 fastqtl_genepos = constructFastQTLGenePos(naive_list$gene_metadata)
-fastql_tpm_list = lapply(tpm_list, prepareFastqtlMatrix, fastqtl_genepos)
-saveFastqtlMatrices(fastql_tpm_list, "results/ATAC/fastqtl/input/", file_suffix = "tpm_exp_full")
+tpm_list = lapply(atac_conditions_renamed, function(x){log(x$tpm + 0.01, 2)})
+cqn_list = lapply(atac_conditions_renamed, function(x){x$cqn})
+fastqtl_tpm_list = lapply(tpm_list, prepareFastqtlMatrix, fastqtl_genepos)
+fastqtl_cqn_list = lapply(cqn_list, prepareFastqtlMatrix, fastqtl_genepos)
+saveFastqtlMatrices(fastqtl_tpm_list, "results/ATAC/fastqtl/input/", file_suffix = "expression_tpm")
+saveFastqtlMatrices(fastqtl_cqn_list, "results/ATAC/fastqtl/input/", file_suffix = "expression_cqn")
 
+#Save covariates
+covariate_names = c("genotype_id", "PC1", "PC2", "PC3", "sex_binary")
+covariate_list = lapply(atac_conditions_renamed, function(x, names){x$sample_metadata[,names]}, covariate_names)
+fastqtl_covariates = lapply(covariate_list, fastqtlMetadataToCovariates)
+saveFastqtlMatrices(fastqtl_covariates, "results/ATAC/fastqtl/input/", file_suffix = "covariates")
+
+#Construct chunks table
+chunks_matrix = data.frame(chunk = seq(1:250), n = 250)
+write.table(chunks_matrix, "results/ATAC/fastqtl/input/all_chunk_table.txt", row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
+
+#Chr11 only
 #Extract chr11 only
 chr11_genes = dplyr::filter(atac_list$gene_metadata, chr == 11)$gene_id
 chr11_list = lapply(atac_conditions_renamed, extractGenesFromExpressionList, chr11_genes)
@@ -81,22 +95,9 @@ fastqtl_tpm_list = lapply(chr11_list, function(x){x$tpm}) %>%
   lapply(., prepareFastqtlMatrix, fastqtl_genepos)
 saveFastqtlMatrices(fastqtl_tpm_list, "results/ATAC/fastqtl/input/", file_suffix = "expression_tpm")
 
-#Save covariates
-fastqtl_cov_list = lapply(chr11_list, function(x){x$covariates}) %>%
-  lapply(., prepareFastqtlCovariates, 4:5)
-saveFastqtlMatrices(fastqtl_cov_list, "results/ATAC/fastqtl/input/", file_suffix = "covariates_pc2")
-
-fastqtl_cov_list = lapply(chr11_list, function(x){x$covariates}) %>%
-  lapply(., prepareFastqtlCovariates, 1:6)
-saveFastqtlMatrices(fastqtl_cov_list, "results/ATAC/fastqtl/input/", file_suffix = "covariates_pc3")
-
 #Construct chunks table
 chunks_matrix = data.frame(chunk = seq(1:25), n = 25)
 write.table(chunks_matrix, "results/ATAC/fastqtl/input/chunk_table.txt", row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
-
-chunks_matrix = data.frame(chunk = seq(1:200), n = 200)
-write.table(chunks_matrix, "results/ATAC/fastqtl/input/all_chunk_table.txt", row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
-
 
 #### export data for RASQUAL ####
 counts_list = lapply(atac_conditions_renamed, function(x){x$counts})
