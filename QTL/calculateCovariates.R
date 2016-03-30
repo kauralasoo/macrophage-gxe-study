@@ -33,11 +33,11 @@ covariates = t(peer_factors[,-1])
 colnames(covariates)= sample_ids
 covariates = covariates[,colnames(head(atac_list$counts))]
 
-#Use PCA to construct covariates for QTL mapping
-naive_PCA = performPCA(log(atac_conditions$naive$tpm + 0.01, 2), atac_conditions$naive$sample_metadata, n_pcs = 10)
-IFNg_PCA = performPCA(log(atac_conditions$IFNg$tpm + 0.01, 2), atac_conditions$IFNg$sample_metadata, n_pcs = 10)
-SL1344_PCA = performPCA(log(atac_conditions$SL1344$tpm + 0.01, 2), atac_conditions$SL1344$sample_metadata, n_pcs = 10)
-IFNg_SL1344_PCA = performPCA(log(atac_conditions$IFNg_SL1344$tpm + 0.01, 2), atac_conditions$IFNg_SL1344$sample_metadata, n_pcs = 10)
+#Use PCA on log TPM values to construct covariates for QTL mapping
+naive_PCA = performPCA(log(atac_conditions$naive$tpm + 0.01, 2), atac_conditions$naive$sample_metadata, n_pcs = 10, column_prefix = "TPM_")
+IFNg_PCA = performPCA(log(atac_conditions$IFNg$tpm + 0.01, 2), atac_conditions$IFNg$sample_metadata, n_pcs = 10, column_prefix = "TPM_")
+SL1344_PCA = performPCA(log(atac_conditions$SL1344$tpm + 0.01, 2), atac_conditions$SL1344$sample_metadata, n_pcs = 10, column_prefix = "TPM_")
+IFNg_SL1344_PCA = performPCA(log(atac_conditions$IFNg_SL1344$tpm + 0.01, 2), atac_conditions$IFNg_SL1344$sample_metadata, n_pcs = 10, column_prefix = "TPM_")
 
 #Plot variance explained
 plot(naive_PCA$var_exp)
@@ -51,3 +51,22 @@ covariates = rbind(naive_PCA$pca_matrix, IFNg_PCA$pca_matrix, SL1344_PCA$pca_mat
   dplyr::mutate(sex_binary = ifelse(sex == "male",0,1))
 new_sample_metadata = dplyr::select(atac_list$sample_metadata, sample_id) %>% dplyr::left_join(covariates, by = "sample_id")
 atac_list$sample_metadata = new_sample_metadata
+
+#Perform PCA on CQN-normalised data
+naive_cqn_PCA = performPCA(atac_conditions$naive$cqn, atac_conditions$naive$sample_metadata, n_pcs = 10, column_prefix = "cqn_")
+IFNg_cqn_PCA = performPCA(atac_conditions$IFNg$cqn, atac_conditions$IFNg$sample_metadata, n_pcs = 10, column_prefix = "cqn_")
+SL1344_cqn_PCA = performPCA(atac_conditions$SL1344$cqn, atac_conditions$SL1344$sample_metadata, n_pcs = 10, column_prefix = "cqn_")
+IFNg_SL1344_cqn_PCA = performPCA(atac_conditions$IFNg_SL1344$cqn, atac_conditions$IFNg_SL1344$sample_metadata, n_pcs = 10, column_prefix = "cqn_")
+
+#Plot variance explained
+plot(naive_cqn_PCA$var_exp)
+plot(IFNg_cqn_PCA$var_exp)
+plot(SL1344_cqn_PCA$var_exp)
+plot(IFNg_SL1344_cqn_PCA$var_exp)
+
+#Add CQN PCAs into the metadata
+cqn_pcas = rbind(naive_cqn_PCA$pca_matrix, IFNg_cqn_PCA$pca_matrix, SL1344_cqn_PCA$pca_matrix, IFNg_SL1344_cqn_PCA$pca_matrix)[,1:11]
+atac_list$sample_metadata = dplyr::left_join(atac_list$sample_metadata, cqn_pcas, by = "sample_id")
+saveRDS(atac_list,"results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
+
+
