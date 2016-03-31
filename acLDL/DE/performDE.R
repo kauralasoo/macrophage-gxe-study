@@ -107,5 +107,9 @@ results(dds, name = "AcLDLyes.LALyes") %>% as.data.frame() %>% dplyr::filter(pad
 results(dds, name = "AcLDL_yes_vs_no") %>% as.data.frame() %>% dplyr::filter(padj < 0.05)
 results(dds, name = "LAL_yes_vs_no") %>% as.data.frame() %>% dplyr::filter(padj < 0.05)
 
+#Export counts matrix to disk
+write.table(expression_data$counts, "results/acLDL/DE/acLDL_counts_matrix.txt", sep = "\t", quote = FALSE)
+write.table(expression_data$cqn, "results/acLDL/DE/acLDL_cqn_matrix.txt", sep = "\t", quote = FALSE)
+
 
 

@@ -39,8 +39,9 @@ formula_qtl = as.formula(paste("expression ~ genotype + condition_name ",
                                paste(covariate_names, collapse = " + "), sep = "+ "))
 formula_interaction = as.formula(paste("expression ~ genotype + condition_name + condition_name:genotype ", 
                                       paste(covariate_names, collapse = " + "), sep = "+ "))
+
 #Test for interactions
-interaction_results = testMultipleInteractions(filtered_pairs, combined_expression_data, filtered_vcf, formula_qtl, formula_interaction)
+interaction_results = testMultipleInteractions(tbl_df(filtered_pairs), combined_expression_data$cqn, combined_expression_data$sample_metadata, filtered_vcf, formula_qtl, formula_interaction)
 interaction_df = postProcessInteractionPvalues(interaction_results)
 saveRDS(interaction_df, "results/SL1344/eQTLs/SL1344_interaction_pvalues.rds")
 interaction_df = readRDS("results/SL1344/eQTLs/SL1344_interaction_pvalues.rds")
@@ -119,100 +120,9 @@ disappear_means_plot = ggplot(disappear_cluster_means, aes(x = condition_name, y
   ylab("Log2 fold-change")
 ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_cluster_means.pdf",disappear_means_plot, width = 6, height = 6)
 
-
-#### Find most associated peaks for each gene ####
-rna_betas = extractAndProcessBetas(dplyr::select(interaction_hits, gene_id, snp_id), rasqual_selected_pvalues, "naive")
-rna_appear_qtls = dplyr::filter(rna_betas$beta_summaries, abs(naive) <= 0.59, max_abs_diff >= 0.59, max_abs_beta >= 0.59)
-
-#Extract most associated peaks for each of the eQTL genes
-appear_hits = dplyr::left_join(appear_qtls, gene_name_map, by = "gene_id")
-
-#Construct GRanges object of SNP positions
-selected_snps = dplyr::semi_join(filtered_vcf$snpspos, rna_appear_qtls, by = c("snpid" = "snp_id")) %>%
-  dplyr::transmute(snp_id = snpid, seqnames = chr, start = pos, end = pos, strand = "*") %>%
-  dataFrameToGRanges()
-
-#Import ATAC data
-atac_list = readRDS("../macrophage-chromatin/results/ATAC/ATAC_combined_accessibility_data.rds")
-min_pvalues_list = readRDS("../macrophage-chromatin/results/ATAC/QTLs/rasqual_min_pvalues.rds")
-min_pvalues_hits = lapply(min_pvalues_list, function(x){dplyr::filter(x, p_fdr < 0.1)})
-
-#Fetch corresponding SNPs from ATAC data
-atac_tabix_list = list(naive = "databases/ATAC/naive_100kb.sorted.unskipped.txt.gz",
-                       IFNg = "databases/ATAC/IFNg_100kb.sorted.unskipped.txt.gz",
-                       SL1344 = "databases/ATAC/SL1344_100kb.sorted.unskipped.txt.gz",
-                       IFNg_SL1344 = "databases/ATAC/IFNg_SL1344_100kb.sorted.unskipped.txt.gz")
-atac_snp_tables = lapply(atac_tabix_list, function(tabix, snps) tabixFetchSNPs(snps, tabix), selected_snps)
-
-#Identify QTLs that appeat after specific stimuli
-ifng_appear_qtls = dplyr::filter(rna_appear_qtls, abs(IFNg) >= 0.59, abs(IFNg_diff) >= 0.59) %>%
-  dplyr::group_by(gene_id) %>% dplyr::arrange(-max_abs_beta) %>%
-  dplyr::filter(row_number() == 1) %>% 
-  dplyr::ungroup()
-sl1344_appear_qtls = dplyr::filter(rna_appear_qtls, abs(SL1344) >= 0.59, abs(SL1344_diff) >= 0.59) %>%
-  dplyr::group_by(gene_id) %>% dplyr::arrange(-max_abs_beta) %>%
-  dplyr::filter(row_number() == 1) %>% 
-  dplyr::ungroup()
-ifng_sl1344_appear_qtls = dplyr::filter(appear_clusters, cluster_id == 4) %>% 
-  dplyr::select(gene_id, snp_id) %>% unique() %>% 
-  dplyr::left_join(rna_appear_qtls, by = c("gene_id","snp_id"))
-
-#IFNg - find corresponding ATAC peaks
-ifng_effects = prepareBetasDf(ifng_appear_qtls, rna_betas, atac_snp_tables, gene_name_map, 
-                              appear_condition = "IFNg", rank_by = "IFNg_diff") %>%
-  dplyr::filter(condition_name %in% c("naive","IFNg")) %>%
-  dplyr::group_by(snp_id, peak_id, gene_id, phenotype) %>% 
-  dplyr::mutate(beta_std = (beta - mean(beta))/sd(beta), beta_scaled = beta/max(beta)) %>%
-  dplyr::ungroup() %>%
-  dplyr::mutate(beta_binary = ifelse(beta >= 0.59, 1, 0))
-
-effect_size_heatmap = ggplot(ifng_effects, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + facet_wrap(~phenotype) + geom_tile() + 
-  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) 
-ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_IFNg_heatmap.pdf", effect_size_heatmap, width = 5, height = 7)
-
-#SL1344 - find corresponding ATAC peaks
-sl1344_effects = prepareBetasDf(sl1344_appear_qtls, rna_betas, atac_snp_tables, gene_name_map, 
-                              appear_condition = "SL1344", rank_by = "SL1344_diff") %>%
-  dplyr::filter(condition_name %in% c("naive","SL1344")) %>%
-  dplyr::group_by(snp_id, peak_id, gene_id, phenotype) %>% 
-  dplyr::mutate(beta_std = (beta - mean(beta))/sd(beta), beta_scaled = beta/max(beta)) %>%
-  dplyr::ungroup() %>%
-  dplyr::mutate(beta_binary = ifelse(beta >= 0.59, 1, 0))
-
-effect_size_heatmap = ggplot(sl1344_effects, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + facet_wrap(~phenotype) + geom_tile() + 
-  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) 
-ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_SL1344_heatmap.pdf", effect_size_heatmap, width = 5, height = 7)
-
-#IFNg_SL1344 - find corresponding ATAC peaks
-ifng_sl1344_effects = prepareBetasDf(ifng_sl1344_appear_qtls, rna_betas, atac_snp_tables, gene_name_map, 
-                                appear_condition = "IFNg_SL1344", rank_by = "IFNg_SL1344_diff") %>%
-  dplyr::group_by(snp_id, peak_id, gene_id, phenotype) %>% 
-  dplyr::mutate(beta_std = (beta - mean(beta))/sd(beta), beta_scaled = beta/max(beta)) %>%
-  dplyr::ungroup() %>%
-  dplyr::mutate(beta_binary = ifelse(beta >= 0.59, 1, 0))
-
-effect_size_heatmap = ggplot(ifng_sl1344_effects, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + facet_wrap(~phenotype) + geom_tile() + 
-  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) 
-ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_IFNg_SL1344_heatmap.pdf", effect_size_heatmap, width = 8, height = 4)
-
-#Count the number of peaks per SNP
-ifng_peaks_ifng = findAllAssociatedPeaksPerSNP(ifng_appear_qtls, atac_snp_tables[["IFNg"]]) %>% 
-  dplyr::filter(p_bonferroni < 0.1) %>% dplyr::group_by(snp_id) %>% dplyr::summarise(ifng_peak_count = length(gene_id))
-ifng_peaks_naive = findAllAssociatedPeaksPerSNP(ifng_appear_qtls, atac_snp_tables[["naive"]]) %>% 
-  dplyr::filter(p_bonferroni < 0.1) %>% dplyr::group_by(snp_id) %>% dplyr::summarise(naive_peak_count = length(gene_id))
-peak_count_comparison = dplyr::left_join(ifng_peaks_ifng, ifng_peaks_naive, by = "snp_id") %>% 
-  dplyr::mutate(naive_peak_count = ifelse(is.na(naive_peak_count),0, naive_peak_count))
-peak_count_diff = dplyr::mutate(peak_count_comparison, diff = ifng_peak_count - naive_peak_count) %>% dplyr::arrange(-diff)
-write.table(peak_count_diff, "results/SL1344/eQTLs/naive_ifng_ATAC_peak_count_diff.txt")
-
-#Make plots
-makeMultiplePlots(ifng_interactions, combined_expression_data$cqn,filtered_vcf$genotypes,combined_expression_data$sample_metadata,combined_expression_data$gene_metadata) %>%
-  savePlots("results/SL1344/eQTLs/interaction_plots/naive_vs_IFNg/", 7,7)
-makeMultiplePlots(sl1344_interactions, combined_expression_data$cqn,filtered_vcf$genotypes,combined_expression_data$sample_metadata,combined_expression_data$gene_metadata) %>%
-  savePlots("results/SL1344/eQTLs/interaction_plots/naive_vs_SL1344/", 7,7)
-makeMultiplePlots(ifng_sl1344_interactions, combined_expression_data$cqn,filtered_vcf$genotypes,combined_expression_data$sample_metadata,combined_expression_data$gene_metadata) %>%
-  savePlots("results/SL1344/eQTLs/interaction_plots/naive_vs_IFNg_SL1344/", 7,7)
-
+#Export clustering results
+variable_qtls = list(appear = appear_betas, disappear = disappear_betas)
+saveRDS(variable_qtls, "results/SL1344/eQTLs/appeat_disappear_eQTLs.rds")
 
 
 #### GWAS overlaps ####
