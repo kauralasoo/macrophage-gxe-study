@@ -5,6 +5,8 @@ load_all("../seqUtils/")
 library("MatrixEQTL")
 load_all("macrophage-gxe-study/housekeeping/")
 library("ggplot2")
+load_all("~/software/rasqual/rasqualTools/")
+
 
 #### Import data ####
 #Load the raw eQTL dataset
@@ -16,7 +18,7 @@ gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, g
 #Load p-values from disk
 rasqual_min_pvalues = readRDS("results/SL1344/eQTLs/rasqual_min_pvalues.rds")
 rasqual_min_hits = lapply(rasqual_min_pvalues, function(x){dplyr::filter(x, p_fdr < 0.1)})
-min_pvalue_df = plyr::ldply(rasqual_min_hits, .id = "condition_name")
+min_pvalue_df = plyr::ldply(rasqual_min_hits, .id = "condition_name") %>% dplyr::arrange(p_nominal)
 joint_pairs = dplyr::select(min_pvalue_df, gene_id, snp_id) %>% unique() 
 
 rasqual_selected_pvalues = readRDS("results/SL1344/eQTLs/rasqual_selected_pvalues.rds")
@@ -126,9 +128,6 @@ saveRDS(variable_qtls, "results/SL1344/eQTLs/appeat_disappear_eQTLs.rds")
 
 
 #### GWAS overlaps ####
-#Find overlaps with the GWAS catalog
-snp_positions = vcf_file$snpspos %>% tbl_df() %>% dplyr::rename(snp_id = snpid)
-
 #Import GWAS catalog
 filtered_catalog = readRDS("annotations/gwas_catalog_v1.0.1-downloaded_2016-03-02.filtered.rds")
 
@@ -140,26 +139,14 @@ interaction_gwas_hits = dplyr::left_join(interaction_olaps, gene_name_map, by = 
 write.table(interaction_gwas_hits, "results/SL1344/eQTLs/appear_gwas_overlaps.txt", row.names = FALSE, sep = "\t", quote = FALSE)
 
 #All GWAS overlaps
-all_olaps = findGWASOverlaps(filtered_pairs, filtered_catalog, vcf_file, min_r2 = 0.8)
+all_olaps = findGWASOverlaps(filtered_pairs, filtered_catalog, vcf_file, min_r2 = 0.6)
 all_gwas_hits = dplyr::left_join(all_olaps, gene_name_map, by = "gene_id") %>%
-  dplyr::select(gene_name, snp_id, gwas_snp_id, R2, trait, gwas_pvalue)
+  dplyr::select(gene_name, gene_id, snp_id, gwas_snp_id, R2, trait, gwas_pvalue)
 write.table(all_gwas_hits, "results/SL1344/eQTLs/all_gwas_overlaps.txt", row.names = FALSE, sep = "\t", quote = FALSE)
 
-#Count the number of SNPs per trait
-all_trait_sizes = dplyr::select(filtered_catalog, snp_id, trait) %>% 
-  dplyr::group_by(trait)  %>% dplyr::summarise(trait_size = length(trait))
-
-#Count the number of overlaps per trait
-trait_counts_overlap = dplyr::group_by(all_gwas_hits, trait) %>%
-  dplyr::select(gwas_snp_id, trait) %>% unique() %>% 
-  summarise(overlap_size = length(trait)) %>% 
-  arrange(-overlap_size)
-
-#Calculate relative overlap
-relative_overlap = dplyr::left_join(trait_counts_overlap, all_trait_sizes, by = "trait") %>% 
-  dplyr::mutate(fraction = overlap_size/trait_size) %>% dplyr::filter(overlap_size > 5) %>% 
-  arrange(-fraction)
-write.table(relative_overlap, "results/SL1344/eQTLs/relative_gwas_overlaps.txt", row.names = FALSE, sep = "\t", quote = FALSE)
+#Rank traits by overlap size
+ranked_traits = rankTraitsByOverlapSize(dplyr::filter(all_gwas_hits, R2 > 0.6), filtered_catalog, min_overlap = 5)
+write.table(ranked_traits, "results/SL1344/eQTLs/relative_gwas_overlaps.txt", row.names = FALSE, sep = "\t", quote = FALSE)
 
 
 
@@ -184,8 +171,8 @@ coords = lapply(tabix_files, function(x, gene_ranges) {
 beta_list1 = extractAndProcessBetas(dplyr::select(unique_snps, gene_id, snp_id), coords, "naive")
 beta_list2 = extractAndProcessBetas(dplyr::select(head(tabix_data,4), gene_id, snp_id), coords, "naive")
 
-
-gene_df = data_frame(gene_id = "ENSG00000178209")
+#PTK2B
+gene_df = data_frame(gene_id = "ENSG00000120899")
 gene_ranges = constructGeneRanges(gene_df, combined_expression_data$gene_metadata, cis_window = 5e5)
 tabix_data = tabixFetchGenes(gene_ranges, "databases/SL1344/IFNg_SL1344_500kb.sorted.txt.gz")[[1]] %>%
   dplyr::arrange(p_nominal) %>%
@@ -221,4 +208,3 @@ ggplot(plotting_data, aes(x = factor(lead_snp_value), y = abs(0.5-ratio))) +
   geom_jitter(position = position_jitter(width = .1)) +
   xlab("Feature SNP id") + 
   ylab("Reference allele ratio")
-

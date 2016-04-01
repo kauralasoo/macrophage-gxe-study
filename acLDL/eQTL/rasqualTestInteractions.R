@@ -35,7 +35,7 @@ snps_pos = dplyr::filter(vcf_file$snpspos, snpid %in% rownames(genotypes))
 filtered_vcf = list(snpspos = snps_pos, genotypes = genotypes)
 
 #Test intetactions between 
-filtered_pairs = filterHitsR2(joint_pairs, filtered_vcf$genotypes, .3)
+filtered_pairs = filterHitsR2(joint_pairs, filtered_vcf$genotypes, .8)
 
 #Ctrl vs AcLDL
 covariate_names = c("sex_binary","macrophage_diff_days", "max_purity_filtered",
@@ -76,4 +76,17 @@ ggplot(plotting_data, aes(x = factor(lead_snp_value), y = ratio)) +
   xlab("Feature SNP id") + 
   ylab("Reference allele ratio")
 
+
+#Look for overlaps with the GWAS catalog
+#Import GWAS catalog
+filtered_catalog = readRDS("annotations/gwas_catalog_v1.0.1-downloaded_2016-03-02.filtered.rds")
+
+#All GWAS overlaps
+all_olaps = findGWASOverlaps(filtered_pairs, filtered_catalog, vcf_file, min_r2 = 0.6)
+all_gwas_hits = dplyr::left_join(all_olaps, gene_name_map, by = "gene_id") %>%
+  dplyr::select(gene_name, gene_id, snp_id, gwas_snp_id, R2, trait, gwas_pvalue)
+write.table(all_gwas_hits, "results/acLDL/eQTLs/all_gwas_overlaps.txt", row.names = FALSE, sep = "\t", quote = FALSE)
+
+#Rank traits by overlap size
+ranked_traits = rankTraitsByOverlapSize(dplyr::filter(all_gwas_hits, R2 > 0.8), filtered_catalog, min_overlap = 3)
 
