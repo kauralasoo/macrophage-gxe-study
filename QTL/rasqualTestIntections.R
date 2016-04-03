@@ -103,3 +103,7 @@ ggsave("results/ATAC/QTLs/properties/caQTLs_disappear_kmeans_heatmap.png",dis_ef
 variable_qtls = list(appear = appear_betas, disappear = disappear_betas)
 saveRDS(variable_qtls, "results/ATAC/QTLs/rasqual_appear_disappear_qtls.rds")
 
+#Plot example
+plotEQTL("ATAC_peak_26312","rs789642", atac_list$cqn, vcf_file$genotypes, atac_list$sample_metadata, atac_list$gene_metadata)
+
+

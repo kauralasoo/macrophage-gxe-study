@@ -1,94 +1,43 @@
-library("PWMEnrich")
 library("dplyr")
+library("readr")
 
 #Import ATAC data and clusters
 atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
 atac_list$sample_metadata$condition_name = factor(atac_list$sample_metadata$condition_name, levels = c("naive","IFNg", "SL1344", "IFNg_SL1344"))
 final_clusters = readRDS("results/ATAC/DA/peak_clusters.rds")
 
+#Import FIMO motif matches
+fimo_hits = readr::read_delim("results/ATAC/FIMO_CISBP_results.long.txt", delim = "\t", col_types = c("cciicddcc"), 
+                              col_names = c("motif_id","seq_name","start","end","strand","score","p_value","dummy","matched_seq"), skip = 1)
 
-#Focus on Drosophila example
-library(PWMEnrich.Dmelanogaster.background)
-library("PWMEnrich.Hsapiens.background")
-data(PWMLogn.dm3.MotifDb.Dmel)
+#Count the number of matches per peak
+fimo_hits_clean = tidyr::separate(fimo_hits,seq_name, c("prefix","gene_id"), sep = "=") 
+width_matrix = dplyr::mutate(atac_list$gene_metadata, width = end - start)
 
-#Calculate enrichments
-sequence = readDNAStringSet(system.file(package="PWMEnrich", dir="extdata", file="stripe2.fa"))
-res = motifEnrichment(sequence, PWMLogn.dm3.MotifDb.Dmel)
-report = sequenceReport(res, 1)
-
-#Look at binding sites
-ids = c("bcd_FlyReg_FBgn0000166",
-        "gt_FlyReg_FBgn0001150",
-        "Kr")
-sel.pwms = PWMLogn.dm3.MotifDb.Dmel$pwms[ids]
-names(sel.pwms) = c("bcd", "gt", "Kr")
-
-scores = motifScores(sequence, sel.pwms, raw.scores=TRUE)
-plotMotifScores(scores, cols=c("green", "red", "blue"))
-
-saveRDS(pwmatrix_list, "results/ATAC/cisBP_PWMatrixList.rds")
+#Import motif metadata
+TF_information = readr::read_tsv("~/annotations/CisBP/Homo_sapiens_2016_03_10_11-59_am/TF_Information.txt")
+colnames(TF_information)[6] = "gene_id"
+unique_motifs = dplyr::select(TF_information, Motif_ID, gene_id, TF_Name) %>% dplyr::filter(Motif_ID != ".") %>%
+  dplyr::rename(motif_id = Motif_ID, tf_name = TF_Name)
 
 
-#Look for enrichmen in multiple sequences
-# load the pre-compiled lognormal background
-data(PWMLogn.dm3.MotifDb.Dmel)
-sequences = readDNAStringSet(system.file(package="PWMEnrich",
-                                         dir="extdata", file="tinman-early-top20.fa"))
-res = motifEnrichment(sequences, PWMLogn.dm3.MotifDb.Dmel)
-report = groupReport(res)
+#Calculate total number of matches for each motif
+total_matches = dplyr::group_by(fimo_hits_clean,motif_id) %>%
+  dplyr::summarise(n_matches = length(motif_id)) %>%
+  dplyr::mutate(total_length = sum(width_matrix$width))
 
+sl1344_up_peaks = dplyr::filter(final_clusters, name == "IFNg_up")
+sl1344_lengths = sum(dplyr::filter(width_matrix, gene_id %in% sl1344_up_peaks$gene_id)$width)
+sl1344_matches = dplyr::filter(fimo_hits_clean, gene_id %in% sl1344_up_peaks$gene_id) %>% 
+  dplyr::group_by(motif_id) %>% 
+  summarise(n_cluster_matches = length(motif_id)) %>%
+  dplyr::mutate(cluster_length = sl1344_lengths)
 
-#Human data
-data(PWMLogn.hg19.MotifDb.Hsap)
-res = motifEnrichment(DNAString("TGCATCAAGTGTGTAGTGCAAGTGAGTGATGAGTAGAAGTTGAGTGAGGTAGATGC"), PWMLogn.hg19.MotifDb.Hsap)
-groupReport(res)
-
-#Import CisBP motifs
-motifs = readRDS("results/ATAC/cisBP_PFMatrixList.rds")
-motifs_list = lapply(motifs, Matrix)
-
-
-
-
-
-
-library(Biostrings)
-library("TFBSTools")
-data(MA0003.2)
-data(MA0004.1)
-
-pwmList = PWMatrixList(MA0003.2=toPWM(MA0003.2), MA0004.1=toPWM(MA0004.1),
-                       use.names=TRUE)
-subject = DNAString("GAATTCTCTCTTGTTGTAGTCTCTTGACAAAATG")
-
-siteset = searchSeq(pwmList, subject, seqname="seq1", min.score="60%", strand="*")
-
-
-#Play around with TFBS_DB
-#Perform motif enrichment
-db <- CisBP.extdata("Homo_sapiens")
-tfs <- tfbs.createFromCisBP(db)
-
-#Agnes clustering
-tfs1 <- tfbs.clusterMotifs(tfs, method="agnes", group.k=100, pdf.heatmap="agnes.hm.pdf")
-#AP clustering
-tfs2 <- tfbs.clusterMotifs(tfs, method="apcluster", pdf.heatmap= "apcluster.hm.pdf")
-
-# Draw motif logos with one group of TF per page
-tfbs.drawLogosForClusters(tfs1, file.pdf="agnes.logos.pdf");
-tfbs.drawLogosForClusters(tfs2, file.pdf="apcluster.logos.pdf")
-
-#Perform analysis with TFBSTools
-cisbp_pwm_list = readRDS("results/ATAC/cisBP_PWMatrixList.rds")
-
-#Import ATAC peak sequences from disk
-sequences = readDNAStringSet("annotations/ATAC_consensus_peaks.fasta")
-peak_ids = strsplit(names(sequences), "=") %>% lapply(function(x) x[2]) %>% unlist()
-names(sequences) = peak_ids
-
-#Search for matches
-sitesetList = searchSeq(cisbp_pwm_list, a[1:2], min.score="80%", strand="*")
-b = as.data.frame(sitesetList)
-
-
+#Motif_enrichment
+a = dplyr::left_join(total_matches, sl1344_matches, by = "motif_id") %>% 
+  dplyr::mutate(enrichment = (n_cluster_matches/cluster_length)/(n_matches/total_length)) %>% 
+  arrange(-enrichment) %>% 
+  dplyr::group_by(motif_id) %>%
+  dplyr::mutate(p_hyper = phyper(n_cluster_matches - 1, n_matches, total_length - n_matches, cluster_length, lower.tail = FALSE)) %>%
+  dplyr::mutate(p_fdr = p.adjust(p_hyper, "fdr")) %>%
+  dplyr::left_join(unique_motifs, by = "motif_id")
