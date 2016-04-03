@@ -14,12 +14,16 @@ library("pheatmap")
 atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
 atac_list$sample_metadata$condition_name = factor(atac_list$sample_metadata$condition_name, levels = c("naive","IFNg", "SL1344", "IFNg_SL1344"))
 
+#Only keep samples with high quality data in all conditions
+hq_donors = c("qolg","vass","kuxp","cicb", "febc","eiwy","oapg","nukw","hayt","bima","pamv","guss","eipl","iill","podx","pelm")
+filtered_metadata = dplyr::filter(atac_list$sample_metadata, donor %in% hq_donors)
+
 #Apply TMM normalisation
-dge = DGEList(counts = atac_list$counts)
+dge = DGEList(counts = atac_list$counts[,filtered_metadata$sample_id])
 dge = calcNormFactors(dge, method = "TMM")
 
 #Apply voom transformation
-design_matrix = model.matrix(~condition_name, atac_list$sample_metadata)
+design_matrix = model.matrix(~condition_name, filtered_metadata)
 v <- voom(dge,design_matrix,plot=TRUE)
 fit = lmFit(v, design_matrix)
 fit <- eBayes(fit)
@@ -31,12 +35,11 @@ ifng_sll1344_hits = topTable(fit,coef=c(4), lfc = 2, p.value = 0.01, number = 1e
 variable_peaks = unique(c(ifng_hits$gene_id, ifng_sll1344_hits$gene_id, sl1344_hits$gene_id))
 
 #Calculate mean peak height per condition
-mean_tpm = calculateMean(atac_list$tpm, as.data.frame(atac_list$sample_metadata), "condition_name")
-mean_tpm = log(mean_tpm + 0.01,2)
-mean_tpm = mean_tpm[variable_peaks,]
+mean_cqn = calculateMean(atac_list$cqn[,filtered_metadata$sample_id], as.data.frame(filtered_metadata), "condition_name")
+mean_cqn = mean_cqn[variable_peaks,]
 
 #Standardise effect sizes
-cqn_set = ExpressionSet(as.matrix(mean_tpm))
+cqn_set = ExpressionSet(as.matrix(mean_cqn))
 cqn_set_std = standardise(cqn_set)
 
 #Cluster the expression data
@@ -79,19 +82,20 @@ ggsave("results/ATAC/DA/ATAC_DA_clusters.png",chromatin_clusters_heatmap, width 
 ggplot(cluster_plot_data, aes(x = condition_name, y = expression)) + 
   facet_grid(new_cluster_id ~ .,  scales = "free_y", space = "free_y") + stat_summary(fun.y = mean, geom="point")
 
+#Add names to each cluster
+cluster_names = data_frame(new_cluster_id = c(1:6), name = c("SL1344_up","IFNg_SL1344_up", "inflammatory_up", "IFNg_up", "IFNg_down", "SL1344_down"))
+
 #Save clusters to disk
-final_clusters = dplyr::select(cluster_plot_data, gene_id, MEM.SHIP, new_cluster_id) %>% unique()
+final_clusters = dplyr::select(cluster_plot_data, gene_id, MEM.SHIP, new_cluster_id) %>% unique() %>%
+  dplyr::left_join(cluster_names, by = "new_cluster_id") %>% dplyr::ungroup()
 saveRDS(final_clusters, "results/ATAC/DA/peak_clusters.rds")
 final_clusters = readRDS("results/ATAC/DA/peak_clusters.rds")
 
-#Add coordinates to each cluster
-cluster_names = data_frame(new_cluster_id = c(1:6), name = c("IFNg_SL1344_up", "SL1344_up", "inflammatory_up", "IFNg_up", "IFNg_down", "SL1344_down"))
 
 #Export all clusters as a single bed file
-cluster_ranges = dplyr::left_join(final_clusters, cluster_names, by = "new_cluster_id") %>% 
-  dplyr::ungroup() %>% 
+cluster_ranges = final_clusters %>%
   dplyr::left_join(atac_list$gene_metadata) %>% 
   dplyr::transmute(gene_id, name, seqnames = chr, start, end, strand)
 
 #Save clusters into a BED file for downstream analyis with GAT
-export.bed(dataFrameToGRanges(cluster_ranges), "results/ATAC/DA/ATAC_clustered_peaks.bed")
+rtracklayer::export.bed(dataFrameToGRanges(cluster_ranges), "results/ATAC/DA/ATAC_clustered_peaks.bed")

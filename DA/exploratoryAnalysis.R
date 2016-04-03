@@ -17,7 +17,7 @@ design = constructDesignMatrix_ATAC(sample_names)
 atac_tpm_log2 = log(atac_data$tpm + 0.1, 2)
 
 #Make heatmap of TPM counts
-pheatmap(spearman_corr, width = 10, height = 10)
+pheatmap(spearman_corr[filtered_metadata$sample_id,filtered_metadata$sample_id], width = 10, height = 10)
 
 #Make a heatmap of CQN normalized accesibility data
 spearman_corr = cor(atac_tpm_log2,method = "spearman")
