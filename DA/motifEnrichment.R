@@ -31,13 +31,6 @@ colnames(TF_information)[6] = "gene_id"
 unique_motifs = dplyr::select(TF_information, Motif_ID, gene_id, TF_Name) %>% dplyr::filter(Motif_ID != ".") %>%
   dplyr::rename(motif_id = Motif_ID, tf_name = TF_Name)
 
-#Calculate enrichments
-sl1344_up_peaks = dplyr::filter(final_clusters, name == "IFNg_down")
-b = fimoRelativeEnrichment(cluster_list[[1]], NULL, fimo_hits_clean, atac_list$gene_metadata) %>% 
-  dplyr::left_join(unique_motifs, by = "motif_id") %>%
-  dplyr::ungroup() %>% 
-  dplyr::semi_join(expressed_motifs, by = "motif_id") %>%
-  dplyr::arrange(-enrichment)
 
 #Calculate motif enrichments in each cluster
 cluster_list = plyr::dlply(final_clusters,.(name))
@@ -49,10 +42,10 @@ motif_enrichment_df = ldply(filtered_enrichments, .id = "cluster_name") %>% tbl_
 
 #Make a heatmap of motif enrichments
 interesting_tfs = c("FOSB","BATF3","POU2F1","NFKB1","IRF1","STAT1", "MAFB", "MEF2A")
-selected_enrichments = dplyr::filter(motif_enrichemnt_df, tf_name %in% interesting_tfs) %>%
+selected_enrichments = dplyr::filter(motif_enrichment_df, tf_name %in% interesting_tfs) %>%
   dplyr::mutate(l2fold = log(enrichment, 2)) %>%
   dplyr::mutate(cluster_name = factor(as.character(cluster_name), 
-          levels =rev(c("SL1344_up", "IFNg_SL1344_up", "inflammatory_up", "IFNg_up", "IFNg_down", "SL1344_down")))) %>%
+          levels =rev(c("SL1344_up_1","SL1344_up_2" ,"IFNg_SL1344_up", "IFNg_up_1", "IFNg_up_2", "IFNg_down", "SL1344_down")))) %>%
   dplyr::mutate(tf_name = factor(tf_name, levels = interesting_tfs))
 
 #Make a plot of motif enrichments

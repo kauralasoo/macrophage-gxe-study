@@ -43,7 +43,7 @@ cqn_set = ExpressionSet(as.matrix(mean_cqn))
 cqn_set_std = standardise(cqn_set)
 
 #Cluster the expression data
-clusters = mfuzz(cqn_set_std, c = 6, m = 1.5, iter = 1000)
+clusters = mfuzz(cqn_set_std, c = 7, m = 1.5, iter = 1000)
 cluster_cores = acore(cqn_set_std, clusters, min.acore = 0.7)
 names(cluster_cores) = c(1:length(cluster_cores))
 pheatmap(clusters$centers)
@@ -64,7 +64,7 @@ cluster_order = tidyr::spread(cluster_means, condition_name, expression) %>% dpl
   dplyr::mutate(SL1344_bin = ifelse(IFNg < SL1344, 0, 1)) %>%
   dplyr::mutate(IFNg_SL1344_bin = ifelse(IFNg_SL1344 < 0, 0, 1)) %>%
   arrange(naive_bin, IFNg_bin, SL1344_bin) %>%
-  dplyr::mutate(new_cluster_id = c(1:6)) %>%
+  dplyr::mutate(new_cluster_id = c(1:7)) %>%
   dplyr::select(cluster_id, new_cluster_id)
 
 cluster_plot_data = dplyr::left_join(cluster_exp, cluster_order, by = "cluster_id") %>% 
@@ -83,7 +83,7 @@ ggplot(cluster_plot_data, aes(x = condition_name, y = expression)) +
   facet_grid(new_cluster_id ~ .,  scales = "free_y", space = "free_y") + stat_summary(fun.y = mean, geom="point")
 
 #Add names to each cluster
-cluster_names = data_frame(new_cluster_id = c(1:6), name = c("SL1344_up","IFNg_SL1344_up", "inflammatory_up", "IFNg_up", "IFNg_down", "SL1344_down"))
+cluster_names = data_frame(new_cluster_id = c(1:7), name = c("SL1344_up_1","SL1344_up_2","IFNg_SL1344_up", "IFNg_up_1", "IFNg_up_2", "IFNg_down", "SL1344_down"))
 
 #Save clusters to disk
 final_clusters = dplyr::select(cluster_plot_data, gene_id, MEM.SHIP, new_cluster_id) %>% unique() %>%
