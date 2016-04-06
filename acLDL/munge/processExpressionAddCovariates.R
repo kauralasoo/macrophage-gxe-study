@@ -29,6 +29,15 @@ cqn_list = lapply(rna_conditions_renamed, function(x){x$cqn})
 savePEERData(cqn_list, "results/acLDL/PEER/input/")
 
 #Run PEER .....
+#Import PEER residuals
+ctrl_residuals = t(readr::read_delim("results/acLDL/PEER/output/Ctrl/residuals.txt", delim = ",", col_names = FALSE))
+rownames(ctrl_residuals) = rownames(rna_conditions$Ctrl$cqn)
+colnames(ctrl_residuals) = colnames(rna_conditions$Ctrl$cqn)
+acldl_residuals = t(readr::read_delim("results/acLDL/PEER/output/AcLDL/residuals.txt", delim = ",", col_names = FALSE))
+rownames(acldl_residuals) = rownames(rna_conditions$AcLDL$cqn)
+colnames(acldl_residuals) = colnames(rna_conditions$AcLDL$cqn)
+peer_residuals = cbind(ctrl_residuals, acldl_residuals)
+saveRDS(peer_residuals,"results/acLDL/PEER/output/PEER_residuals.rds")
 
 #Import PEER factors into R
 ctrl_factors = importPEERFactors("results/acLDL/PEER/output/Ctrl/factors.txt", rna_conditions_renamed$Ctrl$sample_metadata)

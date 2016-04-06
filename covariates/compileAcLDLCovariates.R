@@ -13,6 +13,9 @@ acLDL_dat = read.csv("macrophage-gxe-study/data/sample_lists/acLDL/acLDL_line_da
   dplyr::mutate(rna_extraction = as.Date(rna_extraction, "%d/%m/%Y")) %>%
   dplyr::mutate(rna_submit = as.Date(rna_submit, "%d/%m/%Y"))
 
+#Import RNA concentrations
+acldl_rna = read.table("macrophage-gxe-study/data/sample_lists/acLDL/acLDL_rna_concentrations.txt", header = TRUE, stringsAsFactors = FALSE)
+
 #Join tables together
 line_data = dplyr::left_join(line_data, acLDL_dat, by = c("line_id", "replicate")) %>% 
   dplyr::filter(!is.na(acLDL_date)) %>%
@@ -29,6 +32,12 @@ line_data = dplyr::mutate(line_data,
                           max_purity_filtered = ifelse(as.numeric(line_data$flow_date - line_data$acLDL_date) > 14, NA, max_purity),
                           mean_purity_filtered = ifelse(as.numeric(line_data$flow_date - line_data$acLDL_date) > 14,NA,mean_purity)) %>%
   dplyr::mutate(purity_bins = ifelse(max_purity_filtered < 0.98, "low", "high"))
+
+#Add rna concentrations
+rna_summary = dplyr::filter(acldl_rna, condition_name %in% c("AcLDL","Ctrl")) %>% dplyr::group_by(line_id) %>%
+  dplyr::arrange(condition_name) %>% 
+  dplyr::summarise(ng_ul_mean = mean(ng_ul), ng_ul_ratio = ng_ul[1]/ng_ul[2])
+line_data = dplyr::left_join(line_data, rna_summary, by = "line_id")
 
 #Save results to disk
 saveRDS(line_data, "macrophage-gxe-study/data/covariates/compiled_acLDL_metadata.rds")

@@ -10,6 +10,11 @@ library("ggplot2")
 acldl_list = readRDS("results/acLDL/acLDL_combined_expression_data_covariates.rds")
 acldl_list = extractConditionFromExpressionList(c("Ctrl","AcLDL"), acldl_list)
 
+#Remove some donors
+acldl_list_filtered = acldl_list
+acldl_list_filtered$sample_metadata = acldl_list$sample_metadata %>% dplyr::filter(!(donor %in% c("zaui","pamv","eiwy","eipl","qaqx","hayt")))
+acldl_list_filtered$cqn = acldl_list_filtered$cqn[,acldl_list_filtered$sample_metadata$sample_id]
+
 #Load p-values from disk
 rasqual_min_pvalues = readRDS("results/acLDL/eQTLs/acLDL_rasqual_min_pvalues.rds")
 rasqual_min_hits = lapply(rasqual_min_pvalues, function(x){dplyr::filter(x, p_fdr < 0.1)})
@@ -38,14 +43,15 @@ filtered_vcf = list(snpspos = snps_pos, genotypes = genotypes)
 filtered_pairs = filterHitsR2(joint_pairs, filtered_vcf$genotypes, .8)
 
 #Ctrl vs AcLDL
-covariate_names = c("sex_binary","macrophage_diff_days", "max_purity_filtered",
+covariate_names = c("sex_binary","macrophage_diff_days", "max_purity_filtered","ng_ul_mean",
                     "PEER_factor_1", "PEER_factor_2", "PEER_factor_3","PEER_factor_4", "PEER_factor_5","PEER_factor_6")
 formula_qtl = as.formula(paste("expression ~ genotype + condition_name ", 
                                paste(covariate_names, collapse = " + "), sep = "+ "))
 formula_interaction = as.formula(paste("expression ~ genotype + condition_name + condition_name:genotype ", 
                                        paste(covariate_names, collapse = " + "), sep = "+ "))
+
 #Test for interactions
-interaction_results = testMultipleInteractions(filtered_pairs, acldl_list, filtered_vcf, formula_qtl, formula_interaction)
+interaction_results = testMultipleInteractions(filtered_pairs, acldl_list$cqn, acldl_list$sample_metadata, filtered_vcf, formula_qtl, formula_interaction)
 interaction_df = postProcessInteractionPvalues(interaction_results)
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 write.table(interaction_hits, "results/acLDL/eQTLs/significant_interactions.txt", quote = FALSE, row.names = FALSE)
