@@ -118,3 +118,7 @@ plotEQTL("ENSG00000198133", "rs12878807", eqtl_data_list$exprs_cqn, vcf_file$gen
 plotEQTL("ENSG00000054690", "rs12878807", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
          eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata) %>%
   ggsave("results/SL1344/eQTLs/example_loci/TMEM229B/PLEKHH1_eQTL.pdf", ., width = 7, height = 7)
+
+
+plotEQTL("ENSG00000197728", "rs1131017", combined_expression_data$cqn, vcf_file$genotypes, 
+         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)

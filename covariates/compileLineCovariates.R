@@ -7,6 +7,7 @@ dat = tbl_df(read.csv("macrophage-gxe-study/data/sample_lists/line_metadata.csv"
 flow_purity = readRDS("macrophage-gxe-study/data/covariates/flow_cytometry_purity.rds")
 gender_map = read.table("macrophage-gxe-study/data/sample_lists/line_gender_map.txt", header = TRUE, stringsAsFactors = FALSE)
 genotypes = read.table("macrophage-gxe-study/data/sample_lists/genotype_sample_names.txt", stringsAsFactors = FALSE)
+isOpenAccess = read.table("macrophage-gxe-study/data/sample_lists/HipSci_is_open_access.txt", stringsAsFactors = FALSE)
 
 #Convert all date fields to date
 line_metadata = dat %>%
@@ -33,14 +34,14 @@ tidy_sex = dplyr::mutate(gender_map, new_gender = ifelse(gender == "Female" | ge
   dplyr::rename(sex = new_gender) %>%
   unique()
 
-#Load genotype sample names
-colnames(genotypes) = c("genotype_id")
-genotypes_names = tidyr::separate(genotypes, genotype_id, into = c("batch_id", "line_id"), sep = "-", remove = FALSE) %>% 
-  dplyr::select(genotype_id, line_id)
+#Add genotype ids and open access status
+colnames(isOpenAccess) = c("genotype_id", "open_access")
+genotypes_open_access_names = tidyr::separate(isOpenAccess, genotype_id, into = c("batch_id", "line_id"), sep = "-", remove = FALSE) %>% 
+  dplyr::select(genotype_id, line_id, open_access)
 
 #Put all of the annotations together
 line_data = dplyr::left_join(line_metadata, mean_flow_purity, by = c("donor", "flow_date")) %>%
-  dplyr::left_join(genotypes_names, by = "line_id") %>%
+  dplyr::left_join(genotypes_open_access_names, by = "line_id") %>%
   dplyr::left_join(tidy_sex, by = "line_id") %>%
   dplyr::mutate(ips_culture_days = as.numeric(EB_formation - ips_started)) #iPS culture duration
 
@@ -52,3 +53,4 @@ line_data = dplyr::mutate(line_data, passage_diff_bins = floor(line_data$passage
 #Save line metadata to disk
 saveRDS(line_data, "macrophage-gxe-study/data/covariates/compiled_line_metadata.rds")
 write.table(line_data, "macrophage-gxe-study/data/covariates/compiled_line_metadata.txt", row.names = FALSE, sep = "\t", quote = FALSE)
+
