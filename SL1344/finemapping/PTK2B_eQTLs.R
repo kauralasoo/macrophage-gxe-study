@@ -52,9 +52,9 @@ ggsave("results/SL1344/eQTLs/example_loci/PTK2B/PTK2B_IFNg_SL1344_eQTL.pdf", ifn
 
 #Import pvalues for PTK2B gene
 naive_pvalues = tabixFetchGenesQuick("ENSG00000120899", "databases/SL1344/naive_500kb.sorted.txt.gz", combined_expression_data$gene_metadata, cis_window = 0.5e5)[[1]] %>% 
-  dplyr::mutate(condition = "naive")
+  dplyr::mutate(condition = "naive") %>% addAssociationPosterior(n = 69)
 IFNg_SL1344_pvalues = tabixFetchGenesQuick("ENSG00000120899", "databases/SL1344/IFNg_SL1344_500kb.sorted.txt.gz", combined_expression_data$gene_metadata, cis_window = 0.5e5)[[1]]  %>% 
-  dplyr::mutate(condition = "IFNg_SL1344")
+  dplyr::mutate(condition = "IFNg_SL1344") %>% addAssociationPosterior(n = 69)
 joint_pvalues = rbind(naive_pvalues, IFNg_SL1344_pvalues)
 
 #Import Alzheimer's GWAS summary stats
@@ -140,4 +140,22 @@ write.table(pvalues, "NUP160.gwas", sep ="\t", quote = FALSE, row.names = FALSE)
 pvalues = tabixFetchGenesQuick("ENSG00000105383", "databases/SL1344/naive_500kb.sorted.txt.gz", combined_expression_data$gene_metadata, cis_window = 5e5)[[1]] %>%
   dplyr::transmute(CHR = chr, BP = pos, SNP = snp_id, P = p_nominal)
 write.table(pvalues, "CD33.gwas", sep ="\t", quote = FALSE, row.names = FALSE)
+
+
+#Perform finemapping with ATAC data
+
+#Import ATAC data
+atac_list = readRDS("../macrophage-chromatin/results/ATAC/ATAC_combined_accessibility_data.rds")
+min_pvalues_list = readRDS("../macrophage-chromatin/results/ATAC/QTLs/rasqual_min_pvalues.rds")
+min_pvalues_hits = lapply(min_pvalues_list, function(x){dplyr::filter(x, p_fdr < 0.1)})
+
+#Overlap
+naive_credible_set = constructCredibleSet(naive_pvalues, threshold = 0.99)
+naive_cs_annotated = annotateCredibleSet(naive_credible_set, atac_list$gene_metadata, atac_tabix_list$naive)
+
+ifng_sl1344_cs = constructCredibleSet(IFNg_SL1344_pvalues, threshold = 0.99)
+ifng_sl1344_cs_annotated = annotateCredibleSet(ifng_sl1344_cs, atac_list$gene_metadata, atac_tabix_list$IFNg_SL1344)
+
+
+
 
