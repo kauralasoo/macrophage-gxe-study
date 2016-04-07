@@ -158,52 +158,7 @@ rna_unique_snps = unique(rna_overlaps$gwas_snp_id)
 intersect(atac_unique_snps, rna_unique_snps)
 
 
-
-
-
-#Explore multiple SNPs per gene
-#Fetch p-values from rasqual output
-gene_df = data_frame(gene_id = "ENSG00000091490")
-gene_ranges = constructGeneRanges(gene_df, combined_expression_data$gene_metadata, cis_window = 5e5)
-tabix_data = tabixFetchGenes(gene_ranges, "databases/SL1344/IFNg_500kb.sorted.txt.gz")[[1]] %>%
-  dplyr::arrange(p_nominal) %>%
-  addAssociationPosterior(86) %>%
-  dplyr::filter(lABF > max(lABF)/3)
-unique_snps = filterGeneR2(tabix_data, vcf_file$genotypes, 0.2)
-plot(tabix_data$pos, tabix_data$lABF)
-
-
-
-tabix_files = list(naive = "databases/SL1344/naive_500kb.sorted.txt.gz", IFNg = "databases/SL1344/IFNg_500kb.sorted.txt.gz",
-                   SL1344 = "databases/SL1344/SL1344_500kb.sorted.txt.gz", IFNg_SL1344 = "databases/SL1344/IFNg_SL1344_500kb.sorted.txt.gz")
-coords = lapply(tabix_files, function(x, gene_ranges) {
-  tabixFetchGenes(gene_ranges, x)[[1]]
-}, gene_ranges)
-beta_list1 = extractAndProcessBetas(dplyr::select(unique_snps, gene_id, snp_id), coords, "naive")
-beta_list2 = extractAndProcessBetas(dplyr::select(head(tabix_data,4), gene_id, snp_id), coords, "naive")
-
-#PTK2B
-gene_df = data_frame(gene_id = "ENSG00000120899")
-gene_ranges = constructGeneRanges(gene_df, combined_expression_data$gene_metadata, cis_window = 5e5)
-tabix_data = tabixFetchGenes(gene_ranges, "databases/SL1344/IFNg_SL1344_500kb.sorted.txt.gz")[[1]] %>%
-  dplyr::arrange(p_nominal) %>%
-  addAssociationPosterior(86) %>%
-  dplyr::filter(lABF > max(lABF)/3)
-
-unique_snps = filterGeneR2(tabix_data, vcf_file$genotypes, 0.2)
-
-
-
-tabix_files = list(naive = "databases/SL1344/naive_500kb.sorted.txt.gz", IFNg = "databases/SL1344/IFNg_500kb.sorted.txt.gz",
-                   SL1344 = "databases/SL1344/SL1344_500kb.sorted.txt.gz", IFNg_SL1344 = "databases/SL1344/IFNg_SL1344_500kb.sorted.txt.gz")
-coords = lapply(tabix_files, function(x, gene_ranges) {
-  tabixFetchGenes(gene_ranges, x)[[1]]
-}, gene_ranges)
-beta_list1 = extractAndProcessBetas(dplyr::select(unique_snps, gene_id, snp_id), coords, "naive")
-beta_list2 = extractAndProcessBetas(dplyr::select(head(tabix_data,4), gene_id, snp_id), coords, "naive")
-
-
-
+#### ASE data ####
 #Fetch ASE data from disk
 exon_ranges = constructExonRanges("ENSG00000144228", "rs12621644", combined_expression_data$gene_metadata)
 sample_meta = dplyr::select(combined_expression_data$sample_metadata, sample_id, condition_name, genotype_id)
@@ -219,3 +174,4 @@ ggplot(plotting_data, aes(x = factor(lead_snp_value), y = abs(0.5-ratio))) +
   geom_jitter(position = position_jitter(width = .1)) +
   xlab("Feature SNP id") + 
   ylab("Reference allele ratio")
+
