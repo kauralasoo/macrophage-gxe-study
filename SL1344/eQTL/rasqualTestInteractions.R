@@ -145,8 +145,19 @@ all_gwas_hits = dplyr::left_join(all_olaps, gene_name_map, by = "gene_id") %>%
 write.table(all_gwas_hits, "results/SL1344/eQTLs/all_gwas_overlaps.txt", row.names = FALSE, sep = "\t", quote = FALSE)
 
 #Rank traits by overlap size
-ranked_traits = rankTraitsByOverlapSize(dplyr::filter(all_gwas_hits, R2 > 0.6), filtered_catalog, min_overlap = 5)
-write.table(ranked_traits, "results/SL1344/eQTLs/relative_gwas_overlaps.txt", row.names = FALSE, sep = "\t", quote = FALSE)
+ranked_traits = rankTraitsByOverlapSize(dplyr::filter(all_gwas_hits, R2 > 0.78), filtered_catalog, min_overlap = 4)
+write.table(ranked_traits, "results/SL1344/eQTLs/relative_gwas_overlaps_R08.txt", row.names = FALSE, sep = "\t", quote = FALSE)
+
+#Compare ATAC and RNA overlaps
+atac_olaps = readr::read_delim("../macrophage-chromatin/results/ATAC/QTLs/all_gwas_overlaps_R08.txt", delim = "\t")
+rna_overlaps = dplyr::filter(all_gwas_hits, R2 > 0.8)
+
+#Look at the overlap between GWAS overlaps
+atac_unique_snps = unique(atac_olaps$gwas_snp_id)
+rna_unique_snps = unique(rna_overlaps$gwas_snp_id)
+intersect(atac_unique_snps, rna_unique_snps)
+
+
 
 
 
