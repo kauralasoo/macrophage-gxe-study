@@ -107,3 +107,25 @@ saveRDS(variable_qtls, "results/ATAC/QTLs/rasqual_appear_disappear_qtls.rds")
 plotEQTL("ATAC_peak_26312","rs789642", atac_list$cqn, vcf_file$genotypes, atac_list$sample_metadata, atac_list$gene_metadata)
 
 
+#### GWAS overlaps ####
+#Import GWAS catalog
+filtered_catalog = readRDS("../macrophage-gxe-study/annotations/gwas_catalog_v1.0.1-downloaded_2016-03-02.filtered.rds")
+
+#GWAS overlaps for QTLs that appear
+qtl_table = dplyr::select(interaction_hits, gene_id, snp_id)
+interaction_olaps = findGWASOverlaps(qtl_table, filtered_catalog, vcf_file)
+interaction_gwas_hits = dplyr::left_join(interaction_olaps, gene_name_map, by = "gene_id") %>%
+  dplyr::select(gene_name, snp_id, gwas_snp_id, R2, trait, gwas_pvalue)
+write.table(interaction_gwas_hits, "results/ATAC/eQTLs/appear_gwas_overlaps.txt", row.names = FALSE, sep = "\t", quote = FALSE)
+
+#All GWAS overlaps
+all_olaps = findGWASOverlaps(filtered_pairs, filtered_catalog, vcf_file, min_r2 = 0.8)
+all_gwas_hits = dplyr::left_join(all_olaps, gene_name_map, by = "gene_id") %>%
+  dplyr::select(gene_name, gene_id, snp_id, gwas_snp_id, R2, trait, gwas_pvalue)
+write.table(all_gwas_hits, "results/ATAC/QTLs/all_gwas_overlaps_R08.txt", row.names = FALSE, sep = "\t", quote = FALSE)
+
+#Rank traits by overlap size
+ranked_traits = rankTraitsByOverlapSize(dplyr::filter(all_gwas_hits, R2 > 0.8), filtered_catalog, min_overlap = 4)
+write.table(ranked_traits, "results/ATAC/QTLs/relative_gwas_overlaps_R08.txt", row.names = FALSE, sep = "\t", quote = FALSE)
+
+

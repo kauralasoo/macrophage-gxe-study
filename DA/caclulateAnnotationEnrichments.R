@@ -19,7 +19,7 @@ gat_results = read.table("results/annotation_overlaps/H3K27Ac_overlap.gat.txt", 
 gat_results$track = factor(gat_results$track, 
         levels = rev(c("SL1344_up_1","SL1344_up_2" ,"IFNg_SL1344_up", "IFNg_up_1", "IFNg_up_2", "IFNg_down", "SL1344_down")))
 gat_results$annotation = factor(gat_results$annotation, 
-        levels = c("IFNg_up", "LPS_up", "IFNg_LPS_up", "IFNg_down", "LPS_down"))
+        levels = rev(c("LPS_up", "IFNg_LPS_up", "IFNg_up", "IFNg_down", "LPS_down")))
 
 peak_enrichments = plotEnrichment(gat_results, ylabel = "ATAC-Seq peaks (this study)", xlabel = "H3K27Ac peaks (Qiao et al)")
 ggsave("results/ATAC/DA/MDM_vs_IPSDM_concordance.pdf", peak_enrichments, width = 10, height = 7)

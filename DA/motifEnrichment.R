@@ -15,6 +15,12 @@ fimo_hits = readr::read_delim("results/ATAC/FIMO_CISBP_results.long.txt", delim 
                               col_names = c("motif_id","seq_name","start","end","strand","score","p_value","dummy","matched_seq"), skip = 1)
 fimo_hits_clean = tidyr::separate(fimo_hits, seq_name, c("prefix","gene_id"), sep = "=") 
 
+#Import motif metadata
+TF_information = readr::read_tsv("~/annotations/CisBP/Homo_sapiens_2016_03_10_11-59_am/TF_Information.txt")
+colnames(TF_information)[6] = "gene_id"
+unique_motifs = dplyr::select(TF_information, Motif_ID, gene_id, TF_Name) %>% dplyr::filter(Motif_ID != ".") %>%
+  dplyr::rename(motif_id = Motif_ID, tf_name = TF_Name)
+
 #Filter motifs by TF expression
 combined_expression_data = readRDS("../macrophage-gxe-study/results/SL1344/combined_expression_data.rds")
 mean_tpm = calculateMean(combined_expression_data$tpm, as.data.frame(combined_expression_data$sample_metadata), "condition_name")
@@ -24,13 +30,6 @@ expressed_motifs = dplyr::filter(unique_motifs, gene_id %in% expressed_genes)
 #Make mean_tpm df
 mean_df = dplyr::mutate(mean_tpm, gene_id = rownames(mean_tpm)) %>%
   dplyr::left_join(dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name), by = "gene_id")
-
-#Import motif metadata
-TF_information = readr::read_tsv("~/annotations/CisBP/Homo_sapiens_2016_03_10_11-59_am/TF_Information.txt")
-colnames(TF_information)[6] = "gene_id"
-unique_motifs = dplyr::select(TF_information, Motif_ID, gene_id, TF_Name) %>% dplyr::filter(Motif_ID != ".") %>%
-  dplyr::rename(motif_id = Motif_ID, tf_name = TF_Name)
-
 
 #Calculate motif enrichments in each cluster
 cluster_list = plyr::dlply(final_clusters,.(name))
@@ -58,8 +57,6 @@ motif_enrichment_plot = ggplot2::ggplot(selected_enrichments, aes(x = tf_name, y
     scale_x_discrete(expand = c(0, 0)) +
     scale_y_discrete(expand = c(0, 0))
 ggsave("results/ATAC/DA/Motif_enrichment_in_clusters.pdf", plot = motif_enrichment_plot, width = 8, height = 8)
-
-
 
 
 
