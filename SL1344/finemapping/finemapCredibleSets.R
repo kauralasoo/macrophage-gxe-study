@@ -41,20 +41,16 @@ min_pvalues_hits = lapply(min_pvalues_list, function(x){dplyr::filter(x, p_fdr <
 
 #Fetch top genes
 naive_list = idVectorToList(rasqual_min_hits$naive$gene_id)
-naive_cs = purrr::map(naive_list, ~tabixFetchGenesQuick(.,rna_list$naive, combined_expression_data$gene_metadata, cis_window = 5e5)[[1]] %>% 
-                        addAssociationPosterior(69) %>% constructCredibleSet(0.999))
+naive_cs = purrr::map(naive_list, ~tabixFetchGenesQuick(.,rna_list$naive, combined_expression_data$gene_metadata, cis_window = 5e5)[[1]] %>%
+                        dplyr::arrange(p_nominal) %>% addR2FromLead(vcf_file$genotypes) %>% dplyr::filter(R2 > 0.8))
 
 #Find hits for naive QTLs
-naive_top_hits = purrr::map(naive_list, ~tabixFetchGenesQuick(.,rna_list$naive, combined_expression_data$gene_metadata, cis_window = 5e5)[[1]] %>% 
-                        dplyr::arrange(-chisq) %>% head(50))
-naive_annotated = purrr::map(naive_top_hits, ~annotateCredibleSet(.,atac_list$gene_metadata, atac_tabix_list$naive))
+naive_annotated = purrr::map(naive_cs, ~annotateCredibleSet(.,atac_list$gene_metadata, atac_tabix_list$naive))
+saveRDS(naive_annotated, "results/SL1344/eQTLs/naive_finemapped_QTLs.rds")
 naive_filtered = purrr::map(naive_annotated, ~dplyr::filter(., overlap_peak_id == assoc_peak_id))
 
-
-#Overlap
-naive_credible_set = constructCredibleSet(naive_pvalues, threshold = 0.99)
-naive_cs_annotated = annotateCredibleSet(naive_credible_set, atac_list$gene_metadata, atac_tabix_list$naive)
-
-ifng_sl1344_cs = constructCredibleSet(IFNg_SL1344_pvalues, threshold = 0.99)
-ifng_sl1344_cs_annotated = annotateCredibleSet(ifng_sl1344_cs, atac_list$gene_metadata, atac_tabix_list$IFNg_SL1344)
+#Compare counts
+raw_counts = lapply(naive_cs, nrow) %>% ldply(.id = "gene_id") %>% dplyr::rename(raw_counts = V1)
+fm_counts = lapply(naive_filtered, nrow) %>% ldply(.id = "gene_id") %>% dplyr::rename(fm_counts = V1)
+joint_counts = dplyr::left_join(raw_counts, fm_counts, by = "gene_id")
 
