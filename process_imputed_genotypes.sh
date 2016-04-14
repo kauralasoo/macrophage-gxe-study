@@ -78,6 +78,9 @@ bcftools view -v snps -O z imputed.86_samples.sorted.filtered.named.vcf.gz > imp
 zgrep -v "#" imputed.86_samples.sorted.filtered.named.vcf.gz | cut -f 1,2,3 > imputed.86_samples.snp_coords.txt &
 zgrep -v "#" imputed.86_samples.snps_only.vcf.gz | cut -f 1,2,3 > imputed.86_samples.snps_only.snp_coords.txt &
 
+#Extract REF and ALT alleles
+zgrep -v "#" imputed.86_samples.sorted.filtered.named.vcf.gz | cut -f 1,2,3,4,5 > imputed.86_samples.variant_information.txt &
+
 #Filter by INFO score
 bcftools filter -i 'INFO[0] >= 0.7' -O z imputed.86_samples.sorted.filtered.named.vcf.gz > imputed.86_samples.sorted.filtered.named.INFO_07.vcf.gz
 zgrep -v "#" imputed.86_samples.sorted.filtered.named.INFO_07.vcf.gz | cut -f 1,2,3 > imputed.86_samples.snp_coords.INFO_07.txt &

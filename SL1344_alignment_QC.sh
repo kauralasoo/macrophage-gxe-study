@@ -2,7 +2,7 @@
 bsub -G team170 -n4 -R "span[hosts=1] select[mem>40000] rusage[mem=40000]" -q hugemem -M 40000 -o star_index.%J.jobout "STAR --runThreadN 4 --runMode genomeGenerate --genomeDir STAR_index_79/ --genomeFastaFiles dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sjdbGTFfile genes/Homo_sapiens.GRCh38.79.gtf --sjdbOverhang 74"
 
 #Fetch all file names from iRODS
-python ~/software/utils/irods/irodsGetSamplesInStudy.py --studyName "Genetics of gene expression in human macrophage response to Salmonella" |  cut -f1 -d "." | uniq > fastq/SL1344_samples_4.txt
+python ~/software/utils/irods/irodsGetSamplesInStudy.py --studyName "Genetics of gene expression in human macrophage response to Salmonella" |  cut -f1 -d "." | uniq > fastq/SL1344_samples_5.txt
 
 #Match file names to sample names
 python ~/software/utils/irods/irodsFetchMeta.py --irodsList fastq/SL1344_samples.txt | sort -k1 > fastq/SL1344_names.txt 
@@ -15,6 +15,8 @@ cut -f1 fastq/acLDL_samples.txt | python ~/software/utils/fetch-irods.py --dir f
 cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_samples_2.txt | python ~/software/utils/irods/fetch-irods.py --dir fastq/SL1344/cram/ --suffix .cram
 cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_samples_3.txt | python ~/software/utils/irods/fetch-irods.py --dir fastq/SL1344/cram/ --suffix .cram
 cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_samples_4.txt | python ~/software/utils/irods/fetch-irods.py --dir fastq/SL1344/cram/ --suffix .cram
+cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_samples_5.txt | python ~/software/utils/irods/fetch-irods.py --dir fastq/SL1344/cram/ --suffix .cram
+cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_samples_6.txt | python ~/software/utils/irods/fetch-irods.py --dir fastq/SL1344/cram/ --suffix .cram
 
 #Convert remaining crams to fastq
 cut -f1 fastq/remaining.txt |  python ~/software/utils/submitJobs.py --MEM 1000 --jobname cramToFastq --command "python ~/software/utils/bam/cramToBam.py --inputDir fastq/SL1344/ --outputDir fastq/SL1344/"
