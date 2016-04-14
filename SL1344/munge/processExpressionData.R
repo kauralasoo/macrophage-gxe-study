@@ -49,6 +49,7 @@ design_matrix = constructDesignMatrix_SL1344(sample_ids = colnames(counts)) %>% 
   dplyr::filter(!(donor == "fpdl" & replicate == 2)) %>% #Remove second fpdl sample (ffdp)
   dplyr::filter(!(donor == "ougl" & replicate == 2)) %>% #Remove second ougl sample (dium)
   dplyr::filter(!(donor == "mijn")) %>% #Remove mijn (wrong line from CGAP) 
+  dplyr::mutate(replicate = ifelse(donor == "babk",2,replicate)) %>% #Change babk replicate to two
   dplyr::arrange(donor)
 
 #Add metadata to the design matrix
@@ -76,3 +77,8 @@ results_list = list(
   gene_metadata = gene_metadata)
 
 saveRDS(results_list, "results/SL1344/combined_expression_data.rds")
+
+#export sample genotype map
+dplyr::select(results_list$sample_metadata, sample_id, genotype_id) %>%
+  write.table("macrophage-gxe-study/data/sample_lists/SL1344/SL1344_sample_gt_map.txt", sep ="\t", 
+              quote = FALSE, row.names = FALSE, col.names = FALSE)
