@@ -262,10 +262,6 @@ qanu_A	HPSI0613i-qanu_2
 qanu_B	HPSI0613i-qanu_2
 qanu_C	HPSI0613i-qanu_2
 qanu_D	HPSI0613i-qanu_2
-qaqx_A	HPSI0314i-qaqx_1
-qaqx_B	HPSI0314i-qaqx_1
-qaqx_C	HPSI0314i-qaqx_1
-qaqx_D	HPSI0314i-qaqx_1
 qimz_A	HPSI0713i-qimz_1
 qimz_B	HPSI0713i-qimz_1
 qimz_C	HPSI0713i-qimz_1

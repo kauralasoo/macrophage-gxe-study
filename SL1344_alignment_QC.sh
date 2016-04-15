@@ -112,10 +112,10 @@ cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_names_all.txt | gre
 
 #### PEER ####
 #Run PEER on each condition separately using only expressed genes
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python ~/software/utils/runPEER.py --input results/SL1344/PEER/input/naive.exprs.txt --outdir results/SL1344/PEER/naive_10/ --n_factors 10"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python ~/software/utils/runPEER.py --input results/SL1344/PEER/input/IFNg.exprs.txt --outdir results/SL1344/PEER/IFNg_10/ --n_factors 10"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python ~/software/utils/runPEER.py --input results/SL1344/PEER/input/SL1344.exprs.txt --outdir results/SL1344/PEER/SL1344_10/ --n_factors 10"
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal -M 500 -o FarmOut/PEER.%J.jobout "python ~/software/utils/runPEER.py --input results/SL1344/PEER/input/IFNg_SL1344.exprs.txt --outdir results/SL1344/PEER/IFNg_SL1344_10/ --n_factors 10"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q normal -M 1000 -o FarmOut/PEER.%J.jobout "python ~/software/utils/runPEER.py --input results/SL1344/PEER/input/naive.exprs.txt --outdir results/SL1344/PEER/naive_10/ --n_factors 10"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q normal -M 1000 -o FarmOut/PEER.%J.jobout "python ~/software/utils/runPEER.py --input results/SL1344/PEER/input/IFNg.exprs.txt --outdir results/SL1344/PEER/IFNg_10/ --n_factors 10"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q normal -M 1000 -o FarmOut/PEER.%J.jobout "python ~/software/utils/runPEER.py --input results/SL1344/PEER/input/SL1344.exprs.txt --outdir results/SL1344/PEER/SL1344_10/ --n_factors 10"
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q normal -M 1000 -o FarmOut/PEER.%J.jobout "python ~/software/utils/runPEER.py --input results/SL1344/PEER/input/IFNg_SL1344.exprs.txt --outdir results/SL1344/PEER/IFNg_SL1344_10/ --n_factors 10"
 
 #Convert VCF file into a matrix of genotype doses
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>64000] rusage[mem=64000]" -q hugemem -M 64000 -o FarmOut/importVCF.%J.jobout "/software/R-3.1.2/bin/Rscript macrophage-gxe-study/SL1344/eQTL/matrixeQTL_import_vcf.R"

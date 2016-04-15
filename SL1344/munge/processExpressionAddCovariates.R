@@ -7,8 +7,8 @@ load_all("../seqUtils/")
 combined_expression_data = readRDS("results/SL1344/combined_expression_data.rds")
 
 #Filter genes by expression level
-mean_expression = calculateMean(combined_expression_data$cqn, as.data.frame(combined_expression_data$sample_metadata), "condition_name")
-expressed_genes = names(which(apply(mean_expression, 1, max) > 0))
+mean_tpm = calculateMean(combined_expression_data$tpm, as.data.frame(combined_expression_data$sample_metadata), "condition_name")
+expressed_genes = names(which(apply(mean_tpm, 1, max) > 0.5))
 not_Y_genes = dplyr::filter(combined_expression_data$gene_metadata, !(chr %in% c("MT","Y")))$gene_id
 keep_genes = intersect(expressed_genes, not_Y_genes)
 rna_expressed = extractGenesFromExpressionList(combined_expression_data, keep_genes)

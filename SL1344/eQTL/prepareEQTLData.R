@@ -2,13 +2,11 @@ library("devtools")
 library("plyr")
 library("dplyr")
 load_all("../seqUtils/")
-
+load_all("~/farm-home/software/rasqual/rasqualTools/")
 
 #### Import data ####
 #Load the raw eQTL dataset
 combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
-combined_expression_data$gene_metadata = dplyr::rename(combined_expression_data$gene_metadata, 
-                                                       chr = chromosome_name, start = start_position, end = end_position)
 
 #Extract separate lists for each condition
 condition_names = idVectorToList(c("naive","IFNg","SL1344","IFNg_SL1344"))
@@ -19,21 +17,13 @@ rna_conditions_renamed = lapply(rna_conditions, renameMatrixColumnsInExpressionL
 
 #### RASQUAL ####
 rasqual_input_folder = "results/SL1344/rasqual/input/"
-exportDataForRasqual(rna_conditions_renamed, rasqual_input_folder)
 
-#Import exon coordinates from disk
-union_exon_coords = read.table("annotations/Homo_sapiens.GRCh38.79.gene_exon_start_end.filtered_genes.txt", 
-                               stringsAsFactors = FALSE, header = TRUE) %>% dplyr::rename(chr = chromosome_name)
-filtered_coords = dplyr::semi_join(union_exon_coords, rna_conditions_renamed$naive$gene_metadata, by = "gene_id")
+#Count SNPs overlapping genes
 snp_coords = readr::read_delim("genotypes/SL1344/imputed_20151005/imputed.86_samples.snp_coords.txt", 
                                delim = "\t", col_types = "cdc", col_names = c("chr","pos","snp_id"))
-
-#Count the numer of overlapping SNPs
-exon_df = countSnpsOverlapingExons(filtered_coords, snp_coords, cis_window = 500000) %>% dplyr::arrange(chromosome_name, range_start)
+exon_df = countSnpsOverlapingExons(rna_conditions_renamed$naive$gene_metadata, snp_coords, cis_window = 500000) %>% 
+  dplyr::arrange(chromosome_name, range_start)
 write.table(exon_df, file.path(rasqual_input_folder, "gene_snp_count_500kb.txt"), row.names = FALSE, sep = "\t", quote = FALSE)
-
-exon_df = countSnpsOverlapingExons(filtered_coords, snp_coords, cis_window = 100000) %>% dplyr::arrange(chromosome_name, range_start)
-write.table(exon_df, file.path(rasqual_input_folder, "gene_snp_count_100kb.txt"), row.names = FALSE, sep = "\t", quote = FALSE)
 
 #Construct batches
 chr11_batches = dplyr::filter(exon_df, chromosome_name == "11") %>%
@@ -46,15 +36,69 @@ batches = rasqualOptimisedGeneBatches(exon_df, c(20,8,3,1))
 write.table(batches, file.path(rasqual_input_folder, "gene_batches.txt"), 
             row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
 
+#Export read counts
+counts_list = lapply(rna_conditions_renamed, function(x){x$counts})
+saveRasqualMatrices(counts_list, rasqual_input_folder, file_suffix = "expression")
+
+#Extract sample-genotype map for each condition
+sg_map = lapply(rna_conditions_renamed, function(x){ dplyr::select(x$sample_metadata, sample_id, genotype_id) })
+saveFastqtlMatrices(sg_map, rasqual_input_folder, file_suffix = "sg_map", col_names = FALSE)
+
+#Export GC-corrected library sizes
+gc_library_size_list = lapply(counts_list, rasqualCalculateSampleOffsets, rna_conditions_renamed$naive$gene_metadata)
+rasqualTools::saveRasqualMatrices(gc_library_size_list, rasqual_input_folder, file_suffix = "gc_library_size")
+
+#Save peak names to disk
+gene_names = rownames(counts_list[[1]])
+write.table(gene_names, file.path(rasqual_input_folder, "gene_names.txt"), row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+#Save covariates to disk
+covariate_names = c("genotype_id", "PEER_factor_1", "PEER_factor_2", "sex_binary")
+rasqual_cov_list = lapply(rna_conditions_renamed, function(x, covariate_names){
+  rasqualMetadataToCovariates(x$sample_metadata[,covariate_names])
+}, covariate_names)
+saveRasqualMatrices(rasqual_cov_list, rasqual_input_folder, file_suffix = "covariates")
+
+
+
 ### FastQTL ####
 fastqtl_input_folder = "results/SL1344/fastqtl/input/"
-exportDataForFastQTL(rna_conditions_renamed, fastqtl_input_folder, n_chunks = 200)
+#exportDataForFastQTL(rna_conditions_renamed, fastqtl_input_folder, n_chunks = 200)
 
-#Export chr11 data only
-chr11_genes = dplyr::filter(combined_expression_data$gene_metadata, chr == 11)$gene_id
-chr11_data = lapply(rna_conditions_renamed, extractGenesFromExpressionList, chr11_genes)
-chr11_input_folder = "results/SL1344/fastqtl/input_chr11/"
-exportDataForFastQTL(chr11_data, chr11_input_folder)
+#### Export data for FastQTL ####
+fastqtl_genepos = constructFastQTLGenePos(rna_conditions_renamed$naive$gene_metadata)
+cqn_list = lapply(rna_conditions_renamed, function(x){x$cqn})
+fastqtl_cqn_list = lapply(cqn_list, prepareFastqtlMatrix, fastqtl_genepos)
+saveFastqtlMatrices(fastqtl_cqn_list, fastqtl_input_folder, file_suffix = "expression_cqn")
+
+#Save covariates
+covariate_names = c("genotype_id", "PEER_factor_1", "PEER_factor_2", "PEER_factor_3","PEER_factor_4", "PEER_factor_5","PEER_factor_6", "sex_binary")
+covariate_list = lapply(rna_conditions_renamed, function(x, names){x$sample_metadata[,names]}, covariate_names)
+fastqtl_covariates = lapply(covariate_list, fastqtlMetadataToCovariates)
+saveFastqtlMatrices(fastqtl_covariates, fastqtl_input_folder, file_suffix = "covariates")
+
+#Construct chunks table
+chunks_matrix = data.frame(chunk = seq(1:250), n = 250)
+write.table(chunks_matrix, file.path(fastqtl_input_folder, "all_chunk_table.txt"), row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
+
+### This is incorrect 
+#Chr11 only
+#Extract chr11 only
+chr11_genes = dplyr::filter(atac_list$gene_metadata, chr == 11)$gene_id
+chr11_list = lapply(atac_conditions_renamed, extractGenesFromExpressionList, chr11_genes)
+fastqtl_genepos = constructFastQTLGenePos(chr11_list$naive$gene_metadata)
+
+#Save expression data
+fastqtl_cqn_list = lapply(chr11_list, function(x){x$cqn}) %>%
+  lapply(., prepareFastqtlMatrix, fastqtl_genepos)
+saveFastqtlMatrices(fastqtl_cqn_list, "results/ATAC/fastqtl/input/", file_suffix = "expression")
+fastqtl_tpm_list = lapply(chr11_list, function(x){x$tpm}) %>%
+  lapply(., prepareFastqtlMatrix, fastqtl_genepos)
+saveFastqtlMatrices(fastqtl_tpm_list, "results/ATAC/fastqtl/input/", file_suffix = "expression_tpm")
+
+#Construct chunks table
+chunks_matrix = data.frame(chunk = seq(1:25), n = 25)
+write.table(chunks_matrix, "results/ATAC/fastqtl/input/chunk_table.txt", row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
 
 #### eigenMT ####
 #Export genotype data
