@@ -2,7 +2,7 @@ library("devtools")
 library("plyr")
 library("dplyr")
 load_all("../seqUtils/")
-load_all("~/farm-home/software/rasqual/rasqualTools/")
+load_all("~/software/rasqual/rasqualTools/")
 
 #### Import data ####
 #Load the raw eQTL dataset
@@ -58,6 +58,31 @@ rasqual_cov_list = lapply(rna_conditions_renamed, function(x, covariate_names){
   rasqualMetadataToCovariates(x$sample_metadata[,covariate_names])
 }, covariate_names)
 saveRasqualMatrices(rasqual_cov_list, rasqual_input_folder, file_suffix = "covariates")
+
+#Make new batches of failed peaks
+naive_failed_batches = readr::read_csv("results/SL1344/rasqual/output/naive_500kb/naive_500kb.completed_ids.txt", col_names = "gene_id") %>%
+  dplyr::anti_join(exon_df, ., by = "gene_id") %>%
+  rasqualOptimisedGeneBatches(c(1,1,1,1), batch_prefix = "batch_5")
+write.table(naive_failed_batches, "results/SL1344/rasqual/input/naive_failed_batches.txt", 
+            row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
+
+ifng_failed_batches = readr::read_csv("results/SL1344/rasqual/output/IFNg_500kb/IFNg_500kb.completed_ids.txt", col_names = "gene_id") %>%
+  dplyr::anti_join(exon_df, ., by = "gene_id") %>%
+  rasqualOptimisedGeneBatches(c(1,1,1,1), batch_prefix = "batch_5")
+write.table(ifng_failed_batches, "results/SL1344/rasqual/input/IFNg_failed_batches.txt", 
+            row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
+
+sl1344_failed_batches = readr::read_csv("results/SL1344/rasqual/output/SL1344_500kb/SL1344_500kb.completed_ids.txt", col_names = "gene_id") %>%
+  dplyr::anti_join(exon_df, ., by = "gene_id") %>%
+  rasqualOptimisedGeneBatches(c(1,1,1,1), batch_prefix = "batch_5")
+write.table(sl1344_failed_batches, "results/SL1344/rasqual/input/SL1344_failed_batches.txt", 
+            row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
+
+ifng_sl1344_failed_batches = readr::read_csv("results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.completed_ids.txt", col_names = "gene_id") %>%
+  dplyr::anti_join(exon_df, ., by = "gene_id") %>%
+  rasqualOptimisedGeneBatches(c(1,1,1,1), batch_prefix = "batch_5")
+write.table(ifng_sl1344_failed_batches, "results/SL1344/rasqual/input/IFNg_SL1344_failed_batches.txt", 
+            row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
 
 
 
