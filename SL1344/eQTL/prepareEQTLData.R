@@ -106,6 +106,38 @@ saveFastqtlMatrices(fastqtl_covariates, fastqtl_input_folder, file_suffix = "cov
 chunks_matrix = data.frame(chunk = seq(1:250), n = 250)
 write.table(chunks_matrix, file.path(fastqtl_input_folder, "all_chunk_table.txt"), row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
 
+#Exclude voas sample and see if it changes the results
+filtered_expression_data = combined_expression_data
+filtered_expression_data$sample_metadata = dplyr::filter(filtered_expression_data$sample_metadata, donor != "voas")
+filtered_expression_data$cqn = filtered_expression_data$cqn[,filtered_expression_data$sample_metadata$sample_id]
+
+#Extract separate lists for each condition
+condition_names = idVectorToList(c("naive","IFNg","SL1344","IFNg_SL1344"))
+rna_conditions = lapply(condition_names, extractConditionFromExpressionList, filtered_expression_data)
+
+#Rename column names to genotype ids
+rna_conditions_renamed = lapply(rna_conditions, renameMatrixColumnsInExpressionList, "sample_id", "genotype_id")
+
+
+fastqtl_input_folder = "results/SL1344/fastqtl/input_filtered/"
+
+#### Export data for FastQTL ####
+fastqtl_genepos = constructFastQTLGenePos(rna_conditions_renamed$naive$gene_metadata)
+cqn_list = lapply(rna_conditions_renamed, function(x){x$cqn})
+fastqtl_cqn_list = lapply(cqn_list, prepareFastqtlMatrix, fastqtl_genepos)
+saveFastqtlMatrices(fastqtl_cqn_list, fastqtl_input_folder, file_suffix = "expression_cqn")
+
+#Save covariates
+covariate_names = c("genotype_id", "PEER_factor_1", "PEER_factor_2", "PEER_factor_3","PEER_factor_4", "PEER_factor_5","PEER_factor_6", "sex_binary")
+covariate_list = lapply(rna_conditions_renamed, function(x, names){x$sample_metadata[,names]}, covariate_names)
+fastqtl_covariates = lapply(covariate_list, fastqtlMetadataToCovariates)
+saveFastqtlMatrices(fastqtl_covariates, fastqtl_input_folder, file_suffix = "covariates")
+
+#Construct chunks table
+chunks_matrix = data.frame(chunk = seq(1:250), n = 250)
+write.table(chunks_matrix, file.path(fastqtl_input_folder, "all_chunk_table.txt"), row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
+
+
 ### This is incorrect 
 #Chr11 only
 #Extract chr11 only
