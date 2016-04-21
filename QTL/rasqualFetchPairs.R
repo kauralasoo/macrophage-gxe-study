@@ -11,8 +11,8 @@ min_pvalues_df = ldply(min_pvalue_hits, .id = "condition_name")
 joint_pairs = dplyr::select(min_pvalues_df, gene_id, snp_id) %>% unique()
 
 #Import SNP coords
-snp_coords = readr::read_delim("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.snp_coords.txt", 
-            delim = "\t", col_types = "cdc", col_names = c("chr","pos","snp_id"))
+snp_coords = readr::read_delim("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz", 
+                               delim = "\t", col_types = "cdccc", col_names = c("chr","pos","snp_id","ref","alt"))
 selected_snp_coords = dplyr::filter(snp_coords, snp_id %in% unique(joint_pairs$snp_id)) %>% 
   dplyr::transmute(seqnames = chr, start = pos, end = pos, snp_id, strand = "*") %>%
   dataFrameToGRanges()

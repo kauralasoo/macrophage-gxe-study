@@ -25,20 +25,6 @@ min_pvalue_list = list(naive = naive_eigen_pvalue,
                        IFNg_SL1344 = ifng_sl1344_eigen_pvalue)
 saveRDS(min_pvalue_list, "results/ATAC/QTLs/rasqual_min_pvalues.rds")
 
-#Fixed genotypes
-#Extract minimal p-value for each condition
-naive_eigen_pvalue = eigenMTImportResults("results/ATAC/rasqual/output_fixed_gt//naive_100kb/naive_50kb.eigenMT.txt.gz")
-ifng_eigen_pvalue = eigenMTImportResults("results/ATAC/rasqual/output_fixed_gt/IFNg_100kb/IFNg_50kb.eigenMT.txt.gz")
-sl1344_eigen_pvalue = eigenMTImportResults("results/ATAC/rasqual/output_fixed_gt/SL1344_100kb/SL1344_50kb.eigenMT.txt.gz")
-ifng_sl1344_eigen_pvalue = eigenMTImportResults("results/ATAC/rasqual/output_fixed_gt/IFNg_SL1344_100kb/IFNg_SL1344_50kb.eigenMT.txt.gz")
-
-min_pvalue_list = list(naive = naive_eigen_pvalue,
-                       IFNg = ifng_eigen_pvalue,
-                       SL1344 = sl1344_eigen_pvalue,
-                       IFNg_SL1344 = ifng_sl1344_eigen_pvalue)
-saveRDS(min_pvalue_list, "results/ATAC/QTLs/rasqual_min_pvalues.fixed_gt.rds")
-
-
 #Extract the number of tests performed by eigenMT for each peak
 n_tests = map(min_pvalue_list, ~dplyr::select(.,gene_id, n_tests)) %>% reduce(rbind) %>% unique()
 
