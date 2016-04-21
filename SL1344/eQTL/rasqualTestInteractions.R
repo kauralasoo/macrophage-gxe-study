@@ -18,7 +18,8 @@ gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, g
 #Load p-values from disk
 rasqual_min_pvalues = readRDS("results/SL1344/eQTLs/rasqual_min_pvalues.rds")
 rasqual_min_hits = lapply(rasqual_min_pvalues, function(x){dplyr::filter(x, p_fdr < 0.1)})
-min_pvalue_df = plyr::ldply(rasqual_min_hits, .id = "condition_name") %>% dplyr::arrange(p_nominal)
+min_pvalue_df = plyr::ldply(rasqual_min_hits, .id = "condition_name") %>% 
+  dplyr::group_by(gene_id) %>% dplyr::arrange(p_nominal)
 joint_pairs = dplyr::select(min_pvalue_df, gene_id, snp_id) %>% unique() 
 
 rasqual_selected_pvalues = readRDS("results/SL1344/eQTLs/rasqual_selected_pvalues.rds")
@@ -145,7 +146,7 @@ all_gwas_hits = dplyr::left_join(all_olaps, gene_name_map, by = "gene_id") %>%
 write.table(all_gwas_hits, "results/SL1344/eQTLs/all_gwas_overlaps.txt", row.names = FALSE, sep = "\t", quote = FALSE)
 
 #Rank traits by overlap size
-ranked_traits = rankTraitsByOverlapSize(dplyr::filter(all_gwas_hits, R2 > 0.78), filtered_catalog, min_overlap = 4)
+ranked_traits = rankTraitsByOverlapSize(dplyr::filter(all_gwas_hits, R2 > 0.6), filtered_catalog, min_overlap = 5)
 write.table(ranked_traits, "results/SL1344/eQTLs/relative_gwas_overlaps_R08.txt", row.names = FALSE, sep = "\t", quote = FALSE)
 
 #Compare ATAC and RNA overlaps
