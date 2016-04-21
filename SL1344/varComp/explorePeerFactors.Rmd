@@ -33,68 +33,7 @@ IFNg_SL1344_peer = data_list$covariates_list[[4]][4:13,]
 
 ```
 
-Convert the PEER matrices into data frames
-```{r}
-naive_peer_df = dplyr::mutate(as.data.frame(t(naive_peer)), donor = colnames(naive_peer))
-naive_df = dplyr::filter(data_list$sample_metadata, condition == "A") %>% dplyr::left_join(naive_peer_df,by = "donor")
-
 ```
-
-Focus on the relationship between purity and first PEER factor
-```{r}
-purity_df = dplyr::filter(naive_df, mean_purity_filtered > 0.90)
-peer1_plot = ggplot(purity_df, aes(x = mean_purity_filtered, y = PEER_factor_1)) + 
-  geom_point() +
-  xlab("Mean purity") + 
-  ylab("PEER factor 1")
-ggsave("results/SL1344/varComp/purity_vs_PEER_factor_1.pdf", peer1_plot, width = 5, height = 5)
-cor(purity_df$mean_purity_filtered, purity_df$PEER_factor_1, use = "complete.obs")
-
-
-peer1_plot_2 = ggplot(purity_df, aes(x = ng_ul_mean, y = PEER_factor_1)) + 
-  geom_point() +
-  xlab("Cell density (rna concentration)") + 
-  ylab("PEER factor 1")
-ggsave("results/SL1344/varComp/rna_concetration_vs_PEER_factor_1.pdf", peer1_plot_2, width = 5, height = 5)
-
-```
-
-Focus on the relationship between sequencing chemistry and first PEER factor
-```{r}
-chemistry_df = dplyr::mutate(naive_df, rna_auto = ifelse(chemistry == "V4_auto", "automatic", "manual"))
-peer2_plot = ggplot(chemistry_df, aes(x = rna_auto, y = PEER_factor_2)) + 
-  geom_boxplot(outlier.shape = NA) +
-   geom_jitter(position = position_jitter(width = .1)) + 
-  xlab("RNA sequening chemistry") + 
-  ylab("PEER factor 2")
-ggsave("results/SL1344/varComp/purity_vs_PEER_factor_2.pdf", peer2_plot, width = 5, height = 5)
-cor(as.numeric(factor(chemistry_df$rna_auto)) , chemistry_df$PEER_factor_2, use = "complete.obs")
-```
-
-Look at the variation explained by each PEER factor,
-```{r}
-prec_naive = read.table("results/SL1344/PEER/naive_10/precision.txt", sep = ",")
-prec_ifng = read.table("results/SL1344/PEER/IFNg_10/precision.txt", sep = ",")
-prec_sl1344 = read.table("results/SL1344/PEER/SL1344_10//precision.txt", sep = ",")
-prec_ifng_sl1344 = read.table("results/SL1344/PEER/IFNg_SL1344_10//precision.txt", sep = ",")
-
-#Combine it all together
-precision_df = 1/cbind(prec_naive, prec_ifng, prec_sl1344, prec_ifng_sl1344)[-1,]
-colnames(precision_df) = c("Naive", "IFNg", "SL1344", "IFNg_SL1344")
-precision_df = dplyr::mutate(precision_df, factor = paste("PEER_factor_", c(1:10), sep = "")) %>% 
-  dplyr::mutate(factor = factor(factor, factor)) %>%
-  tidyr::gather(condition, sd, Naive:IFNg_SL1344)
-
-#Make a plot
-precision_plot = ggplot(precision_df, aes(x = factor, y = sd, color = condition, group = condition)) +
-  geom_point() + 
-  geom_line() +
-  ylab("1 / precision") + 
-  theme(axis.text.x = element_text(angle = 25))
-precision_plot
-ggsave("results/SL1344/varComp/PEER_explained.pdf", precision_plot, width = 7, height = 5)
-```
-
 Explore the correlation between PEER factors
 ```{r, fig.width = 8, fig.height = 8}
 heatmap.2(abs(cor(t(naive_peer))), margins = c(10,10))
