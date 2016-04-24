@@ -52,9 +52,11 @@ interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 
 #Extract effect sizes for all gene-snp pairs from RASQUAL data
 beta_list = extractAndProcessBetas(dplyr::select(interaction_hits, gene_id, snp_id), rasqual_selected_pvalues, "naive")
+beta_list$beta_summaries = dplyr::mutate(beta_list$beta_summaries, max_naive_ratio = max_abs_beta/abs(naive))
 
 #Find QTLs that appear
-appear_qtls = dplyr::filter(beta_list$beta_summaries, abs(naive) <= 0.59, max_abs_diff >= 0.59, max_abs_beta >= 0.59)
+
+appear_qtls = dplyr::filter(beta_list$beta_summaries, abs(naive) <= 0.59, max_abs_beta - abs(naive) >= 0.32)
 appear_betas = dplyr::semi_join(beta_list$beta_summaries[,1:6], appear_qtls, by = c("gene_id", "snp_id"))
 appear_clusters = clusterBetasKmeans(appear_betas, 6) %>% dplyr::select(gene_id, snp_id, cluster_id) %>%
   dplyr::left_join(beta_list$beta_df, by = c("gene_id", "snp_id"))
@@ -88,7 +90,7 @@ ggsave("results/SL1344/eQTLs/properties/eQTLs_appear_cluster_means.pdf",appear_m
 
 #Find QTLs that disappear
 #Look for QTLs that disappear after stimulation
-disappear_qtls = dplyr::filter(beta_list$beta_summaries, abs(naive) > 0.59, max_abs_diff >= 0.59, min_abs_beta <= 0.59)
+disappear_qtls = dplyr::filter(beta_list$beta_summaries, abs(naive) > 0.59, abs(naive) - min_abs_beta > 0.32)
 disappear_betas = dplyr::semi_join(beta_list$beta_summaries[,1:6], disappear_qtls, by = c("gene_id", "snp_id"))
 disappear_clusters = clusterBetasKmeans(disappear_betas, 7) %>% dplyr::select(gene_id, snp_id, cluster_id) %>%
   dplyr::left_join(beta_list$beta_df, by = c("gene_id", "snp_id"))
@@ -168,11 +170,35 @@ ase_data = fetchGeneASEData(exon_ranges, "results/SL1344/combined_ASE_counts.sor
 
 
 #Make plot
-plotting_data = filterASEforPlotting(ase_data) %>% dplyr::filter(total_count > 10) %>% dplyr::filter(lead_snp_value == 1)
-ggplot(plotting_data, aes(x = factor(lead_snp_value), y = abs(0.5-ratio))) + 
+ase_data = fetchGeneASEData(exon_ranges, "results/SL1344/combined_ASE_counts.sorted.txt.gz", sample_meta) %>%
+  aseDataAddGenotypes(vcf_file$genotypes)
+plotting_data = filterASEforPlotting(ase_data) %>% dplyr::filter(lead_snp_value == 1)
+new_data_plot = ggplot(plotting_data, aes(x = factor(lead_snp_value), y = abs(0.5-ratio), label = sample_id)) + 
   facet_grid(feature_snp_id~condition_name) +
   geom_boxplot(outlier.shape = NA) + 
+  geom_text() +
   geom_jitter(position = position_jitter(width = .1)) +
   xlab("Feature SNP id") + 
-  ylab("Reference allele ratio")
+  ylab("Allelic imbalance")
+ggsave("results/SL1344/SPOPL_AI_new.pdf", new_data_plot, width = 8, height = 10)
+
+
+new_samples = unique(b$genotype_id)
+old_sample_meta = dplyr::filter(sample_meta, !(sample_meta$genotype_id %in% new_samples))
+
+ase_data_old = fetchGeneASEData(exon_ranges, "results/SL1344/combined_ASE_counts.sorted.old.txt.gz", old_sample_meta) %>%
+  aseDataAddGenotypes(vcf_file$genotypes)
+plotting_data = filterASEforPlotting(ase_data_old) %>% dplyr::filter(lead_snp_value == 1)
+old_data_plot = ggplot(plotting_data, aes(x = factor(lead_snp_value), y = abs(0.5-ratio), label = sample_id)) + 
+  facet_grid(feature_snp_id~condition_name) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_text() +
+  geom_jitter(position = position_jitter(width = .1)) +
+  xlab("Feature SNP id") + 
+  ylab("Allelic imbalance")
+ggsave("results/SL1344/SPOPL_AI_old.pdf", old_data_plot, width = 8, height = 10)
+
+SPOPL_read_counts = plotEQTL("ENSG00000144228", "rs12621644", combined_expression_data$cqn, vcf_file$genotypes, 
+         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+ggsave("results/SL1344/SPOPL_between_individual.pdf", SPOPL_read_counts, width = 8, height = 8)
 

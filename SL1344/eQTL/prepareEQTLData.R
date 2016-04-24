@@ -19,8 +19,8 @@ rna_conditions_renamed = lapply(rna_conditions, renameMatrixColumnsInExpressionL
 rasqual_input_folder = "results/SL1344/rasqual/input/"
 
 #Count SNPs overlapping genes
-snp_coords = readr::read_delim("genotypes/SL1344/imputed_20151005/imputed.86_samples.snp_coords.txt", 
-                               delim = "\t", col_types = "cdc", col_names = c("chr","pos","snp_id"))
+snp_coords = readr::read_delim("genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz", 
+                             delim = "\t", col_types = "cdccc", col_names = c("chr","pos","snp_id","ref","alt"))
 exon_df = countSnpsOverlapingExons(rna_conditions_renamed$naive$gene_metadata, snp_coords, cis_window = 500000) %>% 
   dplyr::arrange(chromosome_name, range_start)
 write.table(exon_df, file.path(rasqual_input_folder, "gene_snp_count_500kb.txt"), row.names = FALSE, sep = "\t", quote = FALSE)
