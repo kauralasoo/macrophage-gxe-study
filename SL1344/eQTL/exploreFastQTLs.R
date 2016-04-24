@@ -31,6 +31,9 @@ IFNg_SL1344_qtls = importFastQTLTable("results/SL1344/fastqtl/output/IFNg_SL1344
 #Combine all hits to a list
 qtl_list = list(naive = naive_qtls, IFNg = IFNg_qtls, SL1344 = SL1344_qtls, IFNg_SL1344 = IFNg_SL1344_qtls)
 fastqtl_hits = purrr::map(qtl_list, ~dplyr::filter(.,qvalue < 0.1))
+saveRDS(qtl_list, "results/SL1344/eQTLs/fastqtl_min_pvalues.rds")
+
+#Calculate Pi1 statistic
 pi1_matrix = calculatePairwisePi1(qtl_list)
 write.table(pi1_matrix, "results/SL1344/eQTLs/pi1_matrix.txt", quote = FALSE, sep = "\t")
 pi1_matrix_tidy = calculatePairwisePi1(qtl_list, tidy = TRUE)

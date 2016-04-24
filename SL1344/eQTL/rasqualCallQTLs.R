@@ -44,4 +44,3 @@ IFNg_SL1344_snp_res = tabixFetchSNPs(selected_snp_coords, "results/SL1344/rasqua
 
 rasqual_selected_results = list(naive = naive_snp_res, IFNg = IFNg_snp_res, SL1344 = SL1344_snp_res, IFNg_SL1344 = IFNg_SL1344_snp_res)
 saveRDS(rasqual_selected_results, "results/SL1344/eQTLs/rasqual_selected_pvalues.rds")
-
