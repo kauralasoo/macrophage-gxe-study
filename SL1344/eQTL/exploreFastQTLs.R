@@ -23,10 +23,10 @@ gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, g
 vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
 #Import permutation p-values
-naive_qtls = importFastQTLTable("results/SL1344/fastqtl/output/naive_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_id_name_map)
-IFNg_qtls = importFastQTLTable("results/SL1344/fastqtl/output/IFNg_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_id_name_map)
-SL1344_qtls = importFastQTLTable("results/SL1344/fastqtl/output/SL1344_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_id_name_map)
-IFNg_SL1344_qtls = importFastQTLTable("results/SL1344/fastqtl/output/IFNg_SL1344_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_id_name_map)
+naive_qtls = importFastQTLTable("results/SL1344/fastqtl/output/naive_500kb_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_id_name_map)
+IFNg_qtls = importFastQTLTable("results/SL1344/fastqtl/output/IFNg_500kb_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_id_name_map)
+SL1344_qtls = importFastQTLTable("results/SL1344/fastqtl/output/SL1344_500kb_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_id_name_map)
+IFNg_SL1344_qtls = importFastQTLTable("results/SL1344/fastqtl/output/IFNg_SL1344_500kb_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_id_name_map)
 
 #Combine all hits to a list
 qtl_list = list(naive = naive_qtls, IFNg = IFNg_qtls, SL1344 = SL1344_qtls, IFNg_SL1344 = IFNg_SL1344_qtls)
