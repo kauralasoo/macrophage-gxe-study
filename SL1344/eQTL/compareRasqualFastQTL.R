@@ -75,7 +75,12 @@ snp_overlaps = countSnpsOverlapingExons(combined_expression_data$gene_metadata, 
   dplyr::select(gene_id, feature_snp_count) %>% 
   dplyr::filter(feature_snp_count > 0) %>% 
   dplyr::left_join(gene_name_map, by = "gene_id")
+write.table(snp_overlaps$gene_id, "macrophage-gxe-study/data/rasqual_bad_fSNP_genes.txt")
 
+#Identify bad feature SNPs
+bad_fSNPs = countSnpsOverlapingExons(combined_expression_data$gene_metadata, bad_snp_info, return_fSNPs = TRUE)
+bad_fSNP_ids = dplyr::filter(bad_snp_info, pos %in% start(bad_fSNPs))$snp_id
+write.table(bad_fSNP_ids, "macrophage-gxe-study/data/rasqual_bad_feature_snps.txt", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 
 
