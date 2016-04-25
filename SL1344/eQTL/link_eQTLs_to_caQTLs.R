@@ -30,11 +30,9 @@ atac_list = readRDS("../macrophage-chromatin/results/ATAC/ATAC_combined_accessib
 min_pvalues_list = readRDS("../macrophage-chromatin/results/ATAC/QTLs/rasqual_min_pvalues.rds")
 min_pvalues_hits = lapply(min_pvalues_list, function(x){dplyr::filter(x, p_fdr < 0.1)})
 
-
-
 #### Find most associated peaks for each gene ####
 rna_betas = extractAndProcessBetas(dplyr::select(interaction_hits, gene_id, snp_id), rasqual_selected_pvalues, "naive")
-rna_appear_qtls = dplyr::filter(rna_betas$beta_summaries, abs(naive) <= 0.59, max_abs_diff >= 0.59, max_abs_beta >= 0.59)
+rna_appear_qtls = dplyr::filter(rna_betas$beta_summaries, abs(naive) <= 0.59, max_abs_beta - abs(naive) >= 0.32)
 
 #Extract most associated peaks for each of the eQTL genes
 appear_hits = dplyr::left_join(rna_appear_qtls, gene_name_map, by = "gene_id")
@@ -52,15 +50,15 @@ atac_tabix_list = list(naive = "../macrophage-chromatin/results/ATAC/rasqual/out
 atac_snp_tables = lapply(atac_tabix_list, function(tabix, snps) rasqualTools::tabixFetchSNPs(snps, tabix), selected_snps)
 
 #Identify QTLs that appeat after specific stimuli
-ifng_appear_qtls = dplyr::filter(rna_appear_qtls, abs(IFNg) >= 0.59, abs(IFNg_diff) >= 0.59) %>%
+ifng_appear_qtls = dplyr::filter(rna_appear_qtls, abs(IFNg) >= 0.32, abs(IFNg_diff) >= 0.32) %>%
   dplyr::group_by(gene_id) %>% dplyr::arrange(-max_abs_beta) %>%
   dplyr::filter(row_number() == 1) %>% 
   dplyr::ungroup()
-sl1344_appear_qtls = dplyr::filter(rna_appear_qtls, abs(SL1344) >= 0.59, abs(SL1344_diff) >= 0.59) %>%
+sl1344_appear_qtls = dplyr::filter(rna_appear_qtls, abs(SL1344) >= 0.32, abs(SL1344_diff) >= 0.32) %>%
   dplyr::group_by(gene_id) %>% dplyr::arrange(-max_abs_beta) %>%
   dplyr::filter(row_number() == 1) %>% 
   dplyr::ungroup()
-ifng_sl1344_appear_qtls = dplyr::filter(qtl_clusters$appear, cluster_id == 4) %>% 
+ifng_sl1344_appear_qtls = dplyr::filter(qtl_clusters$appear, cluster_id == 3) %>% 
   dplyr::select(gene_id, snp_id) %>% ungroup() %>% unique() %>% 
   dplyr::left_join(rna_appear_qtls, by = c("gene_id","snp_id"))
 
@@ -112,4 +110,6 @@ peak_count_comparison = dplyr::left_join(ifng_peaks_ifng, ifng_peaks_naive, by =
 peak_count_diff = dplyr::mutate(peak_count_comparison, diff = ifng_peak_count - naive_peak_count) %>% dplyr::arrange(-diff)
 write.table(peak_count_diff, "results/SL1344/eQTLs/naive_ifng_ATAC_peak_count_diff.txt")
 
-
+#CIITA eQTL
+plotEQTL("ENSG00000144228", "rs145753116", combined_expression_data$cqn, vcf_file$genotypes, 
+         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)

@@ -20,6 +20,7 @@ zcat results/SL1344/fastqtl/output/IFNg_SL1344_500kb_cqn_perm.chunk_*.txt.gz | b
 #Remove chunks
 rm results/SL1344/fastqtl/output/*.chunk_*
 
+
 #Get full p-values from fastQTL
 cat results/SL1344/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz --bed results/SL1344/fastqtl/input/naive.expression.txt.gz --cov results/SL1344/fastqtl/input/naive.covariates.txt --W 500000 --out results/SL1344/fastqtl/output/naive_full --execute True"
 cat results/SL1344/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz --bed results/SL1344/fastqtl/input/IFNg.expression.txt.gz --cov results/SL1344/fastqtl/input/IFNg.covariates.txt --W 500000 --out results/SL1344/fastqtl/output/IFNg_full --execute True"
