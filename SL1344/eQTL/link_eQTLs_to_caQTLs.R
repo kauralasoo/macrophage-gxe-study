@@ -71,9 +71,20 @@ ifng_effects = prepareBetasDf(ifng_appear_qtls, rna_betas, atac_snp_tables, gene
   dplyr::ungroup() %>%
   dplyr::mutate(beta_binary = ifelse(beta >= 0.59, 1, 0))
 
-effect_size_heatmap = ggplot(ifng_effects, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + facet_wrap(~phenotype) + geom_tile() + 
+#Calculate scaled ATAC diff
+scaled_diff = dplyr::filter(ifng_effects, phenotype == "ATAC") %>% 
+  group_by(gene_id) %>% 
+  dplyr::arrange(condition_name) %>% 
+  dplyr::mutate(scaled_diff = beta_scaled[2] - beta_scaled[1]) %>% 
+  dplyr::filter(condition_name == "naive") %>% 
+  dplyr::ungroup() %>% 
+  dplyr::arrange(scaled_diff)
+ifng_effects_sorted = dplyr::mutate(ifng_effects, gene_name = factor(as.character(gene_name), levels = as.character(scaled_diff$gene_name)))
+
+effect_size_heatmap = ggplot(ifng_effects_sorted, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + 
+  facet_wrap(~phenotype) + geom_tile() + 
   scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) 
-ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_IFNg_heatmap.pdf", effect_size_heatmap, width = 5, height = 7)
+ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_IFNg_heatmap.pdf", effect_size_heatmap, width = 5, height = 11)
 
 #SL1344 - find corresponding ATAC peaks
 sl1344_effects = prepareBetasDf(sl1344_appear_qtls, rna_betas, atac_snp_tables, gene_name_map, 
@@ -84,9 +95,19 @@ sl1344_effects = prepareBetasDf(sl1344_appear_qtls, rna_betas, atac_snp_tables, 
   dplyr::ungroup() %>%
   dplyr::mutate(beta_binary = ifelse(beta >= 0.59, 1, 0))
 
-effect_size_heatmap = ggplot(sl1344_effects, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + facet_wrap(~phenotype) + geom_tile() + 
+#Calculate scaled ATAC diff
+scaled_diff = dplyr::filter(sl1344_effects, phenotype == "ATAC") %>% 
+  group_by(gene_id) %>% 
+  dplyr::arrange(condition_name) %>% 
+  dplyr::mutate(scaled_diff = beta_scaled[2] - beta_scaled[1]) %>% 
+  dplyr::filter(condition_name == "naive") %>% 
+  dplyr::ungroup() %>% 
+  dplyr::arrange(scaled_diff)
+sl1344_effects_sorted = dplyr::mutate(sl1344_effects, gene_name = factor(as.character(gene_name), levels = as.character(scaled_diff$gene_name)))
+
+effect_size_heatmap = ggplot(sl1344_effects_sorted, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + facet_wrap(~phenotype) + geom_tile() + 
   scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) 
-ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_SL1344_heatmap.pdf", effect_size_heatmap, width = 5, height = 7)
+ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_SL1344_heatmap.pdf", effect_size_heatmap, width = 5, height = 11)
 
 #IFNg_SL1344 - find corresponding ATAC peaks
 ifng_sl1344_effects = prepareBetasDf(ifng_sl1344_appear_qtls, rna_betas, atac_snp_tables, gene_name_map, 
@@ -98,7 +119,7 @@ ifng_sl1344_effects = prepareBetasDf(ifng_sl1344_appear_qtls, rna_betas, atac_sn
 
 effect_size_heatmap = ggplot(ifng_sl1344_effects, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + facet_wrap(~phenotype) + geom_tile() + 
   scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) 
-ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_IFNg_SL1344_heatmap.pdf", effect_size_heatmap, width = 5, height = 7)
+ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_IFNg_SL1344_heatmap.pdf", effect_size_heatmap, width = 8, height = 7)
 
 #Count the number of peaks per SNP
 ifng_peaks_ifng = findAllAssociatedPeaksPerSNP(ifng_appear_qtls, atac_snp_tables[["IFNg"]]) %>% 
@@ -108,7 +129,21 @@ ifng_peaks_naive = findAllAssociatedPeaksPerSNP(ifng_appear_qtls, atac_snp_table
 peak_count_comparison = dplyr::left_join(ifng_peaks_ifng, ifng_peaks_naive, by = "snp_id") %>% 
   dplyr::mutate(naive_peak_count = ifelse(is.na(naive_peak_count),0, naive_peak_count))
 peak_count_diff = dplyr::mutate(peak_count_comparison, diff = ifng_peak_count - naive_peak_count) %>% dplyr::arrange(-diff)
-write.table(peak_count_diff, "results/SL1344/eQTLs/naive_ifng_ATAC_peak_count_diff.txt")
+write.table(peak_count_diff, "results/SL1344/eQTLs/properties/naive_ifng_ATAC_peak_count_diff.txt")
+
+
+ifng_peaks_ifng = findAllAssociatedPeaksPerSNP(sl1344_appear_qtls, atac_snp_tables[["SL1344"]]) %>% 
+  dplyr::filter(p_bonferroni < 0.1) %>% dplyr::group_by(snp_id) %>% dplyr::summarise(sl1344_peak_count = length(gene_id))
+ifng_peaks_naive = findAllAssociatedPeaksPerSNP(sl1344_appear_qtls, atac_snp_tables[["naive"]]) %>% 
+  dplyr::filter(p_bonferroni < 0.1) %>% dplyr::group_by(snp_id) %>% dplyr::summarise(naive_peak_count = length(gene_id))
+peak_count_comparison = dplyr::left_join(ifng_peaks_ifng, ifng_peaks_naive, by = "snp_id") %>% 
+  dplyr::mutate(naive_peak_count = ifelse(is.na(naive_peak_count),0, naive_peak_count))
+peak_count_diff = dplyr::mutate(peak_count_comparison, diff = sl1344_peak_count - naive_peak_count) %>% dplyr::arrange(-diff)
+write.table(peak_count_diff, "results/SL1344/eQTLs/properties/naive_ifng_ATAC_peak_count_diff.txt")
+
+#Export gene-peak pairs
+pairs = list(IFNg = ifng_effects, SL1344 = sl1344_effects, IFNg_SL1344 = ifng_sl1344_effects)
+saveRDS(pairs, "results/SL1344/eQTLs/interaction_peak_gene_pairs.rds")
 
 #CIITA eQTL
 plotEQTL("ENSG00000144228", "rs145753116", combined_expression_data$cqn, vcf_file$genotypes, 
