@@ -90,3 +90,9 @@ persistent_gained_motifs = dplyr::left_join(persistent_enrich, unique_motifs) %>
   dplyr::mutate(p_fdr = p.adjust(p_hyper, method = "fdr")) %>%
   dplyr::arrange(p_hyper) %>% dplyr::filter(p_fdr < 0.2)
 persistent_gained_motifs
+
+
+
+
+#Identify motifs disrupted by variants
+
