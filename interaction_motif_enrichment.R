@@ -31,6 +31,27 @@ sl1344_atac_diff = dplyr::filter(pairs$SL1344, phenotype == "ATAC") %>%
   dplyr::ungroup() %>% 
   dplyr::arrange(scaled_diff)
 
+#Make lists of peaks
+#IFNg
+ifng_gained_peaks = dplyr::filter(ifng_atac_diff, diff > 0.32, scaled_diff > 0.2) %>% dplyr::select(peak_id) %>%
+  dplyr::rename(gene_id = peak_id)
+ifng_persistent_peaks = dplyr::filter(ifng_atac_diff, abs(diff) < 0.32) %>% dplyr::select(peak_id) %>%
+  dplyr::rename(gene_id = peak_id)
+
+#SL1344
+sl1344_gained_peaks = dplyr::filter(sl1344_atac_diff, diff > 0.32, scaled_diff > 0.2) %>% dplyr::select(peak_id) %>%
+  dplyr::rename(gene_id = peak_id)
+sl1344_persistent_peaks = dplyr::filter(sl1344_atac_diff, abs(diff) < 0.32) %>% dplyr::select(peak_id) %>%
+  dplyr::rename(gene_id = peak_id)
+
+#Persistent
+all_persistent = dplyr::bind_rows(sl1344_persistent_peaks, ifng_persistent_peaks) %>% unique()
+
+#Merge all peaks together
+all_peaks = dplyr::bind_rows(ifng_gained_peaks, ifng_persistent_peaks, sl1344_gained_peaks, sl1344_persistent_peaks) %>% unique()
+all_all_peaks = dplyr::bind_rows(sl1344_atac_diff, ifng_atac_diff) %>% 
+  dplyr::select(peak_id) %>% unique() %>% dplyr::rename(gene_id = peak_id)
+
 #Import FIMO motif matches
 fimo_hits = readr::read_delim("../macrophage-chromatin/results/ATAC/FIMO_CISBP_results.long.txt", delim = "\t", col_types = c("cciicddcc"), 
                               col_names = c("motif_id","seq_name","start","end","strand","score","p_value","dummy","matched_seq"), skip = 1)
@@ -49,42 +70,23 @@ expressed_genes = names(which(apply(mean_tpm, 1, max) > 1))
 expressed_motifs = dplyr::filter(unique_motifs, gene_id %in% expressed_genes)
 
 #Enrichment
-
-#IFNg
-gained_peaks = dplyr::filter(ifng_atac_diff, diff > 0.32, scaled_diff > 0.2) %>% dplyr::select(peak_id) %>%
-  dplyr::rename(gene_id = peak_id)
-persistent_peaks = dplyr::filter(ifng_atac_diff, diff < 0.32, scaled_diff < 0.2) %>% dplyr::select(peak_id) %>%
-  dplyr::rename(gene_id = peak_id)
-all_peaks = dplyr::select(ifng_atac_diff, peak_id) %>% dplyr::rename(gene_id = peak_id)
-
-ifng_enrich = fimoRelativeEnrichment(gained_peaks, all_peaks, fimo_hits_clean, atac_list$gene_metadata)
+ifng_enrich = fimoRelativeEnrichment(ifng_gained_peaks, all_peaks, fimo_hits_clean, atac_list$gene_metadata)
 ifng_gained_motifs = dplyr::left_join(ifng_enrich, unique_motifs) %>% 
   dplyr::semi_join(expressed_motifs, by = "motif_id") %>% 
-  dplyr::arrange(-enrichment) %>% dplyr::filter(p_fdr < 0.05)
+  dplyr::mutate(p_fdr = p.adjust(p_hyper, method = "fdr")) %>%
+  dplyr::arrange(p_hyper) %>% dplyr::filter(p_fdr < 0.2)
+ifng_gained_motifs
 
-ifng_enrich = fimoRelativeEnrichment(persistent_peaks, all_peaks, fimo_hits_clean, atac_list$gene_metadata)
-ifng_persistent_motifs = dplyr::left_join(ifng_enrich, unique_motifs) %>% 
+sl1344_enrich = fimoRelativeEnrichment(sl1344_gained_peaks, all_peaks, fimo_hits_clean, atac_list$gene_metadata)
+sl1344_gained_motifs = dplyr::left_join(sl1344_enrich, unique_motifs) %>% 
   dplyr::semi_join(expressed_motifs, by = "motif_id") %>% 
-  dplyr::arrange(-enrichment) %>% dplyr::filter(p_fdr < 0.2)
+  dplyr::mutate(p_fdr = p.adjust(p_hyper, method = "fdr")) %>%
+  dplyr::arrange(p_hyper) %>% dplyr::filter(p_fdr < 0.2)
+sl1344_gained_motifs
 
-
-#SL1344
-gained_peaks = dplyr::filter(sl1344_atac_diff, diff > 0.32, scaled_diff > 0.2) %>% dplyr::select(peak_id) %>%
-  dplyr::rename(gene_id = peak_id)
-persistent_peaks = dplyr::filter(sl1344_atac_diff, diff < 0.32, scaled_diff < 0.2) %>% dplyr::select(peak_id) %>%
-  dplyr::rename(gene_id = peak_id)
-all_peaks = dplyr::select(sl1344_atac_diff, peak_id) %>% dplyr::rename(gene_id = peak_id)
-
-ifng_enrich = fimoRelativeEnrichment(gained_peaks, all_peaks, fimo_hits_clean, atac_list$gene_metadata)
-ifng_gained_motifs = dplyr::left_join(ifng_enrich, unique_motifs) %>% 
+persistent_enrich = fimoRelativeEnrichment(all_persistent, all_peaks, fimo_hits_clean, atac_list$gene_metadata)
+persistent_gained_motifs = dplyr::left_join(persistent_enrich, unique_motifs) %>% 
   dplyr::semi_join(expressed_motifs, by = "motif_id") %>% 
-  dplyr::arrange(-enrichment) %>% dplyr::filter(p_fdr < 0.05)
-
-ifng_enrich = fimoRelativeEnrichment(persistent_peaks, all_peaks, fimo_hits_clean, atac_list$gene_metadata)
-ifng_gained_motifs = dplyr::left_join(ifng_enrich, unique_motifs) %>% 
-  dplyr::semi_join(expressed_motifs, by = "motif_id") %>% 
-  dplyr::arrange(-enrichment) %>% dplyr::filter(p_fdr < 0.1)
-
-
-
-
+  dplyr::mutate(p_fdr = p.adjust(p_hyper, method = "fdr")) %>%
+  dplyr::arrange(p_hyper) %>% dplyr::filter(p_fdr < 0.2)
+persistent_gained_motifs
