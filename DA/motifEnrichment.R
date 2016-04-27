@@ -4,6 +4,8 @@ library("readr")
 library("devtools")
 library("ggplot2")
 load_all("../seqUtils/")
+library("seqLogo")
+
 
 #Import ATAC data and clusters
 atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
@@ -58,6 +60,55 @@ motif_enrichment_plot = ggplot2::ggplot(selected_enrichments, aes(x = tf_name, y
     scale_y_discrete(expand = c(0, 0))
 ggsave("results/ATAC/DA/Motif_enrichment_in_clusters.pdf", plot = motif_enrichment_plot, width = 8, height = 8)
 
+
+
+
+
+#### Perform motif enrichemnt against a background of promotoer sequences #####
+fimo_promoter_hits = readr::read_delim("results/ATAC/FIMO_CISBP_promoter_matches.txt.gz", delim = "\t", col_types = c("cciicddcc"), 
+                              col_names = c("motif_id","seq_name","start","end","strand","score","p_value","dummy","matched_seq"), skip = 1)
+
+#Calculate enrichments
+width_matrix = dplyr::mutate(atac_list$gene_metadata, width = end - start)
+enrichment = fimoFisherTest(fimo_promoter_hits, fimo_hits_clean, bg_seq_length = 21350*2000, fg_seq_length = sum(width_matrix$width))
+
+#Filter by gene expression
+enrichment = enrichment %>%
+  dplyr::left_join(unique_motifs, by = "motif_id") %>%
+  dplyr::semi_join(expressed_motifs, by = "motif_id") %>%
+  dplyr::arrange(-fold_enrichment)
+
+#Import motifs from disk
+cisbp_pwm_list = readRDS("results/ATAC/cisBP_PWMatrixList.rds")
+cisbp_pfm_list = readRDS("results/ATAC/cisBP_PFMatrixList.rds")
+
+#Make seqLogos for the enriched motifs
+enriched_motifs = dplyr::filter(enrichment, fold_enrichment > 1.2)
+motif_list = as.list(cisbp_pfm_list)[enriched_motifs$motif_id]
+names(motif_list) = paste(enriched_motifs$tf_name, enriched_motifs$motif_id, sep = "::")
+pwm_list = purrr::map(motif_list, ~Matrix(.)) %>% purrr::map(~seqLogo::makePWM(./colSums(.)))
+saveMotifListLogos(pwm_list, "results/ATAC/motif_analysis/all_enriched/")
+
+#Select subset of motifs from each family
+motif_ids = c("M2278_1.02", "M6119_1.02", "M4427_1.02","M1882_1.02", "M6308_1.02",
+              "M4635_1.02", "M1925_1.02", "M2268_1.02", "M1928_1.02","M6331_1.02",
+              "M5292_1.02", "M1955_1.02","M6423_1.02", "M1884_1.02","M6457_1.02",
+              "M4444_1.02","M1917_1.02","M5302_1.02")
+selected_motifs = dplyr::filter(enriched_motifs, motif_id %in% motif_ids)
+write.table(selected_motifs, "results/ATAC/motif_analysis/cisBP_selected_enriched_motifs.txt", 
+            row.names = FALSE, quote = FALSE)
+
+#Save selected motifs to disk
+motif_list = as.list(cisbp_pfm_list)[selected_motifs$motif_id]
+names(motif_list) = paste(selected_motifs$tf_name, selected_motifs$motif_id, sep = "-")
+pwm_list = purrr::map(motif_list, ~Matrix(.)) %>% purrr::map(~seqLogo::makePWM(./colSums(.)))
+saveMotifListLogos(pwm_list, "results/ATAC/motif_analysis/selected_motifs/")
+
+#Calculate similarity matrix of PWMs
+motif_pwm_list = cisbp_pwm_list[enriched_motifs$motif_id]
+names(motif_pwm_list) = enriched_motifs$tf_name
+sim_matrix = PWMSimilarityMatrix(motif_pwm_list, method = "Pearson")
+heatmap.2(sim_matrix)
 
 
 
