@@ -58,22 +58,23 @@ sl1344_appear_qtls = dplyr::filter(rna_appear_qtls, abs(SL1344) >= 0.32, abs(SL1
   dplyr::group_by(gene_id) %>% dplyr::arrange(-max_abs_beta) %>%
   dplyr::filter(row_number() == 1) %>% 
   dplyr::ungroup()
-ifng_sl1344_appear_qtls = dplyr::filter(qtl_clusters$appear, cluster_id == 3) %>% 
+ifng_sl1344_appear_qtls = dplyr::filter(qtl_clusters$appear, cluster_id == 5) %>% 
   dplyr::select(gene_id, snp_id) %>% ungroup() %>% unique() %>% 
   dplyr::left_join(rna_appear_qtls, by = c("gene_id","snp_id"))
 
 #IFNg - find corresponding ATAC peaks
 ifng_effects = prepareBetasDf(ifng_appear_qtls, rna_betas, atac_snp_tables, gene_name_map, 
                               appear_condition = "IFNg", rank_by = "IFNg_diff") %>%
+  dplyr::filter(gene_id != "ENSG00000196735") %>%
   dplyr::filter(condition_name %in% c("naive","IFNg")) %>%
   dplyr::group_by(snp_id, peak_id, gene_id, phenotype) %>% 
   dplyr::mutate(beta_std = (beta - mean(beta))/sd(beta), beta_scaled = beta/max(beta)) %>%
   dplyr::ungroup() %>%
-  dplyr::mutate(beta_binary = ifelse(beta >= 0.59, 1, 0))
+  dplyr::mutate(beta_binary = ifelse(beta >= 0.59, 1, 0)) 
 
 #Calculate scaled ATAC diff
 scaled_diff = dplyr::filter(ifng_effects, phenotype == "ATAC") %>% 
-  group_by(gene_id) %>% 
+  dplyr::group_by(gene_id) %>% 
   dplyr::arrange(condition_name) %>% 
   dplyr::mutate(scaled_diff = beta_scaled[2] - beta_scaled[1]) %>% 
   dplyr::filter(condition_name == "naive") %>% 

@@ -2,7 +2,7 @@ library("devtools")
 library("plyr")
 library("dplyr")
 load_all("../seqUtils/")
-library("MatrixEQTL")
+load_all("~/software/rasqual/rasqualTools/")
 
 #Import all results after eigenMT correction
 naive_eigenMT = eigenMTImportResults("results/SL1344/rasqual/output/naive_500kb/naive_500kb.eigenMT.txt")
