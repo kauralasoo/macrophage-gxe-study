@@ -1,5 +1,6 @@
 library("devtools")
 library("dplyr")
+library("rtracklayer")
 load_all("../seqUtils/")
 
 #### Import peaks for enrichment in naive condition ####
@@ -34,10 +35,39 @@ saveRDS(joint_peaks, "results/ATAC/ChIP_enrichment/naive_combined_peaks.rds")
 #### Load Ivashkiv peaks ####
 sample_names = c("STAT1_rep1_A","STAT1_rep1_B","STAT1_rep1_C","STAT1_rep1_D","STAT1_rep2_B","STAT1_rep2_D",
                  "IRF1_A","IRF1_B","IRF1_E","IRF1_F")
-ivashkiv_peaks = loadNarrowPeaks("processed/Ivashkiv/", sample_names)
+ivashkiv_peaks = loadNarrowPeaks("results/Ivashkiv/peak_calls/", sample_names, sub_dir = FALSE)
+saveRDS(ivashkiv_peaks, "results/ATAC/ChIP_enrichment/ivashkiv_peaks.rds")
 
-peak_list = list(Rehli = rehli_peaks, Ivashkiv = ivashkiv_peaks)
-saveRDS(peak_list, "results/ATAC/DA/Chip_peak_lists.rds")
+
+#### Load and process peaks from the Wong et al dataset ####
+
+#naive CIITA
+ciita_naive_names = c("MO_rep1_naive_CIITA","MO_rep2_naive_CIITA")
+ciita_naive_peaks = loadNarrowPeaks("results/Knight/peak_calls/", ciita_naive_names, sub_dir = FALSE) %>% 
+  filterOverlaps(minOverlapCount = 2) %>% listUnion()
+elementMetadata(ciita_naive_peaks)$name = "CIITA_naive"
+
+#IFNg CIITA
+ciita_ifng_names = c("MO_rep1_IFNg_CIITA","MO_rep2_IFNg_CIITA")
+ciita_ifng_peaks = loadNarrowPeaks("results/Knight/peak_calls/", ciita_ifng_names, sub_dir = FALSE) %>% 
+  filterOverlaps(minOverlapCount = 2) %>% listUnion()
+elementMetadata(ciita_ifng_peaks)$name = "CIITA_IFNg"
+
+#naive RFX5
+rfx5_naive_names = c("MO_rep1_naive_RFX5","MO_rep2_naive_RFX5")
+rfx5_naive_peaks = loadNarrowPeaks("results/Knight/peak_calls/", rfx5_naive_names, sub_dir = FALSE) %>% 
+  filterOverlaps(minOverlapCount = 2) %>% listUnion()
+elementMetadata(rfx5_naive_peaks)$name = "RFX5_naive"
+
+
+rfx5_ifng_names = c("MO_rep1_IFNg_RFX5","MO_rep2_IFNg_RFX5")
+rfx5_ifng_peaks = loadNarrowPeaks("results/Knight/peak_calls/", rfx5_ifng_names, sub_dir = FALSE) %>% 
+  filterOverlaps(minOverlapCount = 2) %>% listUnion()
+elementMetadata(rfx5_ifng_peaks)$name = "RFX5_IFNg"
+
+joint_peaks = c(ciita_naive_peaks, ciita_ifng_peaks, rfx5_naive_peaks, rfx5_ifng_peaks)
+export.bed(joint_peaks, "results/ATAC/ChIP_enrichment/CIITA-RFX5_joint_peaks.bed")
+saveRDS(joint_peaks, "results/ATAC/ChIP_enrichment/CIITA-RFX5_joint_peaks.rds")
 
 
 #### Make consensus peaks ####
