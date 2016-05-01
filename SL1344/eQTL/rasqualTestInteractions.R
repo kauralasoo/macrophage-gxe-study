@@ -192,6 +192,8 @@ dplyr::filter(all_gwas_hits, trait %in% selected_immune_traits, R2 > 0.8, snp_id
 #Immune subset
 14/1233
 37/5660
+fisher.test(t(matrix(c(14,1233,23,5660-1233),nrow=2)))
+
 
 dplyr::filter(all_gwas_hits, trait %in% brain_traits, R2 > 0.8)$snp_id %>% unique() %>% length()
 dplyr::filter(interaction_gwas_hits, trait %in% brain_traits, R2 > 0.8)$snp_id %>% unique() %>% length()
@@ -199,6 +201,8 @@ dplyr::filter(interaction_gwas_hits, trait %in% brain_traits, R2 > 0.8)$snp_id %
 #Brain
 6/1233
 16/5660
+fisher.test(t(matrix(c(6,1233,10,5660-1233),nrow=2)))
+
 
 dplyr::filter(all_gwas_hits, trait %in% lipid_traits, R2 > 0.8)$snp_id %>% unique() %>% length()
 dplyr::filter(interaction_gwas_hits, trait %in% lipid_traits, R2 > 0.8)$snp_id %>% unique() %>% length()
