@@ -20,10 +20,10 @@ min_pvalues_list = readRDS("../macrophage-chromatin/results/ATAC/QTLs/rasqual_mi
 min_pvalues_hits = lapply(min_pvalues_list, function(x){dplyr::filter(x, p_fdr < 0.1)})
 
 #Fetch credible sets for each peak in each condition
-naive_cs = fetchCredibleSets(min_pvalues_hits$naive[1:10,], atac_list$gene_metadata, atac_list$gene_metadata, atac_tabix_list$naive, vcf_file, cis_window = 5e4)
-IFNg_cs = fetchCredibleSets(min_pvalues_hits$IFNg[1:10,], atac_list$gene_metadata, atac_list$gene_metadata, atac_tabix_list$IFNg, vcf_file, cis_window = 5e4)
-SL1344_cs = fetchCredibleSets(min_pvalues_hits$SL1344[1:10,], atac_list$gene_metadata, atac_list$gene_metadata, atac_tabix_list$SL1344, vcf_file, cis_window = 5e4)
-IFNg_SL1344_cs = fetchCredibleSets(min_pvalues_hits$IFNg_SL1344[1:10,], atac_list$gene_metadata, atac_list$gene_metadata, atac_tabix_list$IFNg_SL1344, vcf_file, cis_window = 5e4)
+naive_cs = fetchCredibleSets(min_pvalues_hits$naive, atac_list$gene_metadata, atac_list$gene_metadata, atac_tabix_list$naive, vcf_file, cis_window = 5e4)
+IFNg_cs = fetchCredibleSets(min_pvalues_hits$IFNg, atac_list$gene_metadata, atac_list$gene_metadata, atac_tabix_list$IFNg, vcf_file, cis_window = 5e4)
+SL1344_cs = fetchCredibleSets(min_pvalues_hits$SL1344, atac_list$gene_metadata, atac_list$gene_metadata, atac_tabix_list$SL1344, vcf_file, cis_window = 5e4)
+IFNg_SL1344_cs = fetchCredibleSets(min_pvalues_hits$IFNg_SL1344, atac_list$gene_metadata, atac_list$gene_metadata, atac_tabix_list$IFNg_SL1344, vcf_file, cis_window = 5e4)
 
 #Save credible sets to disk
 credible_set_list = list(naive = naive_cs, IFNg = IFNg_cs, SL1344 = SL1344_cs, IFNg_SL1344 = IFNg_SL1344_cs)
