@@ -9,7 +9,9 @@ library("pheatmap")
 
 #Load processed expression data from disk
 expression_data = readRDS("results/acLDL/acLDL_combined_expression_data.rds")
-weak_responders = c("xugn","giuo","oarz","fikt","kuxp","oefg","coio","nusw","hiaf","voas","cicb")
+weak_responders = c("xugn","giuo","oarz","fikt","kuxp","oefg","coio","nusw","hiaf","voas","cicb","auim","eiwy")
+very_weak_responders = c("voas","coio","giuo", "oefg","oarz", "hiaf","kuxp","piun", "xugn","cicb","fikt", "nusw")
+
 expression_data$sample_metadata = dplyr::mutate(expression_data$sample_metadata, response_group = ifelse(donor %in% weak_responders, "weak", "strong"))
 
 #Import PEER residuals
@@ -20,10 +22,6 @@ mean_expression = seqUtils::calculateMean(expression_data$cqn, as.data.frame(exp
 expressed_genes = names(which(apply(mean_expression, 1, max) > 0.5))
 expressed_data = extractGenesFromExpressionList(expression_data, expressed_genes)
 expressed_data_2 = extractConditionFromExpressionList(c("Ctrl","AcLDL"), expressed_data)
-
-#Import list of strong responders
-strong_responders_meta = dplyr::filter(expressed_data$sample_metadata, donor %in% strong_responder_donors)
-weak_responders_meta = dplyr::filter(expressed_data$sample_metadata, !(donor %in% strong_responder_donors))
 
 #Create purity df
 purity = dplyr::select(expressed_data$sample_metadata, sample_id, mean_purity) %>% as.data.frame()
@@ -58,8 +56,10 @@ gene_data = dplyr::select(expressed_data_2$gene_metadata, gene_id, gene_name, ge
 
 ### AcLDL vs Ctrl DE ###
 #Construct design matrix
-ctrl_vs_acldl_design = dplyr::filter(expressed_data_2$sample_metadata, condition_name %in% c("AcLDL","Ctrl"), !(donor %in% c("piun")))
-ctrl_vs_acldl_design2 = dplyr::filter(expressed_data_2$sample_metadata, condition_name %in% c("AcLDL","Ctrl"))
+#ctrl_vs_acldl_design = dplyr::filter(expressed_data_2$sample_metadata, condition_name %in% c("AcLDL","Ctrl"), !(donor %in% c("piun")))
+#ctrl_vs_acldl_design = dplyr::filter(expressed_data_2$sample_metadata, condition_name %in% c("AcLDL","Ctrl"))
+ctrl_vs_acldl_design = dplyr::filter(expressed_data_2$sample_metadata, condition_name %in% c("AcLDL","Ctrl")) %>%
+  dplyr::filter(!(donor %in% very_weak_responders))
 rownames(ctrl_vs_acldl_design) = ctrl_vs_acldl_design$sample_id
 filtered_counts = expressed_data$counts[,ctrl_vs_acldl_design$sample_id]
 
@@ -87,9 +87,22 @@ de_results_filtered = dplyr::filter(de_results, padj < 0.05, abs(log2FoldChange)
 write.table(de_results_filtered, "results/acLDL/DE/ctrl_vs_acldl_DE_genes_filtered.txt", sep= "\t", quote = FALSE, row.names = FALSE)
 
 #Make heatmap with DE genes only (1.5 fold)
-cor_matrix = cor(expressed_data$cqn[de_results_filtered$gene_id, ctrl_vs_acldl_design2$sample_id], method = "pearson")
+cor_matrix = cor(expressed_data$cqn[de_results_filtered$gene_id, ctrl_vs_acldl_design$sample_id], method = "pearson")
 pheatmap(cor_matrix, annotation_col = purity)
+
+pca_list = performPCA(expressed_data$cqn[de_results_filtered$gene_id, ctrl_vs_acldl_design$sample_id], ctrl_vs_acldl_design)
+ggplot(pca_list$pca_matrix, aes(x = PC3, y = PC4, color = condition, label = sample_id)) + 
+  geom_point() +
+  geom_text()
+
+cor_matrix = cor(expressed_data$cqn[de_results_filtered$gene_id,ctrl_vs_acldl_design_full$sample_id], method = "spearman")
+pheatmap(cor_matrix, annotation_col = purity)
+
 pheatmap(cor_matrix, annotation_col = purity, filename = "results/acLDL/DE/DE_genes_1,5fold_heatmap.pdf", width = 16, height = 14,border_color = NA)
+
+ctrl_vs_acldl_design = dplyr::filter(expressed_data_2$sample_metadata, condition_name %in% c("AcLDL","Ctrl")) %>%
+  dplyr::filter(!(donor %in% very_weak_responders))
+ctrl_vs_acldl_design_full = dplyr::filter(expressed_data_2$sample_metadata, condition_name %in% c("AcLDL","Ctrl"))
 
 #Look at PEER residuals
 cor_matrix = cor(peer_residuals[intersect(rownames(peer_residuals),de_results_filtered$gene_id), ], method = "pearson")
@@ -98,8 +111,12 @@ pheatmap(cor_matrix, filename ="results/acLDL/DE/DE_genes_1,5fold_heatmap.PEER_r
 #2-fold change in DE
 de_results_filtered2 = dplyr::filter(de_results, padj < 0.05, abs(log2FoldChange) > 1) %>%
   arrange(desc(log2FoldChange))
-cor_matrix = cor(expressed_data$cqn[de_results_filtered2$gene_id,ctrl_vs_acldl_design2$sample_id], method = "pearson")
+cor_matrix = cor(expressed_data$cqn[de_results_filtered2$gene_id,ctrl_vs_acldl_design$sample_id], method = "pearson")
 pheatmap(cor_matrix, annotation_col = purity)
+cor_matrix = cor(expressed_data$cqn[de_results_filtered2$gene_id,ctrl_vs_acldl_design_full$sample_id], method = "spearman")
+pheatmap(cor_matrix, annotation_col = purity)
+
+
 pheatmap(cor_matrix, annotation_col = purity, filename = "results/acLDL/DE/DE_genes_2fold_heatmap.pdf", width = 16, height = 14, border_color = NA)
 
 #Look at PEER residuals

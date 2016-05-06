@@ -137,8 +137,8 @@ bcftools view -Oz -S results/acLDL/rasqual/input/AcLDL.genotypes.txt genotypes/a
 bcftools view -Oz -S results/acLDL/rasqual/input/Ctrl.genotypes.txt genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.vcf.gz | bcftools filter -i 'MAF[0] >= 0.05' - > results/acLDL/rasqual/input/Ctrl.vcf &
 
 #Add ASE counts into the VCF file
-echo "vcfAddASE" | python ~/software/utils/submitJobs.py --MEM 32000 --jobname vcfAddASE --queue hugemem --command "python ~/software/utils/rasqual/vcfAddASE.py --ASEcounts results/acLDL/combined_ASE_counts.txt --ASESampleGenotypeMap results/acLDL/rasqual/input/Ctrl.sg_map.txt --VCFfile results/acLDL/rasqual/input/Ctrl.vcf | bgzip > results/acLDL/rasqual/input/Ctrl.ASE.vcf.gz"
-echo "vcfAddASE" | python ~/software/utils/submitJobs.py --MEM 32000 --jobname vcfAddASE --queue hugemem --command "python ~/software/utils/rasqual/vcfAddASE.py --ASEcounts results/acLDL/combined_ASE_counts.txt --ASESampleGenotypeMap results/acLDL/rasqual/input/AcLDL.sg_map.txt --VCFfile results/acLDL/rasqual/input/AcLDL.vcf | bgzip > results/acLDL/rasqual/input/AcLDL.ASE.vcf.gz"
+echo "vcfAddASE" | python ~/software/utils/submitJobs.py --MEM 32000 --jobname vcfAddASE --queue hugemem --command "python ~/software/rasqual/scripts/vcfAddASE.py --ASEcounts results/acLDL/combined_ASE_counts.txt --ASESampleGenotypeMap results/acLDL/rasqual/input/Ctrl.sg_map.txt --VCFfile results/acLDL/rasqual/input/Ctrl.vcf | bgzip > results/acLDL/rasqual/input/Ctrl.ASE.vcf.gz"
+echo "vcfAddASE" | python ~/software/utils/submitJobs.py --MEM 32000 --jobname vcfAddASE --queue hugemem --command "python ~/software/rasqual/scripts/vcfAddASE.py --ASEcounts results/acLDL/combined_ASE_counts.txt --ASESampleGenotypeMap results/acLDL/rasqual/input/AcLDL.sg_map.txt --VCFfile results/acLDL/rasqual/input/AcLDL.vcf | bgzip > results/acLDL/rasqual/input/AcLDL.ASE.vcf.gz"
 
 #Index VCF files
 tabix -p vcf results/acLDL/rasqual/input/Ctrl.ASE.vcf.gz 
@@ -190,6 +190,10 @@ tabix -s3 -b4 -e4 -f results/acLDL/rasqual/output/Ctrl_500kb/Ctrl_500kb.sorted.t
 #Identify completed genes
 cut -f1 results/acLDL/rasqual/output/Ctrl_500kb/Ctrl_500kb.txt | uniq > results/acLDL/rasqual/output/Ctrl_500kb/Ctrl_500kb.completed_ids.txt
 cut -f1 results/acLDL/rasqual/output/AcLDL_500kb/AcLDL_500kb.txt | uniq > results/acLDL/rasqual/output/AcLDL_500kb/AcLDL_500kb.completed_ids.txt
+
+#Compress batches 
+tar czf results/acLDL/rasqual/output/AcLDL_500kb/batches.tar.gz results/acLDL/rasqual/output/AcLDL_500kb/batches/ &
+tar czf results/acLDL/rasqual/output/Ctrl_500kb/batches.tar.gz results/acLDL/rasqual/output/Ctrl_500kb/batches/ &
 
 ### eigenMT ####
 #Convert rasqual output into format suitable for eigenMT

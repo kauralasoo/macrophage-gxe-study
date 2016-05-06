@@ -2,9 +2,17 @@ library("devtools")
 library("plyr")
 library("dplyr")
 load_all("../seqUtils/")
+load_all("~/software/rasqual/rasqualTools/")
 
 #Import data
 combined_expression_data = readRDS("results/acLDL/acLDL_combined_expression_data_covariates.rds")
+
+#Filter out weak responders
+very_weak_responders = c("voas","coio","giuo", "oefg","oarz", "hiaf","kuxp","piun", "xugn","cicb","fikt", "nusw")
+combined_expression_data$sample_metadata = dplyr::filter(combined_expression_data$sample_metadata, !(donor %in% very_weak_responders))
+combined_expression_data$counts = combined_expression_data$counts[,combined_expression_data$sample_metadata$sample_id]
+combined_expression_data$cqn = combined_expression_data$cqn[,combined_expression_data$sample_metadata$sample_id]
+combined_expression_data$tpm = combined_expression_data$tpm[,combined_expression_data$sample_metadata$sample_id]
 
 #Extract separate lists for each condition
 condition_names = idVectorToList(c("Ctrl","AcLDL"))
@@ -14,7 +22,7 @@ rna_conditions = lapply(condition_names, extractConditionFromExpressionList, com
 rna_conditions_renamed = lapply(rna_conditions, renameMatrixColumnsInExpressionList, "sample_id", "genotype_id")
 
 #### RASQUAL ####
-rasqual_input_folder = "results/acLDL/rasqual/input/"
+rasqual_input_folder = "results/acLDL/rasqual/input_filtered/"
 exportDataForRasqual(rna_conditions_renamed, rasqual_input_folder)
 
 #Count SNPs overlapping genes
