@@ -12,6 +12,8 @@ atac_data$sample_metadata$condition_name = factor(atac_data$sample_metadata$cond
 #Import SNP coords and alleles
 snp_info = readr::read_delim("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz", 
                                delim = "\t", col_types = "cdccc", col_names = c("chr","pos","snp_id","ref","alt"))
+#Find indels
+snp_info = dplyr::mutate(snp_info, is_indel = ifelse(pmax(nchar(alt), nchar(ref)) > 1, TRUE, FALSE))
 
 #Perform analysis with TFBSTools
 cisbp_pwm_list = readRDS("results/ATAC/cisBP_PWMatrixList.rds")
