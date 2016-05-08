@@ -93,8 +93,9 @@ saveMotifListLogos(pwm_list, "results/ATAC/motif_analysis/all_enriched/")
 motif_ids = c("M2278_1.02", "M6119_1.02", "M4427_1.02","M1882_1.02", "M6308_1.02",
               "M4635_1.02", "M1925_1.02", "M2268_1.02", "M1928_1.02","M6331_1.02",
               "M5292_1.02", "M1955_1.02","M6423_1.02", "M1884_1.02","M6457_1.02",
-              "M4444_1.02","M1917_1.02","M5302_1.02")
-selected_motifs = dplyr::filter(enriched_motifs, motif_id %in% motif_ids)
+              "M4444_1.02","M1917_1.02","M5302_1.02","M6313_1.02","M2275_1.02","M2277_1.02")
+selected_motifs = dplyr::filter(enriched_motifs, motif_id %in% motif_ids) %>% 
+  dplyr::mutate(p_nominal = ifelse(p_nominal == 0, 1e-300, p_nominal))
 write.table(selected_motifs, "results/ATAC/motif_analysis/cisBP_selected_enriched_motifs.txt", 
             row.names = FALSE, quote = FALSE)
 
