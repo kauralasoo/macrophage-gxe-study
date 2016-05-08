@@ -32,7 +32,7 @@ peak_ids = strsplit(names(sequences), "=") %>% lapply(function(x) x[2]) %>% unli
 names(sequences) = peak_ids
 
 #Calculate motif disruptions
-motif_disruptions = quantifyMultipleVariants(unique_peaks_filtered[1:10,], cisbp_pwm_enriched, atac_data$gene_metadata, sequences, snp_info)
+motif_disruptions = quantifyMultipleVariants(unique_peaks_filtered, cisbp_pwm_enriched, atac_data$gene_metadata, sequences, snp_info)
 saveRDS(motif_disruptions, "results/ATAC/motif_analysis/unique_peaks_disrupted_motifs.rds")
 
 #Filter the results
@@ -43,9 +43,5 @@ saveRDS(motif_disruptions, "results/ATAC/motif_analysis/unique_peaks_disrupted_m
 #  dplyr::ungroup() %>%
 #  dplyr::arrange(-abs(rel_diff)) %>%
 #  dplyr::filter(rel_diff > 0.05)
-
-
-
-
 
 
