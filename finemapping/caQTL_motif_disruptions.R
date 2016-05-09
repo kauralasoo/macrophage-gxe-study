@@ -15,7 +15,8 @@ cisbp_pwm_list = readRDS("results/ATAC/cisBP_PWMatrixList.rds")
 snp_info = readr::read_delim("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz", 
                              delim = "\t", col_types = "cdccc", col_names = c("chr","pos","snp_id","ref","alt"))
 #Find indels
-snp_info = dplyr::mutate(snp_info, is_indel = ifelse(pmax(nchar(alt), nchar(ref)) > 1, TRUE, FALSE))
+snp_info = dplyr::mutate(snp_info, indel_length = pmax(nchar(alt), nchar(ref))) %>%
+  dplyr::mutate(is_indel = ifelse(indel_length > 1, TRUE, FALSE))
 
 #Keep only motfis that are enriched in macrophages
 mf_enriched_motifs = read.table("results/ATAC/motif_analysis/cisBP_selected_enriched_motifs.txt", header = TRUE, stringsAsFactors = FALSE)
@@ -43,5 +44,4 @@ saveRDS(motif_disruptions, "results/ATAC/motif_analysis/unique_peaks_disrupted_m
 #  dplyr::ungroup() %>%
 #  dplyr::arrange(-abs(rel_diff)) %>%
 #  dplyr::filter(rel_diff > 0.05)
-
 

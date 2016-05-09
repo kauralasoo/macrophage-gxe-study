@@ -23,8 +23,8 @@ credible_sets_df = purrr::map(credible_sets, ~purrr::map_df(., ~dplyr::mutate(.,
                                 dplyr::filter(chr != "X") %>%
                                 addOverlappingPeaks(atac_list$gene_metadata))
 
-#Put together all credible sets
-map_df(credible_sets_df, identity) %>% dplyr::select(gene_id, snp_id) %>% unique()
+#Find lead SNPs and credible sets for unique peaks
+credible_sets_by_condition = map_df(credible_sets_df, identity, .id = "condition_name")
 
 
 #Extract peaks that share credible sets
@@ -39,29 +39,21 @@ potential_master_peaks = purrr::map(credible_sets_df, ~dplyr::filter(.,gene_id =
   purrr::map_df(., identity)
 master_peak_list = dplyr::select(potential_master_peaks, gene_id) %>% unique()
 
+#Identify cases where there are more than one putative master peak
+shared_masters = dplyr::filter(shared_credible_sets, overlap_peak_id %in% master_peak_list$gene_id) %>%
+  dplyr::filter(master_peak_id %in% master_peak_list$gene_id) %>%
+  dplyr::filter(master_peak_id != overlap_peak_id)
+shared_master_peaks = c(shared_masters$overlap_peak_id, shared_masters$master_peak_id) %>% unique()
+
+
+#### UNIQUE MASTER PEAKS ####
 #Identify unique master peaks
 unique_masters = dplyr::filter(master_peak_list, !(gene_id %in% shared_master_peaks))
 unique_master_pairs = dplyr::semi_join(potential_master_peaks, unique_masters, by = "gene_id") %>% dplyr::select(gene_id, snp_id) %>% unique()
 snp_count = dplyr::group_by(unique_master_pairs, gene_id) %>% dplyr::summarise(snp_count = length(snp_id))
 unique_masters_counted = dplyr::left_join(unique_master_pairs, snp_count, by = "gene_id")
 
-#Do summary stats
-total_peak_count = map_df(credible_sets_df, identity) %>% dplyr::select(gene_id) %>% unique() %>% nrow()
-overlap_peak_count = purrr::map(credible_sets_df, ~dplyr::filter(.,!is.na(overlap_peak_id))) %>% 
-  purrr::map_df(., identity) %>% 
-  dplyr::select(gene_id) %>% unique() %>% nrow()
-overlap_same_peak = dplyr::select(potential_master_peaks, gene_id) %>% unique() %>% nrow()
-unique_master_peaks = length(unique_masters_counted$gene_id %>% unique)
-
-total_peak_count
-overlap_peak_count
-overlap_same_peak
-unique_master_peaks
-
-#Find lead SNPs and credible sets for unique peaks
-credible_sets_by_condition = map_df(credible_sets_df, identity, .id = "condition_name")
-
-#Lead SNPs
+#Find lead SNPs for unique masters accross conditions
 snp_stats = dplyr::left_join(unique_masters_counted, credible_sets_by_condition, by = c("gene_id","snp_id"))
 unique_lead_snps = group_by(snp_stats, gene_id) %>% 
   dplyr::arrange(p_nominal) %>% 
@@ -88,25 +80,25 @@ shared_snps = map_df(results, identity) %>% dplyr::filter(master_snp_id != overl
 shared_snp_ids = c(shared_snps$master_snp_id, shared_snps$overlap_snp_id) %>% unique()
 
 #Remove additional LD friends
-unique_lead_snps = dplyr::filter(unique_lead_snps, !(snp_id %in% shared_snp_ids))
+unique_lead_snps_filtered = dplyr::filter(unique_lead_snps, !(snp_id %in% shared_snp_ids))
+unique_credible_sets = dplyr::semi_join(credible_sets_by_condition, unique_lead_snps, by = c("gene_id", "condition_name"))
 unique_masters_counted = dplyr::filter(unique_masters_counted, gene_id %in% unique_credible_sets$gene_id)
 
-#Credible sets
-unique_credible_sets = dplyr::semi_join(credible_sets_by_condition, unique_lead_snps, by = c("gene_id", "condition_name"))
-
 #Combine unique results
-unique_peaks = list(peak_snp_pairs = unique_masters_counted, lead_snps = unique_lead_snps, lead_credible_sets = unique_credible_sets)
+unique_peaks = list(peak_snp_pairs = unique_masters_counted, lead_snps = unique_lead_snps_filtered, lead_credible_sets = unique_credible_sets)
 saveRDS(unique_peaks, "results/ATAC/QTLs/unique_qtl_peaks.rds")
-
 
 
 #### Multiple master peaks per QTL ####
 
-#Identify cases where there are more than one putative master peak
-shared_masters = dplyr::filter(shared_credible_sets, overlap_peak_id %in% master_peak_list$gene_id) %>%
-  dplyr::filter(master_peak_id %in% master_peak_list$gene_id) %>%
-  dplyr::filter(master_peak_id != overlap_peak_id)
-shared_master_peaks = c(shared_masters$overlap_peak_id, shared_masters$master_peak_id) %>% unique()
+#Deal with lead SNPs that were not unique
+peak_snp_map = dplyr::select(unique_lead_snps, gene_id, snp_id)
+peaks_with_shared_lead_snps = dplyr::left_join(shared_snps, peak_snp_map, by = c("master_snp_id" = "snp_id")) %>% 
+  dplyr::rename(master_peak_id = gene_id) %>% 
+  dplyr::left_join(peak_snp_map, by =c("overlap_snp_id" = "snp_id")) %>% 
+  dplyr::rename(overlap_peak_id = gene_id) %>% 
+  dplyr::select(master_peak_id, overlap_peak_id)
+shared_masters = rbind(shared_masters, peaks_with_shared_lead_snps) %>% unique()
 
 #Convert shared peaks into clusters
 graph = igraph::graph_from_data_frame(shared_masters, directed = FALSE)
@@ -133,5 +125,25 @@ cluster_lead_snps = dplyr::left_join(atac_clusters_counted, potential_master_pea
   dplyr::filter(row_number() == 1) %>% 
   dplyr::select(cluster_id, gene_id, snp_id, R2, peak_count, cluster_snp_count, chr, pos) %>%
   dplyr::ungroup()
+
+#Save cluster results to disk
+cluster_peaks = list(cluster_memberships = atac_clusters_counted, lead_snps = cluster_lead_snps)
+saveRDS(cluster_peaks, "results/ATAC/QTLs/clustered_qtl_peaks.rds")
+
+
+
+##### Do summary stats ####
+total_peak_count = map_df(credible_sets_df, identity) %>% dplyr::select(gene_id) %>% unique() %>% nrow()
+overlap_peak_count = purrr::map(credible_sets_df, ~dplyr::filter(.,!is.na(overlap_peak_id))) %>% 
+  purrr::map_df(., identity) %>% 
+  dplyr::select(gene_id) %>% unique() %>% nrow()
+overlap_same_peak = dplyr::select(potential_master_peaks, gene_id) %>% unique() %>% nrow()
+unique_master_peaks = length(unique_masters_counted$gene_id %>% unique)
+shared_master_peaks = nrow(atac_clusters_counted)
+
+#Compile stats
+summary_stats = data_frame(type = c("total_count", "overlaps_any_peak", "overlaps_same_peak", "shared","unique"),
+                           peak_count = c(total_peak_count,overlap_peak_count,overlap_same_peak,shared_master_peaks, unique_master_peaks))
+write.table(summary_stats, "results/ATAC/QTLs/properties/credible_set_peak_overlaps.txt", sep = "\t", row.names = FALSE, quote = FALSE)
 
 
