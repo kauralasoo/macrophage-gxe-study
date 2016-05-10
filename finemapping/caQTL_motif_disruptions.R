@@ -8,9 +8,10 @@ library("TFBSTools")
 batch_id = NULL
 
 ####### Get batch id from disk ######
-file <- file("stdin")
-open(file)
-batch_id = readLines(file) %>% as.numeric()
+f <- file("stdin")
+open(f)
+batch_id = readLines(f) %>% as.numeric()
+close(f)
 ####### END #######
 
 #Import ATAC data
@@ -53,8 +54,8 @@ motif_disruptions = quantifyMultipleVariants(unique_peaks_filtered, cisbp_pwm_en
 
 #Save output from each batch
 if(!is.null(batch_id)){
-  output_file = file.path("results/ATAC/motif_analysis/",paste0("motif_disruption_batch_",batch_id, ".txt"))
-  write.table(output_file, motif_disruptions, row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
+  output_file = file.path("results/ATAC/motif_analysis/", paste0("motif_disruption_batch_",batch_id, ".txt"))
+  write.table(motif_disruptions, output_file, row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
 }
                         
 
