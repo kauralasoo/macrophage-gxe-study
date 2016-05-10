@@ -130,6 +130,13 @@ cluster_lead_snps = dplyr::left_join(atac_clusters_counted, potential_master_pea
 cluster_peaks = list(cluster_memberships = atac_clusters_counted, lead_snps = cluster_lead_snps)
 saveRDS(cluster_peaks, "results/ATAC/QTLs/clustered_qtl_peaks.rds")
 
+#Explore peaks that do not overlap their own credible sets
+no_master_qtls = dplyr::filter(shared_credible_sets, master_peak_id != overlap_peak_id) %>% 
+  dplyr::anti_join(master_peak_list, by = c("master_peak_id" = "gene_id"))
+no_master_peak_count = unique(no_master_qtls$master_peak_id) %>% length()
+unique_olaps = dplyr::semi_join(no_master_qtls, unique_lead_snps,by = c("overlap_peak_id" = "gene_id")) %>% dplyr::select(master_peak_id) %>% unique()
+cluster_olaps = dplyr::semi_join(no_master_qtls, cluster_lead_snps,by = c("overlap_peak_id" = "gene_id")) %>% dplyr::select(master_peak_id) %>% unique()
+
 
 
 ##### Do summary stats ####
