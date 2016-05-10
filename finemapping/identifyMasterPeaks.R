@@ -137,7 +137,15 @@ no_master_peak_count = unique(no_master_qtls$master_peak_id) %>% length()
 unique_olaps = dplyr::semi_join(no_master_qtls, unique_lead_snps,by = c("overlap_peak_id" = "gene_id")) %>% dplyr::select(master_peak_id) %>% unique()
 cluster_olaps = dplyr::semi_join(no_master_qtls, cluster_lead_snps,by = c("overlap_peak_id" = "gene_id")) %>% dplyr::select(master_peak_id) %>% unique()
 
-
+#Find the master peak and its QTL
+master_unique = dplyr::semi_join(no_master_qtls, unique_lead_snps,by = c("overlap_peak_id" = "gene_id"))
+dependent_uniq_masters = dplyr::left_join(master_unique, unique_lead_snps, by = c("overlap_peak_id" = "gene_id")) %>% 
+  dplyr::rename(dependent_id = master_peak_id, master_id = overlap_peak_id)
+master_cluster = dplyr::semi_join(no_master_qtls, cluster_lead_snps,by = c("overlap_peak_id" = "gene_id"))
+dependent_cluster_masters = dplyr::left_join(master_cluster, cluster_lead_snps, by = c("overlap_peak_id" = "gene_id")) %>% 
+  dplyr::rename(dependent_id = master_peak_id, master_id = overlap_peak_id)
+res = list(unique_masters = dependent_uniq_masters, cluster_master = dependent_cluster_masters)
+saveRDS(res, "results/ATAC/QTLs/depdendent_peaks.rds")
 
 ##### Do summary stats ####
 total_peak_count = map_df(credible_sets_df, identity) %>% dplyr::select(gene_id) %>% unique() %>% nrow()
