@@ -5,6 +5,14 @@ library("purrr")
 load_all("../seqUtils/")
 library("TFBSTools")
 
+batch_id = NULL
+
+####### Get batch id from disk ######
+file <- file("stdin")
+open(file)
+batch_id = readLines(file) %>% as.numeric()
+####### END #######
+
 #Import ATAC data
 atac_data = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
 
@@ -27,6 +35,13 @@ cisbp_pwm_enriched = cisbp_pwm_list[mf_enriched_motifs$motif_id]
 unique_peaks = readRDS("results/ATAC/QTLs/unique_qtl_peaks.rds")
 unique_peaks_filtered = dplyr::filter(unique_peaks$peak_snp_pairs, snp_count <= 3)
 
+#### Split genes into batches ####
+batches = splitIntoBatches(nrow(unique_peaks_filtered), 50)
+if(!is.null(batch_id)){
+  selection = batches == batch_id
+  unique_peaks_filtered = unique_peaks_filtered[selection,]
+}
+
 #Import ATAC peak sequences from disk
 sequences = Biostrings::readDNAStringSet("annotations/ATAC_consensus_peaks.fasta")
 peak_ids = strsplit(names(sequences), "=") %>% lapply(function(x) x[2]) %>% unlist()
@@ -34,7 +49,14 @@ names(sequences) = peak_ids
 
 #Calculate motif disruptions
 motif_disruptions = quantifyMultipleVariants(unique_peaks_filtered, cisbp_pwm_enriched, atac_data$gene_metadata, sequences, snp_info)
-saveRDS(motif_disruptions, "results/ATAC/motif_analysis/unique_peaks_disrupted_motifs.rds")
+#saveRDS(motif_disruptions, "results/ATAC/motif_analysis/unique_peaks_disrupted_motifs.rds")
+
+#Save output from each batch
+if(!is.null(batch_id)){
+  output_file = file.path("results/ATAC/motif_analysis/",paste0("motif_disruption_batch_",batch_id, ".txt"))
+  write.table(output_file, motif_disruptions, row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
+}
+                        
 
 #Filter the results
 #disruption_table_3 = dplyr::left_join(motif_disruptions, motif_names, by = "motif_id") %>%
