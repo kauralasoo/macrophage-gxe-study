@@ -4,6 +4,7 @@ library("dplyr")
 load_all("../seqUtils/")
 load_all("../macrophage-gxe-study/macrophage-gxe-study/housekeeping/")
 library("ggplot2")
+library("purrr")
 
 #Import data
 atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
@@ -12,7 +13,8 @@ gene_name_map = dplyr::select(atac_list$gene_metadata, gene_id, gene_name)
 #Import minimal p-values
 min_pvalue_list = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
 min_pvalue_hits = lapply(min_pvalue_list, function(x){dplyr::filter(x, p_fdr < 0.1)})
-min_pvalues_df = ldply(min_pvalue_hits, .id = "condition_name")
+min_pvalues_df = purrr::map_df(min_pvalue_hits, identity, .id = "condition_name") %>%
+  dplyr::group_by(gene_id) %>% dplyr::arrange(p_nominal) %>% ungroup()
 joint_pairs = dplyr::select(min_pvalues_df, gene_id, snp_id) %>% unique()
 
 #Rasqual selected p-values
@@ -41,8 +43,7 @@ interaction_results = testMultipleInteractions(filtered_pairs, trait_matrix = at
                     sample_metadata = atac_list$sample_metadata, filtered_vcf, formula_qtl, formula_interaction)
 interaction_df = postProcessInteractionPvalues(interaction_results)
 saveRDS(interaction_df, "results/ATAC/QTLs/rasqual_interaction_results.rds")
-interaction_df = readRDS("results/ATAC/QTLs/rasqual_interaction_results.rds") %>%
-  dplyr::mutate(p_fdr = p.adjust(p_nominal, method = "fdr"))
+interaction_df = readRDS("results/ATAC/QTLs/rasqual_interaction_results.rds")
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 
 
