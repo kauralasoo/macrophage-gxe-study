@@ -66,3 +66,23 @@ plot_list = map(data_list, ~ggplot(., aes(x = factor(genotype), y = cqn)) + geom
 names(plot_list) = paste(data$dependent_id, data$master_id, sep = "-")
 
 savePlotList(plot_list, "results/ATAC/QTLs/peak-peak_interactions/naive_vs_SL1344/", suffix = ".pdf", width = 8, height = 8)
+
+
+##### Distances between master and dependent peaks ####
+#Calculated distances between master and dependent peaks
+peak_distances = calculatePeakDistance(dependent_peaks$unique_masters, atac_data$gene_metadata) %>%
+  dplyr::select(dependent_id, master_id, distance)
+peak_distances_cl = calculatePeakDistance(dependent_peaks$cluster_master, atac_data$gene_metadata) %>%
+  dplyr::select(dependent_id, master_id, distance)
+
+#Make a histogram of distances
+peak_distance_df = rbind(peak_distances, peak_distances_cl)
+plot = ggplot(peak_distance_df, aes(x = distance/1000)) + geom_histogram(binwidth = 1) + 
+  xlab("Distance between master and dependent peaks (kb)") + 
+  ylab("Number of peak pairs")
+ggsave("results/ATAC/QTLs/properties/master_dependent_peak_distance.pdf", plot = plot, width = 6, height = 6)
+
+
+#Calculate distances within peak clusters
+
+
