@@ -149,3 +149,25 @@ saveRDS(pairs, "results/SL1344/eQTLs/interaction_peak_gene_pairs.rds")
 #CIITA eQTL
 plotEQTL("ENSG00000144228", "rs145753116", combined_expression_data$cqn, vcf_file$genotypes, 
          combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+
+# Consequences of the rs7663027 SNP
+naive_atac = tabixFetchSNPsQuick("rs7663027", atac_tabix_list$naive, vcf_file$snpspos)
+naive_rna = tabixFetchSNPsQuick("rs7663027", "results/SL1344/rasqual/output/naive_500kb/naive_500kb.sorted.txt.gz", vcf_file$snpspos)
+
+write.table(naive_rna, "rs7663027_eQTL_results.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(naive_atac, "rs7663027_ATAC_results.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+plotEQTL("ENSG00000145476", "rs7663027", combined_expression_data$cqn, vcf_file$genotypes, 
+         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+
+
+# Consequences of the rs7663027 SNP
+naive_atac = tabixFetchSNPsQuick("rs2289720", atac_tabix_list$naive, vcf_file$snpspos)
+naive_rna = tabixFetchSNPsQuick("rs2289720", "results/SL1344/rasqual/output/naive_500kb/naive_500kb.sorted.txt.gz", vcf_file$snpspos)
+
+write.table(naive_rna, "rs2289720_eQTL_results.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(naive_atac, "rs2289720_ATAC_results.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+plot = plotEQTL("ENSG00000109775", "rs2289720", combined_expression_data$cqn, vcf_file$genotypes, 
+         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+ggsave("UFSP2.pdf", plot = plot, width = 8, height = 8)
