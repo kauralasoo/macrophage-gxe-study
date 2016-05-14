@@ -1,4 +1,5 @@
 library("GenomicRanges")
+load_all("../seqUtils/")
 
 #Import credible sets
 credible_sets = readRDS("results/SL1344/eQTLs/rasqual_credible_sets.rds")
@@ -10,9 +11,41 @@ vcf_file = readRDS("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/im
 snp_pos_df = vcf_file$snpspos %>% 
   dplyr::transmute(seqnames = chr, start = pos, end = pos, strand = "+", snp_id = snpid)
 
-#Convert credible sets to GRangesLists
-#(This can take a long time)
-cs_granges_list = purrr::map(credible_sets, 
-                             ~purrr::map(.,~dplyr::filter(snp_pos_df, snp_id %in% .$snp_id) %>% 
-                                           dataFrameToGRanges()) %>% 
-                               GRangesList())
+#Convert credible sets into gigantic data frame
+credible_sets_df = purrr::map_df(credible_sets, ~purrr::map_df(., 
+                                 ~dplyr::mutate(.,chr = as.character(chr))) %>% 
+                                 dplyr::filter(chr != "X"), .id = "condition_name")
+
+#Construct granges object
+credible_sets_granges = credible_sets_df %>% 
+  dplyr::transmute(condition_name, gene_id, snp_id, chr, seqnames = chr, start = pos, end = pos, strand = "+") %>% 
+  dataFrameToGRanges()
+
+#Find overlaps between credible sets
+olaps = findOverlaps(credible_sets_granges)
+queries = credible_sets_granges[queryHits(olaps),] %>% 
+  elementMetadata() %>% as.data.frame() %>% 
+  dplyr::transmute(condition_name1 = condition_name, master_id = gene_id, chr1 = chr) %>% 
+  tbl_df()
+subjects = credible_sets_granges[subjectHits(olaps),] %>% 
+  elementMetadata() %>% as.data.frame() %>% 
+  dplyr::transmute(condition_name2 = condition_name, dependent_id = gene_id, chr2 = chr) %>% 
+  tbl_df()
+
+#Identify all genes that share at least one SNP in their credible set
+pairwise_shared = dplyr::bind_cols(queries, subjects) %>% 
+  unique() %>% 
+  dplyr::filter(chr1 == chr2) %>% 
+  dplyr::filter(master_id != dependent_id) %>% 
+  dplyr::select(master_id, dependent_id) %>% unique()
+
+#Convert shared peaks into clusters
+clusters = constructClustersFromGenePairs(pairwise_shared)
+
+#Use Coloc to test if the QTLs are indeed shared
+
+#Test for GxGxE interactions
+
+
+
+
