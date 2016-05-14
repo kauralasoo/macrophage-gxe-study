@@ -84,5 +84,17 @@ ggsave("results/ATAC/QTLs/properties/master_dependent_peak_distance.pdf", plot =
 
 
 #Calculate distances within peak clusters
+peak_clusters = readRDS("results/ATAC/QTLs/clustered_qtl_peaks.rds")
+
+#Construct master-dependent pairs
+dependents = dplyr::transmute(peak_clusters$cluster_memberships, dependent_id = gene_id, cluster_id)
+masters = dplyr::transmute(peak_clusters$lead_snps, master_id = gene_id, cluster_id)
+cluster_distances = dplyr::left_join(dependents, masters, by = "cluster_id") %>% 
+  dplyr::filter(master_id != dependent_id) %>% calculatePeakDistance(atac_data$gene_metadata)
+plot = ggplot(dplyr::filter(cluster_distances, abs(distance) < 50000), aes(x = distance/1000)) + geom_histogram(binwidth = 1) + 
+  xlab("Distance between cluster lead peak and dependent peaks (kb)") + 
+  ylab("Number of peak pairs")
+ggsave("results/ATAC/QTLs/properties/cluster_dependent_peak_distance.pdf", plot = plot, width = 6, height = 6)
+
 
 

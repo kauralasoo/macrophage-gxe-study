@@ -22,18 +22,12 @@ atac_list = readRDS("../macrophage-chromatin/results/ATAC/ATAC_combined_accessib
 min_pvalues_list = readRDS("../macrophage-chromatin/results/ATAC/QTLs/rasqual_min_pvalues.rds")
 min_pvalues_hits = lapply(min_pvalues_list, function(x){dplyr::filter(x, p_fdr < 0.1)})
 
-#Fetch cis SNPs for all caQTLs
-naive_pvalues = rasqualTools::constructGeneRanges(min_pvalues_hits$naive, atac_list$gene_metadata, cis_window = 5e4) %>%
-  rasqualTools::tabixFetchGenes(qtl_granges, atac_tabix_list$naive)
-ifng_pvalues = rasqualTools::constructGeneRanges(min_pvalues_hits$IFNg, atac_list$gene_metadata, cis_window = 5e4) %>%
-  rasqualTools::tabixFetchGenes(atac_tabix_list$IFNg)
-sl1344_pvalues = rasqualTools::constructGeneRanges(min_pvalues_hits$SL1344, atac_list$gene_metadata, cis_window = 5e4) %>%
-  rasqualTools::tabixFetchGenes(atac_tabix_list$SL1344)
-ifng_sl1344_pvalues = rasqualTools::constructGeneRanges(min_pvalues_hits$IFNg_SL1344, atac_list$gene_metadata, cis_window = 5e4) %>%
-  rasqualTools::tabixFetchGenes(atac_tabix_list$IFNg_SL1344)
 
-#Compile into a list
-pvalue_list = list(naive = naive_pvalues, IFNg = ifng_pvalues, SL1344 = sl1344_pvalues, IFNg_SL1344 = ifng_sl1344_pvalues)
+#Fetch p-values for each gene
+pvalues_list = purrr::map2(min_pvalues_hits, atac_tabix_list, function(x,y){
+  rasqualTools::constructGeneRanges(x, atac_list$gene_metadata, cis_window = 5e4) %>%
+    rasqualTools::tabixFetchGenes(y)
+})
 saveRDS(pvalue_list, "results/ATAC/QTLs/rasqual_QTL_pvalues.rds")
 pvalue_list = readRDS("results/ATAC/QTLs/rasqual_QTL_pvalues.rds")
 
