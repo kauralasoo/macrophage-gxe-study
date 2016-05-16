@@ -85,7 +85,7 @@ ifng_effects_sorted = dplyr::mutate(ifng_effects, gene_name = factor(as.characte
 effect_size_heatmap = ggplot(ifng_effects_sorted, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + 
   facet_wrap(~phenotype) + geom_tile() + 
   scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) 
-ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_IFNg_heatmap.pdf", effect_size_heatmap, width = 5, height = 11)
+ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_IFNg_heatmap.pdf", effect_size_heatmap, width = 6, height = 12)
 
 #SL1344 - find corresponding ATAC peaks
 sl1344_effects = prepareBetasDf(sl1344_appear_qtls, rna_betas, atac_snp_tables, gene_name_map, 
@@ -108,7 +108,7 @@ sl1344_effects_sorted = dplyr::mutate(sl1344_effects, gene_name = factor(as.char
 
 effect_size_heatmap = ggplot(sl1344_effects_sorted, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + facet_wrap(~phenotype) + geom_tile() + 
   scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) 
-ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_SL1344_heatmap.pdf", effect_size_heatmap, width = 5, height = 11)
+ggsave("results/SL1344/eQTLs/properties/eQTLs_vs_caQTL_SL1344_heatmap.pdf", effect_size_heatmap, width = 6, height = 12)
 
 #IFNg_SL1344 - find corresponding ATAC peaks
 ifng_sl1344_effects = prepareBetasDf(ifng_sl1344_appear_qtls, rna_betas, atac_snp_tables, gene_name_map, 
