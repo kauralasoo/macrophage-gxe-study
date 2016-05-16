@@ -25,11 +25,11 @@ credible_sets_granges = credible_sets_df %>%
 olaps = findOverlaps(credible_sets_granges)
 queries = credible_sets_granges[queryHits(olaps),] %>% 
   elementMetadata() %>% as.data.frame() %>% 
-  dplyr::transmute(condition_name1 = condition_name, master_id = gene_id, chr1 = chr) %>% 
+  dplyr::transmute(master_condition = condition_name, master_id = gene_id, chr1 = chr) %>% 
   tbl_df()
 subjects = credible_sets_granges[subjectHits(olaps),] %>% 
   elementMetadata() %>% as.data.frame() %>% 
-  dplyr::transmute(condition_name2 = condition_name, dependent_id = gene_id, chr2 = chr) %>% 
+  dplyr::transmute(dependent_condition = condition_name, dependent_id = gene_id, chr2 = chr) %>% 
   tbl_df()
 
 #Identify all genes that share at least one SNP in their credible set
@@ -37,7 +37,12 @@ pairwise_shared = dplyr::bind_cols(queries, subjects) %>%
   unique() %>% 
   dplyr::filter(chr1 == chr2) %>% 
   dplyr::filter(master_id != dependent_id) %>% 
-  dplyr::select(master_id, dependent_id) %>% unique()
+  dplyr::select(master_id, master_condition, dependent_id, dependent_condition) %>% 
+  unique()
+
+a = credible_sets$naive$ENSG00000164308$snp_id
+b = credible_sets$IFNg$ENSG00000113441$snp_id
+length(intersect(a,b))/length(union(a,b))
 
 #Convert shared peaks into clusters
 clusters = constructClustersFromGenePairs(pairwise_shared)
@@ -45,6 +50,7 @@ clusters = constructClustersFromGenePairs(pairwise_shared)
 #Use Coloc to test if the QTLs are indeed shared
 
 #Test for GxGxE interactions
+
 
 
 
