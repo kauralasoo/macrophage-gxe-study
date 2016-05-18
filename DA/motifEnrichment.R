@@ -31,7 +31,7 @@ expressed_motifs = dplyr::filter(unique_motifs, gene_id %in% expressed_genes)
 
 #Make mean_tpm df
 mean_df = dplyr::mutate(mean_tpm, gene_id = rownames(mean_tpm)) %>%
-  dplyr::left_join(dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name), by = "gene_id")
+  dplyr::left_join(dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name), by = "gene_id") %>% tbl_df()
 
 #Calculate motif enrichments in each cluster
 cluster_list = plyr::dlply(final_clusters,.(name))
