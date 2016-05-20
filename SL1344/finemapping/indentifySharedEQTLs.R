@@ -1,5 +1,10 @@
 library("GenomicRanges")
+library("devtools")
+library("dplyr")
+library("purrr")
 load_all("../seqUtils/")
+library("ggplot2")
+library("ggthemes")
 
 #Import credible sets
 credible_sets = readRDS("results/SL1344/eQTLs/rasqual_credible_sets.rds")
@@ -49,7 +54,7 @@ pairwise_shared = dplyr::bind_cols(queries, subjects) %>%
 
 #Calculate Jacccard scores for the credible sets
 pairwise_shared_jaccard = purrr::by_row(pairwise_shared, credibleSetJaccard, credible_sets, .collate = "rows")
-gene_pairs = dplyr::filter(pairwise_shared_jaccard, jaccard > 0.5) %>% 
+gene_pairs = dplyr::filter(pairwise_shared_jaccard, jaccard > 0.8) %>% 
   dplyr::group_by(master_id, dependent_id) %>%
   dplyr::arrange(p_nominal) %>%
   dplyr::filter(row_number() == 1) %>%
@@ -57,8 +62,12 @@ gene_pairs = dplyr::filter(pairwise_shared_jaccard, jaccard > 0.5) %>%
   dplyr::summarise(jaccard = max(jaccard)) %>%
   dplyr::ungroup()
 
-#Convert shared peaks into clusters
+#Convert shared peaks into clusters and count the number of genes in each cluster
 clusters = constructClustersFromGenePairs(dplyr::select(gene_pairs, master_id, dependent_id))
+cluster_counts = dplyr::select(clusters, cluster_id, gene_count) %>% unique()
+cluster_count_plot = ggplot(cluster_counts, aes(x = gene_count)) + 
+  geom_bar() + theme_hc() + xlab("Number of genes per cluster")
+ggsave("results/SL1344/eQTLs/properties/number_of_genes_per_cluster.pdf", plot = cluster_count_plot, width = 4, height = 4)
 
 #Use Coloc to test if the QTLs are indeed shared
 
