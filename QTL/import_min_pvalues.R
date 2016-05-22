@@ -46,4 +46,7 @@ saveRDS(fastqtl_pvalue_list, "results/ATAC/QTLs/fastqtl_min_pvalues.rds")
 
 #Calculate Pi1
 pi1_stat = calculatePairwisePi1(fastqtl_pvalue_list)
-write.table(pi1_stat, "results/ATAC/QTLs/fastqtl_pi1_results.txt", sep = "\t", quote = FALSE)
+write.table(pi1_stat, "results/ATAC/QTLs/properties/fastqtl_pi1_results.txt", sep = "\t", quote = FALSE)
+pi1_stat_tidy = calculatePairwisePi1(fastqtl_pvalue_list, tidy = TRUE)
+write.table(pi1_stat_tidy, "results/ATAC/QTLs/properties/fastqtl_pi1_results_tidy.txt", sep = "\t", quote = FALSE)
+
