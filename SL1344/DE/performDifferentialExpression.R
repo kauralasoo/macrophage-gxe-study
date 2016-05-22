@@ -26,9 +26,12 @@ pheatmap(cor(eqtl_data_list$cqn, method = "spearman"), annotation_row = meta,
 
 #Perform PCA analysis
 pca_list = performPCA(eqtl_data_list$cqn, eqtl_data_list$sample_metadata)
-pca_plot = ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = condition_name, label = sample_id)) + 
-  geom_text()
-ggsave("results/SL1344/diffExp/PCA_of_gene_expression.pdf", plot = pca_plot, width = 8.5, height = 6.5)
+pca_list$pca_matrix = dplyr::mutate(pca_list$pca_matrix, 
+    condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344", "IFNg_SL1344")))
+pca_plot = ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = condition_name)) + 
+  geom_point() +
+  scale_color_discrete(name = "condition")
+ggsave("results/SL1344/DE/PCA_of_gene_expression.pdf", plot = pca_plot, width = 5.5, height = 4)
 
 #Perform DEseq (This takes a really long time!)
 dds_gene_meta = dplyr::select(gene_metadata,gene_id, gene_name, gene_biotype)

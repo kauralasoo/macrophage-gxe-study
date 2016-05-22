@@ -37,6 +37,7 @@ saveRDS(qtl_list, "results/SL1344/eQTLs/fastqtl_min_pvalues.rds")
 pi1_matrix = calculatePairwisePi1(qtl_list)
 write.table(pi1_matrix, "results/SL1344/eQTLs/properties/pi1_matrix.txt", quote = FALSE, sep = "\t")
 pi1_matrix_tidy = calculatePairwisePi1(qtl_list, tidy = TRUE)
+write.table(pi1_matrix_tidy, "results/SL1344/eQTLs/properties/pi1_matrix_tidy.txt", quote = FALSE, sep = "\t")
 
 #Make a QQ plot
 ggplot(naive_qtls, aes(x = p_expected, y = p_beta_log10)) +
