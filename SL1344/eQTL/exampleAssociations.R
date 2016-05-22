@@ -1,28 +1,23 @@
+load_all("../seqUtils/")
+
 #Import expression data
 combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
-combined_expression_data$gene_metadata = dplyr::rename(combined_expression_data$gene_metadata, 
-                                                       chr = chromosome_name, start = start_position, end = end_position)
-combined_expression_data$sample_metadata$condition_name = factor(combined_expression_data$sample_metadata$condition_name, 
-                                                                 levels = c("naive", "IFNg", "SL1344", "IFNg_SL1344"))
-
 gene_id_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name)
-
+combined_expression_data$sample_metadata$condition_name = factor(combined_expression_data$sample_metadata$condition_name, 
+        levels = c("naive", "IFNg", "SL1344", "IFNg_SL1344"))
 
 #Import ATAC data
-atac_list = readRDS("../macrophage-chromatin/results/ATAC/ATAC_combined_accessibility_data.rds")
-
-#Construct sample metadata for atac
-line_metadata = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds") #Line metadata
-donor_geno_map = dplyr::select(line_metadata, donor, genotype_id) %>% unique()
-atac_sample_meta = dplyr::left_join(atac_list$design, donor_geno_map, by = "donor") %>% 
-  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344","IFNg_SL1344")))
+atac_list = readRDS("../macrophage-chromatin/results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
+atac_list$sample_metadata = dplyr::mutate(atac_list$sample_metadata, 
+          condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344","IFNg_SL1344")))
 
 #Import genotypes
 vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
+
 #### Focus on the CTSC locus ####
 #Make a QTL plot for the gene
-ctsc_plot = plotEQTL("ENSG00000144227", "rs12621644", combined_expression_data$cqn, vcf_file$genotypes, 
+ctsc_plot = plotEQTL("ENSG00000144228", "rs12621644", combined_expression_data$cqn, vcf_file$genotypes, 
                      combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
 ggsave("results/SL1344/eQTLs/example_loci/CTSC/CTSC_eQTL.pdf", ctsc_plot, width = 7, height = 7)
 
@@ -66,9 +61,12 @@ plotEQTL("ATAC_peak_154958", "rs12621644", atac_list$exprs_cqn, vcf_file$genotyp
          atac_sample_meta, atac_list$gene_metadata) %>%
   ggsave("results/SL1344/eQTLs/example_loci/SPOPL/SPOPL_enhancer+3.pdf", ., width = 7, height = 7)
 
-plotEQTL("ENSG00000144228", "rs12621644", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
-         eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata) %>%
-  ggsave("results/SL1344/eQTLs/example_loci/SPOPL/SPOPL_eQTL.pdf", ., width = 7, height = 7)
+spopl_data = plotEQTL("ENSG00000144228", "rs12621644", combined_expression_data$cqn, vcf_file$genotypes, 
+         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata, return_df = TRUE) 
+plotQtlRow(spopl_data) %>% 
+  ggsave("results/SL1344/eQTLs/example_loci/SPOPL/SPOPL_eQTL.pdf", ., width = 6, height = 2.5)
+
+
 
 
 #CCS
@@ -93,9 +91,10 @@ plotEQTL("ATAC_peak_239457", "rs12654812", atac_list$exprs_cqn, vcf_file$genotyp
          atac_sample_meta, atac_list$gene_metadata) %>%
   ggsave("results/SL1344/eQTLs/example_loci/RGS14/RGS14_enhancer2-2.pdf", ., width = 7, height = 7)
 
-plotEQTL("ENSG00000169220", "rs12654812", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
-         eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata) %>%
-  ggsave("results/SL1344/eQTLs/example_loci/RGS14/RGS14_eQTL.pdf", ., width = 7, height = 7)
+plotEQTL("ENSG00000169220", "rs12654812",combined_expression_data$cqn, vcf_file$genotypes, 
+         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata, return_df = TRUE) %>%
+  plotQtlRow() %>% 
+  ggsave("results/SL1344/eQTLs/example_loci/RGS14/RGS14_eQTL.pdf", ., width = 6, height = 2.5)
 
 plotEQTL("ENSG00000146094", "rs12654812", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
          eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)  %>%
