@@ -171,3 +171,36 @@ write.table(naive_atac, "rs2289720_ATAC_results.txt", sep = "\t", quote = FALSE,
 plot = plotEQTL("ENSG00000109775", "rs2289720", combined_expression_data$cqn, vcf_file$genotypes, 
          combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
 ggsave("UFSP2.pdf", plot = plot, width = 8, height = 8)
+
+
+naive_rna = tabixFetchSNPsQuick("rs10891343", "results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.sorted.txt.gz", vcf_file$snpspos)
+arrange(naive_rna, p_nominal) %>% dplyr::select(gene_id, p_nominal)
+naive_rna = tabixFetchSNPsQuick("rs71478720", "results/SL1344/rasqual/output/SL1344_500kb/SL1344_500kb.sorted.txt.gz", vcf_file$snpspos)
+arrange(naive_rna, p_nominal) %>% dplyr::select(gene_id, p_nominal)
+naive_rna = tabixFetchSNPsQuick("rs71478720", "results/SL1344/rasqual/output/IFNg_500kb/IFNg_500kb.sorted.txt.gz", vcf_file$snpspos)
+arrange(naive_rna, p_nominal) %>% dplyr::select(gene_id, p_nominal)
+naive_rna = tabixFetchSNPsQuick("rs71478720", "results/SL1344/rasqual/output/naive_500kb/naive_500kb.sorted.txt.gz", vcf_file$snpspos)
+arrange(naive_rna, p_nominal) %>% dplyr::select(gene_id, p_nominal)
+
+naive_atac = tabixFetchSNPsQuick("rs10891343", atac_tabix_list$naive, vcf_file$snpspos)
+arrange(naive_atac, p_nominal) %>% dplyr::select(gene_id, p_nominal)
+
+
+plot = plotEQTL("ENSG00000150782", "rs71478720", combined_expression_data$cqn, vcf_file$genotypes, 
+         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+ggsave("IL18.pdf", plot = plot, width = 8, height = 8)
+
+
+plot = plotEQTL("ENSG00000150782", "rs10891343", combined_expression_data$cqn, vcf_file$genotypes, 
+                combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+ggsave("IL18_lead.pdf", plot = plot, width = 8, height = 8)
+
+
+plot = plotEQTL("ENSG00000091106", "rs385076", combined_expression_data$cqn, vcf_file$genotypes, 
+                combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+ggsave("NLRC4.pdf", plot = plot, width = 8, height = 8)
+
+plot = plotEQTL("ENSG00000150782", "rs385076", combined_expression_data$cqn, vcf_file$genotypes, 
+                combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+ggsave("IL18_rs385076.pdf", plot = plot, width = 8, height = 8)
+
