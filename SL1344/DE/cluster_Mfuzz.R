@@ -10,20 +10,19 @@ library("Mfuzz")
 library("pheatmap")
 library("gProfileR")
 
-
 #### Import data ####
 #Load the raw eQTL dataset
-combined_expression_data = readRDS("results/SL1344/combined_expression_data.rds")
 combined_expression_data_filtered = readRDS("results/SL1344/combined_expression_data_covariates.rds")
-gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name)
+gene_name_map = dplyr::select(combined_expression_data_filtered$gene_metadata, gene_id, gene_name)
 
 #### DESeq2 ####
 #Use DESeq to identify genes that vary between conditions
-design = combined_expression_data$sample_metadata %>% as.data.frame()
+design = combined_expression_data_filtered$sample_metadata %>% as.data.frame()
 rownames(design) = design$sample_id
-dds = DESeq2::DESeqDataSetFromMatrix(combined_expression_data$counts, design, ~condition_name) 
+dds = DESeq2::DESeqDataSetFromMatrix(combined_expression_data_filtered$counts, design, ~condition_name) 
 dds = DESeq(dds, test = "LRT", reduced = ~ 1)
 saveRDS(dds, "results/SL1344/DE/DESeq2_condition_name_LRT_results.rds")
+dds = readRDS("results/SL1344/DE/DESeq2_condition_name_LRT_results.rds")
 
 #Extract differentially expressed genes in each condition
 ifng_genes = results(dds, contrast=c("condition_name","IFNg","naive")) %>% 
@@ -42,21 +41,17 @@ log2FC_table = dplyr::transmute(ifng_genes, gene_id, IFNg_log2FC = log2FoldChang
 fc_genes = log2FC_table[which(apply(abs(log2FC_table[2:4]),1, max) > 1),]
 variable_genes = intersect(dplyr::filter(ifng_genes, padj < 0.01)$gene_id, fc_genes$gene_id)
 
-
 ##### Clustering ####
-#Claculate mean expression using TPM values
-mean_tpm = calculateMean(combined_expression_data$tpm, design, "condition_name")
-expressed_genes = names(which(apply(mean_tpm, 1, max) > 0.5))
 
 #Calculate mean CQN and standardise
-mean_cqn = calculateMean(combined_expression_data$cqn, design, "condition_name")
-variable_cqn = mean_cqn[intersect(rownames(combined_expression_data_filtered$counts), variable_genes),]
+mean_cqn = calculateMean(combined_expression_data_filtered$cqn, design, "condition_name")
+variable_cqn = mean_cqn[intersect(rownames(mean_cqn), variable_genes),]
 cqn_set = ExpressionSet(as.matrix(variable_cqn))
 cqn_set_std = standardise(cqn_set)
 
 #Cluster the expression data
 clusters = mfuzz(cqn_set_std, c = 9, m = 1.5, iter = 1000)
-cluster_cores = acore(cqn_set_std, clusters, min.acore = 0.7)
+cluster_cores = acore(cqn_set_std, clusters, min.acore = 0)
 names(cluster_cores) = c(1:length(cluster_cores))
 pheatmap(clusters$centers)
 
@@ -86,9 +81,12 @@ diff_exp_heatmap = ggplot(cluster_plot_data %>% dplyr::sample_frac(0.4), aes(x =
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
   scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Expression", midpoint = 0) +
-  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
-ggsave("results/SL1344/DE/DE_clusters.pdf",diff_exp_heatmap, width = 5, height = 7)
-ggsave("results/SL1344/DE/DE_clusters.png",diff_exp_heatmap, width = 5, height = 7)
+  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 15)) + 
+  theme(axis.title.x = element_blank()) + 
+  ylab("8758 genes") + 
+  theme(panel.margin = unit(0.2, "lines"))
+ggsave("results/SL1344/DE/DE_clusters.pdf",diff_exp_heatmap, width = 4, height = 5.5)
+ggsave("results/SL1344/DE/DE_clusters.png",diff_exp_heatmap, width = 4, height = 5.5)
 
 #Perform GO analysis
 clusters = dplyr::select(cluster_plot_data, new_cluster_id, gene_id) %>% unique() %>%
@@ -143,3 +141,6 @@ cluster9 = (dplyr::filter(clusters, new_cluster_id == 9) %>% dplyr::arrange(IFNg
 
 gprofiler_results = list(cluster1, cluster2, cluster3, cluster4, cluster5, cluster6, cluster7, cluster8, cluster9)
 saveRDS(gprofiler_results, "results/SL1344/DE/Mfuzz_clustering_go_enrichments.rds")
+
+#Save cluster membbership information to disk
+write.table(cluster_df,"results/SL1344/DE/mfuzz_cluster_memberships.txt", sep = "\t", row.names = FALSE, quote = FALSE)
