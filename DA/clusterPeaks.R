@@ -44,7 +44,7 @@ cqn_set_std = standardise(cqn_set)
 
 #Cluster the expression data
 clusters = mfuzz(cqn_set_std, c = 7, m = 1.5, iter = 1000)
-cluster_cores = acore(cqn_set_std, clusters, min.acore = 0.7)
+cluster_cores = acore(cqn_set_std, clusters, min.acore = 0)
 names(cluster_cores) = c(1:length(cluster_cores))
 pheatmap(clusters$centers)
 
@@ -71,13 +71,17 @@ cluster_plot_data = dplyr::left_join(cluster_exp, cluster_order, by = "cluster_i
   dplyr::group_by(new_cluster_id)
 
 #Make a heatmap
-chromatin_clusters_heatmap = ggplot(cluster_plot_data %>% dplyr::sample_frac(0.5), aes(x = condition_name, y = gene_id, fill = expression)) + 
+ylabel = paste(nrow(cluster_df), "peaks")
+chromatin_clusters_heatmap = ggplot(cluster_plot_data %>% dplyr::sample_frac(0.4), aes(x = condition_name, y = gene_id, fill = expression)) + 
   facet_grid(new_cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
-  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Expression", midpoint = 0) +
-  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
-ggsave("results/ATAC/DA/ATAC_DA_clusters.png",chromatin_clusters_heatmap, width = 5, height = 7)
+  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Accessibility", midpoint = 0) +
+  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 15)) + 
+  theme(axis.title.x = element_blank()) + 
+  ylab(ylabel) +
+  theme(panel.margin = unit(0.2, "lines"))
+ggsave("results/ATAC/DA/ATAC_DA_clusters.png",chromatin_clusters_heatmap, width = 4, height = 5.5)
 
 ggplot(cluster_plot_data, aes(x = condition_name, y = expression)) + 
   facet_grid(new_cluster_id ~ .,  scales = "free_y", space = "free_y") + stat_summary(fun.y = mean, geom="point")
@@ -90,7 +94,6 @@ final_clusters = dplyr::select(cluster_plot_data, gene_id, MEM.SHIP, new_cluster
   dplyr::left_join(cluster_names, by = "new_cluster_id") %>% dplyr::ungroup()
 saveRDS(final_clusters, "results/ATAC/DA/peak_clusters.rds")
 final_clusters = readRDS("results/ATAC/DA/peak_clusters.rds")
-
 
 #Export all clusters as a single bed file
 cluster_ranges = final_clusters %>%
