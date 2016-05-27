@@ -36,7 +36,7 @@ filtered_tracks = dplyr::filter(plotting_meta, track_id %in% c("naive", "IFNg"))
 
 #Make plot
 spopl_region = plotCoverage(exons = peak_list, cdss = peak_list, track_data = filtered_tracks, rescale_introns = FALSE, 
-                transcript_annotations = peak_annot, fill_palette = c("#d7191c","#fdae61","#1a9641"), flanking_length = c(300,300), 
+                transcript_annotations = peak_annot, fill_palette = getGenotypePalette(), flanking_length = c(300,300), 
                 connect_exons = FALSE, label_type = "peak", plot_fraction = 0.2, heights = c(0.7,0.3))
 ggsave("results/ATAC/QTLs/figures/SPOPL_region.pdf", spopl_region, width = 8, height = 4)
 
@@ -47,6 +47,7 @@ spopl_region_pu1 = plotCoverage(exons = peak_list, cdss = peak_list, track_data 
                             transcript_annotations = peak_annot, fill_palette = c("black"), flanking_length = c(300,300), 
                             connect_exons = FALSE, label_type = "peak", plot_fraction = 0.2, heights = c(0.5,0.5))
 ggsave("results/ATAC/QTLs/figures/SPOPL_region_PU1.pdf", spopl_region_pu1, width = 8, height = 2)
+
 
 
 

@@ -72,7 +72,7 @@ total_disruptions = dplyr::semi_join(disruption_events, unique_peaks_no_indels, 
 fraction_of_peaks_disrupted = nrow(total_disruptions)/ length(unique(unique_peaks_no_indels$gene_id))
 
 #Analyse QTLs that appear
-appear_cluster_members = dplyr::group_by(variable_qtls$appear, cluster_id ) %>% 
+appear_cluster_members = dplyr::group_by(variable_qtls$appear, new_cluster_id ) %>% 
   purrr::by_slice(~dplyr::select(.,gene_id) %>% 
                     unique() %>%
                     dplyr::semi_join(unique_peaks_no_indels, by = "gene_id"), .to = "clusters")
@@ -81,26 +81,27 @@ appear_cluster_members = dplyr::mutate(appear_cluster_members, cluster_size = ma
 #Count motif disruptions for Appearing QTL clusters
 appear_disruptions = appear_cluster_members %>% 
   purrr::by_row(~dplyr::semi_join(disruption_events, .$clusters[[1]]) %>%
-                                             dplyr::group_by(gene_id, tf_name) %>% 
-                                             dplyr::arrange(-abs(rel_diff)) %>% dplyr::filter(row_number() == 1) %>%
-                                             dplyr::group_by(tf_name) %>% 
-                                             dplyr::summarise(cluster_disruption = length(gene_id)) %>%
-                                             dplyr::left_join(dplyr::select(motif_names, tf_name), ., by = "tf_name") %>% 
-                                             dplyr::mutate(cluster_disruption = ifelse(is.na(cluster_disruption), 0, cluster_disruption)) %>%
-                                             dplyr::arrange(-cluster_disruption), .collate = "rows") %>%
+                          dplyr::group_by(gene_id, tf_name) %>% 
+                          dplyr::arrange(-abs(rel_diff)) %>% dplyr::filter(row_number() == 1) %>%
+                          dplyr::group_by(tf_name) %>% 
+                          dplyr::summarise(cluster_disruption = length(gene_id)) %>%
+                          dplyr::left_join(dplyr::select(motif_names, tf_name), ., by = "tf_name") %>% 
+                          dplyr::mutate(cluster_disruption = ifelse(is.na(cluster_disruption), 0, cluster_disruption)) %>%
+                          dplyr::arrange(-cluster_disruption), .collate = "rows") %>%
   dplyr::select(-clusters, -.row)
 
 #Calculate fold enrichment
 relative_enrichment = dplyr::left_join(baseline_enrichment, appear_disruptions, by = "tf_name") %>% 
-  dplyr::arrange(cluster_id) %>% 
+  dplyr::arrange(new_cluster_id) %>% 
   dplyr::mutate(fold_enrichment = (cluster_disruption/cluster_size)/(baseline_disruption/baseline_peak_count)) %>% 
   dplyr::mutate(fold_enrichment = round(ifelse(fold_enrichment == 0, 0.1, fold_enrichment),3)) %>%
   dplyr::mutate(l2_fold = log(fold_enrichment, 2)) %>%
   dplyr::mutate(fraction_peaks = round(cluster_disruption/cluster_size,3)) %>%
   dplyr::mutate(fraction_baseline = round(baseline_disruption/baseline_peak_count,3)) %>%
-  arrange(cluster_id, -fold_enrichment) %>%
+  arrange(new_cluster_id, -fold_enrichment) %>%
   dplyr::left_join(motif_names, by = "tf_name") %>%
-  dplyr::filter(tf_name %in% c("IRF1","IRF8","RELA","NFKB1","FOS","STAT1","SPI1", "CEBPB")) %>%
+  #dplyr::filter(tf_name %in% c("IRF1","IRF8","RELA","NFKB1","FOS","STAT1","SPI1", "CEBPB")) %>%
+  dplyr::filter(tf_name %in% c("IRF1","RELA","FOS","STAT1","SPI1")) %>%
   dplyr::mutate(tf_name = factor(tf_name, levels = rev(c("IRF1","IRF8","RELA","NFKB1","FOS","STAT1","SPI1", "CEBPB"))))
 
 #Calculate enrichment p-values
@@ -113,17 +114,26 @@ saveRDS(appear_enrihced_motifs, "results/ATAC/motif_analysis/caQTL_clusters_enri
 
 #Identify the fraction of peaks that disrupt enriched motifs
 fraction_disrupting_enriched_motifs = dplyr::filter(appear_enrihced_motifs, is_significant == TRUE) %>% 
-  dplyr::select(tf_name, cluster_id, cluster_size, cluster_disruption, fraction_baseline, fraction_peaks, fold_enrichment, p_enriched)
+  dplyr::select(tf_name, new_cluster_id, cluster_size, cluster_disruption, fraction_baseline, fraction_peaks, fold_enrichment, p_enriched)
 write.table(fraction_disrupting_enriched_motifs, "results/ATAC/motif_analysis/fraction_disrupting_enriched_motifs.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 
+#Add new motif names
+motif_map = data_frame(tf_name = c("IRF1","RELA","FOS","STAT1","SPI1"),
+                       motif_name = c("IRF","NF-kB","AP-1","STAT1","PU.1")) %>%
+  dplyr::mutate(motif_name = factor(motif_name, levels = rev(motif_name)))
+appear_enriched_renamed = dplyr::left_join(appear_enrihced_motifs, motif_map, by = "tf_name")
+
 #Make a plot of enriched motifs
-plot = ggplot(appear_enrihced_motifs, aes(y = tf_name, x = l2_fold, color = is_significant, size = -log10(p_enriched))) + 
-  facet_grid(cluster_id~.) + 
+plot = ggplot(appear_enriched_renamed, aes(y = motif_name, x = l2_fold, color = is_significant, size = -log10(p_enriched))) + 
+  facet_grid(new_cluster_id~.) + 
   geom_point() + 
-  scale_size(range = c(2,8)) + 
+  scale_size(range = c(1,7)) + 
   xlab("Log2 fold enrichment") +
-  ylab("TF motif name")
-ggsave("results/ATAC/motif_analysis/caQTL_clusters_enriched_motifs.pdf", plot = plot, height = 8, width = 6)
+  ylab("TF motif name") + 
+  theme_light() +
+  theme(legend.key = element_blank()) + 
+  theme(panel.margin = unit(0.2, "lines"))
+ggsave("results/ATAC/motif_analysis/caQTL_clusters_enriched_motifs.pdf", plot = plot, height = 6, width = 5)
 
 
 

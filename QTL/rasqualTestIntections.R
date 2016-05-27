@@ -52,6 +52,7 @@ interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 beta_list = extractAndProcessBetas(dplyr::select(interaction_hits, gene_id, snp_id), rasqual_selected_results, "naive")
 
 #Find QTLs that appear
+set.seed(42)
 appear_qtls = dplyr::filter(beta_list$beta_summaries, abs(naive) <= 0.59, max_abs_diff >= 0.59, max_abs_beta >= 0.59)
 appear_betas = dplyr::semi_join(beta_list$beta_summaries[,1:6], appear_qtls, by = c("gene_id", "snp_id"))
 appear_clusters = clusterBetasKmeans(appear_betas, 6) %>% dplyr::select(gene_id, snp_id, cluster_id) %>%
@@ -59,20 +60,34 @@ appear_clusters = clusterBetasKmeans(appear_betas, 6) %>% dplyr::select(gene_id,
 appear_plot = ggplot(appear_clusters, aes(x = condition_name, y = beta, group = paste(gene_id, snp_id))) + 
   geom_line() + facet_wrap(~cluster_id)
 
-#Make heatmap of effect sizes
-appear_betas = appear_clusters %>% dplyr::group_by(gene_id, snp_id) %>% dplyr::mutate(beta_scaled = beta/max(beta)) %>%
-  dplyr::left_join(gene_name_map, by = "gene_id")  %>% ungroup()
-effect_size_heatmap = ggplot(appear_betas, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + 
-  facet_grid(cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
-  scale_x_discrete(expand = c(0, 0)) +
-  scale_y_discrete(expand = c(0, 0)) +
-  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) +
-  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
-ggsave("results/ATAC/QTLs/properties/caQTLs_appear_kmeans_heatmap.png",effect_size_heatmap, width = 5, height = 7)
-
 #Calculate mean effect size in each cluster and condition
 appear_cluster_means = calculateClusterMeans(appear_clusters)
 cluster_sizes = calculateClusterSizes(appear_clusters)
+
+#Make heatmap of effect sizes
+appear_betas = appear_clusters %>% dplyr::group_by(gene_id, snp_id) %>% dplyr::mutate(beta_scaled = beta/max(beta)) %>%
+  dplyr::left_join(gene_name_map, by = "gene_id") %>% 
+  dplyr::semi_join(cluster_sizes, by = "cluster_id") %>% 
+  ungroup()
+
+#Reorder clusters
+cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(1,6,4,3,5,2))
+appear_betas = dplyr::left_join(appear_betas, cluster_reorder, by = "cluster_id")
+
+#Make a plot of effect sizes
+ylabel = paste(sum(cluster_sizes$count), "caQTLs")
+effect_size_heatmap = ggplot(appear_betas, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + 
+  facet_grid(new_cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
+  scale_x_discrete(expand = c(0, 0)) +
+  scale_y_discrete(expand = c(0, 0)) +
+  ylab(ylabel) + 
+  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Relative effect", midpoint = 0) +
+  theme_grey() +
+  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), 
+        axis.title.x = element_blank(), axis.text.x=element_text(angle = 15)) +
+  theme(panel.margin = unit(0.2, "lines"))
+ggsave("results/ATAC/QTLs/properties/caQTLs_appear_kmeans_heatmap.png",effect_size_heatmap, width = 4.5, height = 5.5)
+
 
 #Find QTLs that disappear
 #Look for QTLs that disappear after stimulation
@@ -92,13 +107,19 @@ disappear_cluster_means = calculateClusterMeans(disappear_clusters) %>%
 disappear_betas = disappear_clusters %>% dplyr::group_by(gene_id, snp_id) %>% dplyr::mutate(beta_scaled = beta/max(beta)) %>%
   dplyr::left_join(gene_name_map, by = "gene_id") %>%
   dplyr::semi_join(disappear_cluster_sizes, by = "cluster_id") %>% ungroup()
+
+ylabel = paste(sum(disappear_cluster_sizes$count), "caQTLs")
 dis_effect_size_heatmap = ggplot(disappear_betas, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + 
   facet_grid(cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
-  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) +
-  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
-ggsave("results/ATAC/QTLs/properties/caQTLs_disappear_kmeans_heatmap.png",dis_effect_size_heatmap, width = 5, height = 5)
+  ylab(ylabel) + 
+  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Relative effect", midpoint = 0) +
+  theme_grey() +
+  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), 
+        axis.title.x = element_blank(), axis.text.x=element_text(angle = 15)) +
+  theme(panel.margin = unit(0.2, "lines"))
+ggsave("results/ATAC/QTLs/properties/caQTLs_disappear_kmeans_heatmap.png",dis_effect_size_heatmap, width = 4.5, height = 4)
 
 #Export variable qtls
 variable_qtls = list(appear = appear_betas, disappear = disappear_betas)
