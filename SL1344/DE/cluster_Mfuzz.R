@@ -9,6 +9,7 @@ library("DESeq2")
 library("Mfuzz")
 library("pheatmap")
 library("gProfileR")
+library("cowplot")
 
 #### Import data ####
 #Load the raw eQTL dataset
@@ -75,6 +76,8 @@ cluster_order = tidyr::spread(cluster_means, condition_name, expression) %>% dpl
 
 cluster_plot_data = dplyr::left_join(cluster_exp, cluster_order, by = "cluster_id") %>% 
   dplyr::group_by(new_cluster_id)
+saveRDS(cluster_plot_data, "results/SL1344/DE/mFuzz_cluster_plot_data.rds")
+cluster_plot_data = readRDS("results/SL1344/DE/mFuzz_cluster_plot_data.rds")
 
 diff_exp_heatmap = ggplot(cluster_plot_data %>% dplyr::sample_frac(0.4), aes(x = condition_name, y = gene_id, fill = expression)) + 
   facet_grid(new_cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
@@ -85,6 +88,7 @@ diff_exp_heatmap = ggplot(cluster_plot_data %>% dplyr::sample_frac(0.4), aes(x =
   theme(axis.title.x = element_blank()) + 
   ylab("8758 genes") + 
   theme(panel.margin = unit(0.2, "lines"))
+
 ggsave("results/SL1344/DE/DE_clusters.pdf",diff_exp_heatmap, width = 4, height = 5.5)
 ggsave("results/SL1344/DE/DE_clusters.png",diff_exp_heatmap, width = 4, height = 5.5)
 

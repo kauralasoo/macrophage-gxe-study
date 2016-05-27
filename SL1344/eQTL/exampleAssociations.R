@@ -1,3 +1,5 @@
+library("devtools")
+library("dplyr")
 load_all("../seqUtils/")
 
 #Import expression data
@@ -13,6 +15,30 @@ atac_list$sample_metadata = dplyr::mutate(atac_list$sample_metadata,
 
 #Import genotypes
 vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
+
+#Make some boxplots
+#SPOPL gene
+spopl_data = plotEQTL("ENSG00000144228", "rs12621644", combined_expression_data$cqn, vcf_file$genotypes, 
+                      combined_expression_data$sample_metadata, combined_expression_data$gene_metadata, return_df = TRUE) 
+plotQtlRow(spopl_data) %>% 
+  ggplot2::ggsave("results/SL1344/eQTLs/example_loci/presentation/SPOPL_eQTL.pdf", ., width = 6, height = 2.5)
+dplyr::filter(spopl_data, condition_name %in% c("naive","IFNg")) %>% 
+  plotQtlCol() %>%
+  ggplot2::ggsave("results/SL1344/eQTLs/example_loci/presentation/SPOPL_eQTL_col.pdf", ., width = 2, height = 4)
+
+
+plotEQTL("ENSG00000169220", "rs12654812",combined_expression_data$cqn, vcf_file$genotypes, 
+         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata, return_df = TRUE) %>%
+  plotQtlRow() %>% 
+  ggplot2::ggsave("results/SL1344/eQTLs/example_loci/presentation/RGS14_eQTL.pdf", ., width = 6, height = 2.5)
+
+plotEQTL("ENSG00000144227", "rs12621644", combined_expression_data$cqn, vcf_file$genotypes, 
+        combined_expression_data$sample_metadata, combined_expression_data$gene_metadata, return_df = TRUE) %>%
+plotQtlRow() %>% 
+  ggplot2::ggsave("results/SL1344/eQTLs/example_loci/presentation/NXPH2_eQTL.pdf", ., width = 6, height = 2.5)
+
+
+
 
 
 #### Focus on the CTSC locus ####
@@ -61,11 +87,6 @@ plotEQTL("ATAC_peak_154958", "rs12621644", atac_list$exprs_cqn, vcf_file$genotyp
          atac_sample_meta, atac_list$gene_metadata) %>%
   ggsave("results/SL1344/eQTLs/example_loci/SPOPL/SPOPL_enhancer+3.pdf", ., width = 7, height = 7)
 
-spopl_data = plotEQTL("ENSG00000144228", "rs12621644", combined_expression_data$cqn, vcf_file$genotypes, 
-         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata, return_df = TRUE) 
-plotQtlRow(spopl_data) %>% 
-  ggsave("results/SL1344/eQTLs/example_loci/SPOPL/SPOPL_eQTL.pdf", ., width = 6, height = 2.5)
-
 
 
 
@@ -91,10 +112,6 @@ plotEQTL("ATAC_peak_239457", "rs12654812", atac_list$exprs_cqn, vcf_file$genotyp
          atac_sample_meta, atac_list$gene_metadata) %>%
   ggsave("results/SL1344/eQTLs/example_loci/RGS14/RGS14_enhancer2-2.pdf", ., width = 7, height = 7)
 
-plotEQTL("ENSG00000169220", "rs12654812",combined_expression_data$cqn, vcf_file$genotypes, 
-         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata, return_df = TRUE) %>%
-  plotQtlRow() %>% 
-  ggsave("results/SL1344/eQTLs/example_loci/RGS14/RGS14_eQTL.pdf", ., width = 6, height = 2.5)
 
 plotEQTL("ENSG00000146094", "rs12654812", eqtl_data_list$exprs_cqn, vcf_file$genotypes, 
          eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)  %>%
