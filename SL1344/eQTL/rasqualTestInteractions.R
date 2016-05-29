@@ -55,7 +55,7 @@ beta_list = extractAndProcessBetas(dplyr::select(interaction_hits, gene_id, snp_
 beta_list$beta_summaries = dplyr::mutate(beta_list$beta_summaries, max_naive_ratio = max_abs_beta/abs(naive))
 
 #Find QTLs that appear
-
+set.seed(42)
 appear_qtls = dplyr::filter(beta_list$beta_summaries, abs(naive) <= 0.59, max_abs_beta - abs(naive) >= 0.32)
 appear_betas = dplyr::semi_join(beta_list$beta_summaries[,1:6], appear_qtls, by = c("gene_id", "snp_id"))
 appear_clusters = clusterBetasKmeans(appear_betas, 6) %>% dplyr::select(gene_id, snp_id, cluster_id) %>%
@@ -67,13 +67,26 @@ ggsave("results/SL1344/eQTLs/properties/eQTLs_appear_kmeans.pdf",appear_plot, wi
 #Make heatmap of effect sizes
 appear_betas = appear_clusters %>% dplyr::group_by(gene_id, snp_id) %>% dplyr::mutate(beta_scaled = beta/max(beta)) %>%
   dplyr::left_join(gene_name_map, by = "gene_id")
+
+#Reorder clusters
+cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(6,5,4,1,3,2))
+appear_betas = dplyr::left_join(appear_betas, cluster_reorder, by = "cluster_id")
+
+#Count the number of qtls
+appear_count = dplyr::select(appear_betas, gene_id, snp_id) %>% unique() %>% nrow()
+ylabel = paste(appear_count, "eQTLs")
 effect_size_heatmap = ggplot(appear_betas, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + 
-  facet_grid(cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
+  facet_grid(new_cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
-  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) +
-  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
-ggsave("results/SL1344/eQTLs/properties/eQTLs_appear_kmeans_heatmap.pdf",effect_size_heatmap, width = 5, height = 7)
+  ylab(ylabel) + 
+  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Relative effect", midpoint = 0) +
+  theme_grey() +
+  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), 
+        axis.title.x = element_blank(), axis.text.x=element_text(angle = 15)) +
+  theme(panel.margin = unit(0.2, "lines"))
+ggsave("results/SL1344/eQTLs/properties/eQTLs_appear_kmeans_heatmap.pdf",effect_size_heatmap, width = 4.5, height = 5.5)
+ggsave("results/SL1344/eQTLs/properties/eQTLs_appear_kmeans_heatmap.png",effect_size_heatmap, width = 4.5, height = 5.5)
 
 
 #Calculate mean effect size in each cluster and condition
@@ -108,13 +121,20 @@ disappear_cluster_means = calculateClusterMeans(disappear_clusters) %>%
 disappear_betas = disappear_clusters %>% dplyr::group_by(gene_id, snp_id) %>% dplyr::mutate(beta_scaled = beta/max(beta)) %>%
   dplyr::left_join(gene_name_map, by = "gene_id") %>%
   dplyr::semi_join(disappear_cluster_sizes, by = "cluster_id")
+disappear_count = disappear_cluster_sizes$count %>% sum()
+ylabel = paste(disappear_count, "eQTLs")
 dis_effect_size_heatmap = ggplot(disappear_betas, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + 
   facet_grid(cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
-  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) +
-  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
-ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_kmeans_heatmap.pdf",dis_effect_size_heatmap, width = 5, height = 5)
+  ylab(ylabel) + 
+  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Relative effect", midpoint = 0) +
+  theme_grey() +
+  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), 
+        axis.title.x = element_blank(), axis.text.x=element_text(angle = 15)) +
+  theme(panel.margin = unit(0.2, "lines"))
+ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_kmeans_heatmap.pdf",dis_effect_size_heatmap, width = 4.5, height = 4)
+ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_kmeans_heatmap.png",dis_effect_size_heatmap, width = 4.5, height = 4)
 
 
 disappear_means_plot = ggplot(disappear_cluster_means, aes(x = condition_name, y = beta_mean, group = cluster_id)) + 
