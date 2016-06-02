@@ -24,14 +24,10 @@ snp_pos_df = vcf_file$snpspos %>%
   dplyr::transmute(seqnames = chr, start = pos, end = pos, strand = "+", snp_id = snpid)
 
 #Convert credible sets into gigantic data frame
-credible_sets_df = purrr::map_df(credible_sets, ~purrr::map_df(., 
-                                 ~dplyr::mutate(.,chr = as.character(chr))) %>% 
-                                 dplyr::filter(chr != "X"), .id = "condition_name")
+credible_sets_df = credibleSetsToDf(credible_sets)
 
 #Construct granges object
-credible_sets_granges = credible_sets_df %>% 
-  dplyr::transmute(condition_name, gene_id, snp_id, chr, seqnames = chr, start = pos, end = pos, strand = "+") %>% 
-  dataFrameToGRanges()
+credible_sets_granges = credibleSetsToGranges(credible_sets_df)
 
 #Find overlaps between credible sets
 olaps = findOverlaps(credible_sets_granges)
