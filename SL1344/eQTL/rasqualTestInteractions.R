@@ -133,8 +133,8 @@ dis_effect_size_heatmap = ggplot(disappear_betas, aes(x = condition_name, y = ge
   theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), 
         axis.title.x = element_blank(), axis.text.x=element_text(angle = 15)) +
   theme(panel.margin = unit(0.2, "lines"))
-ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_kmeans_heatmap.pdf",dis_effect_size_heatmap, width = 4.5, height = 4)
-ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_kmeans_heatmap.png",dis_effect_size_heatmap, width = 4.5, height = 4)
+ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_kmeans_heatmap.pdf",dis_effect_size_heatmap, width = 4.5, height = 3)
+ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_kmeans_heatmap.png",dis_effect_size_heatmap, width = 4.5, height = 3)
 
 
 disappear_means_plot = ggplot(disappear_cluster_means, aes(x = condition_name, y = beta_mean, group = cluster_id)) + 
