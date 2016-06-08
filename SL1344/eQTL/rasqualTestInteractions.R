@@ -7,7 +7,6 @@ load_all("macrophage-gxe-study/housekeeping/")
 library("ggplot2")
 load_all("~/software/rasqual/rasqualTools/")
 
-
 #### Import data ####
 #Load the raw eQTL dataset
 combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
@@ -279,3 +278,6 @@ SPOPL_read_counts = plotEQTL("ENSG00000144228", "rs12621644", combined_expressio
          combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
 ggsave("results/SL1344/SPOPL_between_individual.pdf", SPOPL_read_counts, width = 8, height = 8)
 
+
+SPOPL_read_counts = plotEQTL("ENSG00000168310", "rs34156200", combined_expression_data$cqn, vcf_file$genotypes, 
+                             combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
