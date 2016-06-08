@@ -70,5 +70,5 @@ if(!is.null(batch_id)){
 
 
 #Perform motif disruption analysis for a single peak and motif
-res = quantifyMotifDisruption(cisbp_pwm_enriched[["M6119_1.02"]], "ATAC_peak_145162","rs7594476", atac_data$gene_metadata, sequences, snp_info)
+#res = quantifyMotifDisruption(cisbp_pwm_enriched[["M6119_1.02"]], "ATAC_peak_145162","rs7594476", atac_data$gene_metadata, sequences, snp_info)
 
