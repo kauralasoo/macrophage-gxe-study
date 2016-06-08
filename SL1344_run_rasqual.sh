@@ -141,5 +141,15 @@ cat results/SL1344/rasqual/output/IFNg_500kb/IFNg_500kb.chr_*.eigenMT.txt | grep
 cat results/SL1344/rasqual/output/SL1344_500kb/SL1344_500kb.chr_*.eigenMT.txt | grep -v snps > results/SL1344/rasqual/output/SL1344_500kb/SL1344_500kb.eigenMT.txt
 cat results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.chr_*.eigenMT.txt | grep -v snps > results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.eigenMT.txt
 
+# Compress batches
+tar czf results/SL1344/rasqual/output/naive_500kb/batches.tar.gz results/SL1344/rasqual/output/naive_500kb/batches/ &
+tar czf results/SL1344/rasqual/output/IFNg_500kb/batches.tar.gz results/SL1344/rasqual/output/IFNg_500kb/batches/ &
+tar czf results/SL1344/rasqual/output/IFNg_SL1344_500kb/batches.tar.gz results/SL1344/rasqual/output/IFNg_SL1344_500kb/batches/ &
+tar czf results/SL1344/rasqual/output/SL1344_500kb/batches.tar.gz results/SL1344/rasqual/output/SL1344_500kb/batches/ &
+
+#Remove uncompressed batches
+rm -r results/SL1344/rasqual/output/*_500kb/batches/
+
+
 
 
