@@ -1,0 +1,3 @@
+#TF motif disruption events for caQTLs
+macrophage-chromatin/results/ATAC/motif_analysis/motif_disruption.txt
+
