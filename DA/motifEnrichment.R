@@ -92,7 +92,7 @@ cisbp_pwm_list = readRDS("results/ATAC/cisBP_PWMatrixList.rds")
 cisbp_pfm_list = readRDS("results/ATAC/cisBP_PFMatrixList.rds")
 
 #Make seqLogos for the enriched motifs
-enriched_motifs = dplyr::filter(enrichment, fold_enrichment > 1.2)
+enriched_motifs = dplyr::filter(enrichment, OR > 1.2)
 motif_list = as.list(cisbp_pfm_list)[enriched_motifs$motif_id]
 names(motif_list) = paste(enriched_motifs$tf_name, enriched_motifs$motif_id, sep = "::")
 pwm_list = purrr::map(motif_list, ~Matrix(.)) %>% purrr::map(~seqLogo::makePWM(./colSums(.)))
@@ -104,9 +104,23 @@ motif_ids = c("M2278_1.02", "M6119_1.02", "M4427_1.02","M1882_1.02", "M6308_1.02
               "M5292_1.02", "M1955_1.02","M6423_1.02", "M1884_1.02","M6457_1.02",
               "M4444_1.02","M1917_1.02","M5302_1.02","M6313_1.02","M2275_1.02","M2277_1.02")
 selected_motifs = dplyr::filter(enriched_motifs, motif_id %in% motif_ids) %>% 
-  dplyr::mutate(p_nominal = ifelse(p_nominal == 0, 1e-300, p_nominal))
+  dplyr::mutate(p_nominal = ifelse(fisher_pvalue == 0, 1e-300, fisher_pvalue)) %>%
+  dplyr::mutate(tf_name = factor(tf_name, levels = rev(tf_name)))
 write.table(selected_motifs, "results/ATAC/motif_analysis/cisBP_selected_enriched_motifs.txt", 
             row.names = FALSE, quote = FALSE)
+
+#Make a bg enrichment plot
+background_enrichment_plot = ggplot(selected_motifs, aes(y = tf_name, x = OR_log2, xmin = ci_lower_log2, xmax = ci_higher_log2)) + 
+  geom_point() + 
+  geom_errorbarh(aes(height = 0)) +
+  xlab("Log2 fold enrichment") +
+  ylab("TF motif name") + 
+  theme_light() +
+  scale_x_continuous(expand = c(0, 0), limits = c(0,3)) +
+  theme(legend.key = element_blank()) + 
+  theme(panel.margin = unit(0.2, "lines"))
+ggsave("results/ATAC/motif_analysis/motif_enrichment_in_all_peaks.pdf", plot = background_enrichment_plot, width = 4, height = 6)
+
 
 #Save selected motifs to disk
 motif_list = as.list(cisbp_pfm_list)[selected_motifs$motif_id]
