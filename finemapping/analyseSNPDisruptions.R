@@ -90,7 +90,7 @@ appear_disruptions = appear_cluster_members %>%
                           dplyr::arrange(-cluster_disruption), .collate = "rows") %>%
   dplyr::select(-clusters, -.row)
 
-#Group clusters
+#Combine QTL clusters into larger groups to increase power
 cluster_groups = data_frame(new_cluster_id = c(1:6), 
                             cluster_group_id = c("1","2-3","2-3","4","5-6","5-6"))
 grouped_clusters = dplyr::left_join(appear_disruptions, cluster_groups, by = "new_cluster_id") %>%

@@ -33,39 +33,43 @@ expressed_motifs = dplyr::filter(unique_motifs, gene_id %in% expressed_genes)
 mean_df = dplyr::mutate(mean_tpm, gene_id = rownames(mean_tpm)) %>%
   dplyr::left_join(dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name), by = "gene_id") %>% tbl_df()
 
+#Combine QTL clusters into larger groups to increase power
+cluster_groups = data_frame(new_cluster_id = c(1:7), 
+                            cluster_group_id = c("1-2","1-2","3","4-5","4-5","6-7","6-7"))
+grouped_clusters = dplyr::left_join(final_clusters, cluster_groups, by = "new_cluster_id") %>%
+  dplyr::transmute(gene_id, MEM.SHIP, new_cluster_id = cluster_group_id)
+
 #Calculate motif enrichments in each cluster
-cluster_list = plyr::dlply(final_clusters,.(new_cluster_id))
+cluster_list = plyr::dlply(grouped_clusters,.(new_cluster_id))
 cluster_enrichments = purrr::map(cluster_list, ~fimoRelativeEnrichment(.,NULL, fimo_hits_clean, atac_list$gene_metadata))
 filtered_enrichments = purrr::map(cluster_enrichments, ~dplyr::left_join(.,unique_motifs, by = "motif_id") %>%
                                    dplyr::semi_join(expressed_motifs, by = "motif_id") %>%
-                                   dplyr::arrange(-enrichment) )
+                                   dplyr::arrange(-OR_log2) )
 motif_enrichment_df = ldply(filtered_enrichments, .id = "cluster_name") %>% tbl_df()
 
 #Make a heatmap of motif enrichments
 #interesting_tfs = c("FOS","BATF3","POU2F1","NFKB1","IRF1","STAT1", "MAFB", "MEF2A")
 interesting_tfs = c("FOS","NFKB1","IRF1","STAT1", "MAFB", "MEF2A")
-tf_name_casual = data_frame(new_name = c("AP-1","NF-kB","IRF","STAT1", "MAFB","MEF2"), tf_name = interesting_tfs)
+tf_name_casual = data_frame(new_name = c("AP-1","NF-kB","IRF","STAT1", "MAFB","MEF2"), tf_name = interesting_tfs) %>%
+  dplyr::mutate(new_name = factor(new_name, levels = rev(new_name)))
 
+#Filter enrichments by TF
 selected_enrichments = dplyr::filter(motif_enrichment_df, tf_name %in% interesting_tfs) %>%
-  dplyr::mutate(l2fold = log(enrichment, 2)) %>%
-  dplyr::mutate(cluster_name = factor(as.character(cluster_name), 
-          levels =rev(c(1:9)))) %>%
-  dplyr::left_join(tf_name_casual, by = "tf_name") %>%
-  dplyr::mutate(new_name = factor(new_name, levels = c("AP-1","NF-kB","IRF","STAT1", "MAFB","MEF2")))
+  dplyr::left_join(tf_name_casual, by = "tf_name")
 
-#Make a plot of motif enrichments
-motif_enrichment_plot = ggplot2::ggplot(selected_enrichments, aes(x = new_name, y = cluster_name, fill = l2fold, label = round(l2fold,1))) + 
-    geom_tile() +
-    scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Log2 enrichment", midpoint = 0) +
-    geom_text() +
-    xlab("TF motif") + 
-    ylab("ATAC-seq peak cluster") + 
-    scale_x_discrete(expand = c(0, 0)) +
-    scale_y_discrete(expand = c(0, 0)) +
-    theme_light() #+
-    #theme(axis.text.x = element_text(angle = 15))
-motif_plot_switched = cowplot::switch_axis_position(motif_enrichment_plot, axis = "x")
-ggsave("results/ATAC/motif_analysis/motif_enrichment_in_clusters.pdf", plot = motif_plot_switched, width = 5, height = 5)
+#Make a line plot of enrichments
+motif_enrichment_plot = ggplot(selected_enrichments, aes(y = new_name, x = OR_log2, xmin = ci_lower_log2, xmax = ci_higher_log2)) + 
+  facet_grid(cluster_name~.) + 
+  geom_point() + 
+  geom_errorbarh(aes(height = 0)) +
+  xlab("Log2 fold enrichment") +
+  ylab("TF motif name") + 
+  theme_light() +
+  scale_x_continuous(expand = c(0, 0), limits = c(-4,4)) +
+  theme(legend.key = element_blank()) + 
+  theme(panel.margin = unit(0.2, "lines"))
+
+ggsave("results/ATAC/motif_analysis/motif_enrichment_in_clusters.pdf", plot = motif_enrichment_plot, width = 4, height = 6)
 
 
 
