@@ -49,7 +49,7 @@ design_matrix = constructDesignMatrix_SL1344(sample_ids = colnames(counts)) %>% 
   dplyr::filter(!(donor == "fpdl" & replicate == 2)) %>% #Remove second fpdl sample (ffdp)
   dplyr::filter(!(donor == "ougl" & replicate == 2)) %>% #Remove second ougl sample (dium)
   dplyr::filter(!(donor == "mijn")) %>% #Remove mijn (wrong line from CGAP)
-  dplyr::filter(!(donor == "qaqx")) %>% #Remove mijn (wrong line from CGAP) 
+  dplyr::filter(!(donor == "qaqx")) %>% #Remove qaqx (wrong line from CGAP) 
   dplyr::mutate(replicate = ifelse(donor == "babk",2,replicate)) %>% #Change babk replicate to two
   dplyr::arrange(donor)
 

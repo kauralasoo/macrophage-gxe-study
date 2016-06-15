@@ -281,3 +281,7 @@ ggsave("results/SL1344/SPOPL_between_individual.pdf", SPOPL_read_counts, width =
 
 SPOPL_read_counts = plotEQTL("ENSG00000168310", "rs34156200", combined_expression_data$cqn, vcf_file$genotypes, 
                              combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+
+plotEQTL("ENSG00000005844", "rs11574938", combined_expression_data$cqn, vcf_file$genotypes, 
+         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+

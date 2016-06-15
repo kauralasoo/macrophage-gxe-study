@@ -81,7 +81,7 @@ plotEQTL("ENSG00000169220", "rs56235845", combined_expression_data$cqn, vcf_file
          combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
 
 #Looks some other examples
-#ITGAL - IFNg specific, but extremely weak effect
+#ITGAL - IFNg specific, but extremely weak effect, no convincing chromatin QTL
 plotEQTL("ENSG00000005844", "rs11574938", combined_expression_data$cqn, vcf_file$genotypes, 
          combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
 dplyr::filter(min_pvalue_df, gene_id == "ENSG00000005844")
@@ -106,4 +106,16 @@ plotEQTL("ENSG00000143226", "rs4657041", combined_expression_data$cqn, vcf_file$
 IFNg_SL1344_pvalues = tabixFetchGenesQuick("ENSG00000143226", "results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.sorted.txt.gz", combined_expression_data$gene_metadata, cis_window = 5e5)[[1]]  %>% 
   dplyr::mutate(condition = "IFNg_SL1344")
 ggplot(IFNg_SL1344_pvalues, aes(x = pos, y = -log(p_nominal,10))) + geom_point()
+
+
+
+#Explore the ITGAL locus
+plotEQTL("ENSG00000005844", "rs11574938", combined_expression_data$cqn, vcf_file$genotypes, 
+         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+dplyr::filter(min_pvalue_df, gene_id == "ENSG00000005844")
+
+rasqualTools::tabixFetchSNPsQuick("rs11574938", atac_tabix_list$IFNg, vcf_file$snpspos) %>% 
+  dplyr::arrange(p_nominal) %>% dplyr::select(gene_id, p_nominal, n_feature_snps)
+
+
 
