@@ -60,20 +60,24 @@ selected_terms = c("Antigen processing and presentation","cell death",
 selected_terms = c("Antigen processing and presentation","cell death",
                    "Cell cycle", "TNF signaling pathway",
                    "type I interferon receptor binding", "cellular response to type I interferon",
-                   "response to interferon-gamma","locomotion","Jak-STAT signaling pathway","Lactic acidosis", "ncRNA processing")
+                   "response to interferon-gamma","locomotion","Jak-STAT signaling pathway", "ncRNA processing")
+renamed_terms = c("Antigen presentation", "Cell death", "Cell cycle", "TNF signalling", "Type I IFN", "Type I IFN response", 
+                  "IFNg response", "Locomotion", "Jak-STAT signalling", "ncRNA processing")
+new_names = data_frame(term.name = selected_terms, new_term_name = renamed_terms)
 
 #Make a plot
 plot_dataset = dplyr::filter(go_df, term.name %in% selected_terms) %>% 
   dplyr::mutate(log10p = -log(p.value,10)) %>%
-  dplyr::filter(log10p > 8)
-plot = ggplot(plot_dataset, aes(x = log10p, y = term.name)) + 
+  dplyr::filter(log10p > 8) %>% 
+  dplyr::left_join(new_names, by = "term.name")
+plot = ggplot(plot_dataset, aes(x = log10p, y = new_term_name)) + 
   facet_grid(cluster_id~.,scales = "free_y", space = "free_y") + 
   geom_point() + 
   scale_x_continuous(limits = c(0,38)) + 
   theme_light() + 
   xlab("-log10 p-value") + 
   theme(axis.title.y = element_blank())
-ggsave("results/SL1344/DE/DE_clusters_GO_enrichment.pdf", plot = plot, width = 4, height = 6)
+ggsave("results/SL1344/DE/DE_clusters_GO_enrichment.pdf", plot = plot, width = 3, height = 5.5)
 
 
 

@@ -8,8 +8,6 @@ library("ggplot2")
 library("DESeq2")
 library("Mfuzz")
 library("pheatmap")
-library("gProfileR")
-library("cowplot")
 
 #### Import data ####
 #Load the raw eQTL dataset
