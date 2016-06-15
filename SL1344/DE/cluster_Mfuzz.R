@@ -95,56 +95,7 @@ ggsave("results/SL1344/DE/DE_clusters.png",diff_exp_heatmap, width = 4, height =
 #Perform GO analysis
 clusters = dplyr::select(cluster_plot_data, new_cluster_id, gene_id) %>% unique() %>%
   dplyr::left_join(log2FC_table, by = "gene_id") %>% dplyr::ungroup()
-
-### Perform enrichment analysis with g:Profiler
-#Salmonella both
-cluster1 = (dplyr::filter(clusters, new_cluster_id == 1) %>% dplyr::arrange(-IFNg_SL1344_log2FC))$gene_id %>% 
-  gprofiler(max_set_size = 3000, ordered_query = TRUE) %>%
-  dplyr::select(term.size, query.size, overlap.size, p.value, term.name, domain, term.id) %>% 
-  dplyr::arrange(p.value) %>% tbl_df()
-
-cluster2 = (dplyr::filter(clusters, new_cluster_id == 2) %>% dplyr::arrange(-SL1344_log2FC))$gene_id %>% 
-  gprofiler(max_set_size = 3000, ordered_query = TRUE) %>%
-  dplyr::select(term.size, query.size, overlap.size, p.value, term.name, domain, term.id) %>% 
-  dplyr::arrange(p.value) %>% tbl_df()
-
-cluster3 = (dplyr::filter(clusters, new_cluster_id == 3) %>% dplyr::arrange(-IFNg_SL1344_log2FC))$gene_id %>% 
-  gprofiler(max_set_size = 3000, ordered_query = TRUE) %>%
-  dplyr::select(term.size, query.size, overlap.size, p.value, term.name, domain, term.id) %>% 
-  dplyr::arrange(p.value) %>% tbl_df()
-
-cluster4 = (dplyr::filter(clusters, new_cluster_id == 4) %>% dplyr::arrange(-IFNg_log2FC))$gene_id %>% 
-  gprofiler(max_set_size = 3000, ordered_query = TRUE) %>%
-  dplyr::select(term.size, query.size, overlap.size, p.value, term.name, domain, term.id) %>% 
-  dplyr::arrange(p.value) %>% tbl_df()
-
-cluster5 = (dplyr::filter(clusters, new_cluster_id == 5) %>% dplyr::arrange(-IFNg_log2FC))$gene_id %>% 
-  gprofiler(max_set_size = 3000, ordered_query = TRUE) %>%
-  dplyr::select(term.size, query.size, overlap.size, p.value, term.name, domain, term.id) %>% 
-  dplyr::arrange(p.value) %>% tbl_df()
-
-cluster6 = (dplyr::filter(clusters, new_cluster_id == 6) %>% dplyr::arrange(IFNg_log2FC))$gene_id %>% 
-  gprofiler(max_set_size = 3000, ordered_query = TRUE) %>%
-  dplyr::select(term.size, query.size, overlap.size, p.value, term.name, domain, term.id) %>% 
-  dplyr::arrange(p.value) %>% tbl_df()
-
-cluster7 = (dplyr::filter(clusters, new_cluster_id == 7) %>% dplyr::arrange(SL1344_log2FC))$gene_id %>% 
-  gprofiler(max_set_size = 3000, ordered_query = TRUE) %>%
-  dplyr::select(term.size, query.size, overlap.size, p.value, term.name, domain, term.id) %>% 
-  dplyr::arrange(p.value) %>% tbl_df()
-
-cluster8 = (dplyr::filter(clusters, new_cluster_id == 8) %>% dplyr::arrange(IFNg_SL1344_log2FC))$gene_id %>% 
-  gprofiler(max_set_size = 3000, ordered_query = TRUE) %>%
-  dplyr::select(term.size, query.size, overlap.size, p.value, term.name, domain, term.id) %>% 
-  dplyr::arrange(p.value) %>% tbl_df()
-
-cluster9 = (dplyr::filter(clusters, new_cluster_id == 9) %>% dplyr::arrange(IFNg_SL1344_log2FC))$gene_id %>% 
-  gprofiler(max_set_size = 3000, ordered_query = TRUE) %>%
-  dplyr::select(term.size, query.size, overlap.size, p.value, term.name, domain, term.id) %>% 
-  dplyr::arrange(p.value) %>% tbl_df()
-
-gprofiler_results = list(cluster1, cluster2, cluster3, cluster4, cluster5, cluster6, cluster7, cluster8, cluster9)
-saveRDS(gprofiler_results, "results/SL1344/DE/Mfuzz_clustering_go_enrichments.rds")
+saveRDS(clusters, "results/SL1344/DE/mFuzz_clusters_for_GO_analysis.rds")
 
 #Save cluster membbership information to disk
 write.table(cluster_df,"results/SL1344/DE/mfuzz_cluster_memberships.txt", sep = "\t", row.names = FALSE, quote = FALSE)
