@@ -14,7 +14,7 @@ gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, g
 #Import the VCF file
 vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
-#Import QTL variants
+#Import eQTL variants
 rasqual_min_pvalues = readRDS("results/SL1344/eQTLs/rasqual_min_pvalues.rds")
 variable_qtls = readRDS("results/SL1344/eQTLs/appeat_disappear_eQTLs.rds")
 rasqual_qtl_df = extractQTLsFromList(rasqual_min_pvalues, fdr_cutoff = 0.1)
@@ -23,39 +23,91 @@ rasqual_qtl_df = extractQTLsFromList(rasqual_min_pvalues, fdr_cutoff = 0.1)
 joint_pairs = dplyr::select(rasqual_qtl_df, gene_id, snp_id) %>% unique() 
 filtered_pairs = filterHitsR2(joint_pairs, vcf_file$genotypes, .8)
 
+#Import ATAC QTL variants
+atac_min_pvalues = readRDS("../macrophage-chromatin/results/ATAC/QTLs/rasqual_min_pvalues.rds")
+atac_qtl_df = extractQTLsFromList(atac_min_pvalues, fdr_cutoff = 0.1)
+atac_joint_pairs = dplyr::select(atac_qtl_df, gene_id, snp_id) %>% unique() 
+atac_filtered_pairs = filterHitsR2(atac_joint_pairs, vcf_file$genotypes, .8)
+
 #### GWAS overlaps ####
 #Import GWAS catalog
 filtered_catalog = readRDS("annotations/gwas_catalog_v1.0.1-downloaded_2016-03-02.filtered.rds")
 n_loci = dplyr::group_by(filtered_catalog, trait) %>% dplyr::summarise(n_loci = length(catalog_snp_id))
 
-#All GWAS overlaps
+#All GWAS eQTL overlaps
 all_olaps = findGWASOverlaps(filtered_pairs, filtered_catalog, vcf_file, min_r2 = 0.7)
 all_gwas_hits = dplyr::left_join(all_olaps, gene_name_map, by = "gene_id") %>%
   dplyr::select(gene_name, gene_id, snp_id, gwas_snp_id, R2, trait, gwas_pvalue)
 write.table(all_gwas_hits, "results/SL1344/eQTLs/all_gwas_overlaps.txt", row.names = FALSE, sep = "\t", quote = FALSE)
 
+#All GWAS caQTL overlaps
+atac_olaps = findGWASOverlaps(atac_filtered_pairs, filtered_catalog, vcf_file, min_r2 = 0.7)
+saveRDS(atac_olaps, "results/SL1344/eQTLs/ATAC_gwas_overlaps.rds")
+atac_olaps = readRDS("results/SL1344/eQTLs/ATAC_gwas_overlaps.rds")
+atac_gwas_hits = dplyr::transmute(atac_olaps, gene_name = gene_id, gene_id, chr = chr.x, pos = pos.x, snp_id, gwas_snp_id, R2, trait, gwas_pvalue)
+
 #Rank traits by overlap size
 ranked_traits = rankTraitsByOverlapSize(dplyr::filter(all_gwas_hits, R2 > 0.78), filtered_catalog, min_overlap = 5)
 write.table(ranked_traits, "results/SL1344/eQTLs/relative_gwas_overlaps_R08.txt", row.names = FALSE, sep = "\t", quote = FALSE)
+
+#All GWAS caQTL overlaps
+all_olaps = findGWASOverlaps(atac_filtered_pairs, filtered_catalog, vcf_file, min_r2 = 0.7)
 
 #Find which QTLs are condition specific
 appear_eqtls = dplyr::select(variable_qtls$appear, gene_id, snp_id, cluster_id) %>% unique()
 appear_gwas_hits = dplyr::semi_join(all_gwas_hits, appear_eqtls, by = c("gene_id"))
 
 #Explore IBD traits
-ibd_appear_olaps = dplyr::filter(appear_gwas_hits, trait %in% c("Ulcerative colitis", "Inflammatory bowel disease","Crohn's disease"))
+appear_olaps = dplyr::filter(appear_gwas_hits, trait %in% c("Ulcerative colitis", "Inflammatory bowel disease","Crohn's disease"))
 
-#Import GWAS summary staistics around specific loci
-snp_ranges = dplyr::filter(vcf_file$snpspos, snpid %in% unique(ibd_appear_olaps$snp_id)) %>% 
-  dplyr::transmute(seqnames = chr, start = pos - 100000, end = pos + 100000, strand = "+", snp_id = snpid) %>% 
-  dataFrameToGRanges()
-ibd_pvalues = scanTabixDataFrame("/Volumes/JetDrive/databases/GWAS/IBD/EUR.IBD.gwas.bed.GRCh38.sorted.txt.gz", snp_ranges, col_names = FALSE)
+#Plot QTL overlaps for IBD
+
+#Extract overlapping IBD GWAS hits and consturct Granges
+ibd_appear_olaps = dplyr::filter(appear_gwas_hits, trait %in% c("Inflammatory bowel disease")) %>%
+  addVariantCoords(vcf_file$snpspos)
+ibd_ranges = constructGWASRanges(ibd_appear_olaps, 200000)
+gwas_colnames = c("chr","pos","pos2","snp_id","A1","A2", "INFO","OR","SE","p_nominal")
+ibd_pvalues = scanTabixDataFrame("/Volumes/JetDrive/databases/GWAS/IBD/EUR.IBD.gwas.bed.GRCh38.sorted.txt.gz", ibd_ranges, col_names = gwas_colnames)
+ibd_meta_pvalues = scanTabixDataFrame("/Volumes/JetDrive/databases/GWAS/IBD/meta-analysis/IBD_trans_ethnic_bed.GRCh38.sorted.txt.gz", ibd_ranges, col_names = gwas_colnames)
+
+plot(ibd_meta_pvalues[[5]]$pos, -log(ibd_meta_pvalues[[5]]$p_nominal, 10))
+
+
+#Fetch gwas hits
+eqtl_pvalues = tabixFetchGenes(ibd_ranges, "results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.sorted.txt.gz")
+plot(eqtl_pvalues[[5]]$pos, -log(eqtl_pvalues[[5]]$p_nominal, 10))
+
+#Fetch atac hits
+atac_ranges = dplyr::filter(atac_gwas_hits, trait == "Inflammatory bowel disease", gwas_snp_id == "rs12654812") %>% constructGWASRanges(200000)
+atac_pvalues = tabixFetchGenes(atac_ranges, "../macrophage-chromatin/results/ATAC/rasqual/output/naive_100kb/naive_100kb.sorted.txt.gz")
+
+#RGS14 example
+eqtl = eqtl_pvalues[[5]] %>%  dplyr::mutate(phenotype = "RGS14 eQTL") %>% dplyr::select(chr, pos, phenotype, p_nominal)
+ibd = ibd_pvalues[[5]] %>% dplyr::mutate(phenotype = "IBD") %>% dplyr::select(chr, pos, phenotype, p_nominal) %>%
+  dplyr::semi_join(eqtl, by = c("chr","pos"))
+ibd_meta = dplyr::transmute(ibd_meta_pvalues[[5]], chr, pos, phenotype = "IBD meta-analysis", p_nominal)
+atac = dplyr::transmute(atac_pvalues[[1]], chr, pos, phenotype = "RGS14 caQTL", p_nominal)
+res = rbind(ibd, eqtl, ibd_meta, atac)
+rgs14_plot = ggplot(res, aes(x = pos, y = -log(p_nominal,10))) + 
+  geom_point() + 
+  facet_wrap(~phenotype, ncol = 1, scale = "free_y") + 
+  xlab("Chromosome 5 position")
+ggsave("results/SL1344/eQTLs/RGS14_manhattan.pdf", plot = rgs14_plot, width = 6, height = 6)
 
 
 
+#Ulcerative colitis
+uc_ranges = dplyr::filter(appear_gwas_hits, trait %in% c("Ulcerative colitis")) %>%
+  addVariantCoords(vcf_file$snpspos) %>%
+  constructGWASRanges(100000)
+uc_pvalues = scanTabixDataFrame("/Volumes/JetDrive/databases/GWAS/IBD/EUR.UC.gwas.bed.GRCh38.sorted.txt.gz", uc_ranges, col_names = gwas_colnames)
 
-
-
+#Chron's disease
+cd_ranges = dplyr::filter(appear_gwas_hits, trait %in% c("Crohn's disease")) %>%
+  addVariantCoords(vcf_file$snpspos) %>%
+  constructGWASRanges(100000)
+cd_pvalues = scanTabixDataFrame("/Volumes/JetDrive/databases/GWAS/IBD/EUR.CD.gwas.bed.GRCh38.sorted.txt.gz", cd_ranges, col_names = gwas_colnames)
+plot(cd_pvalues[[2]]$pos, -log(cd_pvalues[[2]]$p_nominal, 10))
 
 
 
