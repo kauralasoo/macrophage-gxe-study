@@ -36,22 +36,21 @@ n_loci = dplyr::group_by(filtered_catalog, trait) %>% dplyr::summarise(n_loci = 
 
 #All GWAS eQTL overlaps
 all_olaps = findGWASOverlaps(filtered_pairs, filtered_catalog, vcf_file, min_r2 = 0.7)
+saveRDS(all_olaps, "results/SL1344/eQTLs/GWAS_overlaps/RNA_gwas_overlaps.rds")
+all_olaps = readRDS("results/SL1344/eQTLs/GWAS_overlaps/RNA_gwas_overlaps.rds")
 all_gwas_hits = dplyr::left_join(all_olaps, gene_name_map, by = "gene_id") %>%
   dplyr::select(gene_name, gene_id, snp_id, gwas_snp_id, R2, trait, gwas_pvalue)
-write.table(all_gwas_hits, "results/SL1344/eQTLs/all_gwas_overlaps.txt", row.names = FALSE, sep = "\t", quote = FALSE)
+write.table(all_gwas_hits, "results/SL1344/eQTLs/GWAS_overlaps/all_gwas_overlaps.txt", row.names = FALSE, sep = "\t", quote = FALSE)
 
 #All GWAS caQTL overlaps
 atac_olaps = findGWASOverlaps(atac_filtered_pairs, filtered_catalog, vcf_file, min_r2 = 0.7)
 saveRDS(atac_olaps, "results/SL1344/eQTLs/ATAC_gwas_overlaps.rds")
-atac_olaps = readRDS("results/SL1344/eQTLs/ATAC_gwas_overlaps.rds")
+atac_olaps = readRDS("results/SL1344/eQTLs/GWAS_overlaps/ATAC_gwas_overlaps.rds")
 atac_gwas_hits = dplyr::transmute(atac_olaps, gene_name = gene_id, gene_id, chr = chr.x, pos = pos.x, snp_id, gwas_snp_id, R2, trait, gwas_pvalue)
 
 #Rank traits by overlap size
 ranked_traits = rankTraitsByOverlapSize(dplyr::filter(all_gwas_hits, R2 > 0.78), filtered_catalog, min_overlap = 5)
-write.table(ranked_traits, "results/SL1344/eQTLs/relative_gwas_overlaps_R08.txt", row.names = FALSE, sep = "\t", quote = FALSE)
-
-#All GWAS caQTL overlaps
-all_olaps = findGWASOverlaps(atac_filtered_pairs, filtered_catalog, vcf_file, min_r2 = 0.7)
+write.table(ranked_traits, "results/SL1344/eQTLs/GWAS_overlaps/relative_gwas_overlaps_R08.txt", row.names = FALSE, sep = "\t", quote = FALSE)
 
 #Find which QTLs are condition specific
 appear_eqtls = dplyr::select(variable_qtls$appear, gene_id, snp_id, cluster_id) %>% unique()
@@ -61,7 +60,6 @@ appear_gwas_hits = dplyr::semi_join(all_gwas_hits, appear_eqtls, by = c("gene_id
 appear_olaps = dplyr::filter(appear_gwas_hits, trait %in% c("Ulcerative colitis", "Inflammatory bowel disease","Crohn's disease"))
 
 #Plot QTL overlaps for IBD
-
 #Extract overlapping IBD GWAS hits and consturct Granges
 ibd_appear_olaps = dplyr::filter(appear_gwas_hits, trait %in% c("Inflammatory bowel disease")) %>%
   addVariantCoords(vcf_file$snpspos)
@@ -77,22 +75,27 @@ plot(ibd_meta_pvalues[[5]]$pos, -log(ibd_meta_pvalues[[5]]$p_nominal, 10))
 eqtl_pvalues = tabixFetchGenes(ibd_ranges, "results/SL1344/rasqual/output/IFNg_SL1344_500kb/IFNg_SL1344_500kb.sorted.txt.gz")
 plot(eqtl_pvalues[[5]]$pos, -log(eqtl_pvalues[[5]]$p_nominal, 10))
 
+#Fetch fastQTL p-values
+fastqtl_pvalues = fastqtlTabixFetchGenes(ibd_ranges, "/Volumes/JetDrive/databases/SL1344/fastqtl/IFNg_SL1344_500kb_pvalues.sorted.txt.gz")
+plot(fastqtl_pvalues[[5]]$pos, -log(fastqtl_pvalues[[5]]$p_nominal, 10))
+
 #Fetch atac hits
 atac_ranges = dplyr::filter(atac_gwas_hits, trait == "Inflammatory bowel disease", gwas_snp_id == "rs12654812") %>% constructGWASRanges(200000)
 atac_pvalues = tabixFetchGenes(atac_ranges, "../macrophage-chromatin/results/ATAC/rasqual/output/naive_100kb/naive_100kb.sorted.txt.gz")
 
 #RGS14 example
-eqtl = eqtl_pvalues[[5]] %>%  dplyr::mutate(phenotype = "RGS14 eQTL") %>% dplyr::select(chr, pos, phenotype, p_nominal)
+eqtl = eqtl_pvalues[[5]] %>%  dplyr::mutate(phenotype = "RGS14 eQTL (RASQUAL)") %>% dplyr::select(chr, pos, phenotype, p_nominal)
+fastqtl = fastqtl_pvalues[[5]] %>%  dplyr::mutate(phenotype = "RGS14 eQTL (linear)") %>% dplyr::select(chr, pos, phenotype, p_nominal)
 ibd = ibd_pvalues[[5]] %>% dplyr::mutate(phenotype = "IBD") %>% dplyr::select(chr, pos, phenotype, p_nominal) %>%
   dplyr::semi_join(eqtl, by = c("chr","pos"))
 ibd_meta = dplyr::transmute(ibd_meta_pvalues[[5]], chr, pos, phenotype = "IBD meta-analysis", p_nominal)
 atac = dplyr::transmute(atac_pvalues[[1]], chr, pos, phenotype = "RGS14 caQTL", p_nominal)
-res = rbind(ibd, eqtl, ibd_meta, atac)
+res = rbind(ibd, eqtl, fastqtl, ibd_meta, atac)
 rgs14_plot = ggplot(res, aes(x = pos, y = -log(p_nominal,10))) + 
   geom_point() + 
   facet_wrap(~phenotype, ncol = 1, scale = "free_y") + 
   xlab("Chromosome 5 position")
-ggsave("results/SL1344/eQTLs/RGS14_manhattan.pdf", plot = rgs14_plot, width = 6, height = 6)
+ggsave("results/SL1344/eQTLs/GWAS_overlaps/RGS14_manhattan.pdf", plot = rgs14_plot, width = 6, height = 8)
 
 
 
