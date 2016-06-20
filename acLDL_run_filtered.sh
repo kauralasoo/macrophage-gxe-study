@@ -49,5 +49,11 @@ echo "rasqualToEigenMT" | python ~/software/utils/submitJobs.py --MEM 1000 --job
 cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/submitJobs.py --MEM 2000 --ncores 4 --jobname eigenMTbyChromosome2 --command "python ~/software/utils/eigenMTbyChromosome.py --genepos results/acLDL/rasqual/input/gene_positions.txt --chromosome_dir genotypes/acLDL/imputed_20151005/chromosomes_INFO_07/ --QTL results/acLDL/rasqual/output_filtered/Ctrl_500kb/Ctrl_500kb.eigenMT_input.txt --out_prefix results/acLDL/rasqual/output_filtered/Ctrl_500kb/Ctrl_500kb --cis_dist 1e7 --eigenMT_path ~/software/eigenMT/eigenMT.py"
 cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/submitJobs.py --MEM 2000 --ncores 4 --jobname eigenMTbyChromosome --command "python ~/software/utils/eigenMTbyChromosome.py --genepos results/acLDL/rasqual/input/gene_positions.txt --chromosome_dir genotypes/acLDL/imputed_20151005/chromosomes_INFO_07/ --QTL results/acLDL/rasqual/output_filtered/AcLDL_500kb/AcLDL_500kb.eigenMT_input.txt --out_prefix results/acLDL/rasqual/output_filtered/AcLDL_500kb/AcLDL_500kb --cis_dist 1e7 --eigenMT_path ~/software/eigenMT/eigenMT.py"
 
+# Concat eigenMT results
+cat results/acLDL/rasqual/output_filtered/Ctrl_500kb/Ctrl_500kb.chr_*.eigenMT.txt | grep -v snps > results/acLDL/rasqual/output_filtered/Ctrl_500kb/Ctrl_500kb.eigenMT.txt
+cat results/acLDL/rasqual/output_filtered/AcLDL_500kb/AcLDL_500kb.chr_*.eigenMT.txt | grep -v snps > results/acLDL/rasqual/output_filtered/AcLDL_500kb/AcLDL_500kb.eigenMT.txt
+
+rm results/acLDL/rasqual/output_filtered/*/*chr*
+
 
 

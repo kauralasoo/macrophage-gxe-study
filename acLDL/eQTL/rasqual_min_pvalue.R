@@ -20,6 +20,15 @@ min_pvalue_list = list(Ctrl = ctrl_eigen_pvalue,
                        AcLDL = acldl_eigen_pvalue)
 saveRDS(min_pvalue_list, "results/acLDL/eQTLs/acLDL_rasqual_min_pvalues.rds")
 
+#Extract minimal p-value for each condition (filtered)
+ctrl_eigen_pvalue = eigenMTImportResults("results/acLDL/rasqual/output_filtered/Ctrl_500kb.eigenMT.txt")
+acldl_eigen_pvalue = eigenMTImportResults("results/acLDL/rasqual/output_filtered/AcLDL_500kb.eigenMT.txt")
+
+min_pvalue_list_filtered = list(Ctrl = ctrl_eigen_pvalue,
+                       AcLDL = acldl_eigen_pvalue)
+saveRDS(min_pvalue_list_filtered, "results/acLDL/eQTLs/acLDL_rasqual_min_pvalues_filtered.rds")
+
+
 #Import fastQTL p-values from disk
 ctrl_perm_pvalue = importFastQTLTable("results/acLDL/fastqtl/output/Ctrl_permuted.txt.gz")
 acldl_perm_pvalue = importFastQTLTable("results/acLDL/fastqtl/output/AcLDL_permuted.txt.gz")
