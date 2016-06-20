@@ -82,6 +82,8 @@ plot(fastqtl_pvalues[[5]]$pos, -log(fastqtl_pvalues[[5]]$p_nominal, 10))
 #Fetch atac hits
 atac_ranges = dplyr::filter(atac_gwas_hits, trait == "Inflammatory bowel disease", gwas_snp_id == "rs12654812") %>% constructGWASRanges(200000)
 atac_pvalues = tabixFetchGenes(atac_ranges, "../macrophage-chromatin/results/ATAC/rasqual/output/naive_100kb/naive_100kb.sorted.txt.gz")
+atac_fastqtl_pvalues = fastqtlTabixFetchGenes(atac_ranges, "/Volumes/JetDrive/databases/ATAC/naive_100kb_pvalues.sorted.txt.gz")
+
 
 #RGS14 example
 eqtl = eqtl_pvalues[[5]] %>%  dplyr::mutate(phenotype = "RGS14 eQTL (RASQUAL)") %>% dplyr::select(chr, pos, phenotype, p_nominal)
@@ -89,12 +91,13 @@ fastqtl = fastqtl_pvalues[[5]] %>%  dplyr::mutate(phenotype = "RGS14 eQTL (linea
 ibd = ibd_pvalues[[5]] %>% dplyr::mutate(phenotype = "IBD") %>% dplyr::select(chr, pos, phenotype, p_nominal) %>%
   dplyr::semi_join(eqtl, by = c("chr","pos"))
 ibd_meta = dplyr::transmute(ibd_meta_pvalues[[5]], chr, pos, phenotype = "IBD meta-analysis", p_nominal)
-atac = dplyr::transmute(atac_pvalues[[1]], chr, pos, phenotype = "RGS14 caQTL", p_nominal)
+atac = dplyr::transmute(atac_fastqtl_pvalues[[1]], chr, pos, phenotype = "RGS14 caQTL", p_nominal)
 res = rbind(ibd, eqtl, fastqtl, ibd_meta, atac)
 rgs14_plot = ggplot(res, aes(x = pos, y = -log(p_nominal,10))) + 
   geom_point() + 
   facet_wrap(~phenotype, ncol = 1, scale = "free_y") + 
   xlab("Chromosome 5 position")
+rgs14_plot
 ggsave("results/SL1344/eQTLs/GWAS_overlaps/RGS14_manhattan.pdf", plot = rgs14_plot, width = 6, height = 8)
 
 
