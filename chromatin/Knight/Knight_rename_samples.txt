@@ -1,0 +1,16 @@
+ERR466201	Bcell_rep1_naive_CIITA
+ERR466205	Bcell_rep1_naive_RFX5
+ERR466195	Bcell_rep2_naive_CIITA
+ERR466202	Bcell_rep2_naive_RFX5
+ERR466200	Bcell_rep1_naive_input
+ERR466191	Bcell_rep2_naive_input
+ERR466199	MO_rep1_naive_CIITA
+ERR466196	MO_rep1_naive_RFX5
+ERR466198	MO_rep2_naive_CIITA
+ERR466192	MO_rep2_naive_RFX5
+ERR466197	MO_rep1_IFNg_CIITA
+ERR466193	MO_rep1_IFNg_RFX5
+ERR466206	MO_rep2_IFNg_CIITA
+ERR466203	MO_rep2_IFNg_RFX5
+ERR466204	MO_rep1_naive_input
+ERR466194	MO_rep2_naive_input
