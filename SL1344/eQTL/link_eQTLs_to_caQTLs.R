@@ -14,22 +14,26 @@ combined_expression_data$sample_metadata$condition_name = factor(combined_expres
                                                                  levels = c("naive", "IFNg", "SL1344", "IFNg_SL1344"))
 gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name)
 
-#Import RNA and ATAC credible sets
-rna_cs = readRDS("results/SL1344/eQTLs/rasqual_credible_sets.rds")
-atac_cs = readRDS("../macrophage-chromatin/results/ATAC/QTLs/rasqual_credible_sets.rds")
+#Import the VCF file
+vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
-#Convert credible sets to data_frame
-rna_df = credibleSetsToDf(rna_cs) %>% credibleSetsToGranges()
-atac_df = credibleSetsToDf(atac_cs) %>% credibleSetsToGranges()
+#Link eQTLs to caQTLs based on R2 overlap
+#Import lead eQTL SNPs
+rasqual_min_pvalues = readRDS("results/SL1344/eQTLs/rasqual_min_pvalues.rds")
+rasqual_qtl_df = extractQTLsFromList(rasqual_min_pvalues, fdr_cutoff = 0.1)
+joint_pairs = dplyr::select(rasqual_qtl_df, gene_id, snp_id) %>% unique() 
+filtered_pairs = filterHitsR2(joint_pairs, vcf_file$genotypes, .8)
 
-#Find pairwise overlaps between caQTLs and eQTLs
-pairwise_olaps = findCredibleSetOverlaps(atac_df, rna_df)
+#Import ATAC QTL variants
+atac_min_pvalues = readRDS("../macrophage-chromatin/results/ATAC/QTLs/rasqual_min_pvalues.rds")
+atac_qtl_df = extractQTLsFromList(atac_min_pvalues, fdr_cutoff = 0.1)
+atac_joint_pairs = dplyr::select(atac_qtl_df, gene_id, snp_id) %>% unique() 
+atac_filtered_pairs = filterHitsR2(atac_joint_pairs, vcf_file$genotypes, .8)
 
-#Calculate jaccard indexes
-pairwise_jaccard = purrr::by_row(pairwise_shared, credibleSetJaccard, atac_cs, rna_cs, .collate = "rows")
-shared_qtls = dplyr::filter(pairwise_jaccard, min_jaccard > 0.8) %>% 
-  dplyr::select(master_id, dependent_id) %>% unique() %>% 
-  dplyr::rename(peak_id = master_id, gene_id = dependent_id)
+#Find overlaps using the GWAS overlap code
+atac_trait_pairs = addVariantCoords(atac_filtered_pairs, vcf_file$snpspos) %>%
+  dplyr::rename(peak_id = gene_id)
+rna_atac_overlaps = findGWASOverlaps(filtered_pairs, atac_trait_pairs, vcf_file, max_distance = 5e5, min_r2 = 0.8)
 
 
 #Import RASQUAL results for the eQTLs
@@ -40,8 +44,6 @@ interaction_df = readRDS("results/SL1344/eQTLs/SL1344_interaction_pvalues.rds")
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 qtl_clusters = readRDS("results/SL1344/eQTLs/appeat_disappear_eQTLs.rds")
 
-#Import the VCF file
-vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
 #Import ATAC data
 atac_list = readRDS("../macrophage-chromatin/results/ATAC/ATAC_combined_accessibility_data.rds")
