@@ -172,8 +172,8 @@ cat ctrl_failed_batches_2.txt | python ~/software/utils/submitJobs.py --MEM 500 
 cat acLDL_failed_batches_2.txt | python ~/software/utils/submitJobs.py --MEM 500 --queue long --jobname runRasqual_AcLDL2 --ncores 2 --command "python ~/software/utils/rasqual/runRasqual.py --readCounts results/acLDL/rasqual/input/AcLDL.expression.bin  --offsets results/acLDL/rasqual/input/AcLDL.gc_library_size.bin --n 70 --geneids results/acLDL/rasqual/input/feature_names.txt --vcf results/acLDL/rasqual/input/AcLDL.ASE.vcf.gz --geneMetadata results/acLDL/rasqual/input/gene_snp_count_500kb.txt --outprefix results/acLDL/rasqual/output/AcLDL_500kb/batches/AcLDL_500kb --covariates results/acLDL/rasqual/input/AcLDL.PEER_covariates_n3.bin --rasqualBin rasqual --parameters '\--force --n-threads 2 --imputation-quality-fsnp 0.9' --execute True"
 
 #Merge batches
-echo "merge" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname mergeRasqualBatches --command "python ~/software/utils/rasqual/mergeRasqualBatches.py --prefix results/acLDL/rasqual/output/Ctrl_500kb/batches/Ctrl_500kb"
-echo "merge" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname mergeRasqualBatches --command "python ~/software/utils/rasqual/mergeRasqualBatches.py --prefix results/acLDL/rasqual/output/AcLDL_500kb/batches/AcLDL_500kb"
+echo "merge" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname mergeRasqualBatches --command "python ~/software/rasqual/scripts/mergeRasqualBatches.py --prefix results/acLDL/rasqual/output/Ctrl_500kb/batches/Ctrl_500kb"
+echo "merge" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname mergeRasqualBatches --command "python ~/software/rasqual/scripts/mergeRasqualBatches.py --prefix results/acLDL/rasqual/output/AcLDL_500kb/batches/AcLDL_500kb"
 
 #Move merged file to parent dir
 mv results/acLDL/rasqual/output/Ctrl_500kb/batches/Ctrl_500kb.txt results/acLDL/rasqual/output/Ctrl_500kb/
@@ -197,8 +197,8 @@ tar czf results/acLDL/rasqual/output/Ctrl_500kb/batches.tar.gz results/acLDL/ras
 
 ### eigenMT ####
 #Convert rasqual output into format suitable for eigenMT
-echo "rasqualToEigenMT" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname rasqualToEigenMT --command "python ~/software/utils/rasqual/rasqualToEigenMT.py --rasqualOut results/acLDL/rasqual/output/Ctrl_500kb/Ctrl_500kb.txt > results/acLDL/rasqual/output/Ctrl_500kb/Ctrl_500kb.eigenMT_input.txt"
-echo "rasqualToEigenMT" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname rasqualToEigenMT --command "python ~/software/utils/rasqual/rasqualToEigenMT.py --rasqualOut results/acLDL/rasqual/output/AcLDL_500kb/AcLDL_500kb.txt > results/acLDL/rasqual/output/AcLDL_500kb/AcLDL_500kb.eigenMT_input.txt"
+echo "rasqualToEigenMT" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname rasqualToEigenMT --command "python ~/software/rasqual/scripts/rasqualToEigenMT.py --rasqualOut results/acLDL/rasqual/output/Ctrl_500kb/Ctrl_500kb.txt > results/acLDL/rasqual/output/Ctrl_500kb/Ctrl_500kb.eigenMT_input.txt"
+echo "rasqualToEigenMT" | python ~/software/utils/submitJobs.py --MEM 1000 --jobname rasqualToEigenMT --command "python ~/software/rasqual/scripts/rasqualToEigenMT.py --rasqualOut results/acLDL/rasqual/output/AcLDL_500kb/AcLDL_500kb.txt > results/acLDL/rasqual/output/AcLDL_500kb/AcLDL_500kb.eigenMT_input.txt"
 
 #Split vcf into chromosomes
 cat ../../../macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/vcf/vcfSplitByChromosome.py --vcf imputed.86_samples.sorted.filtered.named.INFO_07.vcf.gz --outdir chromosomes_INFO_07/ --execute False
@@ -207,8 +207,8 @@ cat ../../../macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python
 /software/R-3.1.2/bin/Rscript ~/software/utils/vcf/vcfToGds.R --vcf-directory chromosomes_INFO_07 --chr-list ../../../macrophage-gxe-study/data/sample_lists/chromosome_list.txt
 
 #Run eigenMT on on each chromosome
-cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/submitJobs.py --MEM 2000 --jobname eigenMTbyChromosome2 --command "python ~/software/utils/rasqual/eigenMTbyChromosome.py --genepos results/acLDL/rasqual/input/gene_positions.txt --chromosome_dir genotypes/acLDL/imputed_20151005/chromosomes_INFO_07/ --QTL results/acLDL/rasqual/output/Ctrl_500kb/Ctrl_500kb.eigenMT_input.txt --out_prefix results/acLDL/rasqual/output/Ctrl_500kb/Ctrl_500kb --cis_dist 1e7 --eigenMT_path ~/software/utils/rasqual/eigenMT.py"
-cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/submitJobs.py --MEM 2000 --jobname eigenMTbyChromosome --command "python ~/software/utils/rasqual/eigenMTbyChromosome.py --genepos results/acLDL/rasqual/input/gene_positions.txt --chromosome_dir genotypes/acLDL/imputed_20151005/chromosomes_INFO_07/ --QTL results/acLDL/rasqual/output/AcLDL_500kb/AcLDL_500kb.eigenMT_input.txt --out_prefix results/acLDL/rasqual/output/AcLDL_500kb/AcLDL_500kb --cis_dist 1e7 --eigenMT_path ~/software/utils/rasqual/eigenMT.py"
+cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/submitJobs.py --MEM 2000 --jobname eigenMTbyChromosome2 --command "python ~/software/utils/eigenMTbyChromosome.py --genepos results/acLDL/rasqual/input/gene_positions.txt --chromosome_dir genotypes/acLDL/imputed_20151005/chromosomes_INFO_07/ --QTL results/acLDL/rasqual/output/Ctrl_500kb/Ctrl_500kb.eigenMT_input.txt --out_prefix results/acLDL/rasqual/output/Ctrl_500kb/Ctrl_500kb --cis_dist 1e7 --eigenMT_path ~/software/eigenMT/eigenMT.py"
+cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/submitJobs.py --MEM 2000 --jobname eigenMTbyChromosome --command "python ~/software/utils/eigenMTbyChromosome.py --genepos results/acLDL/rasqual/input/gene_positions.txt --chromosome_dir genotypes/acLDL/imputed_20151005/chromosomes_INFO_07/ --QTL results/acLDL/rasqual/output/AcLDL_500kb/AcLDL_500kb.eigenMT_input.txt --out_prefix results/acLDL/rasqual/output/AcLDL_500kb/AcLDL_500kb --cis_dist 1e7 --eigenMT_path ~/software/eigenMT/eigenMT.py"
 
 # Concat eigenMT results
 cat results/acLDL/rasqual/output/Ctrl_500kb/Ctrl_500kb.chr_*.eigenMT.txt | grep -v snps > results/acLDL/rasqual/output/Ctrl_500kb/Ctrl_500kb.eigenMT.txt
