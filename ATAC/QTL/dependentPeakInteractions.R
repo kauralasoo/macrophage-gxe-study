@@ -4,18 +4,19 @@ library("devtools")
 library("dplyr")
 load_all("../seqUtils/")
 load_all("~/software/rasqual/rasqualTools/")
+load_all("../wiggleplotr/")
 
 #Import ATAC data
 atac_data = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
 
 #Import the VCF file
-vcf_file = readRDS("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
+vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
 #List of ATAC tabix files
-atac_tabix_list = list(naive = "../macrophage-chromatin/results/ATAC/rasqual/output/naive_100kb/naive_100kb.sorted.txt.gz",
-                       IFNg = "../macrophage-chromatin/results/ATAC/rasqual/output/IFNg_100kb/IFNg_100kb.sorted.txt.gz",
-                       SL1344 = "../macrophage-chromatin/results/ATAC/rasqual/output/SL1344_100kb/SL1344_100kb.sorted.txt.gz",
-                       IFNg_SL1344 = "../macrophage-chromatin/results/ATAC/rasqual/output/IFNg_SL1344_100kb/IFNg_SL1344_100kb.sorted.txt.gz")
+atac_tabix_list = list(naive = "results/ATAC/rasqual/output/naive_100kb/naive_100kb.sorted.txt.gz",
+                       IFNg = "results/ATAC/rasqual/output/IFNg_100kb/IFNg_100kb.sorted.txt.gz",
+                       SL1344 = "results/ATAC/rasqual/output/SL1344_100kb/SL1344_100kb.sorted.txt.gz",
+                       IFNg_SL1344 = "results/ATAC/rasqual/output/IFNg_SL1344_100kb/IFNg_SL1344_100kb.sorted.txt.gz")
 
 #Import minimal p-values
 min_pvalue_list = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
@@ -45,6 +46,8 @@ ifng_sl1344_interactions = purrr::by_row(dependent_peaks$unique_masters, testThr
                                          naive_ifng_sl1344_atac$sample_metadata, vcf_file, model0, model1, .collate = "rows", .to = "p_nominal")
 interaction_list = list(IFNg = ifng_interactions, SL1344 = sl1344_interactions, IFNg_SL1344 = ifng_sl1344_interactions)
 saveRDS(interaction_list, "results/ATAC/QTLs/peak_peak_interactions.txt")
+interaction_list = readRDS("results/ATAC/QTLs/peak_peak_interactions.txt")
+
 
 #Convert list into a df and extract interaction hits
 interaction_df = purrr::map_df(interaction_list, identity, .id = "other_condition")
@@ -126,3 +129,47 @@ ggsave("results/ATAC/QTLs/properties/cluster_dependent_peak_distance.pdf", plot 
 
 
 
+#Make coverage plots of master and dependent peak pairs
+
+#Import ATAC data
+atac_data = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
+
+#Construct metadata df for wiggleplotr
+meta = wiggleplotrConstructMetadata(atac_data$counts, atac_data$sample_metadata, "/Volumes/JetDrive/bigwigs/ATAC/")
+
+#Add peak coords to the dependent pairs
+peak_coords = dplyr::select(atac_data$gene_metadata, gene_id, chr, start, end) %>% tbl_df()
+joint_coords = dplyr::left_join(joint_data, peak_coords, by = c("master_id" = "gene_id")) %>%
+  dplyr::left_join(peak_coords, by = c("dependent_id" = "gene_id"))
+
+#Construct df ofregions
+joint_regions = dplyr::transmute(joint_coords, master_id, dependent_id, snp_id, p_nominal, chr = chr.x, 
+                                 region_start = pmin(start.x, start.y), region_end = pmax(end.x, end.y),
+                                 max_fc = pmax(master_baseline,master_other,dependent_baseline,dependent_other),
+                                 min_fc = pmin(master_baseline,master_other,dependent_baseline,dependent_other)) %>%
+  dplyr::mutate(max_sign = ifelse(abs(max_fc) > abs(min_fc), max_fc, min_fc)) %>%
+  dplyr::arrange(p_nominal)
+
+
+coverageByRow <- function(row_df, meta_df, gene_metadata, genotypes){
+  
+  #Extract peaks from row
+  peaks_df = dplyr::filter(gene_metadata, chr == row_df$chr, start >= row_df$region_start, end <= row_df$region_end)
+  peak_annot = wiggpleplotrConstructPeakAnnotations(peaks_df)
+  track_data = wiggleplotrGenotypeColourGroup(meta, row_df$snp_id, genotypes, row_df$max_sign)
+  print(row_df$master_id)
+  
+  #Make coverage plot
+  coverage = plotCoverage(exons = peak_annot$peak_list, cdss = peak_annot$peak_list, track_data = track_data, rescale_introns = FALSE, 
+                          transcript_annotations = peak_annot$peak_annot, fill_palette = getGenotypePalette(), flanking_length = c(500,500), 
+                          connect_exons = FALSE, label_type = "peak", plot_fraction = 0.2, heights = c(0.8,0.2))
+  return(coverage)
+}
+
+#Make a lot of coverage plots
+coverage_df = purrr::by_row(joint_regions[1:3,], ~coverageByRow(.,meta, atac_data$gene_metadata, vcf_file$genotypes))
+plot_list = coverage_df$.out
+names(plot_list) = paste(coverage_df$master_id, coverage_df$dependent_id, sep = "-")
+
+#Save them to disk
+savePlotList(plot_list, "results/ATAC/QTLs/peak-peak_interactions/selected_coverage/", width = 6, height = 7)
