@@ -16,7 +16,7 @@ acldl_list_filtered$sample_metadata = acldl_list$sample_metadata %>% dplyr::filt
 acldl_list_filtered$cqn = acldl_list_filtered$cqn[,acldl_list_filtered$sample_metadata$sample_id]
 
 #Load p-values from disk
-rasqual_min_pvalues = readRDS("results/acLDL/eQTLs/acLDL_rasqual_min_pvalues_filtered.rds")
+rasqual_min_pvalues = readRDS("results/acLDL/eQTLs/acLDL_rasqual_min_pvalues.rds")
 rasqual_min_hits = lapply(rasqual_min_pvalues, function(x){dplyr::filter(x, p_fdr < 0.1)})
 min_pvalue_df = ldply(rasqual_min_hits, .id = "condition_name")
 joint_pairs = dplyr::select(min_pvalue_df, gene_id, snp_id) %>% unique() 

@@ -83,15 +83,20 @@ write.table(de_results, "results/acLDL/DE/ctrl_vs_acldl_DE_genes.txt", sep= "\t"
 
 #Filter by p-value and fold-change
 de_results_filtered = dplyr::filter(de_results, padj < 0.05, abs(log2FoldChange) > 0.58) %>%
-  arrange(desc(log2FoldChange))
+  arrange(-log2FoldChange)
 write.table(de_results_filtered, "results/acLDL/DE/ctrl_vs_acldl_DE_genes_filtered.txt", sep= "\t", quote = FALSE, row.names = FALSE)
 
 #Make heatmap with DE genes only (1.5 fold)
 cor_matrix = cor(expressed_data$cqn[de_results_filtered$gene_id, ctrl_vs_acldl_design$sample_id], method = "pearson")
-pheatmap(cor_matrix, annotation_col = purity)
+pheatmap(cor_matrix, annotation_col = purity, filename = "results/acLDL/DE/58_sample_1.5fold_heatmap.pdf", width = 15, height = 12, border_color = NA)
 
 pca_list = performPCA(expressed_data$cqn[de_results_filtered$gene_id, ctrl_vs_acldl_design$sample_id], ctrl_vs_acldl_design)
-ggplot(pca_list$pca_matrix, aes(x = PC3, y = PC4, color = condition, label = sample_id)) + 
+ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = condition, label = sample_id)) + 
+  geom_point() +
+  geom_text()
+
+pca_list = performPCA(expressed_data$cqn[de_results_filtered$gene_id, dplyr::filter(ctrl_vs_acldl_design, condition_name == "AcLDL")$sample_id], ctrl_vs_acldl_design)
+ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = condition, label = sample_id)) + 
   geom_point() +
   geom_text()
 
@@ -110,9 +115,11 @@ pheatmap(cor_matrix, filename ="results/acLDL/DE/DE_genes_1,5fold_heatmap.PEER_r
 
 #2-fold change in DE
 de_results_filtered2 = dplyr::filter(de_results, padj < 0.05, abs(log2FoldChange) > 1) %>%
-  arrange(desc(log2FoldChange))
+  arrange(-log2FoldChange)
 cor_matrix = cor(expressed_data$cqn[de_results_filtered2$gene_id,ctrl_vs_acldl_design$sample_id], method = "pearson")
 pheatmap(cor_matrix, annotation_col = purity)
+pheatmap(cor_matrix, annotation_col = purity, filename = "results/acLDL/DE/58_sample_2fold_heatmap.pdf", width = 15, height = 12, border_color = NA)
+
 cor_matrix = cor(expressed_data$cqn[de_results_filtered2$gene_id,ctrl_vs_acldl_design_full$sample_id], method = "spearman")
 pheatmap(cor_matrix, annotation_col = purity)
 

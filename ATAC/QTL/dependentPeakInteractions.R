@@ -167,7 +167,7 @@ coverageByRow <- function(row_df, meta_df, gene_metadata, genotypes){
 }
 
 #Make a lot of coverage plots
-coverage_df = purrr::by_row(joint_regions[1:3,], ~coverageByRow(.,meta, atac_data$gene_metadata, vcf_file$genotypes))
+coverage_df = purrr::by_row(joint_regions, ~coverageByRow(.,meta, atac_data$gene_metadata, vcf_file$genotypes))
 plot_list = coverage_df$.out
 names(plot_list) = paste(coverage_df$master_id, coverage_df$dependent_id, sep = "-")
 
