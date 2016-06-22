@@ -131,9 +131,6 @@ ggsave("results/ATAC/QTLs/properties/cluster_dependent_peak_distance.pdf", plot 
 
 #Make coverage plots of master and dependent peak pairs
 
-#Import ATAC data
-atac_data = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
-
 #Construct metadata df for wiggleplotr
 meta = wiggleplotrConstructMetadata(atac_data$counts, atac_data$sample_metadata, "/Volumes/JetDrive/bigwigs/ATAC/")
 
@@ -142,7 +139,7 @@ peak_coords = dplyr::select(atac_data$gene_metadata, gene_id, chr, start, end) %
 joint_coords = dplyr::left_join(joint_data, peak_coords, by = c("master_id" = "gene_id")) %>%
   dplyr::left_join(peak_coords, by = c("dependent_id" = "gene_id"))
 
-#Construct df ofregions
+#Construct df regions
 joint_regions = dplyr::transmute(joint_coords, master_id, dependent_id, snp_id, p_nominal, chr = chr.x, 
                                  region_start = pmin(start.x, start.y), region_end = pmax(end.x, end.y),
                                  max_fc = pmax(master_baseline,master_other,dependent_baseline,dependent_other),
@@ -156,7 +153,7 @@ coverageByRow <- function(row_df, meta_df, gene_metadata, genotypes){
   #Extract peaks from row
   peaks_df = dplyr::filter(gene_metadata, chr == row_df$chr, start >= row_df$region_start, end <= row_df$region_end)
   peak_annot = wiggpleplotrConstructPeakAnnotations(peaks_df)
-  track_data = wiggleplotrGenotypeColourGroup(meta, row_df$snp_id, genotypes, row_df$max_sign)
+  track_data = wiggleplotrGenotypeColourGroup(meta_df, row_df$snp_id, genotypes, row_df$max_sign)
   print(row_df$master_id)
   
   #Make coverage plot
@@ -173,3 +170,7 @@ names(plot_list) = paste(coverage_df$master_id, coverage_df$dependent_id, sep = 
 
 #Save them to disk
 savePlotList(plot_list, "results/ATAC/QTLs/peak-peak_interactions/selected_coverage/", width = 6, height = 7)
+
+#Make single example plot
+coverage_df = purrr::by_row(joint_regions[1,], ~coverageByRow(.,meta, atac_data$gene_metadata, vcf_file$genotypes))
+
