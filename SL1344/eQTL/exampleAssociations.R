@@ -9,7 +9,7 @@ combined_expression_data$sample_metadata$condition_name = factor(combined_expres
         levels = c("naive", "IFNg", "SL1344", "IFNg_SL1344"))
 
 #Import ATAC data
-atac_list = readRDS("../macrophage-chromatin/results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
+atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
 atac_list$sample_metadata = dplyr::mutate(atac_list$sample_metadata, 
           condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344","IFNg_SL1344")))
 
