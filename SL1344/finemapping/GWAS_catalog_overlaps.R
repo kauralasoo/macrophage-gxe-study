@@ -24,7 +24,7 @@ joint_pairs = dplyr::select(rasqual_qtl_df, gene_id, snp_id) %>% unique()
 filtered_pairs = filterHitsR2(joint_pairs, vcf_file$genotypes, .8)
 
 #Import ATAC QTL variants
-atac_min_pvalues = readRDS("../macrophage-chromatin/results/ATAC/QTLs/rasqual_min_pvalues.rds")
+atac_min_pvalues = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
 atac_qtl_df = extractQTLsFromList(atac_min_pvalues, fdr_cutoff = 0.1)
 atac_joint_pairs = dplyr::select(atac_qtl_df, gene_id, snp_id) %>% unique() 
 atac_filtered_pairs = filterHitsR2(atac_joint_pairs, vcf_file$genotypes, .8)
@@ -55,6 +55,17 @@ write.table(ranked_traits, "results/SL1344/eQTLs/GWAS_overlaps/relative_gwas_ove
 #Find which QTLs are condition specific
 appear_eqtls = dplyr::select(variable_qtls$appear, gene_id, snp_id, cluster_id) %>% unique()
 appear_gwas_hits = dplyr::semi_join(all_gwas_hits, appear_eqtls, by = c("gene_id"))
+
+### Chromatin QTL overlaps ###
+#Find overlaps between eQTLs/caQTs and cytokine QTLs
+cyto_qtls = read.table("databases/GWAS/cytokines/significant_reordered_GRCh38.bed")
+colnames(cyto_qtls) = c("chr","pos","pos2","locus", "gwas_snp_id","strand","cytokine","cell_system","time","p_value")
+cyto_qtls = dplyr::mutate(cyto_qtls, chr = as.character(chr)) %>% 
+  dplyr::left_join(vcf_file$snpspos, by = c("chr","pos")) %>% 
+  dplyr::rename(snp_id = snpid) %>% 
+  dplyr::filter(!is.na(snp_id))
+cyto_eqtl_olaps = findGWASOverlaps(filtered_pairs, cyto_qtls, vcf_file, min_r2 = 0.7) 
+cyto_caqtl_olaps = findGWASOverlaps(atac_filtered_pairs, cyto_qtls, vcf_file, min_r2 = 0.7)
 
 #Explore IBD traits
 appear_olaps = dplyr::filter(appear_gwas_hits, trait %in% c("Ulcerative colitis", "Inflammatory bowel disease","Crohn's disease"))
