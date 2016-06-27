@@ -6,7 +6,7 @@ library("ggplot2")
 #This file makes a bunch of QC figures for the technical paper.
 
 #Set up a single output folder for all of the figures
-figure_folder = "results/technical_report/"
+figure_folder = "figures/supplementary/"
 
 #Import metadata from disk
 line_metadata = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds")
@@ -21,19 +21,23 @@ rin_scores = rbind(rin1, rin2)
 ips_duration_plot = ggplot(line_metadata, aes(x = ips_culture_days, fill = received_as)) + 
   geom_histogram(binwidth = 2) + 
   facet_wrap(~media) +
-  xlab("Duration of iPS cell culture (days)")
+  xlab("Duration of iPS cell culture (days)") + 
+  theme_light()
 ggsave(paste(figure_folder, "ips_culture_duration.pdf"), plot = ips_duration_plot, width = 8, height = 5)
 
 #How long does it take from EB formation to stimulation experiment? (From EB formation to Salmonella infection)
-diff_days_plot = ggplot(line_metadata_success, aes(x = diff_days)) + 
-  geom_histogram(binwidth = 2) +
-  xlab("Duration of differentiation (days)")
-ggsave(paste(figure_folder, "salmonella_diff_duration.pdf"), plot = diff_days_plot, width = 6, height = 5)
+duration_df = dplyr::mutate(line_metadata_success, differation_duration = as.numeric(salmonella_date - diff_start))
+diff_days_plot = ggplot(duration_df, aes(x = differation_duration)) + 
+  geom_histogram(binwidth = 3) +
+  xlab("Duration of differentiation (days)") + 
+  theme_light()
+ggsave(paste(figure_folder, "salmonella_diff_duration.pdf"), plot = diff_days_plot, width = 4.5, height = 4.5)
 
 #How many medium changes do we do for successfull differentiations?
 medium_changes_plot = ggplot(line_metadata_success, aes(x = medium_changes)) + 
   geom_histogram(binwidth = 1) + 
-  xlab("Number of medium changes per differentiation")
+  xlab("Number of medium changes per differentiation") +
+  theme_light()
 ggsave(paste(figure_folder, "medium_changes.pdf"), plot = medium_changes_plot, width = 6, height = 5)
 
 #Look at how many differentiations succeed and how many fail
@@ -53,6 +57,7 @@ monthly_df = success_df %>%
   dplyr::mutate(month = factor(month, levels = unique(month)))
 monthly_success_plot = ggplot(monthly_df, aes(x = month, fill = status)) + geom_bar() + 
   xlab("Start of differentiation (month)") +
+  theme_light() +
   theme(axis.text.x=element_text(angle = 45))
 ggsave(paste(figure_folder, "monthly_success_plot.pdf"), plot = monthly_success_plot, width = 8, height = 5)
 
@@ -61,24 +66,20 @@ ggsave(paste(figure_folder, "monthly_success_plot.pdf"), plot = monthly_success_
 flow_df = line_metadata %>% 
   dplyr::filter(donor != "mijn") %>%
   dplyr::filter(status %in% c("Success", "FC_QC_fail"), !is.na(max_purity)) %>%
-  dplyr::filter((status == "Success" & abs(flow_date - salmonella) < 14) | status == "FC_QC_fail") 
+  dplyr::filter((status == "Success" & abs(flow_date - salmonella_date) < 14) | status == "FC_QC_fail") 
 
 flow_purity_plot = ggplot(flow_df, aes(x = max_purity-0.001, fill = status)) + 
   geom_histogram(binwidth = 0.01) + 
-  xlab("Maximum purity")
-ggsave(paste(figure_folder, "flow_purity_histogram.pdf"), plot = flow_purity_plot, width = 7, height = 5)
-
-#How variable is the mean RNA concentration between different lines?
-mean_rna_concentration = ggplot(line_metadata_success, aes(x = ng_ul_mean)) + 
-  geom_histogram(binwidth = 20) + 
-  xlab("Mean RNA concentration (ng/ul)")
-ggsave(paste(figure_folder, "mean_rna_concentration.pdf"), plot = mean_rna_concentration, width = 6, height = 5)
+  xlab("Maximum purity") + 
+  theme_light()
+ggsave(paste(figure_folder, "flow_purity_histogram.pdf"), plot = flow_purity_plot, width = 6, height = 4.5)
 
 #How variable is RNA integrity between samples?
-rin_plot = ggplot(rin_scores, aes(x = RIN-0.001)) + 
+rin_plot = ggplot(rin_scores, aes(x = RIN - 0.01)) + 
   geom_histogram(binwidth = 0.2) + 
   xlab("RNA Integrity Number (RIN)") + 
-  scale_x_continuous(limits = c(0,10))
-ggsave(paste(figure_folder, "RIN_histogram.pdf"), plot = rin_plot, width = 6, height = 5)
+  scale_x_continuous(limits = c(0,10.5), expand = c(0,0)) + 
+  theme_light()
+ggsave(paste(figure_folder, "RIN_histogram.pdf"), plot = rin_plot, width = 4.5, height = 4.5)
 
 

@@ -28,7 +28,7 @@ relative_rna_plot = ggplot(selected_data, aes(x = friendly_name, y = relative_rn
   scale_fill_manual(values = conditionPalette()) + 
   theme(legend.position = "none", axis.title.x = element_blank()) + 
   ylab("Relative RNA amount")
-ggsave("results/SL1344/figures/supplementary/relative_rna_amount_per_condition.pdf", 
+ggsave("figures/supplementary/relative_rna_amount_per_condition.pdf", 
        relative_rna_plot, width = 4.5, height = 4.5)
-ggsave("results/SL1344/figures/supplementary/relative_rna_amount_per_condition.png", 
+ggsave("figures/supplementary/relative_rna_amount_per_condition.png", 
        relative_rna_plot, width = 4.5, height = 4.5)
