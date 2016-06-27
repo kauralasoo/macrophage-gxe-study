@@ -48,6 +48,15 @@ sort -k1,1 -k2,2n EUR.UC.gwas.bed.GRCh38.txt | bgzip > EUR.UC.gwas.bed.GRCh38.so
 tabix -p bed EUR.UC.gwas.bed.GRCh38.sorted.txt.gz
 
 
+#Lift over IGAP GWAS coordinates
+awk -v OFS="\t" '{print "chr"$1,$2,$2,$3,$4,$5,"NA",$6,$7,$8}' IGAP_stage_1.txt | tail -n+2 > IGAP_stage_1.bed
+CrossMap.py bed ../../../macrophage-gxe-study/data/liftOver_genotypes/hg19ToHg38.over.chain IGAP_stage_1.bed IGAP_stage_1.Hg38.bed
+awk '{sub(/chr/,"")}1' IGAP_stage_1.Hg38.bed > IGAP_stage_1.GRCh38.bed
+sort -k1,1 -k2,2n IGAP_stage_1.GRCh38.bed | bgzip > IGAP_stage_1.GRCh38.sorted.bed.gz
+tabix -p bed IGAP_stage_1.GRCh38.sorted.bed.gz
+
+
+
 
 #Extract a region
 echo -e "CHR\tBP\tSNP\tP" > IBD.RGS14.gwas && tabix EUR.IBD.gwas.bed.GRCh38.sorted.txt.gz 5:177,000,000-177,500,000 | cut -f 1,2,4,10 >> IBD.RGS14.gwas
