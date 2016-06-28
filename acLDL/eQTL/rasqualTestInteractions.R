@@ -2,7 +2,6 @@ library("devtools")
 library("plyr")
 library("dplyr")
 load_all("../seqUtils/")
-library("MatrixEQTL")
 load_all("macrophage-gxe-study/housekeeping/")
 library("ggplot2")
 
@@ -10,28 +9,12 @@ library("ggplot2")
 acldl_list = readRDS("results/acLDL/acLDL_combined_expression_data_covariates.rds")
 acldl_list = extractConditionFromExpressionList(c("Ctrl","AcLDL"), acldl_list)
 
-#Remove some donors
-acldl_list_filtered = acldl_list
-acldl_list_filtered$sample_metadata = acldl_list$sample_metadata %>% dplyr::filter(!(donor %in% c("zaui","pamv","eiwy","eipl","qaqx","hayt")))
-acldl_list_filtered$cqn = acldl_list_filtered$cqn[,acldl_list_filtered$sample_metadata$sample_id]
-
 #Load p-values from disk
 rasqual_min_pvalues = readRDS("results/acLDL/eQTLs/acLDL_rasqual_min_pvalues.rds")
-rasqual_min_hits = lapply(rasqual_min_pvalues, function(x){dplyr::filter(x, p_fdr < 0.1)})
-min_pvalue_df = ldply(rasqual_min_hits, .id = "condition_name")
+min_pvalue_df = extractQTLsFromList(rasqual_min_pvalues, fdr_cutoff = 0.1)
 joint_pairs = dplyr::select(min_pvalue_df, gene_id, snp_id) %>% unique() 
 
 #Import the VCF file
-SNPRelate::snpgdsVCF2GDS("genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.vcf.gz", 
-                         "genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.gds", method = "copy.num.of.ref")
-saveRDS(vcf_file, "genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.rds")
-vcf_file = readRDS("genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.rds")
-
-#All SNPs
-SNPRelate::snpgdsVCF2GDS("genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.vcf.gz", 
-                         "genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.gds", method = "copy.num.of.ref")
-vcf_file = seqUtils::gdsToMatrix("genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.gds")
-saveRDS(vcf_file, "genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.rds")
 vcf_file = readRDS("genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.rds")
 
 #Calculate R2
@@ -39,7 +22,7 @@ genotypes = vcf_file$genotypes[unique(joint_pairs$snp_id),]
 snps_pos = dplyr::filter(vcf_file$snpspos, snpid %in% rownames(genotypes))
 filtered_vcf = list(snpspos = snps_pos, genotypes = genotypes)
 
-#Test intetactions between 
+#Filter gene-SNP pairs by R2
 filtered_pairs = filterHitsR2(joint_pairs, filtered_vcf$genotypes, .8)
 
 #Ctrl vs AcLDL
@@ -67,6 +50,7 @@ makeMultiplePlots(interaction_hits, acldl_list$cqn, filtered_vcf$genotypes, acld
   savePlots("results/acLDL/eQTLs/interaction_plots/", 7,7)
 
 
+#Make an example plot of the ASE data
 exon_ranges = constructExonRanges("ENSG00000141682", "rs6567134", acldl_list$gene_metadata)
 sample_meta = dplyr::select(acldl_list$sample_metadata, sample_id, condition_name, genotype_id)
 ase_data = fetchGeneASEData(exon_ranges, "results/acLDL/combined_ASE_counts.sorted.txt.gz", sample_meta) %>%
