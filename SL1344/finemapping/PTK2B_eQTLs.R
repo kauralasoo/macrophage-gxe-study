@@ -7,6 +7,8 @@ load_all("macrophage-gxe-study/housekeeping/")
 library("ggplot2")
 load_all("~/software/rasqual/rasqualTools/")
 library("purrr")
+library("coloc")
+
 
 #### Import data ####
 #Load the raw eQTL dataset
@@ -16,29 +18,22 @@ combined_expression_data$sample_metadata$condition_name = factor(combined_expres
 gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name)
 
 #Import ATAC data
-atac_list = readRDS("../macrophage-chromatin/results/ATAC/ATAC_combined_accessibility_data.rds")
+atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
 atac_list$sample_metadata$condition_name = factor(atac_list$sample_metadata$condition_name, 
                                                                  levels = c("naive", "IFNg", "SL1344", "IFNg_SL1344"))
-#Load p-values from disk
-rasqual_min_pvalues = readRDS("results/SL1344/eQTLs/rasqual_min_pvalues.rds")
-rasqual_min_hits = lapply(rasqual_min_pvalues, function(x){dplyr::filter(x, p_fdr < 0.1)})
-min_pvalue_df = plyr::ldply(rasqual_min_hits, .id = "condition_name") %>% dplyr::arrange(p_nominal)
-joint_pairs = dplyr::select(min_pvalue_df, gene_id, snp_id) %>% unique() 
 
 #Import the VCF file
 vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
-#Calculate R2
-genotypes = vcf_file$genotypes[unique(joint_pairs$snp_id),]
-snps_pos = dplyr::filter(vcf_file$snpspos, snpid %in% rownames(genotypes))
-filtered_vcf = list(snpspos = snps_pos, genotypes = genotypes)
-
-#Prune SNPs
-filtered_pairs = filterHitsR2(joint_pairs, filtered_vcf$genotypes, .8)
+#Load p-values from disk
+rasqual_min_pvalues = readRDS("results/SL1344/eQTLs/rasqual_min_pvalues.rds")
+rasqual_qtl_df = extractQTLsFromList(rasqual_min_pvalues, fdr_cutoff = 0.1)
+joint_pairs = dplyr::select(rasqual_qtl_df, gene_id, snp_id) %>% unique() 
+filtered_pairs = filterHitsR2(joint_pairs, vcf_file$genotypes, .8)
 
 #Find unique eQTLs for this gene:
 independent_qtls = dplyr::filter(filtered_pairs, gene_id == "ENSG00000120899")
-independent_qtl_res = dplyr::semi_join(min_pvalue_df, independent_qtls)
+independent_qtl_res = dplyr::semi_join(rasqual_qtl_df, independent_qtls)
 
 #Make effect size plots for these two qtls
 naive_eQTL = plotEQTL("ENSG00000120899", "rs6987305", combined_expression_data$cqn, vcf_file$genotypes, 
@@ -51,16 +46,28 @@ ggsave("results/SL1344/eQTLs/example_loci/PTK2B/PTK2B_IFNg_SL1344_eQTL.pdf", ifn
 
 
 #Import pvalues for PTK2B gene
-naive_pvalues = tabixFetchGenesQuick("ENSG00000120899", "databases/SL1344/naive_500kb.sorted.txt.gz", combined_expression_data$gene_metadata, cis_window = 0.5e5)[[1]] %>% 
-  dplyr::mutate(condition = "naive") %>% addAssociationPosterior(n = 69)
-IFNg_SL1344_pvalues = tabixFetchGenesQuick("ENSG00000120899", "databases/SL1344/IFNg_SL1344_500kb.sorted.txt.gz", combined_expression_data$gene_metadata, cis_window = 0.5e5)[[1]]  %>% 
-  dplyr::mutate(condition = "IFNg_SL1344") %>% addAssociationPosterior(n = 69)
+naive_pvalues = tabixFetchGenesQuick("ENSG00000120899", qtlResults()$rna_rasqual$naive, 
+                                     combined_expression_data$gene_metadata, cis_window = 0.5e5)[[1]] %>% 
+  dplyr::mutate(condition = "naive") %>% addAssociationPosterior(n = 84)
+IFNg_SL1344_pvalues = tabixFetchGenesQuick("ENSG00000120899", qtlResults()$rna_rasqual$IFNg_SL1344, 
+                                           combined_expression_data$gene_metadata, cis_window = 0.5e5)[[1]]  %>% 
+  dplyr::mutate(condition = "IFNg_SL1344") %>% addAssociationPosterior(n = 84)
 joint_pvalues = rbind(naive_pvalues, IFNg_SL1344_pvalues)
 
 #Import Alzheimer's GWAS summary stats
 igap_gwas_results = readRDS("annotations/IGAP_stage_1_2_combined_stats.rds")
 gwas_pvalues = dplyr::filter(igap_gwas_results, chr == 8, pos > min(joint_pvalues$pos), pos < max(joint_pvalues$pos)) %>%
-  dplyr::transmute(pos, p_nominal = igap_pvalue, condition = "AD GWAS")
+  dplyr::transmute(chr = as.integer(chr), pos, p_nominal = igap_pvalue, beta = Beta, se = SE, condition = "AD GWAS")
+
+#Add MAF
+d = dplyr::select(naive_pvalues, chr, pos, snp_id, MAF) %>% dplyr::left_join(gwas_pvalues, ., by = c("chr", "pos")) %>% 
+  addAssociationPosterior(n = 4000)
+
+#Test for colocalisation
+a = coloc.abf(dataset1 = list(pvalues = naive_pvalues$p_nominal, N = 84, MAF = naive_pvalues$MAF, type = "quant", beta = naive_pvalues$beta), 
+              dataset2 = list(pvalues = d$p_nominal, MAF = d$MAF, beta = d$beta, N = 40000, type = "cc", s = 0.2))  
+
+
 
 #Plot all pvalues
 all_pvalues = rbind(dplyr::select(joint_pvalues, pos, p_nominal, condition), gwas_pvalues)

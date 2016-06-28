@@ -11,18 +11,29 @@ enrichFastQTLPvalues <- function(fastqtl_pvalues, gene_id_name_map){
   return(res)
 }
 
-constructGeneData <- function(gene_id, snp_id, eqtl_data_list){
-  #Test for interaction
-  sample_meta = dplyr::select(eqtl_data_list$sample_metadata, sample_id, donor, condition_name)
-  cov_mat = dplyr::mutate(as.data.frame(eqtl_data_list$covariates), sample_id = rownames(eqtl_data_list$covariates))
+#Return a list of lists of paths to QTL mapping results
+qtlResults <- function(){
+  atac_rasqual = list(naive = "/Volumes/JetDrive/databases/ATAC/rasqual/naive_100kb.sorted.txt.gz",
+                      IFNg = "/Volumes/JetDrive/databases/ATAC/rasqual/IFNg_100kb.sorted.txt.gz",
+                      SL1344 = "/Volumes/JetDrive/databases/ATAC/rasqual/SL1344_100kb.sorted.txt.gz",
+                      IFNg_SL1344 = "/Volumes/JetDrive/databases/ATAC/rasqual/IFNg_SL1344_100kb.sorted.txt.gz")
   
-  #Extract data
-  exp_data = data_frame(sample_id = colnames(eqtl_data_list$exprs_cqn), expression = eqtl_data_list$exprs_cqn[gene_id,])
-  geno_data = data_frame(donor = colnames(eqtl_data_list$genotypes), genotype = eqtl_data_list$genotypes[snp_id,])
+  atac_fastqtl = list(naive = "/Volumes/JetDrive/databases/ATAC/fastqtl/naive_100kb_pvalues.sorted.txt.gz",
+                      IFNg = "/Volumes/JetDrive/databases/ATAC/fastqtl/IFNg_100kb_pvalues.sorted.txt.gz",
+                      SL1344 = "/Volumes/JetDrive/databases/ATAC/fastqtl/SL1344_100kb_pvalues.sorted.txt.gz",
+                      IFNg_SL1344 = "/Volumes/JetDrive/databases/ATAC/fastqtl/IFNg_SL1344_100kb_pvalues.sorted.txt.gz")
   
-  sample_data = dplyr::left_join(sample_meta, cov_mat, by = "sample_id") %>%
-    dplyr::left_join(exp_data, by = "sample_id") %>%
-    dplyr::left_join(geno_data, by = "donor")
+  rna_rasqual = list(naive = "/Volumes/JetDrive/databases/SL1344/rasqual/naive_500kb.sorted.txt.gz",
+                     IFNg = "/Volumes/JetDrive/databases/SL1344/rasqual/IFNg_500kb.sorted.txt.gz",
+                     SL1344 = "/Volumes/JetDrive/databases/SL1344/rasqual/SL1344_500kb.sorted.txt.gz",
+                     IFNg_SL1344 = "/Volumes/JetDrive/databases/SL1344/rasqual/IFNg_SL1344_500kb.sorted.txt.gz")
   
-  return(sample_data)
+  rna_fastqtl = list(naive = "/Volumes/JetDrive/databases/SL1344/fastqtl/naive_500kb_pvalues.sorted.txt.gz",
+                     IFNg = "/Volumes/JetDrive/databases/SL1344/fastqtl/IFNg_500kb_pvalues.sorted.txt.gz",
+                     SL1344 = "/Volumes/JetDrive/databases/SL1344/fastqtl/SL1344_500kb_pvalues.sorted.txt.gz",
+                     IFNg_SL1344 = "/Volumes/JetDrive/databases/SL1344/fastqtl/IFNg_SL1344_500kb_pvalues.sorted.txt.gz") 
+  
+  result = list(atac_fastqtl = atac_fastqtl, atac_rasqual = atac_rasqual,
+                rna_fastqtl = rna_fastqtl, rna_rasqual = rna_rasqual)
+  return(result)
 }
