@@ -25,6 +25,9 @@ atac_list$sample_metadata$condition_name = factor(atac_list$sample_metadata$cond
 #Import the VCF file
 vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
+#Import variant information
+snp_info = importVariantInformation("genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz")
+
 #Load p-values from disk
 rasqual_min_pvalues = readRDS("results/SL1344/eQTLs/rasqual_min_pvalues.rds")
 rasqual_qtl_df = extractQTLsFromList(rasqual_min_pvalues, fdr_cutoff = 0.1)
@@ -44,8 +47,10 @@ ifng_sl1344_eQTL = plotEQTL("ENSG00000120899", "rs1429938", combined_expression_
                       combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
 ggsave("results/SL1344/eQTLs/example_loci/PTK2B/PTK2B_IFNg_SL1344_eQTL.pdf", ifng_sl1344_eQTL, width = 7, height = 7)
 
+#Construct region object
+ptk2b_region = constructGeneRanges(data_frame(gene_id = "ENSG00000120899"), combined_expression_data$gene_metadata, 5e4)
 
-#Import pvalues for PTK2B gene
+#Import RASQUAL pvalues for PTK2B gene
 naive_pvalues = tabixFetchGenesQuick("ENSG00000120899", qtlResults()$rna_rasqual$naive, 
                                      combined_expression_data$gene_metadata, cis_window = 0.5e5)[[1]] %>% 
   dplyr::mutate(condition = "naive") %>% addAssociationPosterior(n = 84)
@@ -54,19 +59,38 @@ IFNg_SL1344_pvalues = tabixFetchGenesQuick("ENSG00000120899", qtlResults()$rna_r
   dplyr::mutate(condition = "IFNg_SL1344") %>% addAssociationPosterior(n = 84)
 joint_pvalues = rbind(naive_pvalues, IFNg_SL1344_pvalues)
 
+#Import fastQTL p-values for the PTK2B gene
+naive_pvalues_linear = fastqtlTabixFetchGenesQuick("ENSG00000120899", qtlResults()$rna_fastqtl$naive, 
+  combined_expression_data$gene_metadata, cis_window = 0.5e5)[[1]] %>%
+  addMafFromVariantInfo(snp_info)
+IFNg_SL1344_linear = fastqtlTabixFetchGenesQuick("ENSG00000120899", qtlResults()$rna_fastqtl$IFNg_SL1344, 
+                                                   combined_expression_data$gene_metadata, cis_window = 0.5e5)[[1]] %>%
+  addMafFromVariantInfo(snp_info)
+
 #Import Alzheimer's GWAS summary stats
 igap_gwas_results = readRDS("annotations/IGAP_stage_1_2_combined_stats.rds")
 gwas_pvalues = dplyr::filter(igap_gwas_results, chr == 8, pos > min(joint_pvalues$pos), pos < max(joint_pvalues$pos)) %>%
   dplyr::transmute(chr = as.integer(chr), pos, p_nominal = igap_pvalue, beta = Beta, se = SE, condition = "AD GWAS")
-
-#Add MAF
-d = dplyr::select(naive_pvalues, chr, pos, snp_id, MAF) %>% dplyr::left_join(gwas_pvalues, ., by = c("chr", "pos")) %>% 
-  addAssociationPosterior(n = 4000)
+gwas_pvalues_df = dplyr::select(naive_pvalues_linear, chr, pos, snp_id, MAF) %>% 
+  dplyr::left_join(gwas_pvalues, ., by = c("chr", "pos"))
 
 #Test for colocalisation
-a = coloc.abf(dataset1 = list(pvalues = naive_pvalues$p_nominal, N = 84, MAF = naive_pvalues$MAF, type = "quant", beta = naive_pvalues$beta), 
-              dataset2 = list(pvalues = d$p_nominal, MAF = d$MAF, beta = d$beta, N = 40000, type = "cc", s = 0.2))  
+a = coloc.abf(dataset1 = list(pvalues = naive_pvalues_linear$p_nominal, N = 84, MAF = naive_pvalues_linear$MAF, 
+                              type = "quant", beta = naive_pvalues_linear$beta, snp = naive_pvalues_linear$snp_id), 
+              dataset2 = list(pvalues = gwas_pvalues_df$p_nominal, MAF = gwas_pvalues_df$MAF, beta = gwas_pvalues_df$beta, 
+                              snp = gwas_pvalues_df$snp_id, N = 74046, type = "cc", s = 0.35))  
 
+#Import p-values from the the original GWAS
+pvalues = importGWASSummaryStats(ptk2b_region, "databases/GWAS/IGAP_summary_statistics/IGAP_stage_1.GRCh38.sorted.bed.gz")[[1]] %>%
+  dplyr::select(-snp_id)
+pvalues_df = dplyr::select(naive_pvalues_linear, chr, pos, snp_id, MAF) %>% 
+  dplyr::left_join(pvalues, ., by = c("chr", "pos")) %>%
+  dplyr::filter(!is.na(snp_id))
+
+a = coloc.abf(dataset1 = list(pvalues = naive_pvalues_linear$p_nominal, N = 84, MAF = naive_pvalues_linear$MAF, 
+                              type = "quant", beta = naive_pvalues_linear$beta, snp = naive_pvalues_linear$snp_id), 
+              dataset2 = list(pvalues = pvalues_df$p_nominal, MAF = pvalues_df$MAF, beta = pvalues_df$OR, 
+                              snp = pvalues_df$snp_id, N = 74046, type = "cc", s = 0.35))  
 
 
 #Plot all pvalues
