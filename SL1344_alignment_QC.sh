@@ -117,13 +117,10 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q norm
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q normal -M 1000 -o FarmOut/PEER.%J.jobout "python ~/software/utils/runPEER.py --input results/SL1344/PEER/input/SL1344.exprs.txt --outdir results/SL1344/PEER/SL1344_10/ --n_factors 10"
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q normal -M 1000 -o FarmOut/PEER.%J.jobout "python ~/software/utils/runPEER.py --input results/SL1344/PEER/input/IFNg_SL1344.exprs.txt --outdir results/SL1344/PEER/IFNg_SL1344_10/ --n_factors 10"
 
-#Convert VCF file into a matrix of genotype doses
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>64000] rusage[mem=64000]" -q hugemem -M 64000 -o FarmOut/importVCF.%J.jobout "/software/R-3.1.2/bin/Rscript macrophage-gxe-study/SL1344/eQTL/matrixeQTL_import_vcf.R"
-
 #Remove some intermediate files
 rm STAR/SL1344/*/*.UniqueMultiple.*
 
-#Run varianve component analysis
+#Run variance component analysis
 echo "" | python ~/software/utils/submitJobs.py --MEM 3000 --jobname varCompAnalysis --command  "/software/R-3.1.2/bin/Rscript macrophage-gxe-study/SL1344/varComp/varianceComponents.R"
 
 

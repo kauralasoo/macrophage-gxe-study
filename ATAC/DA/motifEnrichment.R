@@ -6,14 +6,13 @@ library("ggplot2")
 load_all("../seqUtils/")
 library("seqLogo")
 
-
 #Import ATAC data and clusters
 atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
 atac_list$sample_metadata$condition_name = factor(atac_list$sample_metadata$condition_name, levels = c("naive","IFNg", "SL1344", "IFNg_SL1344"))
 final_clusters = readRDS("results/ATAC/DA/peak_clusters.rds")
 
 #Import FIMO motif matches
-fimo_hits = readr::read_delim("results/ATAC/FIMO_CISBP_results.long.txt", delim = "\t", col_types = c("cciicddcc"), 
+fimo_hits = readr::read_delim("results/ATAC/FIMO_CISBP_results.long.txt.gz", delim = "\t", col_types = c("cciicddcc"), 
                               col_names = c("motif_id","seq_name","start","end","strand","score","p_value","dummy","matched_seq"), skip = 1)
 fimo_hits_clean = tidyr::separate(fimo_hits, seq_name, c("prefix","gene_id"), sep = "=") 
 
@@ -67,9 +66,10 @@ motif_enrichment_plot = ggplot(selected_enrichments, aes(y = new_name, x = OR_lo
   theme_light() +
   scale_x_continuous(expand = c(0, 0), limits = c(-4,4)) +
   theme(legend.key = element_blank()) + 
-  theme(panel.margin = unit(0.2, "lines"))
+  theme(panel.margin = unit(0.2, "lines")) + 
+  geom_vline(aes(xintercept = 0), size = 0.3)
 
-ggsave("results/ATAC/motif_analysis/motif_enrichment_in_clusters.pdf", plot = motif_enrichment_plot, width = 4, height = 6)
+ggsave("figures/main_figures/ATAC_motif_enrichment_in_clusters.pdf", plot = motif_enrichment_plot, width = 4, height = 6)
 
 
 
@@ -119,7 +119,7 @@ background_enrichment_plot = ggplot(selected_motifs, aes(y = tf_name, x = OR_log
   scale_x_continuous(expand = c(0, 0), limits = c(0,3)) +
   theme(legend.key = element_blank()) + 
   theme(panel.margin = unit(0.2, "lines"))
-ggsave("results/ATAC/motif_analysis/motif_enrichment_in_all_peaks.pdf", plot = background_enrichment_plot, width = 4, height = 6)
+ggsave("figures/supplementary/ATAC_motif_enrichment_in_all_peaks.pdf", plot = background_enrichment_plot, width = 4, height = 6)
 
 
 #Save selected motifs to disk

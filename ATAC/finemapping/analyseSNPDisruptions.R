@@ -7,10 +7,7 @@ library("purrr")
 library("ggplot2")
 
 #Import snp info and identify indels
-snp_info = readr::read_delim("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz", 
-                             delim = "\t", col_types = "cdccc", col_names = c("chr","pos","snp_id","ref","alt"))
-snp_info = dplyr::mutate(snp_info, indel_length = pmax(nchar(alt), nchar(ref))) %>%
-  dplyr::mutate(is_indel = ifelse(indel_length > 1, TRUE, FALSE))
+snp_info = importVariantInformation("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz")
 indels = dplyr::filter(snp_info, is_indel == TRUE) %>% dplyr::select(snp_id, is_indel)
 
 #Import putative causal peaks/variants
@@ -130,8 +127,9 @@ plot = ggplot(relative_enrichment_renamed, aes(y = motif_name, x = OR_log2, xmin
   theme_light() +
   scale_x_continuous(expand = c(0, 0), limits = c(-4,4)) +
   theme(legend.key = element_blank()) + 
-  theme(panel.margin = unit(0.2, "lines"))
-ggsave("results/ATAC/motif_analysis/caQTL_clusters_enriched_motifs.pdf", plot = plot, height = 6, width = 4)
+  theme(panel.margin = unit(0.2, "lines"))  + 
+  geom_vline(aes(xintercept = 0), size = 0.3)
+ggsave("figures/main_figures/caQTL_clusters_disrupted_motifs.pdf", plot = plot, height = 5.5, width = 3)
 
 
 

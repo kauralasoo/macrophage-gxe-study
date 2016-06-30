@@ -13,10 +13,7 @@ atac_data = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rd
 vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
 #List of ATAC tabix files
-atac_tabix_list = list(naive = "results/ATAC/rasqual/output/naive_100kb/naive_100kb.sorted.txt.gz",
-                       IFNg = "results/ATAC/rasqual/output/IFNg_100kb/IFNg_100kb.sorted.txt.gz",
-                       SL1344 = "results/ATAC/rasqual/output/SL1344_100kb/SL1344_100kb.sorted.txt.gz",
-                       IFNg_SL1344 = "results/ATAC/rasqual/output/IFNg_SL1344_100kb/IFNg_SL1344_100kb.sorted.txt.gz")
+atac_tabix_list = qtlResults()$atac_rasqual
 
 #Import minimal p-values
 min_pvalue_list = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
