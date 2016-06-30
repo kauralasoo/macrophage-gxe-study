@@ -150,6 +150,12 @@ tar czf results/SL1344/rasqual/output/SL1344_500kb/batches.tar.gz results/SL1344
 #Remove uncompressed batches
 rm -r results/SL1344/rasqual/output/*_500kb/batches/
 
+#Use fgwas to perform gwas enrichment analysis
+echo -e "CD\twgEncodeDukeDnaseGM12892" | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fgwas --command "python ~/software/utils/runFgwas.py --input_dir databases/fgwas/ --output_dir results/SL1344/fgwas/ --parameters '\-cc' --execute True"
+echo -e "HEIGHT\twgEncodeDukeDnaseGM12892" | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fgwas --command "python ~/software/utils/runFgwas.py --input_dir databases/fgwas/ --output_dir results/SL1344/fgwas/ --execute True"
+
+fgwas -i databases/fgwas/CD.allchr.fgwasin_noext.gz -cc -o test -w wgEncodeDukeDnaseGM19238 
+
 
 
 
