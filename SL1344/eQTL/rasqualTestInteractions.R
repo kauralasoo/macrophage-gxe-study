@@ -33,8 +33,7 @@ filtered_vcf = list(snpspos = snps_pos, genotypes = genotypes)
 filtered_pairs = filterHitsR2(joint_pairs, filtered_vcf$genotypes, .8)
 
 #Naive vs IFNg
-covariate_names = c("sex_binary", "ng_ul_mean","macrophage_diff_days","rna_auto", "max_purity_filtered", "harvest_stimulation_days",
-                    "PEER_factor_1", "PEER_factor_2", "PEER_factor_3","PEER_factor_4", "PEER_factor_5","PEER_factor_6")
+covariate_names = c("PEER_factor_1", "PEER_factor_2", "PEER_factor_3","PEER_factor_4", "PEER_factor_5","PEER_factor_6", "sex_binary")
 formula_qtl = as.formula(paste("expression ~ genotype + condition_name ", 
                                paste(covariate_names, collapse = " + "), sep = "+ "))
 formula_interaction = as.formula(paste("expression ~ genotype + condition_name + condition_name:genotype ", 
