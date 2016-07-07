@@ -9,8 +9,19 @@ library("ggplot2")
 acldl_list = readRDS("results/acLDL/acLDL_combined_expression_data_covariates.rds")
 acldl_list = extractConditionFromExpressionList(c("Ctrl","AcLDL"), acldl_list)
 
+#Remove some donors
+acldl_list_filtered = acldl_list
+acldl_list_filtered$sample_metadata = acldl_list$sample_metadata %>% 
+  dplyr::filter(!(donor %in% c("voas","coio","giuo", "oefg","oarz", "hiaf","kuxp","piun", "xugn","cicb","fikt", "nusw")))
+acldl_list_filtered$cqn = acldl_list_filtered$cqn[,acldl_list_filtered$sample_metadata$sample_id]
+
 #Load p-values from disk
 rasqual_min_pvalues = readRDS("results/acLDL/eQTLs/acLDL_rasqual_min_pvalues.rds")
+min_pvalue_df = extractQTLsFromList(rasqual_min_pvalues, fdr_cutoff = 0.1)
+joint_pairs = dplyr::select(min_pvalue_df, gene_id, snp_id) %>% unique() 
+
+#Load p-values from the filtered analysis
+rasqual_min_pvalues = readRDS("results/acLDL/eQTLs/acLDL_rasqual_min_pvalues_filtered.rds")
 min_pvalue_df = extractQTLsFromList(rasqual_min_pvalues, fdr_cutoff = 0.1)
 joint_pairs = dplyr::select(min_pvalue_df, gene_id, snp_id) %>% unique() 
 
@@ -37,6 +48,11 @@ interaction_results = testMultipleInteractions(filtered_pairs, acldl_list$cqn, a
 interaction_df = postProcessInteractionPvalues(interaction_results)
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 write.table(interaction_hits, "results/acLDL/eQTLs/significant_interactions.txt", quote = FALSE, row.names = FALSE)
+
+#Test for interactions with filtered samples
+interaction_results = testMultipleInteractions(filtered_pairs, acldl_list_filtered$cqn, acldl_list_filtered$sample_metadata, filtered_vcf, formula_qtl, formula_interaction)
+interaction_df = postProcessInteractionPvalues(interaction_results)
+interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 
 #Estimate parameters for top hits
 interaction_params = testMultipleInteractions(dplyr::select(interaction_hits, gene_id, snp_id), acldl_list,filtered_vcf,
