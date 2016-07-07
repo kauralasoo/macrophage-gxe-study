@@ -18,7 +18,7 @@ close(f)
 atac_data = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
 
 #Import cisbp motifs
-cisbp_pwm_list = readRDS("results/ATAC/cisBP_PWMatrixList.rds")
+cisbp_pwm_list = readRDS("results/ATAC/cisBP/cisBP_PWMatrixList.rds")
 
 #Import SNP coords and alleles
 snp_info = readr::read_delim("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz", 
