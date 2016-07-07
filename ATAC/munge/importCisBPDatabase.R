@@ -28,7 +28,7 @@ pwmatrix_list = cisBPImportRecords(motifs_collapsed, cisbp_dir)
 pfmatrix_list = cisBPImportRecords(motifs_collapsed, cisbp_dir, toPWM = FALSE)
 
 #Export PWM list to disk
-saveRDS(pwmatrix_list, "results/ATAC/cisBP_PWMatrixList.rds")
-saveRDS(pfmatrix_list, "results/ATAC/cisBP_PFMatrixList.rds")
-
+saveRDS(pwmatrix_list, "results/ATAC/cisBP/cisBP_PWMatrixList.rds")
+saveRDS(pfmatrix_list, "results/ATAC/cisBP/cisBP_PFMatrixList.rds")
+saveRDS(motifs_collapsed,"results/ATAC/cisBP/cisBP_motif_metadata.rds")
 
