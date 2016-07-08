@@ -27,7 +27,11 @@ vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.
 #Import variant information
 snp_info = importVariantInformation("genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz")
 
-#Load p-values from disk
+#Load caQTL p-values from disk
+atac_min_pvalues = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
+atac_qtl_df = extractQTLsFromList(atac_min_pvalues, fdr_cutoff = 0.1)
+
+#Load eQTL p-values from disk
 rasqual_min_pvalues = readRDS("results/SL1344/eQTLs/rasqual_min_pvalues.rds")
 rasqual_qtl_df = extractQTLsFromList(rasqual_min_pvalues, fdr_cutoff = 0.1)
 joint_pairs = dplyr::select(rasqual_qtl_df, gene_id, snp_id) %>% unique() 
@@ -38,8 +42,8 @@ independent_qtls = dplyr::filter(filtered_pairs, gene_id == "ENSG00000120899")
 independent_qtl_res = dplyr::semi_join(rasqual_qtl_df, independent_qtls)
 
 #Mark the likely causal variants
-causal_variants = c("rs28834970","rs10086852", "rs34181358")
-names(causal_variants) = c("naive", "IFNg_SL1344", "IFNg")
+causal_variants = c("rs28834970","rs10086852", "rs34181358", "rs56090771")
+names(causal_variants) = c("naive", "IFNg_SL1344", "IFNg", "naive2")
 
 #Extract relevant genotypes from vcf
 extracted_genotypes = t(vcf_file$genotypes[causal_variants,]) %>% data.frame()
@@ -52,97 +56,60 @@ covariate_names = c("PEER_factor_1", "PEER_factor_2", "PEER_factor_3","PEER_fact
 qtl_data = constructQtlPlotDataFrame("ENSG00000120899", "rs28834970", combined_expression_data$cqn, vcf_file$genotypes, 
                                        combined_expression_data$sample_metadata, combined_expression_data$gene_metadata) %>%
   dplyr::left_join(extracted_genotypes, by = "genotype_id")
-plotQtlRow(qtl_data)
+naive_plot = plotQtlRow(qtl_data)
+ggsave("figures/main_figures/PTK2B_naive_eQTL.pdf", naive_plot, width = 8, height = 4)
+
+ifng_SL1344_plot = constructQtlPlotDataFrame("ENSG00000120899", "rs10086852", combined_expression_data$cqn, vcf_file$genotypes, 
+                                     combined_expression_data$sample_metadata, combined_expression_data$gene_metadata) %>%
+  dplyr::left_join(extracted_genotypes, by = "genotype_id") %>%
+  plotQtlRow()
+ggsave("figures/main_figures/PTK2B_IFNg_SL1344_eQTL.pdf", ifng_SL1344_plot, width = 8, height = 4)
+
 
 #Calculate residuals
-formula = as.formula(paste("norm_exp ~ rs34181358 + rs10086852",
+#Without regerssing out the second QTL
+formula = as.formula(paste("norm_exp ~ ",
+                           paste(covariate_names, collapse = " + "), sep = "+ "))
+
+data = dplyr::filter(qtl_data, condition_name == "IFNg")
+lmfit = lm(formula, data)
+data = dplyr::mutate(data, resid = as.numeric(lmfit$residuals))
+
+orig_plot = ggplot2::ggplot(data, ggplot2::aes(x = as.factor(rs28834970) , y = resid , color = condition_name)) + 
+  #ggplot2::facet_grid(~condition_name) + 
+  ggplot2::geom_boxplot(outlier.shape = NA) + 
+  ggplot2::geom_jitter(position = ggplot2::position_jitter(width = .2), size = 0.5) + 
+  ggplot2::ylab("Expression residual") +
+  ggplot2::theme_light() + 
+  ggplot2::scale_color_manual(values = conditionPalette(), guide=FALSE)
+
+summary(lm(resid ~ rs28834970, data))
+
+#With regressing out the second QTL
+formula = as.formula(paste("norm_exp ~ rs10086852 ",
                                          paste(covariate_names, collapse = " + "), sep = "+ "))
 
 data = dplyr::filter(qtl_data, condition_name == "IFNg")
 lmfit = lm(formula, data)
 data = dplyr::mutate(data, resid = as.numeric(lmfit$residuals))
 
-ggplot2::ggplot(data, ggplot2::aes(x = as.factor(rs28834970) , y = resid , color = condition_name)) + 
+regressed_plot = ggplot2::ggplot(data, ggplot2::aes(x = as.factor(rs28834970) , y = resid , color = condition_name)) + 
   #ggplot2::facet_grid(~condition_name) + 
   ggplot2::geom_boxplot(outlier.shape = NA) + 
   ggplot2::geom_jitter(position = ggplot2::position_jitter(width = .2), size = 0.5) + 
-  ggplot2::ylab("Normalized expression") +
+  ggplot2::ylab("Expression residual") +
   ggplot2::theme_light() + 
   ggplot2::scale_color_manual(values = conditionPalette(), guide=FALSE)
 
 summary(lm(resid ~ rs28834970, data))
 
-
-formula = as.formula(paste("norm_exp ~ condition_name", 
-                           paste(covariate_names, collapse = " + "), sep = "+ "))
-
-lmfit = lm(formula, qtl_data)
-data = dplyr::mutate(qtl_data, resid = as.numeric(lmfit$residuals))
-
-ggplot2::ggplot(data, ggplot2::aes(x = as.factor(rs2322599) , y = resid, color = condition_name)) + 
-  ggplot2::facet_grid(~condition_name) + 
-  ggplot2::geom_boxplot(outlier.shape = NA) + 
-  ggplot2::geom_jitter(position = ggplot2::position_jitter(width = .2), size = 0.5) + 
-  ggplot2::ylab("Normalized expression") +
-  ggplot2::theme_light() + 
-  ggplot2::scale_color_manual(values = conditionPalette(), guide=FALSE)
-
-summary(lm(norm_exp ~ rs2322599, dplyr::filter(data, condition_name == "IFNg")))
-
-
-formula = as.formula(paste("norm_exp ~ condition_name", 
-                           paste(covariate_names, collapse = " + "), sep = "+ "))
-
-lmfit = lm(formula, qtl_data)
-data = dplyr::mutate(qtl_data, resid = as.numeric(lmfit$residuals))
-
-ggplot2::ggplot(data, ggplot2::aes(x = as.factor(rs1429938) , y = resid , color = condition_name)) + 
-  ggplot2::facet_grid(~condition_name) + 
-  ggplot2::geom_boxplot(outlier.shape = NA) + 
-  ggplot2::geom_jitter(position = ggplot2::position_jitter(width = .2), size = 0.5) + 
-  ggplot2::ylab("Normalized expression") +
-  ggplot2::theme_light() + 
-  ggplot2::scale_color_manual(values = conditionPalette(), guide=FALSE)
-
-
-formula = as.formula(paste("norm_exp ~ condition_name + rs2322599 + condition_name*rs2322599", 
-                           paste(covariate_names, collapse = " + "), sep = "+ "))
-
-lmfit = lm(formula, qtl_data)
-data = dplyr::mutate(qtl_data, resid = as.numeric(lmfit$residuals))
-
-ggplot2::ggplot(data, ggplot2::aes(x = as.factor(rs1429938) , y = resid , color = condition_name)) + 
-  ggplot2::facet_grid(~condition_name) + 
-  ggplot2::geom_boxplot(outlier.shape = NA) + 
-  ggplot2::geom_jitter(position = ggplot2::position_jitter(width = .2), size = 0.5) + 
-  ggplot2::ylab("Normalized expression") +
-  ggplot2::theme_light() + 
-  ggplot2::scale_color_manual(values = conditionPalette(), guide=FALSE)
-
-
-
-
-
-#Make effect size plots for these two qtls
-naive_eQTL = plotEQTL("ENSG00000120899", "rs28834970", combined_expression_data$cqn, vcf_file$genotypes, 
-         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
-
-
-
-
-
-ggsave("results/SL1344/eQTLs/example_loci/PTK2B/PTK2B_naive_eQTL.pdf", naive_eQTL, width = 7, height = 7)
-
-ifng_sl1344_eQTL = plotEQTL("ENSG00000120899", "rs1429938", combined_expression_data$cqn, vcf_file$genotypes, 
-                      combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
-ggsave("results/SL1344/eQTLs/example_loci/PTK2B/PTK2B_IFNg_SL1344_eQTL.pdf", ifng_sl1344_eQTL, width = 7, height = 7)
-
-
+#Joint the two plots together
+joint = cowplot::plot_grid(orig_plot, regressed_plot, labels = c("A","B"))
+ggsave("figures/main_figures/PTK2B_sign_flip_residuals.pdf", plot = joint, width = 5, height = 4)
 
 
 
 #Fetch all kinds of p-values from the PTK2B region for plotting and coloc
-
 #Define region
 ptk2b_region = constructGeneRanges(data_frame(gene_id = "ENSG00000120899"), combined_expression_data$gene_metadata, 5e4)
 
@@ -199,23 +166,31 @@ fastqtl_manhattan = ggplot(fastqtl_joint_pvalues, aes(x = pos, y = -log(p_nomina
 ggsave("figures/main_figures/PTK2B_FASTQTL_manhattan.pdf", plot = fastqtl_manhattan, width = 6, height = 7)
 
 
+#Fetch associatated ATAC peaks for each lead eQTL SNP
+peak_midpoints = dplyr::transmute(atac_list$gene_metadata, gene_id, midpoint = end -((end-start)/2)) %>% tbl_df()
+atac_snp_results = purrr::map(qtlResults()$atac_rasqual, ~tabixFetchSNPsQuick(causal_variants,.,vcf_file$snpspos)) %>%
+  ldply(.id = "condition_name") %>%
+  dplyr::left_join(peak_midpoints) %>%
+  dplyr::tbl_df()
 
+dplyr::filter(atac_snp_results, p_nominal < 1e-3) %>% dplyr::select(gene_id, snp_id, p_nominal, condition_name)
 
-naive_pvalues = tabixFetchGenesQuick("ENSG00000120899", qtlResults()$rna_rasqual$naive, 
-                                     combined_expression_data$gene_metadata, cis_window = 0.5e5)[[1]] %>% 
-  dplyr::mutate(condition = "naive") %>% addAssociationPosterior(n = 84)
-IFNg_SL1344_pvalues = tabixFetchGenesQuick("ENSG00000120899", qtlResults()$rna_rasqual$IFNg_SL1344, 
-                                           combined_expression_data$gene_metadata, cis_window = 0.5e5)[[1]]  %>% 
-  dplyr::mutate(condition = "IFNg_SL1344") %>% addAssociationPosterior(n = 84)
-joint_pvalues = rbind(naive_pvalues, IFNg_SL1344_pvalues)
+#Fetch RASQUAL results for the ATAC peak
+peak1_region = constructGeneRanges(data_frame(gene_id = "ATAC_peak_261927"), atac_list$gene_metadata, 1e5)
+peak1_rasqual_pvalues = purrr::map_df(qtlResults()$atac_rasqual, ~tabixFetchGenes(peak1_region, .)[[1]], .id = "condition_name") %>%
+  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344","IFNg_SL1344"))) %>%
+  dplyr::arrange(p_nominal) %>%
+  dplyr::group_by(condition_name) %>%
+  dplyr::mutate(R2 = calculateR2FromLead(snp_id, vcf_file$genotypes)) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(chr = as.character(chr))
 
-#Import fastQTL p-values for the PTK2B gene
-naive_pvalues_linear = fastqtlTabixFetchGenesQuick("ENSG00000120899", qtlResults()$rna_fastqtl$naive, 
-  combined_expression_data$gene_metadata, cis_window = 0.5e5)[[1]] %>%
-  addMafFromVariantInfo(snp_info)
-IFNg_SL1344_linear = fastqtlTabixFetchGenesQuick("ENSG00000120899", qtlResults()$rna_fastqtl$IFNg_SL1344, 
-                                                   combined_expression_data$gene_metadata, cis_window = 0.5e5)[[1]] %>%
-  addMafFromVariantInfo(snp_info)
+peak1_plot = ggplot(peak1_rasqual_pvalues, aes(x = pos, y = -log(p_nominal, 10), color = R2)) + 
+  geom_point() + 
+  facet_grid(condition_name~., scales = "free_y") +
+  theme_light()
+ggsave("figures/main_figures/PTK2B_peak1_rasqual_manhattan.pdf", plot = peak1_plot, width = 6, height = 7)
+
 
 #Import Alzheimer's GWAS summary stats
 igap_gwas_results = readRDS("annotations/IGAP_stage_1_2_combined_stats.rds")
@@ -247,39 +222,9 @@ all_pvalues = rbind(dplyr::select(joint_pvalues, pos, p_nominal, condition), gwa
 all_pvalues$condition = factor(all_pvalues$condition, levels = c("AD GWAS", "naive", "IFNg_SL1344"))
 ggsave("results/SL1344/eQTLs/example_loci/PTK2B/eQTL_vs_GWAS_manhattan_plot.pdf", plot = eQTL_manhattan_plot, width = 7, height = 8)
 
-#Find the most associated ATAC peaks for the lead variants
-
-#Fetch ATAC SNPs
-peak_midpoints = dplyr::transmute(atac_list$gene_metadata, gene_id, midpoint = end -((end-start)/2)) %>% tbl_df()
-atac_snp_results = purrr::map(qtlResults()$atac_rasqual, ~tabixFetchSNPsQuick(causal_variants,.,vcf_file$snpspos)) %>%
-  ldply(.id = "condition_name") %>%
-  dplyr::left_join(peak_midpoints)
-
-#Fetch most associated peaks in each condition
-naive_filtered = dplyr::filter(atac_snp_results, snp_id == causal_variants["naive"], condition_name == "naive") %>%
-  dplyr::arrange(p_nominal)
-ifng_sl1344_filtered = dplyr::filter(atac_snp_results, snp_id == causal_variants["IFNg_SL1344"], condition_name == "IFNg_SL1344") %>%
-  dplyr::arrange(p_nominal)
-
-assoc_atac_peaks = ggplot(naive_filtered, aes(x = midpoint, y = -log(p_nominal, 10))) + 
-  geom_point() + 
-  facet_grid(condition~.) + 
-  geom_vline(x = 27350609) +
-  scale_x_continuous(limits = c(min(joint_pvalues$pos),max(joint_pvalues$pos)))
-ggsave("results/SL1344/eQTLs/example_loci/PTK2B/naive_lead_ATAC_peaks.pdf", plot = assoc_atac_peaks, width = 7, height = 7)
-
-stimulated_filtered = dplyr::filter(atac_snp_results, snp_id == "rs1429938")
-assoc_atac_peaks = ggplot(stimulated_filtered, aes(x = midpoint, y = -log(p_nominal, 10))) + 
-  geom_point() + 
-  facet_grid(condition~.) + 
-  geom_vline(x = 27379689) +
-  scale_x_continuous(limits = c(min(joint_pvalues$pos),max(joint_pvalues$pos)))
-ggsave("results/SL1344/eQTLs/example_loci/PTK2B/stimulated_lead_ATAC_peaks.pdf", plot = assoc_atac_peaks, width = 7, height = 7)
-
-
 #Make effect size plots for the ATAC QTLs
 #Make effect size plots for these two qtls
-naive_QTL = plotEQTL("ATAC_peak_261927", "rs6987305", atac_list$cqn, vcf_file$genotypes, 
+naive_QTL = plotEQTL("ATAC_peak_261927", "rs28834970", atac_list$cqn, vcf_file$genotypes, 
                       atac_list$sample_metadata, atac_list$gene_metadata)
 ggsave("results/SL1344/eQTLs/example_loci/PTK2B/PTK2B_enhancer1_QTL.pdf", naive_QTL, width = 7, height = 7)
 
@@ -288,12 +233,6 @@ ifng_sl1344_QTL = plotEQTL("ATAC_peak_261942", "rs1429938", atac_list$cqn, vcf_f
 ggsave("results/SL1344/eQTLs/example_loci/PTK2B/PTK2B_enhancer2_eQTL.pdf", ifng_sl1344_QTL, width = 7, height = 7)
 
 
-#Fetch rasqual results for the ATAC peaks
-naive_atac_pvalues = tabixFetchGenesQuick("ATAC_peak_261927", "../macrophage-chromatin/results/ATAC/rasqual/output/naive_100kb/naive_100kb.sorted.txt.gz", atac_list$gene_metadata, cis_window = 0.5e5)[[1]] %>% 
-  dplyr::mutate(condition = "naive")
-IFNg_SL1344_atac_pvalues = tabixFetchGenesQuick("ATAC_peak_261942", "../macrophage-chromatin/results/ATAC/rasqual/output/IFNg_SL1344_100kb/IFNg_SL1344_100kb.sorted.txt.gz", atac_list$gene_metadata, cis_window = 0.5e5)[[1]]  %>% 
-  dplyr::mutate(condition = "IFNg_SL1344")
-
 
 #Test for colocalisation
 a = testColoc(naive_pvalues, naive_atac_pvalues, n1 = 69, n2 = 42)
@@ -301,24 +240,6 @@ b = testColoc(naive_pvalues, IFNg_SL1344_atac_pvalues, n1 = 69, n2 = 42)
 c = testColoc(IFNg_SL1344_pvalues, IFNg_SL1344_atac_pvalues, n1 = 69, n2 = 31)
 c = testColoc(IFNg_SL1344_pvalues, naive_pvalues, n1 = 69, n2 = 69)
 
-
-
-#Look at some other variants
-EPHA1_pvalues = tabixFetchGenesQuick("ENSG00000229153", "databases/SL1344/naive_500kb.sorted.txt.gz", combined_expression_data$gene_metadata, cis_window = 5e5)[[1]] %>%
-  dplyr::transmute(CHR = chr, BP = pos, SNP = snp_id, P = p_nominal)
-write.table(EPHA1_pvalues, "EPHA1-AS.gwas", sep ="\t", quote = FALSE, row.names = FALSE)
-
-pvalues = tabixFetchGenesQuick("ENSG00000029725", "databases/SL1344/naive_500kb.sorted.txt.gz", combined_expression_data$gene_metadata, cis_window = 5e5)[[1]] %>%
-  dplyr::transmute(CHR = chr, BP = pos, SNP = snp_id, P = p_nominal)
-write.table(pvalues, "RABEP.gwas", sep ="\t", quote = FALSE, row.names = FALSE)
-
-pvalues = tabixFetchGenesQuick("ENSG00000030066", "databases/SL1344/naive_500kb.sorted.txt.gz", combined_expression_data$gene_metadata, cis_window = 5e5)[[1]] %>%
-  dplyr::transmute(CHR = chr, BP = pos, SNP = snp_id, P = p_nominal)
-write.table(pvalues, "NUP160.gwas", sep ="\t", quote = FALSE, row.names = FALSE)
-
-pvalues = tabixFetchGenesQuick("ENSG00000105383", "databases/SL1344/naive_500kb.sorted.txt.gz", combined_expression_data$gene_metadata, cis_window = 5e5)[[1]] %>%
-  dplyr::transmute(CHR = chr, BP = pos, SNP = snp_id, P = p_nominal)
-write.table(pvalues, "CD33.gwas", sep ="\t", quote = FALSE, row.names = FALSE)
 
 
 #Perform finemapping with ATAC data
@@ -351,3 +272,10 @@ motif_hits = dplyr::filter(motif_disruptions, snp_id %in% causal_variants) %>%
 #PTK2B and CLU hits are independent from each other
 calculateR2FromLead(c("rs7982", "rs28834970"), vcf_file$genotypes)
 
+
+#Find associated peaks for a single specific SNP
+atac_snp_results = purrr::map(qtlResults()$atac_rasqual, ~tabixFetchSNPsQuick(c("rs11375466"),.,vcf_file$snpspos)) %>%
+  ldply(.id = "condition_name")
+dplyr::filter(atac_snp_results, p_nominal < 1e-4) %>% 
+  dplyr::select(gene_id, condition_name, p_nominal) %>% 
+  dplyr::left_join(dplyr::select(atac_data$gene_metadata, gene_id, start, end))
