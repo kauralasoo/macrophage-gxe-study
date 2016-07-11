@@ -43,6 +43,7 @@ cqn_set = ExpressionSet(as.matrix(mean_cqn))
 cqn_set_std = standardise(cqn_set)
 
 #Cluster the expression data
+set.seed(1)
 clusters = mfuzz(cqn_set_std, c = 7, m = 1.5, iter = 1000)
 cluster_cores = acore(cqn_set_std, clusters, min.acore = 0)
 names(cluster_cores) = c(1:length(cluster_cores))
@@ -81,13 +82,13 @@ chromatin_clusters_heatmap = ggplot(cluster_plot_data %>% dplyr::sample_frac(0.4
   theme(axis.title.x = element_blank()) + 
   ylab(ylabel) +
   theme(panel.margin = unit(0.2, "lines"))
-ggsave("results/ATAC/DA/ATAC_DA_clusters.png",chromatin_clusters_heatmap, width = 4, height = 5.5)
+ggsave("figures/main_figures/ATAC_DA_clusters.png",chromatin_clusters_heatmap, width = 4, height = 5.5)
 
 ggplot(cluster_plot_data, aes(x = condition_name, y = expression)) + 
   facet_grid(new_cluster_id ~ .,  scales = "free_y", space = "free_y") + stat_summary(fun.y = mean, geom="point")
 
 #Add names to each cluster
-cluster_names = data_frame(new_cluster_id = c(1:7), name = c("SL1344_up_1","SL1344_up_2","IFNg_SL1344_up", "IFNg_up_1", "IFNg_up_2", "IFNg_down", "SL1344_down"))
+cluster_names = data_frame(new_cluster_id = c(1:7), name = c("Salmonella","Salmonella","Both", "IFNg", "IFNg", "Decreased", "Decreased"))
 
 #Save clusters to disk
 final_clusters = dplyr::select(cluster_plot_data, gene_id, MEM.SHIP, new_cluster_id) %>% unique() %>%

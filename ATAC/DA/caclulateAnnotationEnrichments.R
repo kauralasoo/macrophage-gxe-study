@@ -26,12 +26,20 @@ ggsave("results/ATAC/DA/MDM_vs_IPSDM_concordance.pdf", peak_enrichments, width =
 
 
 #CIITA-RFX5
-ciita_enrich = read.table("results/annotation_overlaps/CIITA-RFX5_overlap.gat.txt", header = TRUE, stringsAsFactors = FALSE) %>%
-  dplyr::select(track, annotation, l2fold)
+ciita_enrich = read.table("results/public_chromatin/annotation_overlaps/CIITA-RFX5_overlap.gat.txt", header = TRUE, stringsAsFactors = FALSE) %>%
+  dplyr::select(track, annotation, l2fold) %>%
+  dplyr::filter(annotation %in% c("CIITA_IFNg", "RFX5_IFNg"))
 ciita_enrich$track = factor(ciita_enrich$track, 
-      levels = rev(c("SL1344_up_1","SL1344_up_2" ,"IFNg_SL1344_up", "IFNg_up_1", "IFNg_up_2", "IFNg_down", "SL1344_down")))
-ciita_enrich_plot = plotEnrichment(ciita_enrich, xlabel = "Monocyte ChIP-Seq", ylabel = "ATAC-Seq peaks")
-ggsave("results/ATAC/DA/CIITA-RFX5_concordance.pdf", ciita_enrich_plot, width = 7, height = 7)
+      levels = (c("Salmonella","Both" ,"IFNg", "Decreased"))) 
+#Make a plot
+ciita_plot = ggplot(ciita_enrich, aes(x = l2fold, y = annotation)) + 
+  geom_point() + 
+  facet_grid(track~.) + 
+  theme_light() + 
+  geom_vline(xintercept = 0) + 
+  xlab("Log2 fold-enrichment") +
+  ylab("Monocyte ChIP-seq data")
+ggsave("figures/supplementary/concordance_CIITA-RFX5.pdf", ciita_plot, width = 3.5, height = 4.5)
 
 #PU.1 and CEBPb from two different papers
 naive_enrich = read.table("results/ATAC/ChIP_enrichment/gat_output/naive_naive_overlap.gat.txt", header = TRUE, stringsAsFactors = FALSE) %>%
