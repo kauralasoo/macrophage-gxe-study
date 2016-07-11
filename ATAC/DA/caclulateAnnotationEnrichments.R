@@ -25,17 +25,6 @@ peak_enrichments = plotEnrichment(gat_results, ylabel = "ATAC-Seq peaks (this st
 ggsave("results/ATAC/DA/MDM_vs_IPSDM_concordance.pdf", peak_enrichments, width = 10, height = 7)
 
 
-#Overlap enrichment with STAT1 peaks
-gat-run.py --segments=results/ATAC/DA/ATAC_clustered_peaks.bed --annotations=results/Ivashkiv/DA/H3K27Ac_clustered_peaks.bed --workspace=../../annotations/blacklists/GRCh38_filtered_gapped_genome.bed --num-samples=1000 --log=results/annotation_overlaps/H3K27Ac_overlap.gat_log.txt --with-segment-tracks > results/annotation_overlaps/H3K27Ac_overlap.gat.txt
-gat-run.py --segments=results/ATAC/DA/ATAC_clustered_peaks.bed --annotations=results/Ivashkiv/DA/STAT1_grouped_peaks.bed  --workspace=../../annotations/blacklists/GRCh38_filtered_gapped_genome.bed --num-samples=1000 --log=results/annotation_overlaps/STAT1_overlap.gat_log.txt --with-segment-tracks > results/annotation_overlaps/STAT1_overlap.gat.txt
-gat-run.py --segments=results/ATAC/DA/ATAC_clustered_peaks.bed --annotations=results/Ivashkiv/peak_calls/IRF1_joint_peaks.bed --workspace=../../annotations/blacklists/GRCh38_filtered_gapped_genome.bed --num-samples=1000 --log=results/annotation_overlaps/IRF1_overlap.gat_log.txt --with-segment-tracks > results/annotation_overlaps/IRF1_overlap.gat.txt
-gat-run.py --segments=results/ATAC/DA/ATAC_clustered_peaks.bed --annotations=results/Knight/CIITA-RFX5_joint_peaks.bed --workspace=../../annotations/blacklists/GRCh38_filtered_gapped_genome.bed --num-samples=1000 --log=results/annotation_overlaps/CIITA-RFX5_overlap.gat_log.txt --with-segment-tracks > results/annotation_overlaps/CIITA-RFX5_overlap.gat.txt
-
-#Enrichments for PU.1, CEBPb and CTCF
-gat-run.py --segments=annotations/ATAC_consensus_peaks.bed  --annotations=results/ATAC/ChIP_enrichment/naive_combined_peaks.bed --workspace=../../annotations/blacklists/GRCh38_filtered_gapped_genome.bed --num-samples=100 --log=results/ATAC/ChIP_enrichment/gat_output/ATAC_naive_overlap.gat_log.txt --with-segment-tracks > results/ATAC/ChIP_enrichment/gat_output/ATAC_naive_overlap.gat.txt
-gat-run.py --segments=results/ATAC/ChIP_enrichment/naive_combined_peaks.bed  --annotations=results/ATAC/ChIP_enrichment/naive_combined_peaks.bed --workspace=../../annotations/blacklists/GRCh38_filtered_gapped_genome.bed --num-samples=100 --log=results/ATAC/ChIP_enrichment/gat_output/naive_naive_overlap.gat_log.txt --with-segment-tracks > results/ATAC/ChIP_enrichment/gat_output/naive_naive_overlap.gat.txt
-
-
 #CIITA-RFX5
 ciita_enrich = read.table("results/annotation_overlaps/CIITA-RFX5_overlap.gat.txt", header = TRUE, stringsAsFactors = FALSE) %>%
   dplyr::select(track, annotation, l2fold)

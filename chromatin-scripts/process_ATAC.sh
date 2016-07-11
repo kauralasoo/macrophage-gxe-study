@@ -336,3 +336,18 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q long
 cat motif_batches.txt | python ~/software/utils/submitJobs.py --MEM 4000 --jobname calculate_motif_disruptions --command "/software/R-3.2.2/bin/Rscript macrophage-chromatin/ATAC/finemapping/caQTL_motif_disruptions.R"
 cat results/ATAC/motif_analysis/motif_disruption_batch_*.txt > results/ATAC/motif_analysis/motif_disruption.txt
 rm results/ATAC/motif_analysis/motif_disruption_batch_*.txt
+
+##### ChIP-seq overlaps #####
+#H3K27Ac
+gat-run.py --segments=results/ATAC/DA/ATAC_clustered_peaks.bed --annotations=results/Ivashkiv/DA/H3K27Ac_clustered_peaks.bed --workspace=../../annotations/blacklists/GRCh38_filtered_gapped_genome.bed --num-samples=1000 --log=results/annotation_overlaps/H3K27Ac_overlap.gat_log.txt --with-segment-tracks > results/annotation_overlaps/H3K27Ac_overlap.gat.txt
+#STAT1
+gat-run.py --segments=results/ATAC/DA/ATAC_clustered_peaks.bed --annotations=results/Ivashkiv/DA/STAT1_grouped_peaks.bed  --workspace=../../annotations/blacklists/GRCh38_filtered_gapped_genome.bed --num-samples=1000 --log=results/annotation_overlaps/STAT1_overlap.gat_log.txt --with-segment-tracks > results/annotation_overlaps/STAT1_overlap.gat.txt
+#IRF1
+gat-run.py --segments=results/ATAC/DA/ATAC_clustered_peaks.bed --annotations=results/Ivashkiv/peak_calls/IRF1_joint_peaks.bed --workspace=../../annotations/blacklists/GRCh38_filtered_gapped_genome.bed --num-samples=1000 --log=results/annotation_overlaps/IRF1_overlap.gat_log.txt --with-segment-tracks > results/annotation_overlaps/IRF1_overlap.gat.txt
+#CIITA-RFX5
+gat-run.py --segments=results/ATAC/DA/ATAC_clustered_peaks.bed --annotations=results/Knight/CIITA-RFX5_joint_peaks.bed --workspace=../../annotations/blacklists/GRCh38_filtered_gapped_genome.bed --num-samples=1000 --log=results/annotation_overlaps/CIITA-RFX5_overlap.gat_log.txt --with-segment-tracks > results/annotation_overlaps/CIITA-RFX5_overlap.gat.txt
+
+#Enrichments for PU.1, CEBPb and CTCF
+gat-run.py --segments=annotations/ATAC_consensus_peaks.bed  --annotations=results/ATAC/ChIP_enrichment/naive_combined_peaks.bed --workspace=../../annotations/blacklists/GRCh38_filtered_gapped_genome.bed --num-samples=100 --log=results/ATAC/ChIP_enrichment/gat_output/ATAC_naive_overlap.gat_log.txt --with-segment-tracks > results/ATAC/ChIP_enrichment/gat_output/ATAC_naive_overlap.gat.txt
+gat-run.py --segments=results/ATAC/ChIP_enrichment/naive_combined_peaks.bed  --annotations=results/ATAC/ChIP_enrichment/naive_combined_peaks.bed --workspace=../../annotations/blacklists/GRCh38_filtered_gapped_genome.bed --num-samples=100 --log=results/ATAC/ChIP_enrichment/gat_output/naive_naive_overlap.gat_log.txt --with-segment-tracks > results/ATAC/ChIP_enrichment/gat_output/naive_naive_overlap.gat.txt
+
