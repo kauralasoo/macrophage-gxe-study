@@ -17,7 +17,7 @@ cat macrophage-gxe-study/data/chromatin/ChIP/Fairfax_samples.txt | python ~/soft
 cat macrophage-gxe-study/data/chromatin/ChIP/Fairfax_samples.txt | python ~/software/utils/submitJobs.py --MEM 1000 --ncores 1 --jobname remove_header --command "python ~/software/utils/bam/bamRemoveBwaHeader.py --indir processed/Fairfax/ --outdir processed/Fairfax/"
 
 #Remove duplicates
-cat macrophage-gxe-study/data/chromatin/ChIP/Fairfax_samples.txt | python ~/software/utils/submitJobs.py --MEM 2200 --ncores 1 --jobname remove_duplicates --command "python ~/software/utils/bam/bamRemoveDuplicates.py --indir processed/Fairfax/ --outdir processed/Fairfax/ --execute True --insuffix .reheadered.bam"
+cat macrophage-gxe-study/data/chromatin/ChIP/Fairfax_samples.txt | python ~/software/utils/submitJobs.py --MEM 2200 --ncores 4 --jobname remove_duplicates --command "python ~/software/utils/bam/bamRemoveDuplicates.py --indir processed/Fairfax/ --outdir processed/Fairfax/ --execute True --insuffix .reheadered.bam"
 
 #Index bams
 cat macrophage-gxe-study/data/chromatin/ChIP/Fairfax_samples.txt  | python ~/software/utils/submitJobs.py --MEM 1000 --jobname index_bams --command  "python ~/software/utils/bam/index-bams.py --bamdir processed/Fairfax/ --insuffix .no_duplicates.bam --execute True"
@@ -41,7 +41,7 @@ rm processed/Fairfax/*/*.reheadered.bam
 rm processed/Fairfax/*/*.new_header.txt
 
 #Call narrow and broad peaks
-cat macrophage-gxe-study/data/chromatin/ChIP/Fairfax_samples.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname chipMacsCallPeakNarrow --command "python ~/software/utils/coverage/chipMacsCallPeak.py --indir processed/Fairfax/ --outdir processed/Fairfax/ --execute True --control processed/OCallaghan/Input_ctrl/Input_ctrl.no_duplicates.bam --broad False"
-cat macrophage-gxe-study/data/chromatin/ChIP/Fairfax_samples.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname chipMacsCallPeakBroad --command "python ~/software/utils/coverage/chipMacsCallPeak.py --indir processed/Fairfax/ --outdir processed/Fairfax/ --execute True --control processed/OCallaghan/Input_ctrl/Input_ctrl.no_duplicates.bam --broad True"
+cat macrophage-gxe-study/data/chromatin/ChIP/Fairfax_samples.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname chipMacsCallPeakNarrow --command "python ~/software/utils/coverage/chipMacsCallPeak.py --indir processed/Fairfax/ --outdir processed/Fairfax/ --execute True --control processed/Fairfax/BTS0011_input/BTS0011_input.no_duplicates.bam --broad False"
+cat macrophage-gxe-study/data/chromatin/ChIP/Fairfax_samples.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname chipMacsCallPeakBroad --command "python ~/software/utils/coverage/chipMacsCallPeak.py --indir processed/Fairfax/ --outdir processed/Fairfax/ --execute True --control processed/Fairfax/BTS0011_input/BTS0011_input.no_duplicates.bam --broad True"
 
 
