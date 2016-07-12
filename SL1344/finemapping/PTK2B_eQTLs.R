@@ -185,7 +185,16 @@ peak1_rasqual_pvalues = purrr::map_df(qtlResults()$atac_rasqual, ~tabixFetchGene
   dplyr::ungroup() %>%
   dplyr::mutate(chr = as.character(chr))
 
-peak1_plot = ggplot(peak1_rasqual_pvalues, aes(x = pos, y = -log(p_nominal, 10), color = R2)) + 
+#Fetch fastQTL results
+peak1_fastqtl_pvalues = purrr::map_df(qtlResults()$atac_fastqtl, ~fastqtlTabixFetchGenes(peak1_region, .)[[1]], .id = "condition_name") %>%
+  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344","IFNg_SL1344"))) %>%
+  dplyr::arrange(p_nominal) %>%
+  dplyr::group_by(condition_name) %>%
+  dplyr::mutate(R2 = calculateR2FromLead(snp_id, vcf_file$genotypes)) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(chr = as.character(chr))
+
+peak1_plot = ggplot(peak1_fastqtl_pvalues, aes(x = pos, y = -log(p_nominal, 10), color = R2)) + 
   geom_point() + 
   facet_grid(condition_name~., scales = "free_y") +
   theme_light()
