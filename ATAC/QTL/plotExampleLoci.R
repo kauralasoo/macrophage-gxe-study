@@ -6,6 +6,7 @@ load_all("macrophage-gxe-study/housekeeping/")
 library("GenomicRanges")
 library("dplyr")
 library("ggplot2")
+library("GenomicFeatures")
 
 
 #Import data
@@ -99,6 +100,20 @@ associated_variants = makeManhattanPlot(naive_peak_pvals, ptk2b_coords)
 ptk2b_full = cowplot::plot_grid(associated_variants, ptk2b_plot$coverage_plot, cebpb_plot$coverage_plot, 
                                 ptk2b_plot$tx_structure, align = "v", rel_heights = c(0.1,0.4,0.1,0.2), ncol = 1)
 ggsave("figures/main_figures/PTK2B_region_coverage.pdf", ptk2b_full, width = 8, height = 8)
+
+#Make a read coverage plot for RNA-Seq
+txdb = loadDb("../../annotations/GRCh38/genes/Ensembl_79/TranscriptDb_GRCh38_79.db")
+tx_metadata = readRDS("../../annotations/GRCh38/genes/Ensembl_79/Homo_sapiens.GRCh38.79.transcript_data.rds") %>%
+  dplyr::rename(transcript_id = ensembl_transcript_id,
+                gene_id = ensembl_gene_id,
+                gene_name = external_gene_name)
+exons = exonsBy(txdb, by = "tx", use.names = TRUE)
+cdss = cdsBy(txdb, by = "tx", use.names = TRUE)
+
+#Filter transcripts for PTK2B
+ptk2b_tx = dplyr::filter(tx_metadata, gene_name == "PTK2B", 
+                         transcript_biotype == "protein_coding", transcript_status == "KNOWN")
+plotTranscripts(exons[ptk2b_tx$transcript_id], cdss[ptk2b_tx$transcript_id], tx_metadata, rescale_introns = FALSE)
 
 
 #### PTK2B second QTL region ####

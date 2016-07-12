@@ -4,6 +4,7 @@ library("dplyr")
 load_all("../seqUtils/")
 library("MatrixEQTL")
 load_all("macrophage-gxe-study/housekeeping/")
+load_all("../wiggleplotr/")
 library("ggplot2")
 load_all("~/software/rasqual/rasqualTools/")
 library("purrr")
@@ -26,6 +27,15 @@ vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.
 
 #Import variant information
 snp_info = importVariantInformation("genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz")
+
+#Import transcript annotations
+txdb = loadDb("../../annotations/GRCh38/genes/Ensembl_79/TranscriptDb_GRCh38_79.db")
+tx_metadata = readRDS("../../annotations/GRCh38/genes/Ensembl_79/Homo_sapiens.GRCh38.79.transcript_data.rds") %>%
+  dplyr::rename(transcript_id = ensembl_transcript_id,
+                gene_id = ensembl_gene_id,
+                gene_name = external_gene_name)
+exons = exonsBy(txdb, by = "tx", use.names = TRUE)
+cdss = cdsBy(txdb, by = "tx", use.names = TRUE)
 
 #Load caQTL p-values from disk
 atac_min_pvalues = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
@@ -112,9 +122,10 @@ ggsave("figures/main_figures/PTK2B_sign_flip_residuals.pdf", plot = joint, width
 #Fetch all kinds of p-values from the PTK2B region for plotting and coloc
 #Define region
 ptk2b_region = constructGeneRanges(data_frame(gene_id = "ENSG00000120899"), combined_expression_data$gene_metadata, 5e4)
+ptk2b_region_coords = c(start(ptk2b_region), end(ptk2b_region))
 
 #Import p-values from the the original GWAS
-alzheimer_pvals = importGWASSummaryStats(ptk2b_region, "databases/GWAS/IGAP_summary_statistics/IGAP_stage_1.GRCh38.sorted.bed.gz")[[1]] %>%
+alzheimer_pvals = importGWASSummaryStats(ptk2b_region, "/Volumes/JetDrive/databases/GWAS/IGAP/IGAP_stage_1.GRCh38.sorted.bed.gz")[[1]] %>%
   dplyr::select(-snp_id)
 alzheimer_pvalues = dplyr::select(snp_info, chr, pos, snp_id, MAF) %>% 
   dplyr::left_join(alzheimer_pvals, ., by = c("chr","pos")) %>% 
@@ -138,14 +149,23 @@ rasqual_r2 = dplyr::group_by(rna_rasqual_pvalues, condition_name) %>% dplyr::arr
 #Merge GWAS and eQTL data together
 joint_pvalues = dplyr::bind_rows(dplyr::select(alzheimer_pvalues, chr, pos, snp_id, p_nominal, R2, condition_name),
                  dplyr::select(rasqual_r2, chr, pos, snp_id, p_nominal, R2, condition_name)) %>%
-  dplyr::mutate(condition_name = factor(condition_name, levels = c("AZ GWAS","naive","IFNg","SL1344","IFNg_SL1344")))
+  dplyr::mutate(condition_name = factor(condition_name, levels = c("AZ GWAS","naive","IFNg","SL1344","IFNg_SL1344"))) %>%
+  dplyr::filter(condition_name %in% c("AZ GWAS", "naive"))
 
 #Make a manhattan plot
 rasqual_manhattan = ggplot(joint_pvalues, aes(x = pos, y = -log(p_nominal, 10), colour = R2)) + 
   geom_point() + 
+  ylab(expression(paste("-",log[10], " p-value"))) +
   facet_grid(condition_name~., scales = "free_y") +
-  theme_light()
-ggsave("figures/main_figures/PTK2B_RASQUAL_manhattan.pdf", plot = rasqual_manhattan, width = 6, height = 7)
+  scale_x_continuous(expand = c(0,0), limits = ptk2b_region_coords) +
+  theme_light() +
+  dataTrackTheme()
+
+#Plot transcript structure for the PTK2B gene
+ptk2b_structure = plotTranscripts(exons["ENST00000346049"], cdss["ENST00000346049"], tx_metadata, rescale_introns = FALSE, 
+                region_coords = c(start(ptk2b_region), end(ptk2b_region)))
+joint_plot = cowplot::plot_grid(rasqual_manhattan, ptk2b_structure, align = "v", ncol = 1, rel_heights = c(8,3))
+ggsave("figures/main_figures/PTK2B_RASQUAL_structure.pdf", plot = joint_plot, width = 6, height = 7)
 
 #Add R2 values per conditon
 fastqtl_r2 = dplyr::group_by(rna_fastqtl_pvalues, condition_name) %>% dplyr::arrange(p_nominal) %>%
