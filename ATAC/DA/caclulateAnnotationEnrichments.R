@@ -15,14 +15,14 @@ plotEnrichment <- function(df, xlabel = "", ylabel = ""){
 }
 
 #Import GAT results
-gat_results = read.table("results/annotation_overlaps/H3K27Ac_overlap.gat.txt", header = TRUE, stringsAsFactors = FALSE)
+gat_results = read.table("results/public_chromatin/annotation_overlaps/H3K27Ac_overlap.gat.txt", header = TRUE, stringsAsFactors = FALSE)
 gat_results$track = factor(gat_results$track, 
-        levels = rev(c("SL1344_up_1","SL1344_up_2" ,"IFNg_SL1344_up", "IFNg_up_1", "IFNg_up_2", "IFNg_down", "SL1344_down")))
+        levels = rev(c("Salmonella","Both" ,"IFNg", "Decreased")))
 gat_results$annotation = factor(gat_results$annotation, 
-        levels = rev(c("LPS_up", "IFNg_LPS_up", "IFNg_up", "IFNg_down", "LPS_down")))
+        levels = rev(c("LPS", "Both", "IFNg", "Decreased")))
 
 peak_enrichments = plotEnrichment(gat_results, ylabel = "ATAC-Seq peaks (this study)", xlabel = "H3K27Ac peaks (Qiao et al)")
-ggsave("results/ATAC/DA/MDM_vs_IPSDM_concordance.pdf", peak_enrichments, width = 10, height = 7)
+ggsave("figures/supplementary/concordance_MDM_vs_IPSDM.pdf", peak_enrichments, width = 4.5, height = 4.5)
 
 
 #CIITA-RFX5
