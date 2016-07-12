@@ -196,3 +196,10 @@ SPOPL_read_counts = plotEQTL("ENSG00000168310", "rs34156200", combined_expressio
 plotEQTL("ENSG00000005844", "rs11574938", combined_expression_data$cqn, vcf_file$genotypes, 
          combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
 
+
+#IRF2 eQTL
+plotEQTL("ENSG00000168310", "rs13149699", combined_expression_data$cqn, vcf_file$genotypes, 
+         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+
+
+

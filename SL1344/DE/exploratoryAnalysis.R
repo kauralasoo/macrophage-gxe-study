@@ -11,6 +11,7 @@ library("pheatmap")
 
 #Load expression data from disk
 eqtl_data_list = readRDS("results/SL1344/combined_expression_data_covariates.rds")
+eqtl_data_list$sample_metadata$condition_name = factor(eqtl_data_list$sample_metadata$condition_name, levels = c("naive","IFNg", "SL1344", "IFNg_SL1344"))
 
 #Make heatmap
 #Extract metadata for the heatmap command
@@ -40,10 +41,26 @@ pca_plot = ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = condition_n
 ggsave("results/SL1344/DE/PCA_of_gene_expression.pdf", plot = pca_plot, width = 5.5, height = 4)
 
 #Make plot of IFNb
-ifnb_plot = plotGene("ENSG00000171855",expression_list$exprs_cqn, design_matrix, expression_list$gene_metadata)
+ifnb_plot = plotGene("ENSG00000179583",eqtl_data_list$cqn, eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata)
 ggsave("results/SL1344/diffExp/IFNB1.pdf", plot = ifnb_plot, width = 5, height = 5)
 
 #Make some plots for subho
 subho_genes = read.table("../LPS/subho_genes.txt", stringsAsFactors = FALSE)[,1]
 plots = lapply(as.list(subho_genes), plotGene, expression_list$exprs_cqn, design_matrix, expression_list$gene_metadata)
 savePlots(plots, "subho_plots/", 6, 6)
+
+#Make a plot of the CIITA gene
+ciita_data = extractGeneData("ENSG00000179583",eqtl_data_list$cqn, eqtl_data_list$sample_metadata, eqtl_data_list$gene_metadata) %>%
+  dplyr::left_join(friendlyNames())
+
+ciita_plot = ggplot(ciita_data, aes(x = friendly_name, y = expression, fill = friendly_name)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(position = position_jitter(width = .2)) + 
+  ylab(expression(paste(Log[2], " normalised expression"))) + 
+  ggtitle(ciita_data$gene_name[1]) +
+  scale_fill_manual(values = conditionPalette()) + 
+  theme_light() + 
+  theme(legend.position="none", axis.title.x = element_blank())
+ggsave("figures/supplementary/CIITA_expression.pdf", ciita_plot, width = 4, height = 4)
+
+
