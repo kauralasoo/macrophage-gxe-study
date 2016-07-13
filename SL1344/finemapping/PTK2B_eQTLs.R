@@ -9,6 +9,17 @@ library("ggplot2")
 load_all("~/software/rasqual/rasqualTools/")
 library("purrr")
 library("coloc")
+library("GenomicFeatures")
+
+#Utility functions
+addR2ByCondition <- function(df, genotypes){
+  result = df %>% 
+    dplyr::group_by(condition_name) %>% 
+    dplyr::arrange(p_nominal) %>%
+    dplyr::mutate(R2 = calculateR2FromLead(snp_id, genotypes)) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(chr = as.character(chr))
+}
 
 #### Import data ####
 #Load the raw eQTL dataset
@@ -132,40 +143,57 @@ alzheimer_pvalues = dplyr::select(snp_info, chr, pos, snp_id, MAF) %>%
   dplyr::filter(!is.na(snp_id)) %>% 
   dplyr::arrange(p_nominal) %>%
   dplyr::mutate(R2 = calculateR2FromLead(snp_id, vcf_file$genotypes)) %>%
-  dplyr::mutate(condition_name = "AZ GWAS")
+  dplyr::mutate(track = "AZ GWAS")
 
-#Import RASQUAL and fastqtl pvalues for PTK2B gene
+#Import RASQUAL p-values for PTK2B gene
 rna_rasqual_pvalues = purrr::map_df(qtlResults()$rna_rasqual, ~tabixFetchGenes(ptk2b_region, .)[[1]], .id = "condition_name") %>%
-  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344","IFNg_SL1344")))
-rna_fastqtl_pvalues = purrr::map_df(qtlResults()$rna_fastqtl, ~fastqtlTabixFetchGenes(ptk2b_region, .)[[1]], .id = "condition_name") %>%
-  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344","IFNg_SL1344")))
+  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344","IFNg_SL1344"))) %>%
+  addR2ByCondition(vcf_file$genotypes)
 
-#Add R2 values per conditon
-rasqual_r2 = dplyr::group_by(rna_rasqual_pvalues, condition_name) %>% dplyr::arrange(p_nominal) %>%
-  dplyr::mutate(R2 = calculateR2FromLead(snp_id, vcf_file$genotypes)) %>%
-  dplyr::ungroup() %>%
-  dplyr::mutate(chr = as.character(chr))
+#Fetch RASQUAL results for the ATAC peak
+peak1_region = constructGeneRanges(data_frame(gene_id = "ATAC_peak_261927"), atac_list$gene_metadata, 1e5)
+peak1_rasqual_pvalues = purrr::map_df(qtlResults()$atac_rasqual, ~tabixFetchGenes(peak1_region, .)[[1]], .id = "condition_name") %>%
+  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344","IFNg_SL1344"))) %>%
+  addR2ByCondition(vcf_file$genotypes)
+
+#Extract naive p-values
+rna_naive = dplyr::filter(rna_rasqual_pvalues, condition_name == "naive") %>%
+  dplyr::select(chr, pos, snp_id, p_nominal, R2) %>%
+  dplyr::mutate(track = "Naive eQTL")
+atac_naive = dplyr::filter(peak1_rasqual_pvalues, condition_name == "naive") %>%
+  dplyr::select(chr, pos, snp_id, p_nominal, R2) %>%
+  dplyr::mutate(track = "Naive caQTL")
 
 #Merge GWAS and eQTL data together
-joint_pvalues = dplyr::bind_rows(dplyr::select(alzheimer_pvalues, chr, pos, snp_id, p_nominal, R2, condition_name),
-                 dplyr::select(rasqual_r2, chr, pos, snp_id, p_nominal, R2, condition_name)) %>%
-  dplyr::mutate(condition_name = factor(condition_name, levels = c("AZ GWAS","naive","IFNg","SL1344","IFNg_SL1344"))) %>%
-  dplyr::filter(condition_name %in% c("AZ GWAS", "naive"))
+joint_pvalues = dplyr::bind_rows(dplyr::select(alzheimer_pvalues, chr, pos, snp_id, p_nominal, R2, track),
+                 rna_naive, atac_naive) %>%
+  dplyr::mutate(track = factor(track, levels = c("AZ GWAS","Naive caQTL","Naive eQTL")))
 
 #Make a manhattan plot
 rasqual_manhattan = ggplot(joint_pvalues, aes(x = pos, y = -log(p_nominal, 10), colour = R2)) + 
   geom_point() + 
   ylab(expression(paste("-",log[10], " p-value"))) +
-  facet_grid(condition_name~., scales = "free_y") +
+  facet_grid(track~., scales = "free_y") +
   scale_x_continuous(expand = c(0,0), limits = ptk2b_region_coords) +
   theme_light() +
   dataTrackTheme()
 
 #Plot transcript structure for the PTK2B gene
 ptk2b_structure = plotTranscripts(exons["ENST00000346049"], cdss["ENST00000346049"], tx_metadata, rescale_introns = FALSE, 
-                region_coords = c(start(ptk2b_region), end(ptk2b_region)))
-joint_plot = cowplot::plot_grid(rasqual_manhattan, ptk2b_structure, align = "v", ncol = 1, rel_heights = c(8,3))
+                region_coords = ptk2b_region_coords)
+
+#Plot ATAC peaks in the region
+selected_peaks = dplyr::filter(atac_list$gene_metadata, start > ptk2b_region_coords[1], end < ptk2b_region_coords[2], chr == 8)
+peak_annot = wiggpleplotrConstructPeakAnnotations(selected_peaks)
+ptk2b_enhancers = plotTranscripts(peak_annot$peak_list, peak_annot$peak_list, peak_annot$peak_annot, rescale_introns = FALSE, 
+                region_coords = ptk2b_region_coords, connect_exons = FALSE, label_type = "peak") + dataTrackTheme()
+                                  
+joint_plot = cowplot::plot_grid(rasqual_manhattan, ptk2b_enhancers, ptk2b_structure, align = "v", ncol = 1, rel_heights = c(8,1,3))
 ggsave("figures/main_figures/PTK2B_RASQUAL_structure.pdf", plot = joint_plot, width = 6, height = 7)
+
+### RNA FastQTL ###
+rna_fastqtl_pvalues = purrr::map_df(qtlResults()$rna_fastqtl, ~fastqtlTabixFetchGenes(ptk2b_region, .)[[1]], .id = "condition_name") %>%
+  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344","IFNg_SL1344")))
 
 #Add R2 values per conditon
 fastqtl_r2 = dplyr::group_by(rna_fastqtl_pvalues, condition_name) %>% dplyr::arrange(p_nominal) %>%
