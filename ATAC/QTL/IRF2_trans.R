@@ -42,11 +42,3 @@ m2 = lm(mean_access ~ sex_binary + assigned_frac + rs13149699, df_filtered)
 anova(m2,m1)
 
 
-
-
-
-
-
-
-
-

@@ -16,7 +16,6 @@ atac_meta_df = wiggleplotrConstructMetadata(atac_data$counts, atac_data$sample_m
 #Import genotypes
 vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
-
 #SPOPL enhancer
 region_coords = c(138677635, 138713158)
 selected_peaks = dplyr::filter(atac_data$gene_metadata, gene_id %in% 
@@ -24,15 +23,27 @@ selected_peaks = dplyr::filter(atac_data$gene_metadata, gene_id %in%
 selected_peaks = dplyr::filter(atac_data$gene_metadata, start > region_coords[1], end < region_coords[2], chr == 2)
 peak_annot = wiggpleplotrConstructPeakAnnotations(selected_peaks)
 
+#Check if the causal SNPs disrupt any known TF motifs
+#Import motif matches
+motif_metadata = readRDS("results/ATAC/cisBP/cisBP_motif_metadata.rds") %>%
+  dplyr::transmute(motif_id = Motif_ID, tf_name = TF_Name, tf_count = TF_count)
+motif_disruptions = importMotifDisruptions("results/ATAC/motif_analysis/motif_disruption.txt") %>%
+  dplyr::left_join(motif_metadata, by = "motif_id")
+
+#Filter by SNP ID
+motif_hits = dplyr::filter(motif_disruptions, snp_id %in% c("rs7594476")) %>%
+  dplyr::filter(max_rel_score > 0.8) %>% dplyr::arrange(-abs(rel_diff))
+
+
 #Construct metadata df for wiggleplotr
-track_data = wiggleplotrGenotypeColourGroup(atac_meta_df, "rs12621644", vcf_file$genotypes, 1)
+track_data = wiggleplotrGenotypeColourGroup(atac_meta_df, "rs7594476", vcf_file$genotypes, 1)
 
 #Filter by condtion
 filtered_tracks = dplyr::filter(track_data, track_id %in% c("naive", "IFNg"))
 
 #Make a coverage plot of the ATAC data
 spopl_region = plotCoverage(exons = peak_annot$peak_list, cdss = peak_annot$peak_list, track_data = filtered_tracks, rescale_introns = FALSE, 
-                transcript_annotations = peak_annot$peak_annot, fill_palette = getGenotypePalette(), flanking_length = c(12000,300), 
+                transcript_annotations = peak_annot$peak_annot, fill_palette = getGenotypePalette(), 
                 connect_exons = FALSE, label_type = "peak", plot_fraction = 0.2, heights = c(0.7,0.3), 
                 region_coords = region_coords, return_subplots_list = TRUE)
 
@@ -40,13 +51,13 @@ spopl_region = plotCoverage(exons = peak_annot$peak_list, cdss = peak_annot$peak
 pu1_df = data_frame(sample_id = "PU1_naive", track_id = "PU.1", colour_group = "PU.1", scaling_factor = 10) %>%
   dplyr::mutate(bigWig = file.path("/Volumes/JetDrive/bigwigs/Schmidt", paste(sample_id, ".bw", sep = "")))
 spopl_region_pu1 = plotCoverage(exons = peak_annot$peak_list, cdss = peak_annot$peak_list, track_data = pu1_df, rescale_introns = FALSE, 
-                            transcript_annotations = peak_annot$peak_annot, fill_palette = c("black"), flanking_length = c(300,300), 
+                            transcript_annotations = peak_annot$peak_annot, fill_palette = c("black"), 
                             connect_exons = FALSE, label_type = "peak", plot_fraction = 0.2, heights = c(0.5,0.5), 
                             region_coords = region_coords, return_subplots_list = TRUE)
 
 #Make a plot of p-values from the region
 naive_peak_pvalues = tabixFetchGenesQuick(c("ATAC_peak_145162"),
-                                    tabix_file = "results/ATAC/rasqual/output/naive_100kb/naive_100kb.sorted.txt.gz", 
+                                    tabix_file = qtlResults()$atac_rasqual$naive, 
                                     gene_metadata = atac_data$gene_metadata, cis_window = 1e5)
 naive_peak_pvals = naive_peak_pvalues %>% 
   purrr::map_df(., ~dplyr::mutate(., track_id = "naive")) %>% 
@@ -57,7 +68,7 @@ associated_variants = makeManhattanPlot(naive_peak_pvals, region_coords)
 #Combine the two plots together
 plot = cowplot::plot_grid(associated_variants, spopl_region$coverage_plot, spopl_region_pu1$coverage_plot, 
                           spopl_region$tx_structure, align = "v", rel_heights = c(0.2,0.4,0.1,0.2), ncol = 1)
-ggsave("figures/main_figures/SPOPL_region_coverage.pdf", plot, width = 8, height = 8)
+ggsave("figures/main_figures/SPOPL_region_coverage.pdf", plot, width = 4.5, height = 5)
 
 
 

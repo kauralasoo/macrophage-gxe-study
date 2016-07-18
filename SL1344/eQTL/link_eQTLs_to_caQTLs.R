@@ -25,7 +25,7 @@ joint_pairs = dplyr::select(rasqual_qtl_df, gene_id, snp_id) %>% unique()
 filtered_pairs = filterHitsR2(joint_pairs, vcf_file$genotypes, .8)
 
 #Import ATAC QTL variants
-atac_min_pvalues = readRDS("../macrophage-chromatin/results/ATAC/QTLs/rasqual_min_pvalues.rds")
+atac_min_pvalues = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
 atac_qtl_df = extractQTLsFromList(atac_min_pvalues, fdr_cutoff = 0.1)
 atac_joint_pairs = dplyr::select(atac_qtl_df, gene_id, snp_id) %>% unique() 
 atac_filtered_pairs = filterHitsR2(atac_joint_pairs, vcf_file$genotypes, .8)
