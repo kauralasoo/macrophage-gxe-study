@@ -39,6 +39,10 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>500] rusage[mem=500]" -q normal
 tabix -s3 -b4 -e4 -f results/acLDL/rasqual/output_filtered/AcLDL_500kb/AcLDL_500kb.sorted.txt.gz
 tabix -s3 -b4 -e4 -f results/acLDL/rasqual/output_filtered/Ctrl_500kb/Ctrl_500kb.sorted.txt.gz
 
+#Compress batches 
+tar czf results/acLDL/rasqual/output_filtered/AcLDL_500kb/batches.tar.gz results/acLDL/rasqual/output_filtered/AcLDL_500kb/batches/ &
+tar czf results/acLDL/rasqual/output_filtered/Ctrl_500kb/batches.tar.gz results/acLDL/rasqual/output_filtered/Ctrl_500kb/batches/ &
+
 
 ### eigenMT ####
 #Convert rasqual output into format suitable for eigenMT

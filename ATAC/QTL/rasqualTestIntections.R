@@ -44,7 +44,6 @@ interaction_results = testMultipleInteractions(filtered_pairs, trait_matrix = at
 interaction_df = postProcessInteractionPvalues(interaction_results)
 saveRDS(interaction_df, "results/ATAC/QTLs/rasqual_interaction_results.rds")
 interaction_df = readRDS("results/ATAC/QTLs/rasqual_interaction_results.rds")
-interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 
 
 #### Cluster effect sizes ####
