@@ -60,3 +60,11 @@ tabix -s2 -b3 -e3 -f results/SL1344/fastqtl/output/IFNg_SL1344_500kb_pvalues.sor
 rm results/SL1344/fastqtl/output/*pvalues.coords.txt.gz
 rm results/SL1344/fastqtl/output/*pvalues.txt.gz
 
+
+###### Map splicing QTLs using LeafCutter ######
+
+#Construct junction files
+cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_names_all.txt | head -n 100 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bamToJunctions --command "python ~/software/utils/bam/bamToJunctions.py --indir STAR/SL1344/ --outdir STAR/SL1344/ --leafCutterDir ~/software/leafcutter/ --insuffix .Aligned.sortedByCoord.RG.bam --execute True"
+
+
+
