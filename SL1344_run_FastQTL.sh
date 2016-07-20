@@ -66,5 +66,15 @@ rm results/SL1344/fastqtl/output/*pvalues.txt.gz
 #Construct junction files
 cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_names_all.txt | head -n 100 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bamToJunctions --command "python ~/software/utils/bam/bamToJunctions.py --indir STAR/SL1344/ --outdir STAR/SL1344/ --leafCutterDir ~/software/leafcutter/ --insuffix .Aligned.sortedByCoord.RG.bam --execute True"
 
+cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_names_all.txt | head -n 200 | tail -n 100 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bamToJunctions --command "python ~/software/utils/bam/bamToJunctions.py --indir STAR/SL1344/ --outdir STAR/SL1344/ --leafCutterDir ~/software/leafcutter/ --insuffix .Aligned.sortedByCoord.RG.bam --execute True"
+
+cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_names_all.txt | tail -n 160 | python ~/software/utils/submitJobs.py --MEM 1000 --jobname bamToJunctions --command "python ~/software/utils/bam/bamToJunctions.py --indir STAR/SL1344/ --outdir STAR/SL1344/ --leafCutterDir ~/software/leafcutter/ --insuffix .Aligned.sortedByCoord.RG.bam --execute True"
+
+#Cluster junctions
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q normal -M 1000 -o FarmOut/leafcutter_cluster.%J.jobout "python ~/software/leafcutter/clustering/leafcutter_cluster.py -j results/SL1344/leafcutter/junction_files.txt -r results/SL1344/leafcutter/ -m 50 -l 500000"
+
+#Split leafcutter output into cluster counts and intron counts
+python ~/software/utils/leafcutter/leafcutter_split_counts.py --leafcutter_out results/SL1344/leafcutter/leafcutter_perind.counts.gz --outprefix leafcutter
+
 
 
