@@ -35,10 +35,11 @@ cat macrophage-gxe-study/data/chromatin/ChIP/Fairfax_samples.txt | python ~/soft
 
 #Clean-up
 rm processed/Fairfax/*/*.filtered.bam
-rm processed/Fairfax/*/*_2??.bam
 rm processed/Fairfax/*/*.sortedByCoord.bam*
 rm processed/Fairfax/*/*.reheadered.bam
 rm processed/Fairfax/*/*.new_header.txt
+rm processed/Fairfax/*/*.sortedByName.bam
+
 
 #Call narrow and broad peaks
 cat macrophage-gxe-study/data/chromatin/ChIP/Fairfax_samples.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname chipMacsCallPeakNarrow --command "python ~/software/utils/coverage/chipMacsCallPeak.py --indir processed/Fairfax/ --outdir processed/Fairfax/ --execute True --control processed/Fairfax/BTS0011_input/BTS0011_input.no_duplicates.bam --broad False"

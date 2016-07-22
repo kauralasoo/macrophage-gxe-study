@@ -19,7 +19,7 @@ gene_name_map = dplyr::select(combined_expression_data_filtered$gene_metadata, g
 design = combined_expression_data_filtered$sample_metadata %>% as.data.frame()
 rownames(design) = design$sample_id
 dds = DESeq2::DESeqDataSetFromMatrix(combined_expression_data_filtered$counts, design, ~condition_name) 
-dds = DESeq(dds, test = "LRT", reduced = ~ 1)
+dds = DESeq2::DESeq(dds, test = "LRT", reduced = ~ 1)
 saveRDS(dds, "results/SL1344/DE/DESeq2_condition_name_LRT_results.rds")
 dds = readRDS("results/SL1344/DE/DESeq2_condition_name_LRT_results.rds")
 

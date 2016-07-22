@@ -42,7 +42,7 @@ atac_tpm = calculateTPM(counts, peak_metadata, fragment_length = 50)
 atac_tpm = atac_tpm[peak_metadata$gene_id,]
 
 #Extract donor to genotype mapping
-atac_metadata = readRDS("macrophage-chromatin/data/SL1344/compiled_atac_metadata.rds") %>%
+atac_metadata = readRDS("macrophage-gxe-study/data/chromatin/ATAC/compiled_atac_metadata.rds") %>%
   dplyr::filter(sample_id %in% colnames(counts))
 
 #Calculate normalization factors

@@ -188,8 +188,9 @@ peak_annot = wiggpleplotrConstructPeakAnnotations(selected_peaks)
 ptk2b_enhancers = plotTranscripts(peak_annot$peak_list, peak_annot$peak_list, peak_annot$peak_annot, rescale_introns = FALSE, 
                 region_coords = ptk2b_region_coords, connect_exons = FALSE, label_type = "peak") + dataTrackTheme()
                                   
-joint_plot = cowplot::plot_grid(rasqual_manhattan, ptk2b_enhancers, ptk2b_structure, align = "v", ncol = 1, rel_heights = c(8,1,3))
-ggsave("figures/main_figures/PTK2B_RASQUAL_structure.pdf", plot = joint_plot, width = 6, height = 7)
+joint_plot = cowplot::plot_grid(rasqual_manhattan, ptk2b_enhancers, ptk2b_structure, align = "v", ncol = 1, rel_heights = c(8,1.5,3))
+ggsave("figures/main_figures/PTK2B_RASQUAL_structure.pdf", plot = joint_plot, width = 4.5, height = 5)
+ggsave("figures/main_figures/PTK2B_gene_structure.pdf", plot = ptk2b_structure, width = 4.5, height = 1.5)
 
 ### RNA FastQTL ###
 rna_fastqtl_pvalues = purrr::map_df(qtlResults()$rna_fastqtl, ~fastqtlTabixFetchGenes(ptk2b_region, .)[[1]], .id = "condition_name") %>%
