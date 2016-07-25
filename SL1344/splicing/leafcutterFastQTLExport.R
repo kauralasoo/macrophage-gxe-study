@@ -9,7 +9,7 @@ load_all("../seqUtils/")
 prop_list = readRDS("results/SL1344/combined_proportions.rds")
 
 #Put each condition into a separate list
-condition_list = list(naive = "naive",SL1344 = "SL1344",IFNg = "IFNg", IFNg_SL344 = "IFNg_SL1344")
+condition_list = list(naive = "naive",SL1344 = "SL1344",IFNg = "IFNg", IFNg_SL1344 = "IFNg_SL1344")
 prop_conditions = purrr::map(condition_list, ~extractConditionFromExpressionList(.,prop_list))
 prop_conditions_renamed = lapply(prop_conditions, renameMatrixColumnsInExpressionList, "sample_id", "genotype_id")
 
