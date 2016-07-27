@@ -1,4 +1,5 @@
 library("readr")
+library("devtools")
 library("dplyr")
 library("tidyr")
 library("limma")
@@ -53,9 +54,6 @@ intron_prop_quantile = quantileNormaliseMatrix(intron_prop_std)
 #Calculate covariates
 sample_metadata = combined_expression_data$sample_metadata[,-grep("PEER*", colnames(combined_expression_data$sample_metadata))]
 
-#Perform PCA on the intron proportions
-a = performPCA(intron_prop_quantile, sample_metadata)
-ggplot(a$pca_matrix, aes(x = PC1, y = PC2, color = rna_auto)) + geom_point()
 
 #Make a list of prop data
 prop_list = list(counts = filtered_introns,
