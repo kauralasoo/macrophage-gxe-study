@@ -1,6 +1,7 @@
 library("purrr")
 library("devtools")
 library("dplyr")
+library("ggplot2")
 load_all("../seqUtils/")
 load_all("~/software/rasqual/rasqualTools/")
 
@@ -33,8 +34,8 @@ rasqual_qtl_count = map(rasqual_pvalues, ~dplyr::filter(., p_fdr < 0.1) %>% nrow
 qtl_counts = rbind(fastqtl_qtl_count, rasqual_qtl_count) %>% t() %>% as.data.frame()
 qtl_counts = dplyr::mutate(qtl_counts, condition = rownames(qtl_counts)) %>% 
   dplyr::select(condition, everything()) %>% 
-  dplyr::mutate(extra_qtls = (rasqual_qtl_count - fastqtl_qtl_count)/fastqtl_qtl_count)
-write.table(qtl_counts, "results/SL1344/eQTLs/properties/fastQTL_vs_rasqual_eQTL_counts.txt", quote = FALSE, row.names = FALSE, sep ="\t")
+  dplyr::mutate(extra_qtls = round((rasqual_qtl_count - fastqtl_qtl_count)/fastqtl_qtl_count,2))
+write.table(qtl_counts, "figures/supplementary/rna_fastQTL_vs_rasqual_eQTL_counts.txt", quote = FALSE, row.names = FALSE, sep ="\t")
 
 #Join rasqual and fastqtl data frames for scatter plots
 joint_pvalues = purrr::map2(rasqual_pvalues, fastqtl_pvalues_filtered, function(rasqual, fastqtl){
@@ -57,6 +58,32 @@ scatter_plots = ggplot(joint_pvalues_df, aes(x = p_fastqtl_log, y = p_rasqual_lo
   ylab("RASQUAL p-value (-log10)") +
   xlab("FastQTL p-value (-log10)")
 ggsave("results/SL1344/eQTLs/properties/fastQTL_vs_rasqual_eQTL_scatters.pdf", plot = scatter_plots, width = 10, height = 10)
+
+#Make Q-Q plots
+#Calculate expected p-values
+rasqual_expected = purrr::map(rasqual_pvalues, ~addExpectedPvalue(.))
+fastqtl_expected = purrr::map(fastqtl_pvalues_filtered, ~addExpectedPvalue(.))
+
+#Collect p-values for the Q-Q plots
+qqplot_lists = purrr::map2(rasqual_expected, fastqtl_expected, function(rasqual, fastqtl){
+  rasqual_res = dplyr::transmute(rasqual, p_eigen, p_expected, method = "RASQUAL")
+  fastqtl_res = dplyr::transmute(fastqtl, p_eigen, p_expected, method = "FastQTL")
+  res = rbind(rasqual_res, fastqtl_res)
+})
+qqplot_df = purrr::map_df(qqplot_lists, identity, .id = "condition_name") %>%
+  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344", "IFNg_SL1344")))
+
+#Make a Q-Q plot for each condition
+qqplot = ggplot(qqplot_df, aes(x = -log(p_expected,10), y = -log(p_eigen, 10),color = method)) + 
+  geom_point() + 
+  geom_abline(slope = 1, intercept = 0, color = "black") + 
+  facet_wrap(~condition_name, ncol = 4) +
+  theme_light() + 
+  ylab("log10 observed p-value") + 
+  xlab("log10 expected p-value")
+ggsave("figures/supplementary/rna_fastQTL_vs_rasqual_eQTL_qqplots.png", plot = qqplot, width = 8, height = 8)
+ggsave("figures/supplementary/rna_fastQTL_vs_rasqual_eQTL_qqplots.pdf", plot = qqplot, width = 10, height = 10)
+
 
 
 
