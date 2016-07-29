@@ -12,7 +12,7 @@ atac_list$sample_metadata$condition_name = factor(atac_list$sample_metadata$cond
 final_clusters = readRDS("results/ATAC/DA/peak_clusters.rds")
 
 #Import FIMO motif matches
-fimo_hits = readr::read_delim("results/ATAC/FIMO_CISBP_results.long.txt.gz", delim = "\t", col_types = c("cciicddcc"), 
+fimo_hits = readr::read_delim("results/ATAC/cisBP/FIMO_CISBP_results.long.txt.gz", delim = "\t", col_types = c("cciicddcc"), 
                               col_names = c("motif_id","seq_name","start","end","strand","score","p_value","dummy","matched_seq"), skip = 1)
 fimo_hits_clean = tidyr::separate(fimo_hits, seq_name, c("prefix","gene_id"), sep = "=") 
 
@@ -48,8 +48,8 @@ motif_enrichment_df = ldply(filtered_enrichments, .id = "cluster_name") %>% tbl_
 
 #Make a heatmap of motif enrichments
 #interesting_tfs = c("FOS","BATF3","POU2F1","NFKB1","IRF1","STAT1", "MAFB", "MEF2A")
-interesting_tfs = c("FOS","NFKB1","IRF1","STAT1", "MAFB", "MEF2A")
-tf_name_casual = data_frame(new_name = c("AP-1","NF-kB","IRF","STAT1", "MAFB","MEF2"), tf_name = interesting_tfs) %>%
+interesting_tfs = c("FOS","NFKB1","IRF1","STAT1", "MAFB", "MEF2A", "SPI1")
+tf_name_casual = data_frame(new_name = c("AP-1","NF-kB","IRF","STAT1", "MAFB","MEF2", "PU.1"), tf_name = interesting_tfs) %>%
   dplyr::mutate(new_name = factor(new_name, levels = rev(new_name)))
 
 #Filter enrichments by TF
