@@ -81,8 +81,8 @@ qqplot = ggplot(qqplot_df, aes(x = -log(p_expected,10), y = -log(p_eigen, 10),co
   theme_light() + 
   ylab("log10 observed p-value") + 
   xlab("log10 expected p-value")
-ggsave("figures/supplementary/rna_fastQTL_vs_rasqual_eQTL_qqplots.png", plot = qqplot, width = 8, height = 8)
-ggsave("figures/supplementary/rna_fastQTL_vs_rasqual_eQTL_qqplots.pdf", plot = qqplot, width = 10, height = 10)
+ggsave("figures/supplementary/rna_fastQTL_vs_rasqual_eQTL_qqplots.png", plot = qqplot, width = 8, height = 4)
+ggsave("figures/supplementary/rna_fastQTL_vs_rasqual_eQTL_qqplots.pdf", plot = qqplot, width = 10, height = 5)
 
 
 
