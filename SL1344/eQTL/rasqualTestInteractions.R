@@ -46,6 +46,16 @@ saveRDS(interaction_df, "results/SL1344/eQTLs/SL1344_interaction_pvalues.rds")
 interaction_df = readRDS("results/SL1344/eQTLs/SL1344_interaction_pvalues.rds")
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 
+#Make a Q-Q plot for the interaction p-values
+qq_df = dplyr::mutate(interaction_df, p_eigen = p_nominal) %>% addExpectedPvalue()
+qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_nominal,10))) + 
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "black") + 
+  theme_light() + 
+  xlab("-log10 exptected p-value") + 
+  ylab("-log10 observed p-value")
+ggsave("figures/supplementary/eQTL_interaction_Q-Q_plot.pdf", width = 5, height = 5)
+
 #Extract effect sizes for all gene-snp pairs from RASQUAL data
 beta_list = extractAndProcessBetas(dplyr::select(interaction_hits, gene_id, snp_id), rasqual_selected_pvalues, "naive")
 beta_list$beta_summaries = dplyr::mutate(beta_list$beta_summaries, max_naive_ratio = max_abs_beta/abs(naive))
@@ -65,7 +75,7 @@ appear_betas = appear_clusters %>% dplyr::group_by(gene_id, snp_id) %>% dplyr::m
   dplyr::left_join(gene_name_map, by = "gene_id")
 
 #Reorder clusters
-cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(6,5,4,1,3,2))
+cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(1,4,6,2,5,3))
 appear_betas = dplyr::left_join(appear_betas, cluster_reorder, by = "cluster_id")
 
 #Count the number of qtls
@@ -81,8 +91,8 @@ effect_size_heatmap = ggplot(appear_betas, aes(x = condition_name, y = gene_name
   theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), 
         axis.title.x = element_blank(), axis.text.x=element_text(angle = 15)) +
   theme(panel.margin = unit(0.2, "lines"))
-ggsave("results/SL1344/eQTLs/properties/eQTLs_appear_kmeans_heatmap.pdf",effect_size_heatmap, width = 4.5, height = 5.5)
-ggsave("results/SL1344/eQTLs/properties/eQTLs_appear_kmeans_heatmap.png",effect_size_heatmap, width = 4.5, height = 5.5)
+ggsave("figures/main_figures/eQTLs_appear_kmeans_heatmap.pdf",effect_size_heatmap, width = 4.5, height = 5.5)
+ggsave("figures/main_figures/eQTLs_appear_kmeans_heatmap.png",effect_size_heatmap, width = 4.5, height = 5.5)
 
 
 #Calculate mean effect size in each cluster and condition
@@ -99,6 +109,7 @@ ggsave("results/SL1344/eQTLs/properties/eQTLs_appear_cluster_means.pdf",appear_m
 
 #Find QTLs that disappear
 #Look for QTLs that disappear after stimulation
+set.seed(41)
 disappear_qtls = dplyr::filter(beta_list$beta_summaries, abs(naive) > 0.59, abs(naive) - min_abs_beta > 0.32)
 disappear_betas = dplyr::semi_join(beta_list$beta_summaries[,1:6], disappear_qtls, by = c("gene_id", "snp_id"))
 disappear_clusters = clusterBetasKmeans(disappear_betas, 7) %>% dplyr::select(gene_id, snp_id, cluster_id) %>%
@@ -129,8 +140,8 @@ dis_effect_size_heatmap = ggplot(disappear_betas, aes(x = condition_name, y = ge
   theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), 
         axis.title.x = element_blank(), axis.text.x=element_text(angle = 15)) +
   theme(panel.margin = unit(0.2, "lines"))
-ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_kmeans_heatmap.pdf",dis_effect_size_heatmap, width = 4.5, height = 3)
-ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_kmeans_heatmap.png",dis_effect_size_heatmap, width = 4.5, height = 3)
+ggsave("figures/supplementary/eQTLs_disappear_kmeans_heatmap.pdf",dis_effect_size_heatmap, width = 4.5, height = 3)
+ggsave("figures/supplementary/eQTLs_disappear_kmeans_heatmap.png",dis_effect_size_heatmap, width = 4.5, height = 3)
 
 
 disappear_means_plot = ggplot(disappear_cluster_means, aes(x = condition_name, y = beta_mean, group = cluster_id)) + 
