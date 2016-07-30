@@ -6,7 +6,7 @@ library("purrr")
 load_all("../seqUtils/")
 
 #Import proportion data
-prop_list = readRDS("results/SL1344/combined_proportions.rds")
+prop_list = readRDS("results/SL1344/combined_proportions.row_quantile.rds")
 
 #Put each condition into a separate list
 condition_list = list(naive = "naive",SL1344 = "SL1344",IFNg = "IFNg", IFNg_SL1344 = "IFNg_SL1344")

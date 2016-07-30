@@ -8,7 +8,7 @@ library("ggplot2")
 load_all("../seqUtils/")
 
 #Import intron prop data
-prop_list = readRDS("results/SL1344/combined_proportions.rds")
+prop_list = readRDS("results/SL1344/combined_proportions.row_quantile.rds")
 prop_list$sample_metadata$condition_name = factor(prop_list$sample_metadata$condition_name, levels = c("naive","IFNg", "SL1344", "IFNg_SL1344"))
 
 #Perform PCA on the intron proportions

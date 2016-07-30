@@ -4,6 +4,7 @@ library("dplyr")
 library("tidyr")
 library("limma")
 library("purrr")
+library("Biobase")
 load_all("../seqUtils/")
 
 #Import read counts
@@ -45,20 +46,25 @@ junction_meta = dplyr::select(intron_coords, gene_id, cluster_id) %>%
 
 #Normalise intron exclusion proportions
 intron_protortions = filtered_introns/filtered_clusters
-intron_protortions[is.nan(intron_protortions)] = 0
+
+#Change NA values to rowMeans
+na_pos = which(is.na(intron_protortions), arr.ind = TRUE)
+intron_protortions[na_pos] = rowMeans(intron_protortions, na.rm=TRUE)[na_pos[,1]]
+
+#Quantile normalize rows
+intron_row_quantile = t(quantileNormaliseMatrix(t(intron_protortions)))
 
 #Standardise intron proportions
-intron_prop_std = ExpressionSet(intron_protortions) %>% standardise() %>% exprs()
-intron_prop_quantile = quantileNormaliseMatrix(intron_prop_std)
+#intron_prop_std = ExpressionSet(log_prop) %>% standardise() %>% exprs()
+#intron_prop_quantile = quantileNormaliseMatrix(intron_prop_std)
 
 #Calculate covariates
 sample_metadata = combined_expression_data$sample_metadata[,-grep("PEER*", colnames(combined_expression_data$sample_metadata))]
 
-
 #Make a list of prop data
 prop_list = list(counts = filtered_introns,
                tpm = intron_protortions,
-               cqn = intron_prop_quantile,
+               cqn = intron_row_quantile,
                norm_factors = combined_expression_data$norm_factors,
                sample_metadata = sample_metadata,
                gene_metadata = junction_meta)
@@ -79,4 +85,4 @@ new_sample_metadata = dplyr::select(prop_list$sample_metadata, sample_id) %>% dp
 prop_list$sample_metadata = new_sample_metadata
 
 #Export data to disk
-saveRDS(prop_list, "results/SL1344/combined_proportions.rds")
+saveRDS(prop_list, "results/SL1344/combined_proportions.row_quantile.rds")
