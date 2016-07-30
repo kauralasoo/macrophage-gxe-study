@@ -81,6 +81,7 @@ qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_bonferroni,10)))
   theme_light() + 
   xlab("-log10 exptected p-value") + 
   ylab("-log10 observed p-value")
+ggsave("figures/supplementary/leafcutter_interaction_qqplot.pdf", plot = qq_plot, width = 4.5, height = 4.5)
 
 #Make a couple of plots
 gene_metadata = dplyr::mutate(prop_list$gene_metadata, gene_name = gene_id)
