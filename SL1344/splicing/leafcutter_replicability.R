@@ -6,7 +6,7 @@ library("Rsamtools")
 library("purrr")
 
 #Import data
-prop_list = readRDS("results/SL1344/combined_proportions.rds")
+prop_list = readRDS("results/SL1344/combined_proportions.row_quantile.rds")
 
 #Import variant information
 snp_info = importVariantInformation("genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz")

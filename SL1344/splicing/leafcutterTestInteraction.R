@@ -28,7 +28,7 @@ fastqtl_pvalue_list = readRDS("results/SL1344/leafcutter/leafcutter_min_pvalues.
 
 #Apply bonferroni correction for p-values within cluster
 fastqtl_bonferroni = purrr::map(fastqtl_pvalue_list, ~bonferroniCorrection(.,cluster_meta)) %>%
-  purrr::map_df(identity)
+  purrr::map_df(identity, .id = "condition_name")
 
 #Extract pairs
 joint_pairs = dplyr::select(fastqtl_bonferroni, gene_id, snp_id) %>% unique()
