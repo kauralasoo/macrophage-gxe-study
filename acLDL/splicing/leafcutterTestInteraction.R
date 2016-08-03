@@ -3,14 +3,15 @@ library("dplyr")
 library("tidyr")
 library("limma")
 library("purrr")
+library("devtools")
 load_all("../seqUtils/")
 
 #Import proportion data
-prop_list = readRDS("results/SL1344/combined_proportions.row_quantile.rds")
+prop_list = readRDS("results/acLDL/acLDL_combined_proportions.row_quantile.rds")
 cluster_meta = dplyr::select(prop_list$gene_metadata, gene_id, cluster_id, cluster_size)
 
 #Import min p-values
-fastqtl_pvalue_list = readRDS("results/SL1344/leafcutter/leafcutter_min_pvalues.rds")
+fastqtl_pvalue_list = readRDS("results/acLDL/leafcutter/leafcutter_min_pvalues.rds")
 
 #Apply bonferroni correction for p-values within cluster
 fastqtl_bonferroni = purrr::map(fastqtl_pvalue_list, ~leafcutterBonferroniCorrection(.,cluster_meta)) %>%
@@ -20,7 +21,7 @@ fastqtl_bonferroni = purrr::map(fastqtl_pvalue_list, ~leafcutterBonferroniCorrec
 joint_pairs = dplyr::select(fastqtl_bonferroni, gene_id, snp_id) %>% unique()
 
 #Import the VCF file
-vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
+vcf_file = readRDS("genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.rds")
 
 #Filter VCF
 genotypes = vcf_file$genotypes[unique(joint_pairs$snp_id),]
@@ -52,34 +53,13 @@ interaction_df = postProcessInteractionPvalues(interaction_results) %>%
   dplyr::ungroup() %>%
   dplyr::arrange(p_fdr)
 
-hist(interaction_df$p_bonferroni, breaks = 40)
-
-dplyr::filter(interaction_df, p_fdr < 0.1)
-700/1893
-
-#Make a Q-Q plot for the interaction p-values
-qq_df = dplyr::mutate(interaction_df, p_eigen = p_bonferroni) %>% 
-  dplyr::arrange(p_eigen) %>% 
-  addExpectedPvalue()
-qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_bonferroni,10))) + 
-  geom_point() +
-  geom_abline(slope = 1, intercept = 0, color = "black") + 
-  theme_light() + 
-  xlab("-log10 exptected p-value") + 
-  ylab("-log10 observed p-value")
-ggsave("figures/supplementary/leafcutter_interaction_qqplot.pdf", plot = qq_plot, width = 4.5, height = 4.5)
-
 #Make a couple of plots
 gene_metadata = dplyr::mutate(prop_list$gene_metadata, gene_name = gene_id)
-plotEQTL("6:33085889:33086219:clu_16781", "rs34544512", prop_list$cqn, vcf_file$genotypes, 
+plotEQTL("17:81192593:81192736:clu_27472", "rs6565545", prop_list$tpm, vcf_file$genotypes, 
          prop_list$sample_metadata, gene_metadata)
-
-
-
-
-#Example of different variance between conditons after quantile normalisation
-plotEQTL("1:179884769:179889313:clu_5474", "rs2245425", prop_list$tpm, vcf_file$genotypes, 
+plotEQTL("15:63504830:63532647:clu_24007", "rs62011334", prop_list$tpm, vcf_file$genotypes, 
          prop_list$sample_metadata, gene_metadata)
-plotEQTL("1:179884769:179889313:clu_5474", "rs2245425", prop_list$cqn, vcf_file$genotypes, 
+plotEQTL("11:110163379:110164341:clu_19512", "rs7941903", prop_list$cqn, vcf_file$genotypes, 
          prop_list$sample_metadata, gene_metadata)
-
+plotEQTL("17:17232901:17236912:clu_26062", "rs75234140", prop_list$tpm, vcf_file$genotypes, 
+         prop_list$sample_metadata, gene_metadata)

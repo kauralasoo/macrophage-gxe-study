@@ -50,4 +50,19 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q norm
 #Split leafcutter output into cluster counts and intron counts
 python ~/software/utils/leafcutter/leafcutter_split_counts.py --leafcutter_out results/acLDL/leafcutter/leafcutter_perind.counts.gz --outprefix leafcutter
 
+#Compress and index intron inclusion files
+bgzip results/acLDL/leafcutter/fastqtl_input/Ctrl.norm_prop.txt && tabix -p bed results/acLDL/leafcutter/fastqtl_input/Ctrl.norm_prop.txt.gz
+bgzip results/acLDL/leafcutter/fastqtl_input/AcLDL.norm_prop.txt && tabix -p bed results/acLDL/leafcutter/fastqtl_input/AcLDL.norm_prop.txt.gz
+
+#Run FastQTL
+cat results/acLDL/leafcutter/fastqtl_input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname leafcutter_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.vcf.gz --bed results/acLDL/leafcutter/fastqtl_input/Ctrl.norm_prop.txt.gz --cov results/acLDL/leafcutter/fastqtl_input/Ctrl.covariates_prop.txt --W 100000 --permute '100 10000' --out results/acLDL/leafcutter/fastqtl_output/Ctrl_100kb_perm --execute True"
+cat results/acLDL/leafcutter/fastqtl_input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname leafcutter_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.vcf.gz --bed results/acLDL/leafcutter/fastqtl_input/AcLDL.norm_prop.txt.gz --cov results/acLDL/leafcutter/fastqtl_input/AcLDL.covariates_prop.txt --W 100000 --permute '100 10000' --out results/acLDL/leafcutter/fastqtl_output/AcLDL_100kb_perm --execute True"
+
+#Merge chunks into single files
+zcat results/acLDL/leafcutter/fastqtl_output/Ctrl_100kb_perm.chunk_*.txt.gz | bgzip > results/acLDL/leafcutter/fastqtl_output/Ctrl_100kb_permuted.txt.gz
+zcat results/acLDL/leafcutter/fastqtl_output/AcLDL_100kb_perm.chunk_*.txt.gz | bgzip > results/acLDL/leafcutter/fastqtl_output/AcLDL_100kb_permuted.txt.gz
+
+#Remove chunks
+rm results/SL1344/leafcutter/fastqtl_output/*.chunk_*
+
 
