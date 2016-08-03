@@ -120,5 +120,5 @@ gc_bias = ggplot(gc_grid, aes(x = grid_point, y = gc_effect, group = library_typ
   ylab("Relative bias") +
   theme(legend.position = "top")
 ggsave("figures/supplementary/rna_gc_bias_by_protocol.pdf", 
-       plot = fragment_count_plot, width = 4, height = 4)
+       plot = gc_bias, width = 4, height = 4)
 
