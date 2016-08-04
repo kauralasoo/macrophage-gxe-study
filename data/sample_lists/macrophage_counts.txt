@@ -17,8 +17,8 @@ kaks_3
 | 02/10/14 | No |  |      |
 | 07/10/14 | No |  |      |
 | 11/10/14 | No |  |      |
-| 15/10/14 | Yes | 10.2*e6 | 8w@150k for Salmonella |
-| 21/10/14 | Yes | 7*e6 | 1x10cm@1M for flow. Cells dead on 25/10 for unknown reason. |
+| 15/10/14 | Yes | 10.2e6 | 8w@150k for Salmonella |
+| 21/10/14 | Yes | 7e6 | 1x10cm@1M for flow. Cells dead on 25/10 for unknown reason. |
 | 25/10/14 | No |  | |
 | 30/10/14 | No |    |  |
 | 04/11/14 | Yes |  3.775e6  | 4w + 2x10cm |
