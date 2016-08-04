@@ -13,7 +13,7 @@ aipt_2
 | 02/07/14 | No |   |  |
 | 08/07/14 | No  |    | Terminated |
 kaks_3
-| 26/09/14 | |  | Commence week1     |
+| 26/09/14 | |  | Commence Week1 |
 | 02/10/14 | No |  |      |
 | 07/10/14 | No |  |      |
 | 11/10/14 | No |  |      |
@@ -47,7 +47,7 @@ peop_2
 | 08/06/14 | Yes | 1.875e6  | Plated 8w of 6wp @ 200k/w |
 | 13/06/14 | No |   | Terminated |
 ougl_3
-| 21/03/14 | | | Commence Week1. 4 plates made, 5th discarded |
+| 21/03/14 | | | Commence Week1 |
 | 28/04/14 | No |  | Most EBs not adhered  |
 | 04/04/14 | No |  |      |
 | 10/04/14 | No |  | Producing progenitors - Discarded  |
@@ -185,7 +185,7 @@ fpdk_2
 | 27/05/14 |  |   | Commence Week1 |
 | 03/06/14 | No |   |  |
 | 09/06/14 | No |   |  |
-| 17/06/14 | Yes | 750k   | Plated 4w of 6wp |
+| 17/06/14 | Yes | 7.5e5   | Plated 4w of 6wp |
 | 24/06/14 | No |   | Lot of dead cells + fully differentiated macrophages in EB plates  |
 | 01/07/14 | Yes | 1.5075e6  |  |
 | 09/07/14 | Yes | 1.925e6  |      |
@@ -224,8 +224,8 @@ yuze_1
 | 22/07/14 | No |  | Most floating EBs discarded.     |
 | 26/07/14 | No |  | Add 5 ml    |
 | 01/08/14 | No  |   |  |
-| 04/08/14 | Yes | 680k  |  |
-| 09/08/14 | Yes | 800k  | Plated 8w @ 100k/w |
+| 04/08/14 | Yes | 6.8e5  |  |
+| 09/08/14 | Yes | 8e5  | Plated 8w @ 100k/w |
 | 14/08/14 | Yes | 1.475e6  |   |
 | 19/08/14 | Yes | 1.875e6  |  |
 | 23/08/14 | No |  |  |
@@ -429,7 +429,7 @@ auim_2
 | 28/11/14 | Yes |    | Plated 8w@150k |
 | 10/12/14 | No |    | Terminated |
 bima_1
-| 07/11/14 | | | Commence Week1.  |
+| 07/11/14 | | | Commence Week1 |
 | 13/11/14 | No |  |   |
 | 19/11/14 | No |  |      |
 | 24/11/14 | No |    |  |
@@ -437,18 +437,18 @@ bima_1
 | 01/12/14 | No |    | Making progenitors |
 | 19/12/14 | No |    | Terminated |
 eofe_1
-| 01/11/14 | | | Commence Week1.  |
+| 01/11/14 | | | Commence Week1 |
 | 06/11/14 | No  |  |   |
 | 10/11/14 | No |  |   |  
 | 14/11/14 | No |  |   |  
 | 19/11/14 | No  |  |   |
 | 24/11/14 | No |    | Making progenitors  |
-| 28/11/14 | Yes | 700k   | Plated 1x10cm |
+| 28/11/14 | Yes | 7e5   | Plated 1x10cm |
 | 01/12/14 | Yes | 1.025e6   | Plated 4w@150k + remainder 1x10cm |
 | 05/12/14 | Yes |    |   |
 | 19/12/14 | No |    | Terminated |
 euir_2
-| 04/11/14 | | | Commence Week1.  |
+| 04/11/14 | | | Commence Week1 |
 | 10/11/14 | No |  |   |
 | 14/11/14 | No  |  | |
 | 19/11/14 | No  |  |   |
@@ -474,8 +474,8 @@ piun_3
 | 04/11/14 | No |    |  |
 | 07/11/14 |  |  | 5ml media added |
 | 10/11/14 | No |  |  |
-| 14/11/14 | Yes  | 550k | Didn't plate |
-| 19/11/14 |Yes | 850k | Plated 1x10cm  |
+| 14/11/14 | Yes  | 5.5e5 | Didn't plate |
+| 19/11/14 |Yes | 8.5e5 | Plated 1x10cm  |
 | 24/11/14 | No |    |  |
 | 28/11/14 | Yes | 1.125e6   | Plated 1x10cm |
 | 19/12/14 | No |    | Terminated |
@@ -485,12 +485,12 @@ piun_3
 | 13/02/15 | No |  |  |
 | 19/02/15 | No |  |   |
 | 24/02/15 | No |  |  |
-| 02/03/15 | Yes | 260k | Lots of dead cells. Plated 1w  |
-| 10/03/15 | Yes | 760k | Plated 4w @ 150k  |
+| 02/03/15 | Yes | 2.60e5 | Lots of dead cells. Plated 1w  |
+| 10/03/15 | Yes | 7.60e5 | Plated 4w @ 150k  |
 | 14/03/15 | No |  |  |
-| 18/03/15 | Yes | 675k | Plated 4w @ 168k |
+| 18/03/15 | Yes | 6.75e5 | Plated 4w @ 168k |
 | 23/03/15 | No |  |  |
-| 27/03/15 | Yes | 775k |Plated 1x10cm for flow |
+| 27/03/15 | Yes | 7.75e5 |Plated 1x10cm for flow |
 | 07/04/15 | Yes | |For Mycoplasma testing; Terminated |
 dium_1
 | 01/02/15 | | | Commence Week1 |
@@ -498,10 +498,10 @@ dium_1
 | 13/02/15 | No |  |  |
 | 19/02/15 | No |  |   |
 | 24/02/15 | No |  |  |
-| 02/03/15 | Yes | 340k | Plated 1w   |
-| 10/03/15 | Yes | 775k | Plated 4w @150k  |
+| 02/03/15 | Yes | 3.40e5 | Plated 1w   |
+| 10/03/15 | Yes | 7.75e5 | Plated 4w @150k  |
 | 14/03/15 | No |  |  |
-| 18/03/15 | Yes | 775k | Plated 4w @ 175k |
+| 18/03/15 | Yes | 7.75e5 | Plated 4w @ 175k |
 | 23/03/15 | No |  |  |
 | 27/03/15 | Yes | 1.125e6 |Plated 1x10cm @ 1x10^6 for flow |
 | 07/04/15 | Yes |  | For Mycoplasma testing; Terminated |
@@ -511,8 +511,8 @@ nibo_2
 | 13/02/15 | No |  |  |
 | 19/02/15 | No |  |   |
 | 24/02/15 | No |  |  |
-| 02/03/15 | Yes | 320k | Plated 1w   |
-| 10/03/15 | Yes | 925k | Plated 4w @150k  |
+| 02/03/15 | Yes | 3.2e5 | Plated 1w   |
+| 10/03/15 | Yes | 9.25e5 | Plated 4w @150k  |
 | 14/03/15 | No |  |  |
 | 18/03/15 | Yes | 1.45e6 | Plated 8w @ 175k |
 | 23/03/15 | No |  |  |
@@ -523,7 +523,7 @@ licq_1
 | 04/03/15 | No |   |  |
 | 10/03/15 | No |  |  |
 | 14/03/15 | No |  |   |
-| 18/03/15 | Yes | 700k | Plated 4w @ 175k |
+| 18/03/15 | Yes | 7e5 | Plated 4w @ 175k |
 | 22/03/15 | No |  |   |
 | 27/03/15 | Yes | 2.2e6  | Plated 1x10cm @ 1x10^6 for flow |
 | 01/04/15 | Yes | 2.425e6  |  |
@@ -546,7 +546,7 @@ cups_3
 | 14/03/15 | No |  |   |
 | 18/03/15 | No |  |  |
 | 23/03/15 | No |  |  |
-| 27/03/15 | Yes | 340k |Plated 1x10cm for flow |
+| 27/03/15 | Yes | 3.4e5 |Plated 1x10cm for flow |
 | 01/04/15 | Yes | 1.05e6 |Plated 6w for KA + for flow |
 | 07/04/15 | Yes | 2.6e6 | Plated 12w+ for flow; Terminated |
 bubh_1
@@ -652,7 +652,7 @@ wibj_2
 | 07/04/15 | No |  |  |
 | 10/04/15 | No |  |   |
 | 14/04/15 | No |  |  |
-| 17/04/15 | Yes | 800k | Plate for flow  |
+| 17/04/15 | Yes | 0.8e5 | Plate for flow  |
 | 21/04/15 | Yes | 1.575e6 | Plate for KA |
 | 24/04/15 | No |  |  |
 | 27/04/15 | No |  |   |
@@ -662,7 +662,7 @@ joxm_1
 | 01/04/15 | No |   |  |
 | 07/04/15 | No |  |  |
 | 12/04/15 | No |  |   |
-| 17/04/15 | Yes | 420k | Plate for flow  |
+| 17/04/15 | Yes | 4.2e5 | Plate for flow  |
 | 21/04/15 | No |  |   |
 | 26/04/15 | No |  |   |
 | 29/04/15 | Yes | 1.2e6 | Plate for KA  |
@@ -830,7 +830,7 @@ nemb_1
 | 20/07/15 | Yes | 2.85e6  | Plate 4w + for flow  |
 | 24/07/15 | Yes | 4.225e6  | Plate for ATAC  |
 | 02/08/15 | No |   |  |
-| 05/08/15 | Yes | 625k  | Plate for ATAC |
+| 05/08/15 | Yes | 6.25e5  | Plate for ATAC |
 | 11/08/15 | No |   | Terminated  |
 pamv_3
 | 01/07/15 | | | Commence Week1 |
@@ -914,7 +914,7 @@ oevr_3
 | 27/09/15 | No |  |  |
 | 02/10/15 | Yes | 4.5e6 |  |
 | 07/10/15 | Yes | 1.6e6  | EBs cobweb-like. Plated for KA |
-| 12/10/15 | Yes | 900k | Plated for flow. Terminated |
+| 12/10/15 | Yes | 9e5 | Plated for flow. Terminated |
 fafq_1
 | 16/09/15 | | | Commence Week1 |
 | 21/09/15 | No |   |  |
@@ -940,10 +940,10 @@ kucg_2
 | 05/10/15 | No |  |  |
 | 09/10/15 | No |  |   |
 | 14/10/15 | No |  |  |
-| 19/10/15 | Yes | 425k | Plated for flow. Mostly dead cells |
-| 23/10/15 | Yes | 650k | Plated for flow  |
-| 28/10/15 | Yes | 650k | Plated 4w for KA  |
-| 02/11/15 | Yes | 907k | Plated 6w for KA. Terminated  |
+| 19/10/15 | Yes | 4.25e5 | Plated for flow. Mostly dead cells |
+| 23/10/15 | Yes | 6.50e5 | Plated for flow  |
+| 28/10/15 | Yes | 6.50e5 | Plated 4w for KA  |
+| 02/11/15 | Yes | 9.07e5 | Plated 6w for KA. Terminated  |
 uoxz_5
 | 13/06/14 |  |   | Commence Week1  |
 | 20/06/14 | No |   |  |
@@ -994,8 +994,8 @@ fikt_3
 | 19/10/15 | No |   |  |
 | 23/10/15 | No |  |   |
 | 28/10/15 | Yes | 8.55e6 | Plated for KA + JR + flow  |
-| 05/11/15 | No |  | Terminated. Given to Subho  |
-| 11/11/15 | Yes | 920000 | Plated 2w to repeat ATAC. Given back to Subho. |
+| 05/11/15 | No |  | Given to Subho  |
+| 11/11/15 | Yes | 9.2e5 | Plated 2w to repeat ATAC. Given back to Subho. Terminated |
 coyi_3
 | 30/09/15 | | | Commence Week1 |
 | 05/10/15 | No |   |  |
@@ -1013,8 +1013,8 @@ uaqe_1
 | 16/10/15 | No | |    |
 | 21/10/15 | Yes | 1.4e6 |  8w for KA  |
 | 27/10/15 | No |  | Add 5ml |
-| 28/10/15 | Yes | 825k | Plated 4w for KA |
-| 02/11/15 | Yes | 840k | Plated 6w for KA  |
+| 28/10/15 | Yes | 8.25e5 | Plated 4w for KA |
+| 02/11/15 | Yes | 8.40e5 | Plated 6w for KA  |
 | 06/11/15 | Yes | 1.2e6 | Plated 8w. Terminated  |
 bezi_1
 | 18/06/15 | | | Commence Week1 |
@@ -1081,10 +1081,10 @@ vabj_3
 | 14/10/15 | No |  |   |
 | 19/10/15 | No |  |   |
 | 23/10/15 |  |  |   |
-| 28/10/15 | Yes | 475k | Mostly dead cells. Plate for flow  |
-| 02/11/15 | Yes | 525k | 4w for KA |
-| 06/11/15 | Yes | 660k | 4w for KA |
-| 11/11/15 | Yes | 650k | Plated 1x10cm. Terminated |
+| 28/10/15 | Yes | 4.75e5 | Mostly dead cells. Plate for flow  |
+| 02/11/15 | Yes | 5.25e5 | 4w for KA |
+| 06/11/15 | Yes | 6.60e5 | 4w for KA |
+| 11/11/15 | Yes | 6.50e5 | Plated 1x10cm. Terminated |
 diku_1
 | 15/10/15 | | | Commence Week1 |
 | 20/10/15 | No |   |  |
@@ -1161,11 +1161,11 @@ uahf_3
 | 30/10/14 | No |  |  |
 | 04/11/14 | No |    | Making progenitors |
 | 07/11/14 |  |  | 5ml media added |
-| 10/11/14 | Yes  | 800k | Plated 4w  |
-| 14/11/14 | Yes  | 600k | Plated 1x10cm  |
-| 19/11/14 | Yes  | 500k | Plated 1x10cm  |
-| 24/11/14 | Yes | 460k | Didn't plate. |
-| 28/11/14 | Yes | 500k   | Didn't plate. Terminated. |
+| 10/11/14 | Yes  | 0.8e6 | Plated 4w  |
+| 14/11/14 | Yes  | 0.6e6 | Plated 1x10cm  |
+| 19/11/14 | Yes  | 0.5e6 | Plated 1x10cm  |
+| 24/11/14 | Yes | 0.46e6 | Didn't plate. |
+| 28/11/14 | Yes | 0.5e6 | Didn't plate. Terminated. |
 focm_1
 | 11/10/14 | |  | Commence Week1 |
 | 15/10/14 | No |  |   |
@@ -1201,7 +1201,7 @@ riiv_1
 | 28/11/14 | Yes |    | Plated 8w@150k |
 | 19/12/14 | No |    | Terminated |
 xegx_2
-| 04/11/14 | | | Commence Week1.  |
+| 04/11/14 | | | Commence Week1  |
 | 10/11/14 | No |  |   |
 | 14/11/14 | No  |  | |
 | 19/11/14 | No  |  |   |
@@ -1218,14 +1218,14 @@ xegx_2 repeat
 | 06/03/15 | No |  |   |
 | 09/03/15 | No |  | Terminated  |
 bulb_1
-| 10/11/14 | | | Commence Week1.  |
+| 10/11/14 | | | Commence Week1 |
 | 15/11/14 | No  |  |   |
 | 20/11/14 | No  |  |   |
 | 24/11/14 | No |    |  |
 | 28/11/14 | No |    | |
 | 01/12/14 | No |    | Making progenitors |
 | 19/12/14 | No |    | Terminated |
-bulb_1 repeat
+bulb_1
 | 02/02/15 | | | Commence Week1 |
 | 08/02/15 | No |   |  |
 | 13/02/15 | No |  |  |
@@ -1234,6 +1234,7 @@ bulb_1 repeat
 | 02/03/15 | No |  |   |
 | 09/03/15 | No |  | Terminated  |
 iakz_1
+| 27/09/14 | | | Commence Week1 |
 | 3/10/14 | No  |  |   |
 | 8/10/14 | No  |  |   |
 | 12/10/14 | No |  |  |
@@ -1241,7 +1242,7 @@ iakz_1
 | 20/10/14 | No |  |    |
 | 25/10/14 | No |  | |
 | 31/10/14 | No |  | Terminated. No progenitors and most EBs dissapeared.|
-iakz_1 repeat
+iakz_1
 | 01/02/15 | | | Commence Week1 |
 | 06/02/15 | No |   |  |
 | 11/02/15 | No |  |  |
@@ -1312,7 +1313,7 @@ sebz_1
 | 05/05/15 | No |  |  |
 | 08/05/15 | Yes | 267k | Plate for flow  |
 | 12/05/15 | Yes | 340k | Plate for flow  |
-| 15/05/15 | No |  | Terminated; Insufficient cells - weird looking  |
+| 15/05/15 | No |  | Terminated - Insufficient cells - weird looking  |
 foop_1
 | 11/06/15 | | | Commence Week1 |
 | 17/06/15 | No |   |  |
@@ -1434,7 +1435,7 @@ eiwy_1
 | 25/11/15 | Yes | 5.025e6 | Plated 12w |
 | 04/12/15 | Yes | 10.075e6 | Plated 1x10cm. Terminated  |
 babk_2
-| 29/10/14 | | | Commence Week1.  |
+| 29/10/14 | | | Commence Week1 |
 | 04/11/14 | No |  |   |
 | 10/11/14 | No |  |   |
 | 14/11/14 | No  |  | |
