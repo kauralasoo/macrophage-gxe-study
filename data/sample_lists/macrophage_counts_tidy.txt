@@ -1,0 +1,1322 @@
+aipt_2	30/04/14	30/04/14			Commence Week1
+aipt_2	30/04/14	06/05/14	No		
+aipt_2	30/04/14	12/05/14	No		
+aipt_2	30/04/14	18/05/14	No		
+aipt_2	30/04/14	23/05/14	Yes	7.65e6	Plated 3w of 6wp @ 100k, 150k, 200k
+aipt_2	30/04/14	27/05/14	No		
+aipt_2	30/04/14	03/06/14	Yes	2.575e6	Plated 8w of 6wp + 1x10cm. Lot of dead cells
+aipt_2	30/04/14	08/06/14	Yes	3.075e6	Plated 8w of 6wp @ 200k/w + 2x10cm
+aipt_2	30/04/14	13/06/14	Yes	7.56e6	
+aipt_2	30/04/14	19/06/14	Yes	2.58e6	
+aipt_2	30/04/14	25/06/14	Yes	2.875e6	Plated 2w for RNA-seq
+aipt_2	30/04/14	02/07/14	No		
+aipt_2	30/04/14	08/07/14	No		Terminated
+kaks_3	26/09/14	26/09/14			Commence Week1
+kaks_3	26/09/14	02/10/14	No		
+kaks_3	26/09/14	07/10/14	No		
+kaks_3	26/09/14	11/10/14	No		
+kaks_3	26/09/14	15/10/14	Yes	10.2e6	8w@150k for Salmonella
+kaks_3	26/09/14	21/10/14	Yes	7e6	1x10cm@1M for flow. Cells dead on 25/10 for unknown reason.
+kaks_3	26/09/14	25/10/14	No		
+kaks_3	26/09/14	30/10/14	No		
+kaks_3	26/09/14	04/11/14	Yes	3.775e6	4w + 2x10cm
+kaks_3	26/09/14	14/11/14			Terminated
+peop_2	03/03/14	03/03/14			Commence Week1
+peop_2	03/03/14	10/03/14	No		
+peop_2	03/03/14	14/03/14	No		4 ml media added
+peop_2	03/03/14	17/03/14	Yes	3.42e6	Harveted from 2 plates only
+peop_2	03/03/14	21/03/14	Yes	13e6	Plated 4x10cm plates @ 1.5e6 cells/plate
+peop_2	03/03/14	26/03/14	Yes	6.9e6	Plated 3 x 12wp @ 70k cells/well + 5 x 10 cm plates @ 800k cells/plate
+peop_2	03/03/14	01/04/14	Yes	3.55e6	Most S/N discarded
+peop_2	03/03/14	07/04/14	Yes	6.36e6	Cells dying
+peop_2	03/03/14	11/04/14	No		6 ml media added
+peop_2	03/03/14	15/04/14	Yes	12.42e6	Plated 4x10cm plates @ 800k cells/plate
+peop_2	03/03/14	17/04/14	No		
+peop_2	03/03/14	22/04/14	Yes	8.43e6	Plated 2x10 cm plates @ 800k cells/well
+peop_2	03/03/14	28/04/14	Yes	10e6	Plated only 3 wells of 6 wp @ 250k cells/well
+peop_2	03/03/14	03/05/14	Yes	3.54e6	Plated 2 wells @ 200k cells
+peop_2	03/03/14	08/05/14	Yes	4.8e6	Harvested from 4 plates only. Seeded 4x10cm @ 900k cells
+peop_2	03/03/14	12/05/14	No		Media change on plate 5 & 6
+peop_2	03/03/14	13/05/14	Yes	5.355e6	Harvested from 4 only. Plated 4x10cm plates @ 850k cells/plate
+peop_2	03/03/14	19/05/14	Yes	3.87e6	Plate 5&6 discarded. Seeded 4x10cm plates @ 900k
+peop_2	03/03/14	26/05/14	Yes	3.51e6	Plated 8w of 6wp + 1x10cm
+peop_2	03/03/14	02/06/14	Yes	1.6e6	Plated 8w of 6wp @ 200k/w
+peop_2	03/03/14	08/06/14	Yes	1.875e6	Plated 8w of 6wp @ 200k/w
+peop_2	03/03/14	13/06/14	No		Terminated
+ougl_3	21/03/14	21/03/14			Commence Week1
+ougl_3	21/03/14	28/04/14	No		Most EBs not adhered
+ougl_3	21/03/14	04/04/14	No		
+ougl_3	21/03/14	10/04/14	No		Producing progenitors - Discarded
+ougl_3	21/03/14	15/04/14	Yes	2.91e6	Plated 3x10cm plates @ 850k cells/plate
+ougl_3	21/03/14	17/04/14	No		Add 5 ml media per plate
+ougl_3	21/03/14	22/04/14	Yes	2.97e6	Plated 2x10cm plates @ 800k cells/plate
+ougl_3	21/03/14	28/04/14	Yes	3.65e6	Plated only 3 wells of 6 wp w/ 250k cells/well
+ougl_3	21/03/14	03/05/14	No		Add 5 ml media per plate
+ougl_3	21/03/14	05/05/14	Yes	3.2e6	
+ougl_3	21/03/14	10/05/14	No		Add 4 ml media per plate
+ougl_3	21/03/14	13/05/14	Yes	6.66e6	Plated 4x10cm plates @ 850k cells/plate
+ougl_3	21/03/14	19/05/14	Yes	3.54e6	Seeded 4x10cm plates @ 885k
+ougl_3	21/03/14	26/05/14	Yes	4.8e6	Plated 8w of 6wp + 2x10cm
+ougl_3	21/03/14	02/06/14	Yes	2.01e6	Plated 8w of 6wp
+ougl_3	21/03/14	08/06/14	Yes	2.3e6	Plated 8w of 6wp @ 200k/w +1x10cm
+ougl_3	21/03/14	13/06/14	No		Terminated
+ffdp_3	25/03/14	25/03/14			Commence Week1
+ffdp_3	25/03/14	01/04/14	No		
+ffdp_3	25/03/14	08/03/14	No		
+ffdp_3	25/03/14	14/04/14	No		
+ffdp_3	25/03/14	17/04/14	No		Add 5 ml media per plate
+ffdp_3	25/03/14	22/04/14	No		
+ffdp_3	25/03/14	29/04/14	No		Producing some progenitors, but more dead cells - Discard
+ffdp_3	25/03/14	03/05/14	No		Add 5 ml media per plate
+ffdp_3	25/03/14	05/05/14	Yes	1.02e6	
+ffdp_3	25/03/14	10/05/14	No		Add 4 ml media per plate
+ffdp_3	25/03/14	13/05/14	Yes	3.15e6	More dead cells than monocytes. Plated 4x10cm plates @ 800k cells/plate
+ffdp_3	25/03/14	19/05/14	Yes	2.07e6	Heterogeneous population. Seeded 2x10cm plates @ 900k
+ffdp_3	25/03/14	26/05/14	Yes	2.49e6	Plated 8w of 6wp
+ffdp_3	25/03/14	02/06/14	Yes	3e6	Plated 8w of 6wp + 1x10cm
+ffdp_3	25/03/14	08/06/14	Yes	2.65e6	Plated 8w of 6wp @ 200k/w + 1x10cm
+ffdp_3	25/03/14	13/06/14	No		Terminated
+ffdk_1	27/03/14	27/03/14			Commence Week1
+ffdk_1	27/03/14	03/04/14	No		
+ffdk_1	27/03/14	08/03/14	No		
+ffdk_1	27/03/14	14/04/14	No		
+ffdk_1	27/03/14	17/04/14	No		Add 5 ml media per plate
+ffdk_1	27/03/14	23/04/14	No		Making progenitors - Discard
+ffdk_1	27/03/14	29/04/14	Yes	5.97e6	Plated 2x10 cm plates @ 800k cells/plate + 3 wells of 6wp @ 250k cells/well
+ffdk_1	27/03/14	05/05/14	Yes	4.56e6	
+ffdk_1	27/03/14	13/05/14	Yes	3.875e6	Plated 4x10cm plates @ 850k cells/plate
+ffdk_1	27/03/14	19/05/14	Yes	3.84e6	Seeded 4x10cm plates @ 960k
+ffdk_1	27/03/14	26/05/14	Yes	5.7e6	Plated 8w of 6wp + 3x10cm
+ffdk_1	27/03/14	02/06/14	Yes	4.14e6	Plated 8w of 6wp + 2x10cm
+ffdk_1	27/03/14	08/06/14	Yes	4.92e6	Plated 8w of 6wp @ 200k/w + 2x10cm
+ffdk_1	27/03/14	13/06/14	No		Terminated
+iasn_3	27/03/14	27/03/14			Commence Week1
+iasn_3	27/03/14	01/04/14	No		
+iasn_3	27/03/14	07/03/14	No		
+iasn_3	27/03/14	11/04/14	No		
+iasn_3	27/03/14	15/04/14	No		
+iasn_3	27/03/14	17/04/14	No		Making progentiors - Discard
+iasn_3	27/03/14	22/04/14	Yes	12.87e6	Plated only 2x10 cm plates @ 800k cells/plate
+iasn_3	27/03/14	28/04/14	Yes	9.39e6	Plated 3 wells of 6 wp @ 250k cells/well
+iasn_3	27/03/14	03/05/14	Yes	6.86e6	Plated 2 wells of 6wp @ 200k cells/well
+iasn_3	27/03/14	08/05/14	No		
+iasn_3	27/03/14	13/05/14	Yes	13.65e6	Plated 4x10cm plates @ 850k cells/plate
+iasn_3	27/03/14	19/05/14	Yes	11.52e6	Seeded 6x10cm plates @ 900k
+iasn_3	27/03/14	26/05/14	Yes	8.85e6	Plated 8w of 6wp + 6x10cm
+iasn_3	27/03/14	02/06/14	Yes	6.6e6	Plated 8w of 6wp + 2x10cm
+iasn_3	27/03/14	08/06/14	Yes	7.02e6	Plated 8w of 6wp @ 200k/w + 2x10cm
+iasn_3	27/03/14	13/06/14	No		Terminated
+qanu_2	14/05/14	14/05/14			Commence Week1
+qanu_2	14/05/14	21/05/14	No		
+qanu_2	14/05/14	27/05/14	No		
+qanu_2	14/05/14	02/06/14	Yes	8.875e6	Plated 3w of 6wp @ 100k, 150k, 200k
+qanu_2	14/05/14	08/06/14	Yes	11.16e6	Plated 8w of 6wp @ 200k/w + 4x10cm
+qanu_2	14/05/14	13/06/14	Yes	3.69e6	
+qanu_2	14/05/14	19/06/14	Yes	9.25e6	
+qanu_2	14/05/14	26/06/14	No		Terminated
+oomz_2	12/05/14	12/05/14			Commence Week1
+oomz_2	12/05/14	21/05/14	No		
+oomz_2	12/05/14	27/05/14	No		
+oomz_2	12/05/14	02/06/14	Yes	6.2e6	Plated 3w of 6wp @ 100k, 150k, 200k. Lot of dead cells
+oomz_2	12/05/14	08/06/14	Yes	6.45e6	From 4x10cm plates: Plated 8w of 6wp @ 200k/w + 4x10cm
+oomz_2	12/05/14	08/06/14	Yes	3.45e6	From T75
+oomz_2	12/05/14	13/06/14	Yes	4.92e6	
+oomz_2	12/05/14	13/06/14	Yes	1.98e6	From T75. (Discarded)
+oomz_2	12/05/14	19/06/14	Yes	7.575e6	
+oomz_2	12/05/14	26/06/14	No		Terminated
+liun_2	30/04/14	30/04/14			Commence Week1
+liun_2	30/04/14	05/05/14	No		Move most floating EBs to new 5th plate
+liun_2	30/04/14	12/05/14	No		
+liun_2	30/04/14	18/05/14	No		
+liun_2	30/04/14	23/05/14	Yes	10.08e6	Plated 3w of 6wp @ 100k, 150k, 200k
+liun_2	30/04/14	27/05/14	No		
+liun_2	30/04/14	03/06/14	Yes	6.72e6	Plated 8w of 6wp + 2x10cm
+liun_2	30/04/14	08/06/14	Yes	3.6e6	Plated 8w of 6wp @ 200k/w + 2x10cm
+liun_2	30/04/14	13/06/14	Yes	5.49e6	
+liun_2	30/04/14	19/06/14	Yes	5.58e6	Too many dead cells
+liun_2	30/04/14	25/06/14	Yes	4.125e6	
+liun_2	30/04/14	02/07/14	No		Partial media change
+liun_2	30/04/14	05/07/14	Yes	1.675e6	
+liun_2	30/04/14	08/07/14	No		Terminated
+zisa_3	22/05/14	22/05/14			Commence Week1
+zisa_3	22/05/14	27/05/14	No		Add 4ml media
+zisa_3	22/05/14	03/06/14	No		
+zisa_3	22/05/14	09/06/14	No		
+zisa_3	22/05/14	17/06/14	Yes	5.2e6	
+zisa_3	22/05/14	24/06/14	Yes	2.375e6	
+zisa_3	22/05/14	01/07/14	Yes	4.325e6	
+zisa_3	22/05/14	05/07/14	Yes	2.61e6	
+zisa_3	22/05/14	09/07/14	Yes	1.775e6	
+zisa_3	22/05/14	15/07/14	No		Terminated
+qimz_1	21/05/14	21/05/14			Commence Week1. Dodgy EBs
+qimz_1	21/05/14	27/05/14	No		
+qimz_1	21/05/14	02/06/14	No		
+qimz_1	21/05/14	09/06/14	No		
+qimz_1	21/05/14	17/06/14	Yes	5.025e6	
+qimz_1	21/05/14	24/06/14	Yes	4.675e6	
+qimz_1	21/05/14	01/07/14	Yes	3.7e6	
+qimz_1	21/05/14	05/07/14	Yes	3.3e6	
+qimz_1	21/05/14	09/07/14	Yes	3.3e6	
+qimz_1	21/05/14	16/07/14	No		Terminated
+hikj_1	21/05/14	21/05/14			Commence Week1. Dodgy EBs
+hikj_1	21/05/14	27/05/14	No		
+hikj_1	21/05/14	02/06/14	No		
+hikj_1	21/05/14	09/06/14	No		
+hikj_1	21/05/14	17/06/14	Yes	2.95e6	
+hikj_1	21/05/14	24/06/14	Yes	2.72e6	
+hikj_1	21/05/14	01/07/14	Yes	2.7e6	
+hikj_1	21/05/14	05/07/14	Yes	1.2e6	
+hikj_1	21/05/14	09/07/14	Yes	2.8e6	
+hikj_1	21/05/14	16/07/14	No		Terminated
+fpdk_2	27/05/14	27/05/14			Commence Week1
+fpdk_2	27/05/14	03/06/14	No		
+fpdk_2	27/05/14	09/06/14	No		
+fpdk_2	27/05/14	17/06/14	Yes	7.5e5	Plated 4w of 6wp
+fpdk_2	27/05/14	24/06/14	No		Lot of dead cells + fully differentiated macrophages in EB plates
+fpdk_2	27/05/14	01/07/14	Yes	1.5075e6	
+fpdk_2	27/05/14	09/07/14	Yes	1.925e6	
+fpdk_2	27/05/14	21/07/14	No		
+fpdk_2	27/05/14	29/07/14	No		
+fpdk_2	27/05/14	04/08/14	No		
+fpdk_2	27/05/14	09/08/14	Yes	600k	
+fpdk_2	27/05/14	14/08/14	Yes	750k	
+fpdk_2	27/05/14	19/08/14	Yes	760k	
+fpdk_2	27/05/14	27/08/14	No		Terminated
+coxy_3	19/07/14	19/07/14			Commence Week1
+coxy_3	19/07/14	26/07/14	No		
+coxy_3	19/07/14	01/08/14	No		
+coxy_3	19/07/14	05/08/14	Yes	4.425e6	
+coxy_3	19/07/14	09/08/14	Yes	4.65e6	Plated 8w @150k/w
+coxy_3	19/07/14	14/08/14	Yes	6.75e6	
+coxy_3	19/07/14	19/08/14	Yes	6.875e6	
+coxy_3	19/07/14	23/08/14	Yes	7.320e6	Plate 8w @175k/w
+coxy_3	19/07/14	27/08/14	Yes	8.075e6	8w @125k/w + 3x10cm @800k
+coxy_3	19/07/14	09/09/14	No		Terminated
+funp_3	19/07/14	19/07/14			Commence Week1
+funp_3	19/07/14	26/07/14	No		
+funp_3	19/07/14	01/08/14	No		
+funp_3	19/07/14	05/08/14	Yes	1.15e6	
+funp_3	19/07/14	09/08/14	Yes	2e6	Plated 8w @150k/w
+funp_3	19/07/14	14/08/14	Yes	2.95e6	
+funp_3	19/07/14	19/08/14	Yes	2.8e6	
+funp_3	19/07/14	23/08/14	No		
+funp_3	19/07/14	27/08/14	Yes	2.875e6	8w@125k/w + 1x10cm@800k
+funp_3	19/07/14	09/09/14	No		Terminated
+yuze_1	11/07/14	11/07/14			Commence Week1
+yuze_1	11/07/14	17/07/14	No		
+yuze_1	11/07/14	22/07/14	No		Most floating EBs discarded.
+yuze_1	11/07/14	26/07/14	No		Add 5 ml
+yuze_1	11/07/14	01/08/14	No		
+yuze_1	11/07/14	04/08/14	Yes	6.8e5	
+yuze_1	11/07/14	09/08/14	Yes	8e5	Plated 8w @ 100k/w
+yuze_1	11/07/14	14/08/14	Yes	1.475e6	
+yuze_1	11/07/14	19/08/14	Yes	1.875e6	
+yuze_1	11/07/14	23/08/14	No		
+yuze_1	11/07/14	27/08/14	Yes	2.3e6	8w@125k/w + 1x10cm@800k
+yuze_1	11/07/14	09/09/14	No		Terminated
+huls_1	13/08/14	13/08/14			Commence Week1
+huls_1	13/08/14	19/08/14	No		
+huls_1	13/08/14	27/08/14	No		
+huls_1	13/08/14	02/09/14	No		
+huls_1	13/08/14	08/09/14	Yes	2.55e6	8w@150k/w
+huls_1	13/08/14	12/09/14	Yes	2.5e6	8w@150k/w + 1x10cm@800k
+huls_1	13/08/14	18/09/14	Yes		
+huls_1	13/08/14	23/09/14	No		Terminated
+gedo_3	14/08/14	14/08/14			Commence Week1
+gedo_3	14/08/14	19/08/14	No		
+gedo_3	14/08/14	22/08/14	No		
+gedo_3	14/08/14	27/08/14	No		
+gedo_3	14/08/14	01/09/14	No		
+gedo_3	14/08/14	05/09/14	No		
+gedo_3	14/08/14	08/09/14	Yes	7.95e6	8w@150k/w
+gedo_3	14/08/14	12/09/14	Yes	5.75e6	8w@150k/w + 2x10cm@800k
+gedo_3	14/08/14	06/10/14	No		Terminated
+fpdl_1	05/09/14	05/09/14			Commence Week1
+fpdl_1	05/09/14	11/09/14	No		
+fpdl_1	05/09/14	17/09/14	No		
+fpdl_1	05/09/14	06/10/14	Yes	0.6e6	4w@150k for Salmonella
+fpdl_1	05/09/14	21/10/14	Yes	1e6	1x10cm for flow. Terminated.
+ffdm_3	12/09/14	12/09/14			Commence Week1 - Only 2x10cm
+ffdm_3	12/09/14	06/10/14	Yes	5.9e6	8w@150k for Salmonella
+ffdm_3	12/09/14	15/10/14			
+ffdm_3	12/09/14	21/10/14	Yes	5e6	1x10cm for flow. Terminated.
+oeoo_2	16/08/14	16/08/14			Commence Week1
+oeoo_2	16/08/14	22/08/14	No		
+oeoo_2	16/08/14	29/08/14	No		
+oeoo_2	16/08/14	05/09/14	No		
+oeoo_2	16/08/14	12/09/14	Yes	11.425e6	8w@150k/w + 2x10cm@800k
+oeoo_2	16/08/14	06/10/14	Yes	7.5e6	8w@150k for Salmonella
+oeoo_2	16/08/14	28/10/14	No		Terminated
+giuo_4	10/10/14	10/10/14			Commence Week1
+giuo_4	10/10/14	16/10/14	No		
+giuo_4	10/10/14	21/10/14	No		
+giuo_4	10/10/14	25/10/14	No		
+giuo_4	10/10/14	30/10/14	No	6.2e6	Plate 6w @ 150k
+giuo_4	10/10/14	04/11/14	Yes	5.825e6	4w + 2x10cm
+giuo_4	10/10/14	13/11/14			Terminated
+oarz_2	06/10/14	06/10/14			Commence Week1
+oarz_2	06/10/14	15/10/14	No		
+oarz_2	06/10/14	20/10/14	No		
+oarz_2	06/10/14	25/10/14	No		
+oarz_2	06/10/14	30/10/14	No	2.7e6	Plate 6w @ 150k
+oarz_2	06/10/14	04/11/14	Yes	7.4e6	4w + 2x10cm
+oarz_2	06/10/14	13/11/14			Terminated
+golb_1	12/09/14	12/09/14			Commence Week1
+golb_1	12/09/14	06/10/14	No		
+golb_1	12/09/14	11/10/14	No		
+golb_1	12/09/14	15/10/14	Yes	3.47e6	8w@150k for Salmonella
+golb_1	12/09/14	21/10/14	Yes	4.68e6	1x10cm@1M for flow
+golb_1	12/09/14	25/10/14	No		
+golb_1	12/09/14	30/10/14	No		
+golb_1	12/09/14	04/11/14	Yes	1.875e6	4w + 1x10cm
+golb_1	12/09/14	10/11/14	Yes	2.475e6	4w + 2x10cm
+golb_1	12/09/14	14/11/14			Terminated
+gomv_3	16/09/14	16/09/14			Commence Week1
+gomv_3	16/09/14	06/10/14	No		
+gomv_3	16/09/14	11/10/14	No		
+gomv_3	16/09/14	15/10/14	Yes	2.15e6	8w@150k for Salmonella
+gomv_3	16/09/14	21/10/14	Yes	5.26e6	1x10cm@1M for flow
+gomv_3	16/09/14	25/10/14	No		
+gomv_3	16/09/14	30/10/14	No		
+gomv_3	16/09/14	04/11/14	Yes	6.525e6	4w + 1x10cm
+gomv_3	16/09/14	14/11/14			Terminated
+cuau_2	27/09/14	27/09/14			Commence Week1
+cuau_2	27/09/14	3/10/14	No		
+cuau_2	27/09/14	8/10/14	No		
+cuau_2	27/09/14	12/10/14	No		
+cuau_2	27/09/14	15/10/14	Yes	1.35*e6	8w@150k for Salmonella
+cuau_2	27/09/14	21/10/14	Yes	4.38*e6	1x10cm@1M for flow
+cuau_2	27/09/14	25/10/14	No		
+cuau_2	27/09/14	30/10/14	Yes	12.7e6	Plate 6w @ 150k
+cuau_2	27/09/14	04/11/14	Yes	6.54e6	4w + 1x10cm + 6w for Elizabeth
+cuau_2	27/09/14	07/11/14			5ml media added
+cuau_2	27/09/14	10/11/14	No		
+cuau_2	27/09/14	14/11/14	Yes	7.7e6	Plated 8w
+cuau_2	27/09/14	25/11/14			Terminated
+darw_2	28/09/14	28/09/14	No		Commence Week1
+darw_2	28/09/14	3/10/14	No		
+darw_2	28/09/14	8/10/14	No		
+darw_2	28/09/14	12/10/14	No		
+darw_2	28/09/14	15/10/14	No		
+darw_2	28/09/14	21/10/14	Yes	10.65*e6	1x10cm@1M for flow
+darw_2	28/09/14	25/10/14	No		
+darw_2	28/09/14	30/10/14	Yes	25e6	Plate 6w @ 150k
+darw_2	28/09/14	04/11/14	Yes	15.48e6	4w + 1x10cm + 1x10cm for Elizabeth
+darw_2	28/09/14	07/11/14	Yes	9.39e6	8x10cm@1x10^6 for Elizabeth
+darw_2	28/09/14	11/11/14	Yes	15.69e6	4w + 8x10cm@1x10^6 for Elizabeth
+darw_2	28/09/14	15/11/14	Yes	14e6	Plated 8x10cm for Elizabeth
+darw_2	28/09/14	19/11/14	No		
+darw_2	28/09/14	25/11/14			Terminated
+zuta_1	10/10/14	10/10/14			Commence Week1
+zuta_1	10/10/14	16/10/14	No		
+zuta_1	10/10/14	21/10/14	No		
+zuta_1	10/10/14	25/10/14	No		
+zuta_1	10/10/14	30/10/14	Yes	9.9e6	Plate 6w @ 150k
+zuta_1	10/10/14	04/11/14	Yes	6.12e6	4w + 1x10cm
+zuta_1	10/10/14	10/11/14	No		
+zuta_1	10/10/14	14/11/14	Yes	6.275e6	Plated 8w
+zuta_1	10/10/14	25/11/14			Terminated
+cehw_3	11/10/14	11/10/14			Commence Week1
+cehw_3	11/10/14	15/10/14	No		
+cehw_3	11/10/14	20/10/14	No		
+cehw_3	11/10/14	25/10/14	No		Lots of dead cells.
+cehw_3	11/10/14	30/10/14	No		
+cehw_3	11/10/14	04/11/14	No		Making progenitors
+cehw_3	11/10/14	07/11/14			5ml media added
+cehw_3	11/10/14	10/11/14	Yes	2.875e6	4w + 2x10cm
+cehw_3	11/10/14	14/11/14	Yes	6.7e6	Plated 8w
+cehw_3	11/10/14	19/11/14	Yes	5.875e6	Plated 8w
+cehw_3	11/10/14	27/11/14			Terminated
+coio_2	11/10/14	11/10/14			Commence Week1
+coio_2	11/10/14	15/10/14	No		
+coio_2	11/10/14	20/10/14	No		
+coio_2	11/10/14	25/10/14	No		Lots of dead cells.
+coio_2	11/10/14	30/10/14	No		
+coio_2	11/10/14	04/11/14	No		Making progenitors
+coio_2	11/10/14	07/11/14			5ml media added
+coio_2	11/10/14	10/11/14	Yes	8.4e6	4w + 2x10cm
+coio_2	11/10/14	14/11/14	Yes	11.125e6	Plated 8w
+coio_2	11/10/14	19/11/14	No		
+coio_2	11/10/14	27/11/14			Terminated
+vorx_1	20/10/14	20/10/14			Commence Week1
+vorx_1	20/10/14	30/10/14	No		
+vorx_1	20/10/14	04/11/14	No		
+vorx_1	20/10/14	07/11/14			5ml media added
+vorx_1	20/10/14	10/11/14	No		
+vorx_1	20/10/14	14/11/14	Yes	5.025e6	Plated 4w + 8w + 2x10cm
+vorx_1	20/10/14	19/11/14	Yes	4.9e6	Plated 8w
+vorx_1	20/10/14	27/11/14			Terminated
+debk_7	16/10/14	16/10/14	No		Commence Week1
+debk_7	16/10/14	25/10/14	No		
+debk_7	16/10/14	30/10/14	No		
+debk_7	16/10/14	04/11/14	No		
+debk_7	16/10/14	07/11/14			5ml media added
+debk_7	16/10/14	10/11/14	No		
+debk_7	16/10/14	14/11/14	Yes	1.775e6	Plated 4w + 1x10cm
+debk_7	16/10/14	19/11/14	Yes	1.75e6	Plated 8w@150k + remainder in 10cm
+debk_7	16/10/14	24/11/14	No		
+debk_7	16/10/14	01/12/14	Yes	4.2e6	Plated 4w@150k
+debk_7	16/10/14	10/12/14	No		Terminated
+voas_2	16/10/14	16/10/14	No		Commence Week1
+voas_2	16/10/14	21/10/14	No		
+voas_2	16/10/14	25/10/14	No		
+voas_2	16/10/14	30/10/14	No		
+voas_2	16/10/14	04/11/14	No		
+voas_2	16/10/14	07/11/14			5ml media added
+voas_2	16/10/14	10/11/14	No		
+voas_2	16/10/14	14/11/14	Yes	14.925e6	Plated 4w + 2x10cm
+voas_2	16/10/14	19/11/14	Yes	13.71e6	Plated 8w
+voas_2	16/10/14	24/11/14	No		
+voas_2	16/10/14	27/11/14	Yes		Plated 6w@150k +1x10cm for pelleting
+voas_2	16/10/14	10/12/14	No		Terminated
+meqo_3	20/10/14	20/10/14			Commence Week1
+meqo_3	20/10/14	30/10/14	No		
+meqo_3	20/10/14	04/11/14	No		
+meqo_3	20/10/14	07/11/14			5ml media added
+meqo_3	20/10/14	10/11/14	No		
+meqo_3	20/10/14	14/11/14	Yes	2.2e6	Plated 4w + 8w
+meqo_3	20/10/14	19/11/14	Yes	2.95e6	Plated 2x10cm
+meqo_3	20/10/14	24/11/14	No		
+meqo_3	20/10/14	28/11/14	Yes		Plated 8w@150k
+meqo_3	20/10/14	10/12/14	No		Terminated
+auim_2	16/10/14	16/10/14			Commence Week1
+auim_2	16/10/14	22/10/14	No		
+auim_2	16/10/14	27/10/14	No		
+auim_2	16/10/14	30/10/14	No		
+auim_2	16/10/14	04/11/14	No		
+auim_2	16/10/14	07/11/14			5ml media added
+auim_2	16/10/14	10/11/14	Yes	2.025e6	4w@150k + 1x10cm@1x10^6
+auim_2	16/10/14	14/11/14	Yes	4.85e6	Plated 8w + 1x10cm
+auim_2	16/10/14	19/11/14	No		
+auim_2	16/10/14	24/11/14	No		
+auim_2	16/10/14	28/11/14	Yes		Plated 8w@150k
+auim_2	16/10/14	10/12/14	No		Terminated
+bima_1	07/11/14	07/11/14			Commence Week1
+bima_1	07/11/14	13/11/14	No		
+bima_1	07/11/14	19/11/14	No		
+bima_1	07/11/14	24/11/14	No		
+bima_1	07/11/14	28/11/14	No		
+bima_1	07/11/14	01/12/14	No		Making progenitors
+bima_1	07/11/14	19/12/14	No		Terminated
+eofe_1	01/11/14	01/11/14			Commence Week1
+eofe_1	01/11/14	06/11/14	No		
+eofe_1	01/11/14	10/11/14	No		
+eofe_1	01/11/14	14/11/14	No		
+eofe_1	01/11/14	19/11/14	No		
+eofe_1	01/11/14	24/11/14	No		Making progenitors
+eofe_1	01/11/14	28/11/14	Yes	7e5	Plated 1x10cm
+eofe_1	01/11/14	01/12/14	Yes	1.025e6	Plated 4w@150k + remainder 1x10cm
+eofe_1	01/11/14	05/12/14	Yes		
+eofe_1	01/11/14	19/12/14	No		Terminated
+euir_2	04/11/14	04/11/14			Commence Week1
+euir_2	04/11/14	10/11/14	No		
+euir_2	04/11/14	14/11/14	No		
+euir_2	04/11/14	19/11/14	No		
+euir_2	04/11/14	24/11/14	No		Making progenitors
+euir_2	04/11/14	28/11/14	Yes	1.75e6	Plated 8w@150k + remainder 1x10cm
+euir_2	04/11/14	01/12/14	Yes	1.875e6	Plated 4w@150k + 1x10cm
+euir_2	04/11/14	19/12/14	No		Terminated
+jorr_1	04/11/14	04/11/14			Commence Week1.
+jorr_1	04/11/14	10/11/14	No		
+jorr_1	04/11/14	14/11/14	No		
+jorr_1	04/11/14	19/11/14	No		
+jorr_1	04/11/14	24/11/14	No		
+jorr_1	04/11/14	27/11/14	No		Making progenitors
+jorr_1	04/11/14	01/12/14	No		
+jorr_1	04/11/14	19/12/14	No		Terminated
+piun_3	16/10/14	16/10/14	No		Commence Week1
+piun_3	16/10/14	21/10/14	No		
+piun_3	16/10/14	25/10/14	No		
+piun_3	16/10/14	30/10/14	No		
+piun_3	16/10/14	04/11/14	No		
+piun_3	16/10/14	07/11/14			5ml media added
+piun_3	16/10/14	10/11/14	No		
+piun_3	16/10/14	14/11/14	Yes	5.5e5	Didn't plate
+piun_3	16/10/14	19/11/14	Yes	8.5e5	Plated 1x10cm
+piun_3	16/10/14	24/11/14	No		
+piun_3	16/10/14	28/11/14	Yes	1.125e6	Plated 1x10cm
+piun_3	16/10/14	19/12/14	No		Terminated
+piun_3	31/01/15	31/01/15			Commence Week1
+piun_3	31/01/15	06/02/15	No		
+piun_3	31/01/15	13/02/15	No		
+piun_3	31/01/15	19/02/15	No		
+piun_3	31/01/15	24/02/15	No		
+piun_3	31/01/15	02/03/15	Yes	2.60e5	Lots of dead cells. Plated 1w
+piun_3	31/01/15	10/03/15	Yes	7.60e5	Plated 4w @ 150k
+piun_3	31/01/15	14/03/15	No		
+piun_3	31/01/15	18/03/15	Yes	6.75e5	Plated 4w @ 168k
+piun_3	31/01/15	23/03/15	No		
+piun_3	31/01/15	27/03/15	Yes	7.75e5	Plated 1x10cm for flow
+piun_3	31/01/15	07/04/15	Yes		For Mycoplasma testing; Terminated
+dium_1	01/02/15	01/02/15			Commence Week1
+dium_1	01/02/15	06/02/15	No		
+dium_1	01/02/15	13/02/15	No		
+dium_1	01/02/15	19/02/15	No		
+dium_1	01/02/15	24/02/15	No		
+dium_1	01/02/15	02/03/15	Yes	3.40e5	Plated 1w
+dium_1	01/02/15	10/03/15	Yes	7.75e5	Plated 4w @150k
+dium_1	01/02/15	14/03/15	No		
+dium_1	01/02/15	18/03/15	Yes	7.75e5	Plated 4w @ 175k
+dium_1	01/02/15	23/03/15	No		
+dium_1	01/02/15	27/03/15	Yes	1.125e6	Plated 1x10cm @ 1x10^6 for flow
+dium_1	01/02/15	07/04/15	Yes		For Mycoplasma testing; Terminated
+nibo_2	02/02/15	02/02/15			Commence Week1
+nibo_2	02/02/15	08/02/15	No		
+nibo_2	02/02/15	13/02/15	No		
+nibo_2	02/02/15	19/02/15	No		
+nibo_2	02/02/15	24/02/15	No		
+nibo_2	02/02/15	02/03/15	Yes	3.2e5	Plated 1w
+nibo_2	02/02/15	10/03/15	Yes	9.25e5	Plated 4w @150k
+nibo_2	02/02/15	14/03/15	No		
+nibo_2	02/02/15	18/03/15	Yes	1.45e6	Plated 8w @ 175k
+nibo_2	02/02/15	23/03/15	No		
+nibo_2	02/02/15	27/03/15	Yes	3.325e6	Plated 1x10cm @1x10^6 for flow
+nibo_2	02/02/15	07/04/15	Yes		For Mycoplasma testing; Terminated
+licq_1	26/02/15	26/02/15			Commence Week1
+licq_1	26/02/15	04/03/15	No		
+licq_1	26/02/15	10/03/15	No		
+licq_1	26/02/15	14/03/15	No		
+licq_1	26/02/15	18/03/15	Yes	7e5	Plated 4w @ 175k
+licq_1	26/02/15	22/03/15	No		
+licq_1	26/02/15	27/03/15	Yes	2.2e6	Plated 1x10cm @ 1x10^6 for flow
+licq_1	26/02/15	01/04/15	Yes	2.425e6	
+licq_1	26/02/15	07/04/15	Yes		For Mycoplasma testing; Terminated
+nusw_2	23/02/15	23/02/15			Commence Week1
+nusw_2	23/02/15	02/03/15	No		
+nusw_2	23/02/15	09/03/15	No		
+nusw_2	23/02/15	13/03/15	No		
+nusw_2	23/02/15	17/03/15	No		
+nusw_2	23/02/15	21/03/15	No		
+nusw_2	23/02/15	25/03/15	Yes	1.73e6	Plated 8w @ 150k/well
+nusw_2	23/02/15	31/03/15	Yes	3.875e6	Plated
+nusw_2	23/02/15	07/04/15	No		
+nusw_2	23/02/15	10/04/15	Yes	3.025e6	Given to Subho. Terminated
+cups_3	27/02/15	27/02/15			Commence Week1
+cups_3	27/02/15	05/03/15	No		
+cups_3	27/02/15	10/03/15	No		
+cups_3	27/02/15	14/03/15	No		
+cups_3	27/02/15	18/03/15	No		
+cups_3	27/02/15	23/03/15	No		
+cups_3	27/02/15	27/03/15	Yes	3.4e5	Plated 1x10cm for flow
+cups_3	27/02/15	01/04/15	Yes	1.05e6	Plated 6w for KA + for flow
+cups_3	27/02/15	07/04/15	Yes	2.6e6	Plated 12w+ for flow; Terminated
+bubh_1	23/02/15	23/02/15			Commence Week1
+bubh_1	23/02/15	02/03/15	No		
+bubh_1	23/02/15	09/03/15	No		
+bubh_1	23/02/15	13/03/15	No		
+bubh_1	23/02/15	17/03/15	No		
+bubh_1	23/02/15	21/03/15	No		
+bubh_1	23/02/15	25/03/15	Yes	1.84e6	Plated 12w @ 150k/well
+bubh_1	23/02/15	30/03/15	No		
+bubh_1	23/02/15	02/04/15	No		
+bubh_1	23/02/15	07/04/15	Yes	1.45e6	Plated 1x10cm for flow
+bubh_1	23/02/15	10/04/15	Yes	3.075e6	Plated 4w for ATAC; Given to Subho. Terminated.
+uimo_1	24/02/15	24/02/15			Commence Week1
+uimo_1	24/02/15	02/03/15	No		
+uimo_1	24/02/15	08/03/15	No		
+uimo_1	24/02/15	12/03/15	No		
+uimo_1	24/02/15	16/03/15	No		
+uimo_1	24/02/15	21/03/15	No		
+uimo_1	24/02/15	25/03/15	Yes	9.45e6	Plated 12w @ 150k/well
+uimo_1	24/02/15	30/03/15	No		
+uimo_1	24/02/15	02/04/15	No		
+uimo_1	24/02/15	07/04/15	Yes	13.575e6	Plated 1x10cm for flow
+uimo_1	24/02/15	10/04/15	Yes	7.35e6	Plated 4w for ATAC; Given to Subho. Terminated.
+ruyv_1	02/03/15	02/03/15			Commence Week1
+ruyv_1	02/03/15	09/03/15	No		
+ruyv_1	02/03/15	13/03/15	No		
+ruyv_1	02/03/15	17/03/15	No		
+ruyv_1	02/03/15	21/03/15	No		
+ruyv_1	02/03/15	28/03/15	No		
+ruyv_1	02/03/15	01/04/15	Yes	1.45e6	Plated 8w for KA
+ruyv_1	02/03/15	07/04/15	Yes	1.925e6	Plated 12w + for flow
+ruyv_1	02/03/15	10/04/15	Yes	2.025e6	Plated 4w for ATAC
+ruyv_1	02/03/15	13/04/15	Yes	1.5e6	Plated 1x10cm for flow
+ruyv_1	02/03/15	21/04/15	No		Terminated
+eika_2	05/03/15	05/03/15			Commence Week1
+eika_2	05/03/15	10/03/15	No		
+eika_2	05/03/15	14/03/15	No		
+eika_2	05/03/15	18/03/15	No		
+eika_2	05/03/15	23/03/15	No		
+eika_2	05/03/15	28/03/15	No		
+eika_2	05/03/15	02/04/15	No		
+eika_2	05/03/15	07/04/15	Yes	1.775e6	Plated for KA + flow
+eika_2	05/03/15	10/04/15	Yes	1.3e6	Plated 4w for me + 4w for ATAC
+eika_2	05/03/15	15/04/15	No		
+eika_2	05/03/15	20/04/15	No		Terminated
+ieki_2	02/03/15	02/03/15			Commence Week1
+ieki_2	02/03/15	08/03/15	No		
+ieki_2	02/03/15	12/03/15	No		
+ieki_2	02/03/15	16/03/15	No		
+ieki_2	02/03/15	21/03/15	No		
+ieki_2	02/03/15	25/03/15	No		
+ieki_2	02/03/15	30/03/15	No		
+ieki_2	02/03/15	02/04/15	No		
+ieki_2	02/03/15	07/04/15	Yes	1.05e6	Plated 6w for KA + for flow
+ieki_2	02/03/15	10/04/15	Yes	1.025e6	Plated 4w for me + 2w for ATAC
+ieki_2	02/03/15	13/04/15	Yes	2.8e6	Plated 12w for lalistat optimisation assay
+ieki_2	02/03/15	17/04/15	No		
+ieki_2	02/03/15	20/04/15	No		Terminated
+oefg_2	20/03/15	20/03/15			Commence Week1
+oefg_2	20/03/15	27/03/15	No		
+oefg_2	20/03/15	02/04/15	No		
+oefg_2	20/03/15	07/04/15	No		
+oefg_2	20/03/15	14/04/15	No		
+oefg_2	20/03/15	21/04/15	Yes	2.925e6	Plate 12w + for flow
+oefg_2	20/03/15	26/04/15	No		
+oefg_2	20/03/15	29/04/15	Yes	7.4e6	Plate for ATAC; Terminated
+yemz_1	25/03/15	25/03/15			Commence Week1
+yemz_1	25/03/15	31/03/15	No		
+yemz_1	25/03/15	07/04/15	No		
+yemz_1	25/03/15	14/04/15	No		
+yemz_1	25/03/15	22/04/15	No		
+yemz_1	25/03/15	28/04/15	Yes		For flow; Terminated
+cicb_3	22/03/15	22/03/15			Commence Week1
+cicb_3	22/03/15	27/03/15	No		
+cicb_3	22/03/15	02/04/15	No		
+cicb_3	22/03/15	07/04/15	No		
+cicb_3	22/03/15	14/04/15	No		
+cicb_3	22/03/15	22/04/15	No		
+cicb_3	22/03/15	28/04/15	No		
+cicb_3	22/03/15	07/05/15	No		Terminated
+vass_1	29/03/15	29/03/15			Commence Week1
+vass_1	29/03/15	02/04/15	No		
+vass_1	29/03/15	07/04/15	No		
+vass_1	29/03/15	10/04/15	No		
+vass_1	29/03/15	14/04/15	No		
+vass_1	29/03/15	17/04/15	Yes	3.05e6	Plate 12w + for flow
+vass_1	29/03/15	21/04/15	Yes	4.375e6	Plate 12w
+vass_1	29/03/15	24/04/15	No		
+vass_1	29/03/15	29/04/15	No		Terminated
+wibj_2	30/03/15	30/03/15			Commence Week1
+wibj_2	30/03/15	02/04/15	No		
+wibj_2	30/03/15	07/04/15	No		
+wibj_2	30/03/15	10/04/15	No		
+wibj_2	30/03/15	14/04/15	No		
+wibj_2	30/03/15	17/04/15	Yes	0.8e5	Plate for flow
+wibj_2	30/03/15	21/04/15	Yes	1.575e6	Plate for KA
+wibj_2	30/03/15	24/04/15	No		
+wibj_2	30/03/15	27/04/15	No		
+wibj_2	30/03/15	29/04/15	Yes	2.525e6	Plate for ATAC; Terminated
+joxm_1	26/03/15	26/03/15			Commence Week1
+joxm_1	26/03/15	01/04/15	No		
+joxm_1	26/03/15	07/04/15	No		
+joxm_1	26/03/15	12/04/15	No		
+joxm_1	26/03/15	17/04/15	Yes	4.2e5	Plate for flow
+joxm_1	26/03/15	21/04/15	No		
+joxm_1	26/03/15	26/04/15	No		
+joxm_1	26/03/15	29/04/15	Yes	1.2e6	Plate for KA
+joxm_1	26/03/15	04/05/15	No		
+joxm_1	26/03/15	07/05/15	Yes	2.5e6	Plate 8w (ATAC inc) + for flow
+joxm_1	26/03/15	12/05/15	No		Terminated
+eojr_3	23/03/15	23/03/15			Commence Week1
+eojr_3	23/03/15	27/03/15	No		
+eojr_3	23/03/15	02/04/15	No		
+eojr_3	23/03/15	07/04/15	No		
+eojr_3	23/03/15	10/04/15	No		
+eojr_3	23/03/15	14/04/15	No		
+eojr_3	23/03/15	21/04/15	No		
+eojr_3	23/03/15	26/04/15	No		
+eojr_3	23/03/15	01/05/15	No		
+eojr_3	23/03/15	05/05/15	Yes		MO for  flow
+eojr_3	23/03/15	07/05/15	Yes		Plated for  flow; Terminated
+veqz_6	02/04/15	02/04/15			Commence Week1
+veqz_6	02/04/15	08/04/15	No		
+veqz_6	02/04/15	12/04/15	No		
+veqz_6	02/04/15	17/04/15	No		
+veqz_6	02/04/15	22/04/15	No		
+veqz_6	02/04/15	26/04/15	No		
+veqz_6	02/04/15	29/04/15	Yes	3.575e6	Plate 16w + for flow
+veqz_6	02/04/15	04/05/15	No		
+veqz_6	02/04/15	08/05/15	No		
+veqz_6	02/04/15	12/05/15	No		Terminated
+iisa_3	26/03/15	26/03/15			Commence Week1
+iisa_3	26/03/15	01/04/15	No		
+iisa_3	26/03/15	08/04/15	No		
+iisa_3	26/03/15	14/04/15	No		
+iisa_3	26/03/15	26/04/15	No		
+iisa_3	26/03/15	29/04/15	Yes	2.65e6	Plate 12w + for flow
+iisa_3	26/03/15	04/05/15	No		
+iisa_3	26/03/15	07/05/15	Yes	4.9e6	Plate 12w + 4w for ATAC
+iisa_3	26/03/15	12/05/15	No		
+iisa_3	26/03/15	19/05/15	No		Terminated
+mijn_2	01/04/15	01/04/15			Commence Week1
+mijn_2	01/04/15	07/04/15	No		
+mijn_2	01/04/15	10/04/15	No		
+mijn_2	01/04/15	17/04/15	No		
+mijn_2	01/04/15	20/04/15	No		
+mijn_2	01/04/15	23/04/15	No		
+mijn_2	01/04/15	26/04/15	No		
+mijn_2	01/04/15	29/04/15	No		
+mijn_2	01/04/15	03/05/15	No		
+mijn_2	01/04/15	06/05/15	No		Just add media
+mijn_2	01/04/15	07/05/15	Yes	1.725e6	Plate for KA + flow
+mijn_2	01/04/15	11/05/15	No		
+mijn_2	01/04/15	12/05/15	Yes	1.5e6	Plate for JR + ATAC
+mijn_2	01/04/15	15/05/15	No		Terminated
+kolf_3	31/03/15	31/03/15			Commence Week1
+kolf_3	31/03/15	07/04/15	No		
+kolf_3	31/03/15	12/04/15	No		
+kolf_3	31/03/15	17/04/15	No		
+kolf_3	31/03/15	21/04/15	No		
+kolf_3	31/03/15	26/04/15	No		
+kolf_3	31/03/15	29/04/15	No		
+kolf_3	31/03/15	03/05/15	No		
+kolf_3	31/03/15	07/05/15	Yes	1.2e6	Plate 8w for KA
+kolf_3	31/03/15	12/05/15	Yes	2.2e6	Plate for JR + ATAC
+kolf_3	31/03/15	19/05/15	No		Terminated
+pahc_4	31/03/15	31/03/15			Commence Week1
+pahc_4	31/03/15	02/04/15	No		
+pahc_4	31/03/15	07/04/15	No		
+pahc_4	31/03/15	10/04/15	No		
+pahc_4	31/03/15	13/04/15	No		
+pahc_4	31/03/15	16/04/15	No		
+pahc_4	31/03/15	20/04/15	No		
+pahc_4	31/03/15	27/04/15	No		
+pahc_4	31/03/15	29/04/15	Yes	3.325e6	Plate 16w + for flow
+pahc_4	31/03/15	04/05/15	No		
+pahc_4	31/03/15	08/05/15	No		
+pahc_4	31/03/15	13/05/15	No		
+pahc_4	31/03/15	15/05/15	No		
+pahc_4	31/03/15	20/05/15	No		
+pahc_4	31/03/15	25/05/15	No		
+pahc_4	31/03/15	29/05/15	No		Terminated; EBs started disintegrating
+sukz_1	30/03/15	30/03/15			Commence Week1
+sukz_1	30/03/15	02/04/15	No		
+sukz_1	30/03/15	07/04/15	No		
+sukz_1	30/03/15	14/04/15	No		
+sukz_1	30/03/15	17/04/15	No		
+sukz_1	30/03/15	22/04/15	No		
+sukz_1	30/03/15	26/04/15	No		
+sukz_1	30/03/15	29/04/15	Yes	7.35e6	Plate 16w + for flow
+sukz_1	30/03/15	04/05/15	No		
+sukz_1	30/03/15	08/05/15	No		
+sukz_1	30/03/15	13/05/15	No		
+sukz_1	30/03/15	15/05/15	No		
+sukz_1	30/03/15	20/05/15	No		
+sukz_1	30/03/15	25/05/15	No		
+sukz_1	30/03/15	29/05/15	No		Terminated; EBs started disintegrating
+xugn_1	11/06/15	11/06/15			Commence Week1
+xugn_1	11/06/15	17/06/15	No		
+xugn_1	11/06/15	23/06/15	No		
+xugn_1	11/06/15	27/06/15	No		
+xugn_1	11/06/15	01/07/15	No		
+xugn_1	11/06/15	06/07/15	No		
+xugn_1	11/06/15	10/07/15	No		
+xugn_1	11/06/15	15/07/15	Yes	4.175e6	Plate 16w + for flow
+xugn_1	11/06/15	20/07/15	No		
+xugn_1	11/06/15	24/07/15	Yes	1.2e6	Plate for ATAC - Terminated
+hiaf_2	18/06/15	18/06/15			Commence Week1
+hiaf_2	18/06/15	24/06/15	No		
+hiaf_2	18/06/15	29/06/15	No		
+hiaf_2	18/06/15	03/07/15	No		
+hiaf_2	18/06/15	08/07/15	No		
+hiaf_2	18/06/15	13/07/15	No		
+hiaf_2	18/06/15	16/07/15	Yes	5.775e6	Plate 16w + for flow
+hiaf_2	18/06/15	23/07/15	No		Add media
+hiaf_2	18/06/15	24/07/15	Yes	2.35e6	Plate for ATAC. Terminated
+kuxp_1	22/06/15	22/06/15			Commence Week1
+kuxp_1	22/06/15	29/06/15	No		
+kuxp_1	22/06/15	03/07/15	No		
+kuxp_1	22/06/15	08/07/15	No		
+kuxp_1	22/06/15	13/07/15	No		
+kuxp_1	22/06/15	16/07/15	Yes	6.45e6	Plate 16w + for flow
+kuxp_1	22/06/15	23/07/15	No		Add media
+kuxp_1	22/06/15	24/07/15	No		Terminated
+oapg_5	21/06/15	21/06/15			Commence Week1
+oapg_5	21/06/15	26/06/15	No		
+oapg_5	21/06/15	01/07/15	No		
+oapg_5	21/06/15	06/07/15	No		
+oapg_5	21/06/15	10/07/15	No		
+oapg_5	21/06/15	15/07/15	No		
+oapg_5	21/06/15	20/07/15	Yes	2.65e6	Plate 4w + for flow
+oapg_5	21/06/15	24/07/15	Yes	3.675e6	Plate 12w
+oapg_5	21/06/15	04/08/15	No		Terminated
+oapg_5	21/06/15	21/06/15			Commence Week1
+oapg_5	21/06/15	26/06/15	No		
+oapg_5	21/06/15	01/07/15	No		
+oapg_5	21/06/15	06/07/15	No		
+oapg_5	21/06/15	10/07/15	No		
+oapg_5	21/06/15	15/07/15	No		
+oapg_5	21/06/15	20/07/15	Yes	2.65e6	Plate 4w + for flow
+oapg_5	21/06/15	24/07/15	Yes	3.675e6	Plate 12w
+oapg_5	21/06/15	04/08/15	No		Terminated
+febc_2	06/07/15	06/07/15			Commence Week1
+febc_2	06/07/15	10/07/15	No		
+febc_2	06/07/15	15/07/15	No		
+febc_2	06/07/15	20/07/15	No		
+febc_2	06/07/15	24/07/15	No		
+febc_2	06/07/15	29/07/15	Yes	5.55e6	Plate 6w + for flow
+febc_2	06/07/15	08/08/15	No		Terminated
+nemb_1	26/06/15	26/06/15			Commence Week1
+nemb_1	26/06/15	01/07/15	No		
+nemb_1	26/06/15	06/07/15	No		
+nemb_1	26/06/15	10/07/15	No		
+nemb_1	26/06/15	15/07/15	Yes	1.38e6	Plate 8w
+nemb_1	26/06/15	20/07/15	Yes	2.85e6	Plate 4w + for flow
+nemb_1	26/06/15	24/07/15	Yes	4.225e6	Plate for ATAC
+nemb_1	26/06/15	02/08/15	No		
+nemb_1	26/06/15	05/08/15	Yes	6.25e5	Plate for ATAC
+nemb_1	26/06/15	11/08/15	No		Terminated
+pamv_3	01/07/15	01/07/15			Commence Week1
+pamv_3	01/07/15	06/07/15	No		
+pamv_3	01/07/15	10/07/15	No		
+pamv_3	01/07/15	15/07/15	No		
+pamv_3	01/07/15	20/07/15	Yes	4.9e6	Plate 4w + for flow
+pamv_3	01/07/15	24/07/15	Yes	8e6	Plate 12w
+pamv_3	01/07/15	04/08/15	No		Terminated
+podx_1	26/06/15	26/06/15			Commence Week1
+podx_1	26/06/15	01/07/15	No		
+podx_1	26/06/15	06/07/15	No		
+podx_1	26/06/15	10/07/15	No		
+podx_1	26/06/15	15/07/15	Yes	3.275e6	Plate 16w + for flow
+podx_1	26/06/15	20/07/15	No		
+podx_1	26/06/15	24/07/15	Yes	2.2e6	Plate 2w for ATAC. Terminated
+eipl_1	30/06/15	30/06/15			Commence Week1
+eipl_1	30/06/15	06/07/15	No		
+eipl_1	30/06/15	10/07/15	No		
+eipl_1	30/06/15	15/07/15	No		
+eipl_1	30/06/15	20/07/15	No		
+eipl_1	30/06/15	24/07/15	Yes	1.025e6	Plate 4w + for flow
+eipl_1	30/06/15	29/07/15	Yes	5.3e6	Plate 16w
+eipl_1	30/06/15	08/08/15	No		Terminated
+heja_1	29/06/15	29/06/15			Commence Week1
+heja_1	29/06/15	03/07/15	No		
+heja_1	29/06/15	08/07/15	No		
+heja_1	29/06/15	13/07/15	No		
+heja_1	29/06/15	17/07/15	No		
+heja_1	29/06/15	22/07/15	No		
+heja_1	29/06/15	27/07/15	Yes	5.2e6	Plate 4w
+heja_1	29/06/15	31/07/15	No		
+heja_1	29/06/15	05/08/15	Yes	4.25e6	Plate 12w + for flow
+heja_1	29/06/15	12/08/15	No		Terminated
+pelm_3	03/07/15	03/07/15			Commence Week1
+pelm_3	03/07/15	08/07/15	No		
+pelm_3	03/07/15	13/07/15	No		
+pelm_3	03/07/15	17/07/15	No		
+pelm_3	03/07/15	22/07/15	No		
+pelm_3	03/07/15	27/07/15	Yes	875k	Plate 4w
+pelm_3	03/07/15	31/07/15	No		
+pelm_3	03/07/15	05/08/15	Yes	1.575e6	Plate 8w + for flow
+pelm_3	03/07/15	12/08/15	No		Terminated
+xucm_3	02/04/15	02/04/15			Commence Week1
+xucm_3	02/04/15	08/04/15	No		
+xucm_3	02/04/15	14/04/15	No		
+xucm_3	02/04/15	20/04/15	No		
+xucm_3	02/04/15	28/04/15	No		
+xucm_3	02/04/15	03/05/15	No		
+xucm_3	02/04/15	07/05/15	Yes	7.025e6	Plate 16w + for flow
+xucm_3	02/04/15	12/05/15	No		
+xucm_3	02/04/15	15/05/15	Yes	5.35e6	Plate 12w for Sebastian
+xucm_3	02/04/15	21/05/15	Yes	10e6	Plate 12w for Sebastian
+xucm_3	02/04/15	26/05/15	Yes	4.9e6	Plate 12w for Sebastian
+xucm_3	02/04/15	29/05/15	Yes	6.6e6	Plate 6x10cm for Sebastian @1x10^6
+xucm_3	02/04/15	03/06/15	Yes	7.7e6	Plate 7x10cm for Sebastian @1x10^6
+xucm_3	02/04/15	09/06/15	Yes	6.4e6	Plate 6x10cm for Sebastian @1x10^6
+xucm_3	02/04/15	15/06/15	Yes	6.525e6	Plate 6x10cm for Sebastian @1x10^6
+xucm_3	02/04/15	28/08/15	No		Terminated
+hayt_1	12/09/15	12/09/15			Commence Week1
+hayt_1	12/09/15	17/09/15	No		
+hayt_1	12/09/15	21/09/15	No		
+hayt_1	12/09/15	24/09/15	No		Add 5ml
+hayt_1	12/09/15	29/09/15	No		
+hayt_1	12/09/15	02/10/15	Yes	1.95e6	Plated for KA (RNA+ATAC)
+hayt_1	12/09/15	07/10/15	Yes	3.75e6	Plated for myself + flow
+hayt_1	12/09/15	14/10/15	No		Terminated
+oevr_3	30/08/15	30/08/15			Commence Week1
+oevr_3	30/08/15	04/09/15	No		
+oevr_3	30/08/15	09/09/15	No		
+oevr_3	30/08/15	14/09/15	No		
+oevr_3	30/08/15	18/09/15	No		
+oevr_3	30/08/15	22/09/15	No		
+oevr_3	30/08/15	27/09/15	No		
+oevr_3	30/08/15	02/10/15	Yes	4.5e6	
+oevr_3	30/08/15	07/10/15	Yes	1.6e6	EBs cobweb-like. Plated for KA
+oevr_3	30/08/15	12/10/15	Yes	9e5	Plated for flow. Terminated
+fafq_1	16/09/15	16/09/15			Commence Week1
+fafq_1	16/09/15	21/09/15	No		
+fafq_1	16/09/15	24/09/15	No		Add 5ml
+fafq_1	16/09/15	30/09/15	No		
+fafq_1	16/09/15	05/10/15	No		
+fafq_1	16/09/15	07/10/15	Yes	4.6e6	EBs disintegrating - should discard soon
+fafq_1	16/09/15	14/10/15	No		Terminated
+sojd_3	11/09/15	11/09/15			Commence Week1
+sojd_3	11/09/15	16/09/15	No		
+sojd_3	11/09/15	20/09/15	No		
+sojd_3	11/09/15	24/09/15	No		
+sojd_3	11/09/15	29/09/15	No		
+sojd_3	11/09/15	02/10/15	Yes		Mostly dead cells. Didn't plate
+sojd_3	11/09/15	07/10/15	Yes	1.225e6	Plated 8w for KA + ATAC
+sojd_3	11/09/15	12/10/15	Yes	3e6	Plated for myself + flow
+sojd_3	11/09/15	19/09/15	No		Terminated
+kucg_2	21/09/15	21/09/15			Commence Week1
+kucg_2	21/09/15	26/09/15	No		
+kucg_2	21/09/15	30/09/15	No		
+kucg_2	21/09/15	05/10/15	No		
+kucg_2	21/09/15	09/10/15	No		
+kucg_2	21/09/15	14/10/15	No		
+kucg_2	21/09/15	19/10/15	Yes	4.25e5	Plated for flow. Mostly dead cells
+kucg_2	21/09/15	23/10/15	Yes	6.50e5	Plated for flow
+kucg_2	21/09/15	28/10/15	Yes	6.50e5	Plated 4w for KA
+kucg_2	21/09/15	02/11/15	Yes	9.07e5	Plated 6w for KA. Terminated
+uoxz_5	13/06/14	13/06/14			Commence Week1
+uoxz_5	13/06/14	20/06/14	No		
+uoxz_5	13/06/14	26/06/14	No		
+uoxz_5	13/06/14	02/07/14	No		
+uoxz_5	13/06/14	09/07/14	No		
+uoxz_5	13/06/14	11/07/14	No		8ml media added
+uoxz_5	13/06/14	15/07/14	No		
+uoxz_5	13/06/14	21/07/14	Yes		Plated 2w. Strange, heterogeneous cells
+uoxz_5	13/06/14	25/07/14	No		
+uoxz_5	13/06/14	29/07/14	No		
+uoxz_5	13/06/14	01/08/14	No		
+uoxz_5	13/06/14	04/08/14	Yes		Tiny loose pellet. Can barely see MO
+uoxz_5	13/06/14	09/08/14	Yes		Mostly dead cells. Unable to count
+uoxz_5	13/06/14	14/08/14	Yes		Couldn't count. Didn't plate.
+uoxz_5	13/06/14	19/08/14	No		Terminated
+airc_2	16/08/14	16/08/14			Commence Week1
+airc_2	16/08/14	22/08/14	No		
+airc_2	16/08/14	29/08/14	No		
+airc_2	16/08/14	05/09/14	No		
+airc_2	16/08/14	11/09/14	No		
+airc_2	16/08/14	06/10/14	No		Terminated
+nukw_1	23/09/15	23/09/15			Commence Week1
+nukw_1	23/09/15	28/09/15	No		
+nukw_1	23/09/15	03/10/15	No		
+nukw_1	23/09/15	08/10/15	No		
+nukw_1	23/09/15	14/10/15	No		
+nukw_1	23/09/15	19/10/15	Yes	2.725e6	Plated 4w + flow
+nukw_1	23/09/15	23/10/15	Yes	4.78e6	Plated for myself + flow
+nukw_1	23/09/15	28/10/15	Yes	9.725e6	Plated for KA + flow
+nukw_1	23/09/15	05/11/15	No		Terminated. Given to Subho
+iill_1	27/09/15	27/09/15			Commence Week1
+iill_1	27/09/15	02/10/15	No		
+iill_1	27/09/15	07/10/15	No		
+iill_1	27/09/15	12/10/15	Yes	2.1e6	Plated for myself + flow
+iill_1	27/09/15	16/10/15	No		
+iill_1	27/09/15	21/10/15	Yes	5.875e6	Plated for KA + flow
+iill_1	27/09/15	27/10/15	No		Add 5ml
+iill_1	27/09/15	28/10/15	Yes	4.275e6	Plated for KA + flow
+iill_1	27/09/15	05/11/15	No		Terminated. Given to Subho
+fikt_3	03/10/15	03/10/15			Commence Week1
+fikt_3	03/10/15	08/10/15	No		
+fikt_3	03/10/15	14/10/15	No		
+fikt_3	03/10/15	19/10/15	No		
+fikt_3	03/10/15	23/10/15	No		
+fikt_3	03/10/15	28/10/15	Yes	8.55e6	Plated for KA + JR + flow
+fikt_3	03/10/15	05/11/15	No		Given to Subho
+fikt_3	03/10/15	11/11/15	Yes	9.2e5	Plated 2w to repeat ATAC. Given back to Subho. Terminated
+coyi_3	30/09/15	30/09/15			Commence Week1
+coyi_3	30/09/15	05/10/15	No		
+coyi_3	30/09/15	09/10/15	No		
+coyi_3	30/09/15	14/10/15	No		
+coyi_3	30/09/15	19/10/15	No		
+coyi_3	30/09/15	23/10/15	No		
+coyi_3	30/09/15	28/10/15	Yes	2.925e6	Plated 12w for KA + flow
+coyi_3	30/09/15	02/11/15	No		
+coyi_3	30/09/15	06/11/15	Yes	10.375e6	Plated 8w for myself. Terminated
+uaqe_1	01/10/15	01/10/15	No		Commence Week1
+uaqe_1	01/10/15	06/10/15	No		
+uaqe_1	01/10/15	12/10/15	No		
+uaqe_1	01/10/15	16/10/15	No		
+uaqe_1	01/10/15	21/10/15	Yes	1.4e6	8w for KA
+uaqe_1	01/10/15	27/10/15	No		Add 5ml
+uaqe_1	01/10/15	28/10/15	Yes	8.25e5	Plated 4w for KA
+uaqe_1	01/10/15	02/11/15	Yes	8.40e5	Plated 6w for KA
+uaqe_1	01/10/15	06/11/15	Yes	1.2e6	Plated 8w. Terminated
+bezi_1	18/06/15	18/06/15			Commence Week1
+bezi_1	18/06/15	24/06/15	No		
+bezi_1	18/06/15	29/06/15	No		
+bezi_1	18/06/15	03/07/15	No		
+bezi_1	18/06/15	08/07/15	No		
+bezi_1	18/06/15	13/07/15	No		
+bezi_1	18/06/15	16/07/15	Yes		Barely any cells - plate for flow
+bezi_1	18/06/15	21/07/15	No		
+bezi_1	18/06/15	24/07/15	Yes	1.675e6	Plate 8w + for flow
+bezi_1	18/06/15	29/07/15	Yes	4.475e6	Plate 16w + for flow
+bezi_1	18/06/15	05/08/15	Yes	2.75e6	Plate 12w
+bezi_1	18/06/15	12/08/15	No		Terminated
+dard_2	30/03/15	30/03/15			Commence Week1
+dard_2	30/03/15	02/04/15	No		
+dard_2	30/03/15	07/04/15	No		
+dard_2	30/03/15	10/04/15	No		
+dard_2	30/03/15	13/04/15	No		
+dard_2	30/03/15	17/04/15	No		
+dard_2	30/03/15	22/04/15	No		
+dard_2	30/03/15	26/04/15	No		
+dard_2	30/03/15	29/04/15	No		
+dard_2	30/03/15	05/05/15	No		
+dard_2	30/03/15	08/05/15	Yes	1.25e6	Plate for KA
+dard_2	30/03/15	12/05/15	Yes	1.85e6	Plate for JR + ATAC + flow
+dard_2	30/03/15	15/05/15	Yes	1.925e6	Plate for KA
+dard_2	30/03/15	19/05/15	No		Terminated - contaminating cell types
+kehc_2	29/06/15	29/06/15			Commence Week1
+kehc_2	29/06/15	03/07/15	No		
+kehc_2	29/06/15	08/07/15	No		
+kehc_2	29/06/15	13/07/15	No		
+kehc_2	29/06/15	16/07/15	Yes		Barely any cells - plate for flow
+kehc_2	29/06/15	21/07/15	No		
+kehc_2	29/06/15	25/07/15	No		
+kehc_2	29/06/15	29/07/15	Yes	4.85e6	Plate 16w + for flow
+kehc_2	29/06/15	05/08/15	Yes	4.3e6	Plate 16w + for flow
+kehc_2	29/06/15	11/08/15	No		Terminated - weird contaminating cell types
+hehd_2	30/09/15	30/09/15			Commence Week1
+hehd_2	30/09/15	05/10/15	No		
+hehd_2	30/09/15	09/10/15	No		
+hehd_2	30/09/15	14/10/15	No		
+hehd_2	30/09/15	19/10/15	No		
+hehd_2	30/09/15	23/10/15	No		
+hehd_2	30/09/15	28/10/15	Yes	1.64e6	Plated 10w for KA
+hehd_2	30/09/15	02/11/15	Yes	1.925e6	Plated 8w for KA
+hehd_2	30/09/15	06/11/15	Yes	2.075e6	Plated 8w for myself
+hehd_2	30/09/15	11/11/15	Yes	4.7e6	Plated 2x10cm. Terminated
+qolg_3	10/10/15	10/10/15			Commence Week1
+qolg_3	10/10/15	15/10/15			
+qolg_3	10/10/15	20/10/15	No		
+qolg_3	10/10/15	26/10/15	No		
+qolg_3	10/10/15	30/10/15	Yes	1.875e6	12w for KA
+qolg_3	10/10/15	05/11/15	No		Add media
+qolg_3	10/10/15	06/11/15	Yes	3.55e6	Plated 12w
+qolg_3	10/10/15	11/11/15	Yes	5.475e6	Plated 2x10cm. Terminated
+vabj_3	03/10/15	03/10/15			Commence Week1
+vabj_3	03/10/15	08/10/15	No		
+vabj_3	03/10/15	14/10/15	No		
+vabj_3	03/10/15	19/10/15	No		
+vabj_3	03/10/15	23/10/15			
+vabj_3	03/10/15	28/10/15	Yes	4.75e5	Mostly dead cells. Plate for flow
+vabj_3	03/10/15	02/11/15	Yes	5.25e5	4w for KA
+vabj_3	03/10/15	06/11/15	Yes	6.60e5	4w for KA
+vabj_3	03/10/15	11/11/15	Yes	6.50e5	Plated 1x10cm. Terminated
+diku_1	15/10/15	15/10/15			Commence Week1
+diku_1	15/10/15	20/10/15	No		
+diku_1	15/10/15	26/10/15	No		
+diku_1	15/10/15	30/10/15	No		
+diku_1	15/10/15	05/11/15	No		Add media
+diku_1	15/10/15	06/11/15	Yes	2.9e6	Plated 16w
+diku_1	15/10/15	11/11/15	Yes	13.8e6	Plated 2x10cm. Terminated
+xekf_1	05/08/14	05/08/14			Commence Week1
+xekf_1	05/08/14	11/08/14	No		
+xekf_1	05/08/14	18/08/14	No		Most floating EBs discarded
+xekf_1	05/08/14	27/08/14	No		
+xekf_1	05/08/14	02/09/14	No		
+xekf_1	05/08/14	08/09/14	No		Too many dead cells
+xekf_1	05/08/14	12/09/14	No		Fewer dead cells
+xekf_1	05/08/14	06/10/14	No		Terminated
+leeh_3	13/08/14	13/08/14			Commence Week1
+leeh_3	13/08/14	19/08/14	No		
+leeh_3	13/08/14	27/08/14	No		
+leeh_3	13/08/14	02/09/14	No		
+leeh_3	13/08/14	08/09/14	Yes		Not able to count - plated 2w
+leeh_3	13/08/14	12/09/14	No		Dead cells>Progenitors
+leeh_3	13/08/14	06/10/14	No		Terminated
+leeh_3	02/02/15	02/02/15			Commence Week1
+leeh_3	02/02/15	08/02/15	No		
+leeh_3	02/02/15	13/02/15	No		
+leeh_3	02/02/15	19/02/15	No		
+leeh_3	02/02/15	19/02/15	No		
+leeh_3	02/02/15	24/02/15	No		
+leeh_3	02/02/15	02/03/15	No		
+leeh_3	02/02/15	09/03/15	No		Terminated
+koun_2	29/08/14	29/08/14			Commence Week1
+koun_2	29/08/14	05/09/14	No		
+koun_2	29/08/14	11/09/14	No		
+koun_2	29/08/14	17/09/14	No		
+koun_2	29/08/14	11/10/14	No		Terminated
+koun_2	31/01/15	31/01/15			Commence Week1
+koun_2	31/01/15	06/02/15	No		
+koun_2	31/01/15	13/02/15	No		
+koun_2	31/01/15	19/02/15	No		
+koun_2	31/01/15	24/02/15	No		
+koun_2	31/01/15	02/03/15	No		
+koun_2	31/01/15	06/03/15	No		
+koun_2	31/01/15	09/03/15	No		Terminated
+vopm_2	15/08/14	15/08/14			Commence Week1
+vopm_2	15/08/14	22/08/14	No		
+vopm_2	15/08/14	29/08/14	No		
+vopm_2	15/08/14	05/09/14	No		
+vopm_2	15/08/14	11/09/14	No		
+vopm_2	15/08/14	06/10/14	Yes	1.04e6	6w@150k for Salmomella
+vopm_2	15/08/14	11/10/14	No		
+vopm_2	15/08/14	21/10/14	No		Terminated. Too few cells to perform assays.
+vopm_2	30/01/15	30/01/15			Commence Week1
+vopm_2	30/01/15	04/02/15	No		
+vopm_2	30/01/15	10/02/15	No		
+vopm_2	30/01/15	16/02/15	No		
+vopm_2	30/01/15	21/02/15	No		Making progenitors slightly
+vopm_2	30/01/15	27/02/15	No		
+vopm_2	30/01/15	05/03/15	No		
+vopm_2	30/01/15	09/03/15	No		Terminated
+uahf_3	03/10/14	03/10/14			Commence Week1
+uahf_3	03/10/14	10/10/14	No		
+uahf_3	03/10/14	16/10/14	No		
+uahf_3	03/10/14	20/10/14	No		
+uahf_3	03/10/14	25/10/14	No		
+uahf_3	03/10/14	30/10/14	No		
+uahf_3	03/10/14	04/11/14	No		Making progenitors
+uahf_3	03/10/14	07/11/14			5ml media added
+uahf_3	03/10/14	10/11/14	Yes	0.8e6	Plated 4w
+uahf_3	03/10/14	14/11/14	Yes	0.6e6	Plated 1x10cm
+uahf_3	03/10/14	19/11/14	Yes	0.5e6	Plated 1x10cm
+uahf_3	03/10/14	24/11/14	Yes	0.46e6	Didn't plate.
+uahf_3	03/10/14	28/11/14	Yes	0.5e6	Didn't plate. Terminated.
+focm_1	11/10/14	11/10/14			Commence Week1
+focm_1	11/10/14	15/10/14	No		
+focm_1	11/10/14	20/10/14	No		
+focm_1	11/10/14	25/10/14	No		Lots of dead cells.
+focm_1	11/10/14	30/10/14	No		
+focm_1	11/10/14	04/11/14	No		Dead cells>progenitors
+focm_1	11/10/14	07/11/14			5ml media added
+focm_1	11/10/14	10/11/14	No		
+focm_1	11/10/14	14/11/14	No		
+focm_1	11/10/14	19/11/14	No		
+focm_1	11/10/14	27/11/14			Terminated
+focm_1	30/01/15	30/01/15			Commence Week1
+focm_1	30/01/15	04/02/15	No		
+focm_1	30/01/15	10/02/15	No		
+focm_1	30/01/15	16/02/15	No		
+focm_1	30/01/15	21/02/15	No		
+focm_1	30/01/15	27/02/15	No		
+focm_1	30/01/15	05/03/15	No		
+focm_1	30/01/15	09/03/15	No		Terminated
+riiv_1	16/10/14	16/10/14	No		Commence Week1
+riiv_1	16/10/14	21/10/14	No		
+riiv_1	16/10/14	25/10/14	No		
+riiv_1	16/10/14	30/10/14	No		
+riiv_1	16/10/14	04/11/14	No		
+riiv_1	16/10/14	07/11/14	No		
+riiv_1	16/10/14	10/11/14	No		
+riiv_1	16/10/14	14/11/14	Yes	1.775e6	Plated 4w + 1x10cm
+riiv_1	16/10/14	19/11/14	Yes	1.425e6	Plated 8w
+riiv_1	16/10/14	24/11/14	No		
+riiv_1	16/10/14	28/11/14	Yes		Plated 8w@150k
+riiv_1	16/10/14	19/12/14	No		Terminated
+xegx_2	04/11/14	04/11/14			Commence Week1
+xegx_2	04/11/14	10/11/14	No		
+xegx_2	04/11/14	14/11/14	No		
+xegx_2	04/11/14	19/11/14	No		
+xegx_2	04/11/14	24/11/14	No		Making progenitors
+xegx_2	04/11/14	27/11/14	No		
+xegx_2	04/11/14	01/12/14	No		
+xegx_2	04/11/14	19/12/14	No		Terminated
+xegx_2	11/02/15	11/02/15			Commence Week1
+xegx_2	11/02/15	17/02/15	No		
+xegx_2	11/02/15	23/02/15	No		
+xegx_2	11/02/15	27/02/15	No		
+xegx_2	11/02/15	04/03/15	No		
+xegx_2	11/02/15	06/03/15	No		
+xegx_2	11/02/15	09/03/15	No		Terminated
+bulb_1	10/11/14	10/11/14			Commence Week1
+bulb_1	10/11/14	15/11/14	No		
+bulb_1	10/11/14	20/11/14	No		
+bulb_1	10/11/14	24/11/14	No		
+bulb_1	10/11/14	28/11/14	No		
+bulb_1	10/11/14	01/12/14	No		Making progenitors
+bulb_1	10/11/14	19/12/14	No		Terminated
+bulb_1	02/02/15	02/02/15			Commence Week1
+bulb_1	02/02/15	08/02/15	No		
+bulb_1	02/02/15	13/02/15	No		
+bulb_1	02/02/15	19/02/15	No		
+bulb_1	02/02/15	24/02/15	No		
+bulb_1	02/02/15	02/03/15	No		
+bulb_1	02/02/15	09/03/15	No		Terminated
+iakz_1	27/09/14	27/09/14			Commence Week1
+iakz_1	27/09/14	3/10/14	No		
+iakz_1	27/09/14	8/10/14	No		
+iakz_1	27/09/14	12/10/14	No		
+iakz_1	27/09/14	15/10/14	No		
+iakz_1	27/09/14	20/10/14	No		
+iakz_1	27/09/14	25/10/14	No		
+iakz_1	27/09/14	31/10/14	No		Terminated. No progenitors and most EBs dissapeared.
+iakz_1	01/02/15	01/02/15			Commence Week1
+iakz_1	01/02/15	06/02/15	No		
+iakz_1	01/02/15	11/02/15	No		
+iakz_1	01/02/15	17/02/15	No		
+iakz_1	01/02/15	23/02/15	No		
+iakz_1	01/02/15	27/02/15	No		
+iakz_1	01/02/15	04/03/15	No		
+iakz_1	01/02/15	06/03/15	No		
+iakz_1	01/02/15	09/03/15	No		Terminated
+nekd_1	02/03/15	02/03/15			Commence Week1
+nekd_1	02/03/15	09/03/15	No		
+nekd_1	02/03/15	13/03/15	No		
+nekd_1	02/03/15	17/03/15	No		
+nekd_1	02/03/15	21/03/15	No		
+nekd_1	02/03/15	27/03/15	No		
+nekd_1	02/03/15	01/04/15	Yes		Mostly dead cells, didn't plate
+nekd_1	02/03/15	07/04/15	No		Terminated
+cuhk_2	20/02/15	20/02/15			Commence Week1
+cuhk_2	20/02/15	26/02/15	No		
+cuhk_2	20/02/15	04/03/15	No		
+cuhk_2	20/02/15	08/03/15	No		
+cuhk_2	20/02/15	12/03/15	No		
+cuhk_2	20/02/15	16/03/15	No		
+cuhk_2	20/02/15	21/03/15	No		
+cuhk_2	20/02/15	26/03/15	No		
+cuhk_2	20/02/15	30/03/15	No		
+cuhk_2	20/02/15	02/04/15	No		Terminated
+xavk_3	20/03/15	20/03/15			Commence Week1
+xavk_3	20/03/15	25/03/15	No		
+xavk_3	20/03/15	31/03/15	No		
+xavk_3	20/03/15	07/04/15	Yes	5.5e5	Plated for flow - looked strange
+xavk_3	20/03/15	10/04/15	Yes	5.75e5	Plated 4w @144k/w
+xavk_3	20/03/15	14/04/15	Yes		
+xavk_3	20/03/15	27/04/15	No		Terminated
+robp_3	30/03/15	30/03/15			Commence Week1
+robp_3	30/03/15	02/04/15	No		
+robp_3	30/03/15	07/04/15	No		
+robp_3	30/03/15	10/04/15	No		
+robp_3	30/03/15	13/04/15	No		
+robp_3	30/03/15	16/04/15	No		
+robp_3	30/03/15	26/04/15	No		
+robp_3	30/03/15	06/05/15	No		Terminated. Lots of debris and EBs disintegrating.
+ruql_3	16/03/15	16/03/15			Commence Week1
+ruql_3	16/03/15	21/03/15	No		
+ruql_3	16/03/15	25/03/15	No		
+ruql_3	16/03/15	31/03/15	No		
+ruql_3	16/03/15	07/04/15	No		
+ruql_3	16/03/15	10/04/15	Yes		Mostly dead cells - didn't plate
+ruql_3	16/03/15	15/04/15	No		
+ruql_3	16/03/15	21/04/15	Yes		Mostly dead cells - plated for flow
+ruql_3	16/03/15	28/04/15	No		
+ruql_3	16/03/15	05/05/15	No		
+ruql_3	16/03/15	08/05/15	Yes	4.25e5	Plated for flow
+ruql_3	16/03/15	12/05/15	Yes	4.2e5	Didn't plate
+ruql_3	16/03/15	15/05/15	No		Terminated - not enough cells, and weird cell type
+sebz_1	02/04/15	02/04/15			Commence Week1
+sebz_1	02/04/15	08/04/15	No		
+sebz_1	02/04/15	12/04/15	No		
+sebz_1	02/04/15	17/04/15	No		
+sebz_1	02/04/15	22/04/15	No		
+sebz_1	02/04/15	28/04/15	No		
+sebz_1	02/04/15	05/05/15	No		
+sebz_1	02/04/15	08/05/15	Yes	2.67e5	Plate for flow
+sebz_1	02/04/15	12/05/15	Yes	3.4e5	Plate for flow
+sebz_1	02/04/15	15/05/15	No		Terminated - Insufficient cells - weird looking
+foop_1	11/06/15	11/06/15			Commence Week1
+foop_1	11/06/15	17/06/15	No		
+foop_1	11/06/15	23/06/15	No		
+foop_1	11/06/15	27/06/15	No		
+foop_1	11/06/15	01/07/15	No		
+foop_1	11/06/15	06/07/15	No		
+foop_1	11/06/15	10/07/15	No		
+foop_1	11/06/15	15/07/15	Yes		Barely any cells - plate for flow
+foop_1	11/06/15	20/07/15	No		
+foop_1	11/06/15	24/07/15	No		Terminated
+rozh_5	08/06/15	08/06/15			Commence Week1
+rozh_5	08/06/15	15/06/15	No		
+rozh_5	08/06/15	22/06/15	No		
+rozh_5	08/06/15	27/06/15	No		
+rozh_5	08/06/15	02/07/15	No		
+rozh_5	08/06/15	06/07/15	No		
+rozh_5	08/06/15	10/07/15	No		
+rozh_5	08/06/15	15/07/15	Yes		Barely any cells - plate for flow
+rozh_5	08/06/15	20/07/15	Yes		Barely any cells - plate for flow
+rozh_5	08/06/15	24/07/15	Yes	3.2e5	Plate for flow
+rozh_5	08/06/15	29/07/15	Yes	6.4e5	Plate 4w. Terminated
+suzg_3	08/06/15	08/06/15			Commence Week1
+suzg_3	08/06/15	15/06/15	No		
+suzg_3	08/06/15	22/06/15	No		
+suzg_3	08/06/15	27/06/15	No		
+suzg_3	08/06/15	02/07/15	No		
+suzg_3	08/06/15	10/07/15	No		
+suzg_3	08/06/15	15/07/15	No		
+suzg_3	08/06/15	20/07/15	Yes		Barely any cells - Plate for flow
+suzg_3	08/06/15	24/07/15	Yes		Barely any cells - not plated
+suzg_3	08/06/15	29/07/15	No		Terminated
+qorq_1	08/06/15	08/06/15			Commence Week1
+qorq_1	08/06/15	13/06/15	No		
+qorq_1	08/06/15	??/06/15	No		
+qorq_1	08/06/15	22/06/15	No		
+qorq_1	08/06/15	28/06/15	No		
+qorq_1	08/06/15	06/07/15	No		
+qorq_1	08/06/15	08/07/15	No		Terminated - forgotten cell line - inconsistent medium changes?
+lexy_1	18/06/15	18/06/15			Commence Week1
+lexy_1	18/06/15	24/06/15	No		
+lexy_1	18/06/15	29/06/15	No		
+lexy_1	18/06/15	03/07/15	No		
+lexy_1	18/06/15	08/07/15	No		
+lexy_1	18/06/15	13/07/15	No		
+lexy_1	18/06/15	16/07/15	Yes		Barely any cells - Plate for flow
+lexy_1	18/06/15	21/07/15	No		
+lexy_1	18/06/15	24/07/15	Yes	5.5e5	Plate for flow
+lexy_1	18/06/15	29/07/15	Yes		Mostly dead cells - Plate for flow
+lexy_1	18/06/15	04/08/15	No		Terminated
+qony_1	30/06/15	30/06/15			Commence Week1
+qony_1	30/06/15	06/07/15	No		
+qony_1	30/06/15	10/07/15	No		
+qony_1	30/06/15	15/07/15	No		
+qony_1	30/06/15	20/07/15	No		
+qony_1	30/06/15	24/07/15	Yes	4.5e5	Plate for flow
+qony_1	30/06/15	29/07/15	Yes		Mostly dead cells - Plate for flow
+qony_1	30/06/15	05/08/15	Yes		Only dead cells - not plated
+qony_1	30/06/15	11/08/15	No		Terminated
+dons_1	03/07/15	03/07/15			Commence Week1
+dons_1	03/07/15	08/07/15	No		
+dons_1	03/07/15	13/07/15	No		
+dons_1	03/07/15	17/07/15	No		
+dons_1	03/07/15	22/07/15	No		
+dons_1	03/07/15	27/07/15	Yes		Only dead cells - don't plate
+dons_1	03/07/15	31/07/15	No		
+dons_1	03/07/15	05/08/15	Yes		Mostly dead cells - Plate for flow
+dons_1	03/07/15	11/08/15	No		Terminated
+xuja_2	21/09/15	21/09/15			Commence Week1
+xuja_2	21/09/15	24/09/15	No		Terminated
+qonc_2	23/09/15	23/09/15			Commence Week1
+qonc_2	23/09/15	28/09/15	No		EBs have not adhered
+qonc_2	23/09/15	03/10/15	No		
+qonc_2	23/09/15	08/10/15	No		
+qonc_2	23/09/15	14/10/15	No		
+qonc_2	23/09/15	19/10/15	No		Mostly dead cells
+qonc_2	23/09/15	23/10/15	No		
+qonc_2	23/09/15	28/10/15	No		
+qonc_2	23/09/15	02/11/15	No		Terminated
+bipt_1	22/09/15	22/09/15			Commence Week1
+bipt_1	22/09/15	27/09/15	No		
+bipt_1	22/09/15	02/10/15	No		
+bipt_1	22/09/15	07/10/15	No		
+bipt_1	22/09/15	12/10/15	No		
+bipt_1	22/09/15	16/10/15	Yes		Slippery pellet - Accidentally aspirated
+bipt_1	22/09/15	21/10/15	No		
+bipt_1	22/09/15	27/10/15	No		Add 5ml
+bipt_1	22/09/15	28/10/15	Yes		Mostly dead cells - didn't plate
+bipt_1	22/09/15	02/11/15	Yes		Mostly dead cells - didn't plate
+bipt_1	22/09/15	06/11/15	Yes		Mostly dead cells - didn't plate. Terminated
+uofv_1	22/09/15	22/09/15			Commence Week1
+uofv_1	22/09/15	27/09/15	No		
+uofv_1	22/09/15	02/10/15	No		
+uofv_1	22/09/15	07/10/15	No		
+uofv_1	22/09/15	12/10/15	No		
+uofv_1	22/09/15	16/10/15	Yes		Mostly dead cells - didn't plate
+uofv_1	22/09/15	21/10/15	No		
+uofv_1	22/09/15	27/10/15	No		
+uofv_1	22/09/15	02/11/15	No		
+uofv_1	22/09/15	05/11/15	Yes		Mostly dead cells - didn't plate. Terminated
+eiwy_1	23/10/15	23/10/15			Commence Week1
+eiwy_1	23/10/15	28/10/15	No		
+eiwy_1	23/10/15	02/11/15	No		
+eiwy_1	23/10/15	06/11/15	No		
+eiwy_1	23/10/15	11/11/15	No		
+eiwy_1	23/10/15	16/11/15	No		
+eiwy_1	23/10/15	20/11/15	Yes	2.675e6	Plated 4w + 2x10cm
+eiwy_1	23/10/15	25/11/15	Yes	5.025e6	Plated 12w
+eiwy_1	23/10/15	04/12/15	Yes	10.075e6	Plated 1x10cm. Terminated
+babk_2	29/10/14	29/10/14			Commence Week1
+babk_2	29/10/14	04/11/14	No		
+babk_2	29/10/14	10/11/14	No		
+babk_2	29/10/14	14/11/14	No		
+babk_2	29/10/14	19/11/14	No		
+babk_2	29/10/14	24/11/14	No		
+babk_2	29/10/14	27/11/14	No		
+babk_2	29/10/14	01/12/14	Yes		Plated 4w@150k + 1x10cm
+babk_2	29/10/14	19/12/14	No		Terminated
+zaui_3	11/10/15	11/10/15			Commence Week1
+zaui_3	11/10/15	16/10/15	No		
+zaui_3	11/10/15	21/10/15	No		
+zaui_3	11/10/15	27/10/15	No		
+zaui_3	11/10/15	30/10/15	No		
+zaui_3	11/10/15	05/11/15	No		
+zaui_3	11/10/15	11/11/15	Yes	1.9e6	Plated 12w for KA
+zaui_3	11/10/15	16/11/15	No		
+zaui_3	11/10/15	20/11/15	Yes	3.1e6	Plated 4w + 2x10cm
+zaui_3	11/10/15	25/11/15	Yes	4.45e6	Plated 12w
+zaui_3	11/10/15	04/12/15	No		Terminated
