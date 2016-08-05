@@ -18,20 +18,24 @@ rin2 = read.table("macrophage-gxe-study/data/bioanalyzer/bioanalyser_illumina_be
 rin_scores = rbind(rin1, rin2)
 
 #How long does it take to expand iPS cells before differentiation?
-ips_duration_plot = ggplot(line_metadata, aes(x = ips_culture_days, fill = received_as)) + 
+duration_df = dplyr::mutate(line_metadata, received_as = ifelse(received_as == "alive/frozen", "frozen",received_as)) %>%
+  dplyr::mutate(media_type = ifelse(media == "E8", "feeder-free","feeder-dependent"))
+ips_duration_plot = ggplot(duration_df, aes(x = ips_culture_days, fill = received_as)) + 
   geom_histogram(binwidth = 2) + 
-  facet_wrap(~media) +
+  facet_wrap(~media_type) +
   xlab("Duration of iPS cell culture (days)") + 
   theme_light()
-ggsave(paste(figure_folder, "ips_culture_duration.pdf"), plot = ips_duration_plot, width = 8, height = 5)
+ggsave(paste0(figure_folder, "diff_ips_culture_duration.pdf"), plot = ips_duration_plot, width = 7, height = 4.5)
 
 #How long does it take from EB formation to stimulation experiment? (From EB formation to Salmonella infection)
 duration_df = dplyr::mutate(line_metadata_success, differation_duration = as.numeric(salmonella_date - diff_start))
+median_duration = median(duration_df$differation_duration, na.rm = TRUE)
 diff_days_plot = ggplot(duration_df, aes(x = differation_duration)) + 
   geom_histogram(binwidth = 3) +
   xlab("Duration of differentiation (days)") + 
-  theme_light()
-ggsave(paste(figure_folder, "salmonella_diff_duration.pdf"), plot = diff_days_plot, width = 4.5, height = 4.5)
+  theme_light() +
+  geom_vline(xintercept = median_duration, color = "red")
+ggsave(paste0(figure_folder, "diff_days_until_salmnoella_assay.pdf"), plot = diff_days_plot, width = 4.5, height = 4.5)
 
 #How many medium changes do we do for successfull differentiations?
 medium_changes_plot = ggplot(line_metadata_success, aes(x = medium_changes)) + 
@@ -66,20 +70,54 @@ ggsave(paste(figure_folder, "monthly_success_plot.pdf"), plot = monthly_success_
 flow_df = line_metadata %>% 
   dplyr::filter(donor != "mijn") %>%
   dplyr::filter(status %in% c("Success", "FC_QC_fail"), !is.na(max_purity)) %>%
-  dplyr::filter((status == "Success" & abs(flow_date - salmonella_date) < 14) | status == "FC_QC_fail") 
+  dplyr::filter((status == "Success" & abs(flow_date - salmonella_date) < 14) | status == "FC_QC_fail") %>%
+  dplyr::mutate(flow_QC = ifelse(status == "Success", "Pass", "Fail"))
 
-flow_purity_plot = ggplot(flow_df, aes(x = max_purity-0.001, fill = status)) + 
+flow_purity_plot = ggplot(flow_df, aes(x = mean_purity, fill = flow_QC)) + 
   geom_histogram(binwidth = 0.01) + 
-  xlab("Maximum purity") + 
-  theme_light()
-ggsave(paste(figure_folder, "flow_purity_histogram.pdf"), plot = flow_purity_plot, width = 6, height = 4.5)
+  xlab("Mean purity") + 
+  theme_light() +
+  theme(legend.position = "top")
+ggsave(paste0(figure_folder, "diff_flow_purity_histogram.pdf"), plot = flow_purity_plot, width = 4.5, height = 4.5)
+
+
+#Look at sources of variation in the RNA-Seq data
+combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
 
 #How variable is RNA integrity between samples?
-rin_plot = ggplot(rin_scores, aes(x = RIN - 0.01)) + 
+rin_scores_filtered = dplyr::semi_join(rin_scores, combined_expression_data$sample_metadata, by = "sample_id")
+rin_plot = ggplot(rin_scores_filtered, aes(x = RIN - 0.01)) + 
   geom_histogram(binwidth = 0.2) + 
   xlab("RNA Integrity Number (RIN)") + 
-  scale_x_continuous(limits = c(0,10.5), expand = c(0,0)) + 
   theme_light()
-ggsave(paste(figure_folder, "RIN_histogram.pdf"), plot = rin_plot, width = 4.5, height = 4.5)
+ggsave(paste0(figure_folder, "diff_RIN_histogram.pdf"), plot = rin_plot, width = 4.5, height = 4.5)
+
+#iPS passage number
+median_passage = median(combined_expression_data$sample_metadata$passage_diff, na.rm = TRUE)
+passage_plot = ggplot(combined_expression_data$sample_metadata, aes(x = passage_diff)) + 
+  geom_histogram(binwidth = 3) +
+  xlab("IPSC passage number") + 
+  theme_light() +
+  geom_vline(xintercept = median_passage, color = "red")
+ggsave(paste0(figure_folder, "diff_passage_histogram.pdf"), plot = passage_plot, width = 4.5, height = 4.5)
+
+#iPS passage number
+median_passage = median(combined_expression_data$sample_metadata$passage_diff, na.rm = TRUE)
+passage_plot = ggplot(combined_expression_data$sample_metadata, aes(x = passage_diff)) + 
+  geom_histogram(binwidth = 3) +
+  xlab("IPSC passage number") + 
+  theme_light() +
+  geom_vline(xintercept = median_passage, color = "red")
+ggsave(paste0(figure_folder, "diff_passage_histogram.pdf"), plot = passage_plot, width = 4.5, height = 4.5)
+
+#iPS passage number
+median_rna = median(combined_expression_data$sample_metadata$ng_ul_mean, na.rm = TRUE)
+rna_plot = ggplot(combined_expression_data$sample_metadata, aes(x = ng_ul_mean)) + 
+  geom_histogram(binwidth = 30) +
+  xlab("RNA concentration (ng/ul)") + 
+  theme_light() +
+  geom_vline(xintercept = median_rna, color = "red")
+ggsave(paste0(figure_folder, "diff_rna_concentration_histogram.pdf"), plot = rna_plot, width = 4.5, height = 4.5)
+
 
 
