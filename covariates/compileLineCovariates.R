@@ -6,7 +6,6 @@ library("tidyr")
 dat = tbl_df(read.csv("macrophage-gxe-study/data/sample_lists/line_metadata.csv", stringsAsFactors = FALSE, na.strings = ""))
 flow_purity = readRDS("macrophage-gxe-study/data/covariates/flow_cytometry_purity.rds")
 gender_map = read.table("macrophage-gxe-study/data/sample_lists/line_gender_map.txt", header = TRUE, stringsAsFactors = FALSE)
-genotypes = read.table("macrophage-gxe-study/data/sample_lists/genotype_sample_names.txt", stringsAsFactors = FALSE)
 isOpenAccess = read.table("macrophage-gxe-study/data/sample_lists/HipSci_is_open_access.txt", stringsAsFactors = FALSE)
 
 #Convert all date fields to date
