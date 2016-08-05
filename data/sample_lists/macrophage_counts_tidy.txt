@@ -62,7 +62,7 @@ ougl_3	21/03/14	08/06/14	Yes	2.3e6	Plated 8w of 6wp @ 200k/w +1x10cm
 ougl_3	21/03/14	13/06/14	No		Terminated
 ffdp_3	25/03/14	25/03/14			Commence Week1
 ffdp_3	25/03/14	01/04/14	No		
-ffdp_3	25/03/14	08/03/14	No		
+ffdp_3	25/03/14	08/04/14	No		
 ffdp_3	25/03/14	14/04/14	No		
 ffdp_3	25/03/14	17/04/14	No		Add 5 ml media per plate
 ffdp_3	25/03/14	22/04/14	No		
@@ -78,7 +78,7 @@ ffdp_3	25/03/14	08/06/14	Yes	2.65e6	Plated 8w of 6wp @ 200k/w + 1x10cm
 ffdp_3	25/03/14	13/06/14	No		Terminated
 ffdk_1	27/03/14	27/03/14			Commence Week1
 ffdk_1	27/03/14	03/04/14	No		
-ffdk_1	27/03/14	08/03/14	No		
+ffdk_1	27/03/14	08/04/14	No		
 ffdk_1	27/03/14	14/04/14	No		
 ffdk_1	27/03/14	17/04/14	No		Add 5 ml media per plate
 ffdk_1	27/03/14	23/04/14	No		Making progenitors - Discard
@@ -92,7 +92,7 @@ ffdk_1	27/03/14	08/06/14	Yes	4.92e6	Plated 8w of 6wp @ 200k/w + 2x10cm
 ffdk_1	27/03/14	13/06/14	No		Terminated
 iasn_3	27/03/14	27/03/14			Commence Week1
 iasn_3	27/03/14	01/04/14	No		
-iasn_3	27/03/14	07/03/14	No		
+iasn_3	27/03/14	07/04/14	No		
 iasn_3	27/03/14	11/04/14	No		
 iasn_3	27/03/14	15/04/14	No		
 iasn_3	27/03/14	17/04/14	No		Making progentiors - Discard
@@ -178,9 +178,9 @@ fpdk_2	27/05/14	09/07/14	Yes	1.925e6
 fpdk_2	27/05/14	21/07/14	No		
 fpdk_2	27/05/14	29/07/14	No		
 fpdk_2	27/05/14	04/08/14	No		
-fpdk_2	27/05/14	09/08/14	Yes	600k	
-fpdk_2	27/05/14	14/08/14	Yes	750k	
-fpdk_2	27/05/14	19/08/14	Yes	760k	
+fpdk_2	27/05/14	09/08/14	Yes	6e5	
+fpdk_2	27/05/14	14/08/14	Yes	7.5e5	
+fpdk_2	27/05/14	19/08/14	Yes	7.6e5	
 fpdk_2	27/05/14	27/08/14	No		Terminated
 coxy_3	19/07/14	19/07/14			Commence Week1
 coxy_3	19/07/14	26/07/14	No		
@@ -284,8 +284,8 @@ cuau_2	27/09/14	27/09/14			Commence Week1
 cuau_2	27/09/14	3/10/14	No		
 cuau_2	27/09/14	8/10/14	No		
 cuau_2	27/09/14	12/10/14	No		
-cuau_2	27/09/14	15/10/14	Yes	1.35*e6	8w@150k for Salmonella
-cuau_2	27/09/14	21/10/14	Yes	4.38*e6	1x10cm@1M for flow
+cuau_2	27/09/14	15/10/14	Yes	1.35e6	8w@150k for Salmonella
+cuau_2	27/09/14	21/10/14	Yes	4.38e6	1x10cm@1M for flow
 cuau_2	27/09/14	25/10/14	No		
 cuau_2	27/09/14	30/10/14	Yes	12.7e6	Plate 6w @ 150k
 cuau_2	27/09/14	04/11/14	Yes	6.54e6	4w + 1x10cm + 6w for Elizabeth
@@ -298,7 +298,7 @@ darw_2	28/09/14	3/10/14	No
 darw_2	28/09/14	8/10/14	No		
 darw_2	28/09/14	12/10/14	No		
 darw_2	28/09/14	15/10/14	No		
-darw_2	28/09/14	21/10/14	Yes	10.65*e6	1x10cm@1M for flow
+darw_2	28/09/14	21/10/14	Yes	10.65e6	1x10cm@1M for flow
 darw_2	28/09/14	25/10/14	No		
 darw_2	28/09/14	30/10/14	Yes	25e6	Plate 6w @ 150k
 darw_2	28/09/14	04/11/14	Yes	15.48e6	4w + 1x10cm + 1x10cm for Elizabeth
@@ -795,7 +795,7 @@ pelm_3	03/07/15	08/07/15	No
 pelm_3	03/07/15	13/07/15	No		
 pelm_3	03/07/15	17/07/15	No		
 pelm_3	03/07/15	22/07/15	No		
-pelm_3	03/07/15	27/07/15	Yes	875k	Plate 4w
+pelm_3	03/07/15	27/07/15	Yes	8.75e5	Plate 4w
 pelm_3	03/07/15	31/07/15	No		
 pelm_3	03/07/15	05/08/15	Yes	1.575e6	Plate 8w + for flow
 pelm_3	03/07/15	12/08/15	No		Terminated
@@ -1225,7 +1225,6 @@ suzg_3	08/06/15	24/07/15	Yes		Barely any cells - not plated
 suzg_3	08/06/15	29/07/15	No		Terminated
 qorq_1	08/06/15	08/06/15			Commence Week1
 qorq_1	08/06/15	13/06/15	No		
-qorq_1	08/06/15	??/06/15	No		
 qorq_1	08/06/15	22/06/15	No		
 qorq_1	08/06/15	28/06/15	No		
 qorq_1	08/06/15	06/07/15	No		

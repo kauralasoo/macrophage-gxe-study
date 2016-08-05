@@ -67,7 +67,7 @@ ougl_3
 ffdp_3
 | 25/03/14 | | | Commence Week1 |
 | 01/04/14 | No |  |      |
-| 08/03/14 | No |  |      |
+| 08/04/14 | No |  |      |
 | 14/04/14 | No |  |      |
 | 17/04/14 | No |  | Add 5 ml media per plate |
 | 22/04/14 | No |  |      |
@@ -84,7 +84,7 @@ ffdp_3
 ffdk_1
 | 27/03/14 | | | Commence Week1 |
 | 03/04/14 | No |  |      |
-| 08/03/14 | No |  |      |
+| 08/04/14 | No |  |      |
 | 14/04/14 | No |  |      |
 | 17/04/14 | No |  | Add 5 ml media per plate |
 | 23/04/14 | No |  | Making progenitors - Discard |
@@ -99,7 +99,7 @@ ffdk_1
 iasn_3
 | 27/03/14 | | | Commence Week1 |
 | 01/04/14 | No |  |      |
-| 07/03/14 | No |  |      |
+| 07/04/14 | No |  |      |
 | 11/04/14 | No |  |      |
 | 15/04/14 | No |  |      |
 | 17/04/14 | No |  | Making progentiors - Discard |
@@ -192,9 +192,9 @@ fpdk_2
 | 21/07/14 | No |   |  |
 | 29/07/14 | No |   |  |
 | 04/08/14 | No |   |  |
-| 09/08/14 | Yes | 600k  |  |
-| 14/08/14 | Yes | 750k  |   |
-| 19/08/14 | Yes | 760k  |  |
+| 09/08/14 | Yes | 6e5  |  |
+| 14/08/14 | Yes | 7.5e5  |   |
+| 19/08/14 | Yes | 7.6e5  |  |
 | 27/08/14 | No |   | Terminated |
 coxy_3
 | 19/07/14 | | | Commence Week1 |
@@ -311,8 +311,8 @@ cuau_2
 | 3/10/14 | No  |  |   |
 | 8/10/14 | No | | |
 | 12/10/14 | No |  |  |
-| 15/10/14 | Yes | 1.35*e6 | 8w@150k for Salmonella |
-| 21/10/14 | Yes | 4.38*e6 | 1x10cm@1M for flow |
+| 15/10/14 | Yes | 1.35e6 | 8w@150k for Salmonella |
+| 21/10/14 | Yes | 4.38e6 | 1x10cm@1M for flow |
 | 25/10/14 | No |  | |
 | 30/10/14 | Yes |  12.7e6  | Plate 6w @ 150k |
 | 04/11/14 | Yes |  6.54e6  | 4w + 1x10cm + 6w for Elizabeth |
@@ -326,7 +326,7 @@ darw_2
 | 8/10/14 | No |  |  |
 | 12/10/14 | No |  |  |
 | 15/10/14 | No |  |  |
-| 21/10/14 | Yes | 10.65*e6 | 1x10cm@1M for flow |
+| 21/10/14 | Yes | 10.65e6 | 1x10cm@1M for flow |
 | 25/10/14 | No |  |   |
 | 30/10/14 | Yes |  25e6  | Plate 6w @ 150k |
 | 04/11/14 | Yes |  15.48e6  | 4w + 1x10cm + 1x10cm for Elizabeth |
@@ -872,7 +872,7 @@ pelm_3
 | 13/07/15 | No |  |  |
 | 17/07/15 | No |  |  |
 | 22/07/15 | No |  |   |
-| 27/07/15 | Yes | 875k | Plate 4w  |
+| 27/07/15 | Yes | 8.75e5 | Plate 4w  |
 | 31/07/15 | No |  |   |
 | 05/08/15 | Yes | 1.575e6 | Plate 8w + for flow  |
 | 12/08/15 | No |  | Terminated |
@@ -1349,7 +1349,6 @@ suzg_3
 qorq_1
 | 08/06/15 | | | Commence Week1 |
 | 13/06/15 | No |   |  |
-| ??/06/15 | No |  |  |
 | 22/06/15 | No |  |  |
 | 28/06/15 | No |  |   |
 | 06/07/15 | No |  |  |
