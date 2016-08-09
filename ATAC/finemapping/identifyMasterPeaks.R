@@ -183,6 +183,7 @@ snp_count_plot = ggplot(snp_count_df, aes(x = snp_count)) +
   ylab("Number of master caQTL regions") +
   xlab("Number of variants within region")
 ggsave("figures/supplementary/caQTL_number_of_variants_per_unqiue_master.pdf", plot = snp_count_plot, width = 4, height = 4)
+ggsave("figures/supplementary/caQTL_number_of_variants_per_unqiue_master.png", plot = snp_count_plot, width = 4, height = 4)
 
 #Count the number of dependent peaks per master
 master_dependent_pairs = rbind(dplyr::select(dependent_uniq_masters, dependent_id, master_id), dplyr::select(dependent_cluster_masters, dependent_id, master_id))
