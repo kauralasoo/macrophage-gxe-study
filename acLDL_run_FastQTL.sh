@@ -63,6 +63,30 @@ zcat results/acLDL/leafcutter/fastqtl_output/Ctrl_100kb_perm.chunk_*.txt.gz | bg
 zcat results/acLDL/leafcutter/fastqtl_output/AcLDL_100kb_perm.chunk_*.txt.gz | bgzip > results/acLDL/leafcutter/fastqtl_output/AcLDL_100kb_permuted.txt.gz
 
 #Remove chunks
-rm results/SL1344/leafcutter/fastqtl_output/*.chunk_*
+rm results/acLDL/leafcutter/fastqtl_output/*.chunk_*
+
+#Get full p-values
+cat results/acLDL/leafcutter/fastqtl_input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname leafcutter_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.vcf.gz --bed results/acLDL/leafcutter/fastqtl_input/Ctrl.norm_prop.txt.gz --cov results/acLDL/leafcutter/fastqtl_input/Ctrl.covariates_prop.txt --W 100000 --out results/acLDL/leafcutter/fastqtl_output/Ctrl_100kb_full --execute True"
+cat results/acLDL/leafcutter/fastqtl_input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname leafcutter_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.vcf.gz --bed results/acLDL/leafcutter/fastqtl_input/AcLDL.norm_prop.txt.gz --cov results/acLDL/leafcutter/fastqtl_input/AcLDL.covariates_prop.txt --W 100000 --out results/acLDL/leafcutter/fastqtl_output/AcLDL_100kb_full --execute True"
+
+#Merge chunks into single files
+zcat results/acLDL/leafcutter/fastqtl_output/Ctrl_100kb_full.chunk_*.txt.gz | bgzip > results/acLDL/leafcutter/fastqtl_output/Ctrl_100kb_pvalues.txt.gz
+zcat results/acLDL/leafcutter/fastqtl_output/AcLDL_100kb_full.chunk_*.txt.gz | bgzip > results/acLDL/leafcutter/fastqtl_output/AcLDL_100kb_pvalues.txt.gz
+
+#Remove chunks
+rm results/acLDL/leafcutter/fastqtl_output/*.chunk_*
+
+#Add SNP coordinates
+echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.vcf.gz --fastqtl results/acLDL/leafcutter/fastqtl_output/Ctrl_100kb_pvalues.txt.gz | bgzip > results/acLDL/leafcutter/fastqtl_output/Ctrl_100kb_pvalues.coords.txt.gz"
+echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.vcf.gz --fastqtl results/acLDL/leafcutter/fastqtl_output/AcLDL_100kb_pvalues.txt.gz | bgzip > results/acLDL/leafcutter/fastqtl_output/AcLDL_100kb_pvalues.coords.txt.gz"
+
+#Sort files by SNP coordinates
+#awk command is necessary to change field separator from space to tab
+zcat results/acLDL/leafcutter/fastqtl_output/Ctrl_100kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/acLDL/leafcutter/fastqtl_output/Ctrl_100kb_pvalues.sorted.txt.gz &
+zcat results/acLDL/leafcutter/fastqtl_output/AcLDL_100kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/acLDL/leafcutter/fastqtl_output/AcLDL_100kb_pvalues.sorted.txt.gz &
+
+
+
+
 
 
