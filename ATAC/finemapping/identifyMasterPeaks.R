@@ -8,12 +8,12 @@ library("ggplot2")
 load_all("~/software/rasqual/rasqualTools/")
 
 #Import the VCF file
-vcf_file = readRDS("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
+vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
 #Import ATAC data
-atac_list = readRDS("../macrophage-chromatin/results/ATAC/ATAC_combined_accessibility_data.rds")
-min_pvalues_list = readRDS("../macrophage-chromatin/results/ATAC/QTLs/rasqual_min_pvalues.rds")
-min_pvalues_hits = lapply(min_pvalues_list, function(x){dplyr::filter(x, p_fdr < 0.1)})
+atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
+min_pvalues_list = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
+min_pvalues_hits = purrr::map(min_pvalues_list, ~dplyr::filter(., p_fdr < 0.1))
 
 #Import credible sets from disk
 credible_sets = readRDS("results/ATAC/QTLs/rasqual_credible_sets.rds")
@@ -24,8 +24,7 @@ credible_sets_df = purrr::map(credible_sets, ~purrr::map_df(., ~dplyr::mutate(.,
                                 addOverlappingPeaks(atac_list$gene_metadata))
 
 #Find lead SNPs and credible sets for unique peaks
-credible_sets_by_condition = map_df(credible_sets_df, identity, .id = "condition_name")
-
+credible_sets_by_condition = purrr::map_df(credible_sets_df, identity, .id = "condition_name")
 
 #Extract peaks that share credible sets
 shared_credible_sets = purrr::map(credible_sets_df, ~dplyr::filter(.,!is.na(overlap_peak_id))) %>% 
@@ -149,7 +148,7 @@ overlap_peak_count = purrr::map(credible_sets_df, ~dplyr::filter(.,!is.na(overla
 overlap_same_peak = dplyr::select(potential_master_peaks, gene_id) %>% unique() %>% nrow()
 unique_master_peaks = length(unique_masters_counted$gene_id %>% unique)
 shared_master_peaks = nrow(atac_clusters_counted)
-other_is_qtl = length(unique(master_cluster$master_peak_id)) + length(unique(master_unique$master_peak_id))
+other_is_qtl = length(unique(dependent_uniq_masters$dependent_id)) + length(unique(dependent_cluster_masters$dependent_id))
 
 #Compile stats
 summary_stats = data_frame("total" = total_peak_count, "overlap_any_peak" = overlap_peak_count, "overlap_same_peak" = overlap_same_peak, 
@@ -178,9 +177,12 @@ ggsave("results/ATAC/QTLs/properties/number_of_peaks_per_cluster.pdf", plot = co
 snp_count_df = dplyr::select(unique_masters_counted, gene_id, snp_count) %>% unique() %>%
   dplyr::filter(snp_count <= 10) %>%
   dplyr::mutate(snp_count = factor(snp_count))
-snp_count_plot = ggplot(snp_count_df, aes(x = snp_count)) + geom_bar() + theme_hc() +
-  xlab("Number of variants")
-ggsave("results/ATAC/QTLs/properties/number_of_variants_per_unqiue_master.pdf", plot = snp_count_plot, width = 4, height = 4)
+snp_count_plot = ggplot(snp_count_df, aes(x = snp_count)) + 
+  geom_bar() + 
+  theme_light() +
+  ylab("Number of master caQTL regions") +
+  xlab("Number of variants within region")
+ggsave("figures/supplementary/caQTL_number_of_variants_per_unqiue_master.pdf", plot = snp_count_plot, width = 4, height = 4)
 
 #Count the number of dependent peaks per master
 master_dependent_pairs = rbind(dplyr::select(dependent_uniq_masters, dependent_id, master_id), dplyr::select(dependent_cluster_masters, dependent_id, master_id))
