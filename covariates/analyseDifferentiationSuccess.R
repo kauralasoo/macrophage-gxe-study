@@ -30,4 +30,10 @@ dplyr::filter(diff_fail_count, diff_attempt_count > diff_fail_count)
 dplyr::filter(diff_fail_count, assay_success_count > 0)
 dplyr::filter(diff_fail_count, flow_success_count > 0)
 
+#Count the number of feeder and feeder free lines
+media_types = dplyr::select(line_data, line_id, media) %>% 
+  dplyr::group_by(line_id) %>% 
+  dplyr::filter(row_number() == 1)
+
+
 
