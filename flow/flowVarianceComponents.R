@@ -35,11 +35,11 @@ flow_purity = readRDS("macrophage-gxe-study/data/covariates/flow_cytometry_purit
 line_medatada = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds")
 #vcf_file = readRDS("genotypes/SL1344/array_genotypes.59_samples.imputed.vcfToMatrix.rds")
 #vcf_file = seqUtils::gdsToMatrix("genotypes/SL1344/imputed_20151005/imputed.59_samples.snps_indels.INFO_08.gds")
-eqtl_data_list = readRDS("results/SL1344/eqtl_data_list.rds")
+eqtl_data_list = readRDS("results/SL1344/combined_expression_data_covariates.rds")
 gene_id_name_map = dplyr::select(eqtl_data_list$gene_metadata, gene_id, gene_name)
 
 #Extract gene coords
-gene_coords = dplyr::filter(eqtl_data_list$genepos, geneid %in% 
+gene_coords = dplyr::filter(eqtl_data_list$gene_metadata, gene_id %in% 
                               c("ENSG00000170458","ENSG00000203747","ENSG00000162747","ENSG00000260314")) %>%
   dplyr::left_join(gene_id_name_map, by = c("geneid" = "gene_id"))
 
