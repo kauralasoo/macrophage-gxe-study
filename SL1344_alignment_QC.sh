@@ -121,7 +121,7 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q norm
 rm STAR/SL1344/*/*.UniqueMultiple.*
 
 #Run variance component analysis
-echo "" | python ~/software/utils/submitJobs.py --MEM 3000 --jobname varCompAnalysis --command  "/software/R-3.1.2/bin/Rscript macrophage-gxe-study/SL1344/varComp/varianceComponents.R"
+echo "" | python ~/software/utils/submitJobs.py --MEM 3000 --jobname varCompAnalysis --command  "/software/3.2.2/bin/Rscript macrophage-gxe-study/SL1344/varComp/varianceComponents.R"
 
 
 

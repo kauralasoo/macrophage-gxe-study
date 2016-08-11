@@ -13,6 +13,7 @@ bgzip results/flow/fastqtl/mean_intensity.txt && tabix -f -p bed results/flow/fa
 bgzip results/flow/fastqtl/random_intensity.txt && tabix -f -p bed results/flow/fastqtl/random_intensity.txt.gz
 
 #Run fastqtl
-cat results/flow/fastqtl/all_chunk_table.txt | python ~/software/utils/fastqtl/runFastQTL.py --vcf flow/genotypes/flow_cis_regions.filtered.vcf.gz --bed results/flow/fastqtl/mean_intensity.txt.gz --W 200000 --out results/flow/fastqtl/mean_out --execute True --permute 10000
-
 cat results/flow/fastqtl/all_chunk_table.txt | python ~/software/utils/fastqtl/runFastQTL.py --vcf flow/genotypes/flow_cis_regions.filtered.vcf.gz --bed results/flow/fastqtl/random_intensity.txt.gz --W 200000 --out results/flow/fastqtl/random_out --execute True --permute 10000
+
+#Calculate full p-values
+cat results/flow/fastqtl/all_chunk_table.txt | python ~/software/utils/fastqtl/runFastQTL.py --vcf flow/genotypes/flow_cis_regions.filtered.vcf.gz --bed results/flow/fastqtl/random_intensity.txt.gz --W 200000 --out results/flow/fastqtl/random_out_full --execute True

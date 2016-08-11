@@ -3,7 +3,6 @@
 library("dplyr")
 library("lme4")
 library("devtools")
-library("ggplot2")
 library("purrr")
 load_all("../seqUtils/")
 
@@ -24,7 +23,7 @@ metadata = data_list$sample_metadata %>%
 #Prepare data for lmer analysis
 gene_ids = rownames(data_list$cqn)
 gene_id_list = idVectorToList(gene_ids)
-gene_data_list = lapply(gene_id_list[1:10], constructGeneData, data_list$cqn, metadata)
+gene_data_list = lapply(gene_id_list, constructGeneData, data_list$cqn, metadata)
 
 #Fit the extended model
 model_extended <- function(model_data){
