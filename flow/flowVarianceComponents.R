@@ -40,8 +40,7 @@ gene_id_name_map = dplyr::select(eqtl_data_list$gene_metadata, gene_id, gene_nam
 
 #Extract gene coords
 gene_coords = dplyr::filter(eqtl_data_list$gene_metadata, gene_id %in% 
-                              c("ENSG00000170458","ENSG00000203747","ENSG00000162747","ENSG00000260314")) %>%
-  dplyr::left_join(gene_id_name_map, by = c("geneid" = "gene_id"))
+                              c("ENSG00000170458","ENSG00000203747","ENSG00000162747","ENSG00000260314"))
 
 #Map channel to marker
 channel_marker_map = data_frame(channel = c("APC.A","PE.A","Pacific.Blue.A"), marker = c("CD206","CD16","CD14"))
@@ -51,6 +50,9 @@ flow_data = dplyr::left_join(flow_purity, channel_marker_map, by = "channel") %>
   dplyr::left_join(unique_lines, by = "donor") %>%
   dplyr::mutate(intensity = mean2-mean1) %>%
   dplyr::select(line_id, genotype_id, donor, flow_date, marker, purity, intensity)
+
+flow_data = dplyr::filter(flow_data, !(as.character(flow_date) %in% c("2015-10-16","2015-10-20","2014-06-16")))
+
 
 #Save flow genotypes list to disk
 write.table(unique(sort(flow_data$genotype_id)), "macrophage-gxe-study/data/sample_lists/flow_cytometry_gt_list.txt", 
@@ -76,28 +78,28 @@ geno_mat = as.data.frame(t(flow_cis_region$genotypes)) %>%
   dplyr::mutate(genotype_id = colnames(flow_cis_region$genotypes))
 
 #Prepare CD14 data
-cd14_model_data = dplyr::filter(flow_data, marker == "CD14") %>%
+cd14_data = dplyr::filter(flow_data, marker == "CD14") %>%
   dplyr::left_join(geno_mat, by = "genotype_id")
-cd14_replicates = cd14_model_data %>% dplyr::semi_join(replicate_donors, by = "donor")
+cd14_replicates = cd14_data %>% dplyr::semi_join(replicate_donors, by = "donor")
 
 #Analyse CD16 only
 cd16_data = dplyr::filter(flow_data, marker == "CD16") %>% 
   dplyr::left_join(geno_mat, by = "genotype_id")
-cd16_replicates = cd16_model_data %>% dplyr::semi_join(replicate_donors, by = "donor")
+cd16_replicates = cd16_data %>% dplyr::semi_join(replicate_donors, by = "donor")
 
 #There seems to be correlation between purity and CD16 intensity
-ggplot(cd16_model_data, aes(x = purity, y = intensity)) + geom_point()
+ggplot(cd16_data, aes(x = purity, y = intensity)) + geom_point()
 
 #Analyse CD206 only
-cd206_model_data = dplyr::filter(flow_data, marker == "CD206") %>%
+cd206_data = dplyr::filter(flow_data, marker == "CD206") %>%
   dplyr::left_join(geno_mat, by = "genotype_id")
-cd206_replicates = cd206_model_data %>% dplyr::semi_join(replicate_donors, by = "donor")
+cd206_replicates = cd206_data %>% dplyr::semi_join(replicate_donors, by = "donor")
 
 #### QTL mapping ####
 ##### Make a single intensity data set #####
-cd14_mean = dplyr::group_by(cd14_model_data, donor) %>% summarise(CD14 = mean(intensity))
-cd16_mean = dplyr::group_by(cd16_model_data, donor) %>% summarise(CD16 = mean(intensity))
-cd206_mean = dplyr::group_by(cd206_model_data, donor) %>% summarise(CD206 = mean(intensity))
+cd14_mean = dplyr::group_by(cd14_data, donor) %>% summarise(CD14 = mean(intensity))
+cd16_mean = dplyr::group_by(cd16_data, donor) %>% summarise(CD16 = mean(intensity))
+cd206_mean = dplyr::group_by(cd206_data, donor) %>% summarise(CD206 = mean(intensity))
 
 #Prepare intensity data
 intensity_df = dplyr::left_join(cd14_mean, cd16_mean, by = "donor") %>% 
@@ -107,13 +109,13 @@ rownames(intensity_df) = intensity_df$donor
 intensity_df = t(intensity_df[,-1])
 
 #Prepare gene positions
-genepos = dplyr::select(gene_coords, gene_name, chr, left, right) %>%
+genepos = dplyr::select(gene_coords, gene_name, chr, start, end) %>%
   dplyr::rename(geneid = gene_name) %>%
   dplyr::mutate(geneid = ifelse(geneid == "FCGR3A", "CD16", geneid)) %>%
   dplyr::mutate(geneid = ifelse(geneid == "FCGR3B", "CD16", geneid)) %>%
   dplyr::mutate(geneid = ifelse(geneid == "MRC1", "CD206", geneid)) %>%
-  dplyr::group_by(geneid) %>%
-  dplyr::summarize(chr = min(chr), left = min(left), right = max(right)) %>%
+  #plyr::group_by(geneid) %>%
+  #dplyr::summarize(chr = min(chr), left = min(start), right = max(end)) %>%
   as.data.frame()
 
 #Prepare genotype data
@@ -123,7 +125,7 @@ genotype_donor_map = dplyr::select(flow_data, genotype_id, donor) %>% unique()
 qtl_df = mapFlowQTLs(intensity_df, genepos[1:3,], flow_cis_region, genotype_donor_map, cisDist = 2e5)
 
 #Perform QTL mapping with permutations
-perm_list = lapply(as.list(c(1:1000)), function(x){
+perm_list = lapply(as.list(c(1:100)), function(x){
   mapFlowQTLs(intensity_df, genepos[1:3,], flow_cis_region, genotype_donor_map, cisDist = 2e5, permute = TRUE)
   })
 saveRDS(perm_list, "results/flow/VarComp/permutation_list.rds")
@@ -162,7 +164,7 @@ ggplot(cd14_qtl_df, aes(x = expected, y = log10_pvalue)) +
   stat_abline(slope = 1, intercept = 0, color = "red")
 
 #Make a QTL plot
-cd14_qtl_plot = ggplot(cd14_model_data, aes(x = factor(rs2569177), y = intensity)) + 
+cd14_qtl_plot = ggplot(cd14_filtered, aes(x = factor(rs2569177), y = intensity)) + 
   geom_boxplot(outlier.shape = NA) + 
   geom_jitter(position = position_jitter(width = .1)) + 
   ggtitle("CD14")
@@ -274,7 +276,8 @@ ggplot(cd206_model_data, aes(x = factor(rs9418387), y = intensity)) +
 cd14_by_donor = ggplot(cd14_replicates, aes(x = donor, y = intensity)) + geom_point()
 ggsave("results/technical_report/CD14_by_donor.pdf", cd14_by_donor, width = 7, height = 5)
 
-cd14_by_date = ggplot(cd14_model_data, aes(x = flow_date, y = intensity)) + geom_point()
+cd14_filtered = dplyr::filter(cd14_data, !(as.character(flow_date) %in% c("2015-10-16","2015-10-20","2014-06-16")))
+cd14_by_date = ggplot(cd14_filtered, aes(x = flow_date, y = intensity)) + geom_point()
 ggsave("results/technical_report/CD14_by_date.pdf", cd14_by_date, width = 8, height = 5)
 
 #Count the number of replicates by donor
