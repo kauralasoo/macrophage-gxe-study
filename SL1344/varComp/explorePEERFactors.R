@@ -19,7 +19,7 @@ peer1_plot = ggplot(purity_df, aes(x = mean_purity_filtered, y = PEER_factor_1))
   ylab("PEER factor 1") +
   theme_light()
 ggsave("figures/supplementary/varComp_purity_vs_PEER_factor_1.pdf", peer1_plot, width = 4, height = 4)
-cor(purity_df$mean_purity_filtered, purity_df$PEER_factor_1, use = "complete.obs")
+cor.test(purity_df$mean_purity_filtered, purity_df$PEER_factor_1, use = "complete.obs")
 
 #RNA concetration vs PEER 1
 peer1_plot_2 = ggplot(purity_df, aes(x = ng_ul_mean, y = PEER_factor_1)) + 

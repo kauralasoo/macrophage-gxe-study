@@ -6,6 +6,15 @@ library("devtools")
 library("purrr")
 load_all("../seqUtils/")
 
+batch_id = NULL
+
+####### Get batch id from disk ######
+f <- file("stdin")
+open(f)
+batch_id = readLines(f) %>% as.numeric()
+close(f)
+####### END #######
+
 #Import eQTL data list
 data_list = readRDS("results/SL1344/combined_expression_data_covariates.rds")
 
@@ -20,8 +29,15 @@ metadata = data_list$sample_metadata %>%
   dplyr::mutate(passage_diff_bins = cut(passage_diff, breaks = c(0,25,35,45,60))) %>%
   dplyr::mutate(macrophage_diff_bins = cut(macrophage_diff_days, breaks = c(0,30,40,50,60,100)))
 
-#Prepare data for lmer analysis
+#### Split genes into batches ####
 gene_ids = rownames(data_list$cqn)
+batches = splitIntoBatches(length(gene_ids), 50)
+if(!is.null(batch_id)){
+  selection = batches == batch_id
+  gene_ids = gene_ids[selection]
+}
+
+#Prepare data for lmer analysis
 gene_id_list = idVectorToList(gene_ids)
 gene_data_list = lapply(gene_id_list, constructGeneData, data_list$cqn, metadata)
 
@@ -37,4 +53,11 @@ model_extended <- function(model_data){
 
 variance_list = lapply(gene_data_list, estimateVarianceExplained, model_extended)
 var_table = purrr::map_df(variance_list, identity, .id = "gene_id")
-saveRDS(var_table, "results/SL1344/varComp/model_results.rds")
+#saveRDS(var_table, "results/SL1344/varComp/model_results.rds")
+
+#Save output from each batch
+if(!is.null(batch_id)){
+  output_file = file.path("results/SL1344/varComp/", paste0("varComp_batch_",batch_id, ".txt"))
+  write.table(var_table, output_file, row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
+}
+
