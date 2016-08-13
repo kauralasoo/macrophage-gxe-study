@@ -43,7 +43,8 @@ variance_dist_plot = ggplot(dat, aes(x = factor, y = var_explained)) +
   geom_violin(scale = "width" ) + 
   geom_boxplot(width = .2) + 
   theme_light() + 
-  theme(axis.text.x=element_text(angle=15))
+  theme(axis.text.x=element_text(angle=15), axis.title.x = element_blank()) + 
+  ylab("Variance explained")
 variance_dist_plot
 ggsave("figures/supplementary/varComp_variance_dist_plot.pdf", variance_dist_plot, width = 10, height = 7)
 
