@@ -123,5 +123,7 @@ rm STAR/SL1344/*/*.UniqueMultiple.*
 #Run variance component analysis
 cat results/SL1344/varComp/batch_list.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname varCompAnalysis --command  "/software/R-3.2.2/bin/Rscript macrophage-gxe-study/SL1344/varComp/varianceComponents.R"
 
+cat results/SL1344/varComp/batch_list.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname varCompAnalysis --command  "/software/R-3.2.2/bin/Rscript macrophage-gxe-study/SL1344/varComp/varianceComponentsByCondition.R"
+
 
 
