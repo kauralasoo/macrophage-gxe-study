@@ -1,10 +1,15 @@
 library("readr")
+library("dplyr")
+library("devtools")
+library("purrr")
+load_all("../seqUtils/")
+library("ggplot2")
 
 #Import variance component analysis results
 colnames = colnames(var_table)
-colnames = c("gene_id","type","chemistry","RNA_concentration","IFNg","library_pool","line_id",
+colnames = c("gene_id","type","chemistry","cell_density","IFNg","library_pool","line",
              "diff_duration","passage","purity",
-             "residual","library_type","RNA_ext_date","stimulation_date",
+             "residual","library_type","RNA_extraction","stimulation_date",
              "sex","SL1344","IFNg_SL1344","converged") 
 var_table = readr::read_delim("results/SL1344/varComp/varComp_all.txt", delim = "\t", col_names = colnames) %>%
   dplyr::filter(converged == TRUE) %>% #Remove genes where lmr4 did not converge
@@ -38,7 +43,8 @@ plotBinnedVariance(var_exp_selected)
 
 #We can look at the distribution of variance explained by each factor
 dat = tidyr::gather(var_table, factor, var_explained, chemistry:IFNg_SL1344) %>%
-  dplyr::mutate(factor = factor(factor, levels = as.character(total_var$component)))
+  dplyr::mutate(factor = factor(factor, levels = as.character(total_var$component))) %>%
+  dplyr::filter(factor != "residual") #Remove residual variance
 variance_dist_plot = ggplot(dat, aes(x = factor, y = var_explained)) + 
   geom_violin(scale = "width" ) + 
   geom_boxplot(width = .2) + 
@@ -46,13 +52,13 @@ variance_dist_plot = ggplot(dat, aes(x = factor, y = var_explained)) +
   theme(axis.text.x=element_text(angle=15), axis.title.x = element_blank()) + 
   ylab("Variance explained")
 variance_dist_plot
-ggsave("figures/supplementary/varComp_variance_dist_plot.pdf", variance_dist_plot, width = 10, height = 7)
+ggsave("figures/supplementary/varComp_variance_dist_plot.pdf", variance_dist_plot, width = 9, height = 6.2)
 
 
 #### Variannce components by condition ####
-colnames = c("condition_name","gene_id","type","chemistry","RNA_concentration","library_pool",
+colnames = c("condition_name","gene_id","type","chemistry","cell_density","library_pool",
              "diff_duration","passage","purity","residual","library_type",
-             "RNA_ext_date","stimulation_date","sex","converged")
+             "RNA_extraction","stimulation_date","sex","converged")
 var_table_conditions = readr::read_delim("results/SL1344/varComp/varCompByCondition_all.txt", 
                               delim = "\t", col_names = colnames) %>%
   dplyr::filter(converged == TRUE) %>% #Remove genes where lmr4 did not converge
