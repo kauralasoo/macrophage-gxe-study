@@ -17,7 +17,7 @@ full_data = dplyr::left_join(line_data, acldl_success_samples, by = c("line_id",
 
 #Count the number of differentiation attempts and the number of failures
 diff_fail_count = dplyr::group_by(full_data, line_id) %>% 
-  summarise(diff_attempt_count = length(line_id), 
+  dplyr::summarise(diff_attempt_count = length(line_id), 
             diff_fail_count = sum(diff_fail), 
             assay_success_count = sum(assay_success),
             flow_success_count = sum(flow_success)) %>% 
@@ -35,5 +35,16 @@ media_types = dplyr::select(line_data, line_id, media) %>%
   dplyr::group_by(line_id) %>% 
   dplyr::filter(row_number() == 1)
 
+#Test the significance of the failure rate
+test = fisher.test(matrix(c(20,15,122,16), nrow = 2, byrow = TRUE)) #Test accorss differnetiation
+test = fisher.test(matrix(c(15,7,115,8), nrow = 2, byrow = TRUE)) #Test accorss lines
 
+#Identify lines that failed to dfferentiate twice
+failed_twice = dplyr::filter(diff_fail_count, diff_fail_count > 1)$line_id
+dplyr::filter(full_data, line_id %in% failed_twice) %>% arrange(ips_started)
 
+#Look at the lines differentiated in Jan 2015
+dplyr::mutate(full_data, days_from = as.numeric(ips_started - as.Date("2015-01-15"))) %>% 
+  dplyr::filter(abs(days_from) < 15 ) %>% 
+  dplyr::select(line_id, flow_success, ips_started) %>% 
+  dplyr::mutate(failed = ifelse(line_id %in% failed_twice, TRUE,FALSE))
