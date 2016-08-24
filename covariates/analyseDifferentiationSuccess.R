@@ -48,3 +48,8 @@ dplyr::mutate(full_data, days_from = as.numeric(ips_started - as.Date("2015-01-1
   dplyr::filter(abs(days_from) < 15 ) %>% 
   dplyr::select(line_id, flow_success, ips_started) %>% 
   dplyr::mutate(failed = ifelse(line_id %in% failed_twice, TRUE,FALSE))
+
+#Is there a difference in success rate between feeder and feeder free lines
+line_media_assignment = dplyr::select(full_data, line_id, media) %>% group_by(line_id) %>% dplyr::filter(row_number() == 1)
+success_rate = dplyr::left_join(diff_fail_count, line_media_assignment, by = "line_id") %>% 
+  dplyr::mutate(has_succeeded = diff_attempt_count > diff_fail_count)
