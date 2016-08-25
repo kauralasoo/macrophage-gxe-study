@@ -1,8 +1,3 @@
-#Extract genotypes from the hg19 files
-cut -f1 genotypes/file_list.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname filterVCF --command "python ~/software/utils/vcf/filterVcf.py  --sampleList macrophage-gxe-study/data/sample_lists/acLDL/acLDL_gt_list.txt --indir /nfs/users/nfs_k/ka8/group-scratch/hipsci/genotypes/REL-2014-11
- --outdir genotypes/acLDL/imputed_20151005/hg19 --execute True --vcfSuffix .vcf.gz"
-
-
 #Filter VCF files for samples, MAF > 0.05
 cut -f1 genotypes/file_list.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname filterVCF --command "python ~/software/utils/vcf/filterVcf.py --sampleList macrophage-gxe-study/data/sample_lists/acLDL/acLDL_gt_list.txt --MAF 0.05 --indir genotypes/GRCh38/imputed_20151005/ --outdir genotypes/acLDL/imputed_20151005/ --execute True --vcfSuffix .GRCh38.sorted.vcf.gz"
 

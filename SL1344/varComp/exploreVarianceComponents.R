@@ -6,7 +6,6 @@ load_all("../seqUtils/")
 library("ggplot2")
 
 #Import variance component analysis results
-colnames = colnames(var_table)
 colnames = c("gene_id","type","chemistry","cell_density","IFNg","library_pool","line",
              "diff_duration","passage","purity",
              "residual","library_type","RNA_extraction","stimulation_date",
