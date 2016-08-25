@@ -85,6 +85,10 @@ echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_
 zcat results/acLDL/leafcutter/fastqtl_output/Ctrl_100kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/acLDL/leafcutter/fastqtl_output/Ctrl_100kb_pvalues.sorted.txt.gz &
 zcat results/acLDL/leafcutter/fastqtl_output/AcLDL_100kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/acLDL/leafcutter/fastqtl_output/AcLDL_100kb_pvalues.sorted.txt.gz &
 
+#Remove intermediate files
+rm results/acLDL/leafcutter/fastqtl_output/*_pvalues.txt*
+
+
 
 
 
