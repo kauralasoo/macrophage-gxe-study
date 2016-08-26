@@ -71,7 +71,7 @@ prec_ifng_sl1344 = read.table("results/SL1344/PEER/IFNg_SL1344_10//precision.txt
 #Combine it all together
 precision_df = 1/cbind(prec_naive, prec_ifng, prec_sl1344, prec_ifng_sl1344)[-1,]
 colnames(precision_df) = c("naive", "IFNg", "SL1344", "IFNg_SL1344")
-precision_df = dplyr::mutate(precision_df, factor = paste("PEER_factor_", c(1:10), sep = "")) %>% 
+precision_df = dplyr::mutate(precision_df, factor = as.character(c(1:10))) %>% 
   dplyr::mutate(factor = factor(factor, factor)) %>%
   tidyr::gather(condition, sd, naive:IFNg_SL1344) %>%
   dplyr::group_by(condition) %>% 
@@ -81,11 +81,12 @@ precision_df = dplyr::mutate(precision_df, factor = paste("PEER_factor_", c(1:10
 precision_plot = ggplot(precision_df, aes(x = factor, y = var_exp, color = condition, group = condition)) +
   geom_point() + 
   geom_line() +
-  ylab("Fraction variance explained") +
+  ylab("Variance explained (%)") +
   theme_light() +
-  theme(axis.text.x = element_text(angle = 25))
+  xlab("PEER factor") +
+  scale_color_manual(values = conditionPalette())
 precision_plot
-ggsave("figures/supplementary/varComp_PEER_explained.pdf", precision_plot, width = 6, height = 5)
+ggsave("figures/supplementary/varComp_PEER_explained.pdf", precision_plot, width = 5, height = 3.5)
 
 
 
