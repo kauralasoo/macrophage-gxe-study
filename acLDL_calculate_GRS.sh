@@ -58,5 +58,8 @@ bcftools concat -a chr10.vcf.gz chr11.vcf.gz chr12.vcf.gz chr13.vcf.gz chr14.vcf
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>4000] rusage[mem=4000]" -q normal -M 4000 -o plink_convert.%J.jobout "plink --vcf imputed.70_samples.hg19.vcf --make-bed --out imputed.70_samples.hg19"
 
 #Use PLINK to compute GRS
-plink --bed imputed.70_samples.hg19.bed --score 79k_grs_weights.txt --extract 49k_grs_subset.txt --out grs_score.txt
+plink --bfile imputed.70_samples.hg19 --score 79k_grs_weights.txt --extract 49k_grs_subset.txt --out grs_score.txt
+
+plink --bfile imputed.70_samples.hg19 --score LDL_GRS.score --out LDL_GRS_output --extract LDL_GRS_SNPs.txt 
+
 
