@@ -1,0 +1,2 @@
+#Construct transcriptome index for Salmon
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>10000] rusage[mem=10000]" -q normal -M 10000 -o construct_index.%J.jobout "salmon --no-version-check index -t Homo_sapiens.GRCh38.cdna.all.fa.gz -i test.index"
