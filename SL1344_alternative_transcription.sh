@@ -7,3 +7,6 @@ cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_names_all.txt | pyt
 #Copy gene and transcript estimates back to the main results folder
 cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_names_all.txt | python ~/software/utils/copySalmonOutput.py --currentDir processed/SL1344_salmon/ --currentSubdir ensembl_full_bootstraps_50 --newDir STAR/SL1344/ --filename quant.sf --suffix ensembl85
 cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_names_all.txt | python ~/software/utils/copySalmonOutput.py --currentDir processed/SL1344_salmon/ --currentSubdir ensembl_full_bootstraps_50 --newDir STAR/SL1344/ --filename quant.genes.sf --suffix ensembl85
+
+#Estimate dispersions with DRIMSeq
+echo "test" | python ~/software/utils/submitJobs.py --MEM 6000 --jobname drimseq_dispersions --ncores 10 --queue normal --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/splicing/differentialTranscriptExpression.R"
