@@ -20,9 +20,9 @@ splicing_data <- dmFilter(splicing_data, min_samps_gene_expr = 84, min_samps_fea
 
 #Estimate dispersions
 splicing_data <- dmDispersion(splicing_data, verbose = 1, 
-                              BPPARAM = BiocParallel::MulticoreParam(workers = 9))
+                              BPPARAM = BiocParallel::SerialParam())
 #Save dispersion estimates to disk
-saveRDS(splicing_data, "results/SL1344/combined_ensembl85_dispersion_estimates.rds")
+saveRDS(splicing_data, "results/SL1344/combined_ensembl85_dispersion_estimates.serial.rds")
 
 #Estimate proportions
 splicing_data <- dmFit(splicing_data, BPPARAM = BiocParallel::SerialParam())
