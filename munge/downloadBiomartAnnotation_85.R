@@ -15,7 +15,7 @@ attributes = listAttributes(ensembl)
 #Define attributes to be downloaded from biomart
 biomart_attributes = c("ensembl_gene_id", "external_gene_name", "gene_biotype","status", 
                        "chromosome_name","strand", "transcript_start","transcript_end","ensembl_transcript_id", 
-                       "transcript_status", "transcript_tsl",
+                       "transcript_status", "transcript_tsl","transcript_version",
                        "transcript_gencode_basic","external_transcript_name", 
                        "transcript_length", "transcript_biotype", "ccds")
 refseq_attributes = c("ensembl_gene_id","ensembl_transcript_id","refseq_mrna")
