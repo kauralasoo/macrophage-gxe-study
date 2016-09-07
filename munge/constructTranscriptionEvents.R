@@ -37,7 +37,7 @@ if(!is.null(batch_id)){
 
 #Construct events
 gene_ids_list = seqUtils::idVectorToList(gene_ids)
-alt_events = purrr::map(gene_ids_list[1:2], ~constructAlternativeEventsWrapper(., filtered_metadata, exons, cdss)) %>% 
+alt_events = purrr::map(gene_ids_list, ~constructAlternativeEventsWrapper(., filtered_metadata, exons, cdss)) %>% 
   purrr::flatten() %>%
   flattenAlternativeEvents()
 
