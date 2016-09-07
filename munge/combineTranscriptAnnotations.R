@@ -2,6 +2,7 @@ library("dplyr")
 library("tidyr")
 library("devtools")
 load_all("../seqUtils/")
+load_all("../reviseAnnotations/")
 
 #Read different datasets from disk
 transcript_data = tbl_df(readRDS("../../annotations/GRCh38/genes/Ensembl_85/Homo_sapiens.GRCh38.85.transcript_data.rds"))
@@ -67,6 +68,7 @@ valid_gene_biotypes = c("lincRNA","protein_coding","IG_C_gene","IG_D_gene","IG_J
                         "3prime_overlapping_ncrna","known_ncrna", "processed_transcript",
                         "antisense","sense_intronic","sense_overlapping")
 
+#Remove retained introns from the annotations
 filtered_data = dplyr::filter(compiled_data, chromosome_name %in% valid_chromosomes, 
                          gene_biotype %in% valid_gene_biotypes,
                          transcript_biotype %in% valid_gene_biotypes) %>%
@@ -75,34 +77,8 @@ filtered_data = dplyr::filter(compiled_data, chromosome_name %in% valid_chromoso
 saveRDS(filtered_data, "../../annotations/GRCh38/genes/Ensembl_85/Homo_sapiens.GRCh38.85.compiled_tx_metadata.filtered.rds")  
 
 #For each gene mark the transcripts with longest starts and ends
-by_tx_start = dplyr::filter(filtered_data, is_good_reference == 1) %>% 
-  dplyr::group_by(ensembl_gene_id) %>% 
-  dplyr::arrange(transcript_start) %>% #Find smallest possible transcript_start coordinate
-  dplyr::select(ensembl_gene_id, ensembl_transcript_id, strand,transcript_start) %>% 
-  dplyr::filter(row_number() == 1) %>% 
-  dplyr::ungroup() %>%
-  #Use strand infromation to decide whether it is at the start or the end of the transcript
-  dplyr::transmute(ensembl_transcript_id, longest_start = sign(strand +1), longest_end = sign(abs(strand-1)))
-
-by_tx_end = dplyr::filter(filtered_data, is_good_reference == 1) %>% 
-  dplyr::group_by(ensembl_gene_id) %>% 
-  dplyr::arrange(desc(transcript_end)) %>% #Find largest possible transcript_end coordinate
-  dplyr::select(ensembl_gene_id, ensembl_transcript_id, strand, transcript_end) %>% 
-  dplyr::filter(row_number() == 1) %>% 
-  dplyr::ungroup() %>%
-  #Use strand infromation to decide whether it is at the start or the end of the transcript
-  dplyr::transmute(ensembl_transcript_id, longest_start = sign(abs(strand-1)), longest_end = sign(strand +1))
-
-#Combine the start and end coordinates
-both_ends = dplyr::left_join(filtered_data, by_tx_start, by = "ensembl_transcript_id") %>% 
-  dplyr::left_join(by_tx_end, by = "ensembl_transcript_id") %>%
-  dplyr::transmute(ensembl_transcript_id, 
-            longest_start = ifelse(is.na(longest_start.x), 0, longest_start.x) + ifelse(is.na(longest_start.y), 0, longest_start.y),
-            longest_end = ifelse(is.na(longest_end.x), 0, longest_end.x) + ifelse(is.na(longest_end.y), 0, longest_end.y))
-
-marked_data = dplyr::left_join(filtered_data, both_ends, by = "ensembl_transcript_id")
+marked_data = markLongestTranscripts(filtered_data)
 saveRDS(marked_data, "../../annotations/GRCh38/genes/Ensembl_85/Homo_sapiens.GRCh38.85.compiled_tx_metadata.longest_marked.rds")  
-
 
 #Are multiple Ids for the same gene a problem
 multiple_ids_per_name = dplyr::select(filtered_data, ensembl_gene_id, external_gene_name, gene_biotype) %>% 

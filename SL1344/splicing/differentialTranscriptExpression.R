@@ -23,12 +23,17 @@ splicing_data <- dmDispersion(splicing_data, verbose = 1,
                               BPPARAM = BiocParallel::SerialParam())
 #Save dispersion estimates to disk
 saveRDS(splicing_data, "results/SL1344/combined_ensembl85_dispersion_estimates.serial.rds")
+splicing_data = readRDS("results/SL1344/combined_ensembl85_dispersion_estimates.serial.rds")
 
 #Estimate proportions
 splicing_data <- dmFit(splicing_data, BPPARAM = BiocParallel::SerialParam())
 
 #Test for differences in proportions
-splicing_data <- dmTest(splicing_data, verbose = 1, BPPARAM = BiocParallel::SerialParam(),
+all_dte <- dmTest(splicing_data, verbose = 1, BPPARAM = BiocParallel::SerialParam())
+naive_vs_SL1344_dte <- dmTest(splicing_data, verbose = 1, BPPARAM = BiocParallel::SerialParam(),
                         compared_groups = c(1,3))
-
+naive_vs_ifng_dte <- dmTest(splicing_data, verbose = 1, BPPARAM = BiocParallel::SerialParam(),
+                              compared_groups = c(1,2))
+naive_vs_ifng_sl1344_dte <- dmTest(splicing_data, verbose = 1, BPPARAM = BiocParallel::SerialParam(),
+                            compared_groups = c(1,4))
 
