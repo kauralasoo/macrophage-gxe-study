@@ -13,4 +13,11 @@ echo "test" | python ~/software/utils/submitJobs.py --MEM 12000 --jobname drimse
 echo "test" | python ~/software/utils/submitJobs.py --MEM 8000 --jobname drimseq_dispersions --ncores 1 --queue normal --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/splicing/differentialTranscriptExpression.R"
 
 #Construct new alternative transcription events
-cat annotation_batches.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname reviseAnnotations --ncores 1 --queue normal --command "/software/R-3.2.2/bin/Rscript macrophage-gxe-study/munge/constructTranscriptionEvents.R"
+cat annotation_batches.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname reviseAnnotations4 --ncores 1 --queue normal --command "/software/R-3.2.2/bin/Rscript macrophage-gxe-study/munge/constructTranscriptionEvents.R"
+
+#Convert GFF to fasta
+gtf_to_fasta reviseAnnotations_batch_35.gff3 ../../../../annotations/GRCh38/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa test.fa
+/software/team82/cufflinks/2.2.1/bin/gffread -w test.fa -g ../../../../annotations/GRCh38/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa reviseAnnotations_batch_35.gff3 
+
+salmon --no-version-check index -t test.gffread.fa -i test_index2
+
