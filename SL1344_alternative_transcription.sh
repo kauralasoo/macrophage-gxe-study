@@ -11,3 +11,6 @@ cut -f1 macrophage-gxe-study/data/sample_lists/SL1344/SL1344_names_all.txt | pyt
 #Estimate dispersions with DRIMSeq
 echo "test" | python ~/software/utils/submitJobs.py --MEM 12000 --jobname drimseq_dispersions --ncores 10 --queue normal --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/splicing/differentialTranscriptExpression.R"
 echo "test" | python ~/software/utils/submitJobs.py --MEM 8000 --jobname drimseq_dispersions --ncores 1 --queue normal --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/splicing/differentialTranscriptExpression.R"
+
+#Construct new alternative transcription events
+cat annotation_batches.txt | head -n2 | python ~/software/utils/submitJobs.py --MEM 3000 --jobname reviseAnnotations --ncores 1 --queue normal --command "/software/R-3.2.2/bin/Rscript macrophage-gxe-study/munge/constructTranscriptionEvents.R"
