@@ -13,4 +13,4 @@ echo "test" | python ~/software/utils/submitJobs.py --MEM 12000 --jobname drimse
 echo "test" | python ~/software/utils/submitJobs.py --MEM 8000 --jobname drimseq_dispersions --ncores 1 --queue normal --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/splicing/differentialTranscriptExpression.R"
 
 #Construct new alternative transcription events
-cat annotation_batches.txt | head -n2 | python ~/software/utils/submitJobs.py --MEM 3000 --jobname reviseAnnotations --ncores 1 --queue normal --command "/software/R-3.2.2/bin/R macrophage-gxe-study/munge/constructTranscriptionEvents.R"
+cat annotation_batches.txt | head -n2 | python ~/software/utils/submitJobs.py --MEM 3000 --jobname reviseAnnotations --ncores 1 --queue normal --command "/software/R-3.2.2/bin/Rscript macrophage-gxe-study/munge/constructTranscriptionEvents.R"
