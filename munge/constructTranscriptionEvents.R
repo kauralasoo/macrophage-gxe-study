@@ -37,9 +37,15 @@ if(!is.null(batch_id)){
 
 #Construct events
 gene_ids_list = seqUtils::idVectorToList(gene_ids)
-alt_events = purrr::map(gene_ids_list, ~constructAlternativeEventsWrapper(., filtered_metadata, exons, cdss)) %>% 
-  purrr::flatten() %>%
-  flattenAlternativeEvents()
+
+#Construct alternative events and remove failed genes
+safe_construct = purrr::safely(constructAlternativeEventsWrapper)
+alt_events = purrr::map(gene_ids_list, ~safe_construct(., filtered_metadata, exons, cdss)$result)
+failed_genes = purrr::map_lgl(alt_events, is.null)
+alt_events = alt_events[!failed_genes] #Remove failed genes
+
+#Faltten
+alt_events = purrr::flatten(alt_events) %>% flattenAlternativeEvents()
 
 #Construct event metadata
 event_metadata = data.frame(transcript_id = names(alt_events)) %>% 
@@ -51,8 +57,13 @@ event_metadata = data.frame(transcript_id = names(alt_events)) %>%
 #Construct transcript annotations
 transcript_annotations = transcriptsToAnnotations(alt_events, event_metadata)
 
+#Make a list of failed genes
+failed_names = names(which(failed_genes))
+
 #Save output from each batch
 if(!is.null(batch_id)){
   output_file = file.path("results/reviseAnnotations", paste0("reviseAnnotations_batch_",batch_id, ".gff3"))
+  error_file = file.path("results/reviseAnnotations", paste0("failed_genes_batch_",batch_id, ".txt"))
   rtracklayer::export.gff3(transcript_annotations, output_file)
+  write.table(failed_names, error_file, row.names = FALSE, col.names = FALSE, quote = FALSE)
 }
