@@ -53,6 +53,6 @@ transcript_annotations = transcriptsToAnnotations(alt_events, event_metadata)
 
 #Save output from each batch
 if(!is.null(batch_id)){
-  output_file = file.path("results/reviseAnnotations", paste0("/reviseAnnotations_batch_",batch_id, ".gff3"))
+  output_file = file.path("results/reviseAnnotations", paste0("reviseAnnotations_batch_",batch_id, ".gff3"))
   rtracklayer::export.gff3(transcript_annotations, output_file)
 }
