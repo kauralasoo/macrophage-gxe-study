@@ -44,18 +44,14 @@ alt_events = purrr::map(gene_ids_list, ~safe_construct(., filtered_metadata, exo
 failed_genes = purrr::map_lgl(alt_events, is.null)
 alt_events = alt_events[!failed_genes] #Remove failed genes
 
-#Faltten
+#Flatten
 alt_events = purrr::flatten(alt_events) %>% flattenAlternativeEvents()
 
 #Construct event metadata
-event_metadata = data.frame(transcript_id = names(alt_events)) %>% 
-  tidyr::separate(transcript_id, c('ensembl_gene_id', 'clique_id', 'event_type','ensembl_transcript_id'), 
-                  sep = "\\.", remove = F) %>%
-  dplyr::mutate(gene_id = paste(ensembl_gene_id, clique_id, event_type, sep = ".")) %>%
-  dplyr::mutate(transcript_id = as.character(transcript_id))
+event_metadata = reviseAnnotations::constructEventMetadata(names(alt_events))
 
 #Construct transcript annotations
-transcript_annotations = transcriptsToAnnotations(alt_events, event_metadata)
+transcript_annotations = reviseAnnotations::transcriptsToAnnotations(alt_events, event_metadata)
 
 #Make a list of failed genes
 failed_names = names(which(failed_genes))
