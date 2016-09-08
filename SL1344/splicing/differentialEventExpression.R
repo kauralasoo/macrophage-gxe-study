@@ -1,6 +1,7 @@
 library("DRIMSeq")
 library("SummarizedExperiment")
 library("devtools")
+library("dplyr")
 load_all("../seqUtils/")
 
 #Import event dataset
