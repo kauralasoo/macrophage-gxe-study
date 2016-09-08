@@ -55,7 +55,5 @@ results_df = dplyr::left_join(prop_df, SL1344_dte, by = "gene_id") %>%
   dplyr::left_join(all_dte, by = "gene_id")
 
 #Save output from each batch
-if(!is.null(batch_id)){
-  output_file = file.path("results/SL1344/diff_splicing", paste0("differential_events_batch",gsub(" ","_",batch_string), ".gff3"))
-  write.table(results_df, output_file, row.names = FALSE, col.names = FALSE, quote = FALSE)
-}
+output_file = file.path("results/SL1344/diff_splicing", paste0("differential_events_batch",gsub(" ","_",batch_string), ".gff3"))
+write.table(results_df, output_file, row.names = FALSE, col.names = FALSE, quote = FALSE)
