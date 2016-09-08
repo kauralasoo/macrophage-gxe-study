@@ -15,3 +15,10 @@ tx_meta = readRDS("../../annotations/GRCh38/genes/Ensembl_85/Homo_sapiens.GRCh38
 #Construct SummarizedExeperiment object
 se_ensembl = salmonSummarizedExperiment(sample_metadata, tx_meta, "results/SL1344/salmon_quants/", sub_dir = FALSE)
 saveRDS(se_ensembl,"results/SL1344/combined_ensembl85_transcript_quants.rds")
+
+#Import Salmon event quantifications from reviseAnnotations
+transcript_meta = readRDS("results/reviseAnnotations/reviseAnnotations.transcript_metadata.rds") %>%
+  dplyr::left_join(dplyr::select(gene_data$gene_metadata, gene_id, gene_name), by = c("ensembl_gene_id" = "gene_id"))
+se_reviseAnnotations = salmonSummarizedExperiment(sample_metadata, transcript_meta, "results/SL1344/salmon_reviseAnnotations_quants/", 
+                                                  counts_suffix = ".reviseAnnotations.quant.sf.gz", sub_dir = FALSE)
+saveRDS(se_reviseAnnotations,"results/SL1344/combined_reviseAnnotations_transcript_quants.rds")
