@@ -73,5 +73,23 @@ normalised_list = purrr::map(prop_list, ~replaceNAsWithRowMeans(.)) %>%
 fastqtl_norm_prop_list = purrr::map(normalised_list, prepareFastqtlMatrix, fastqtl_genepos)
 saveFastqtlMatrices(fastqtl_norm_prop_list, "results/SL1344/salmon/fastqtl_input/", file_suffix = "norm_prop")
 
+#Calculate principal components
+sample_meta = tbl_df2(colData(renamed_se_list$naive)) %>% 
+  dplyr::rename(sample_id2 = sample_id) %>%
+  dplyr::rename(sample_id = genotype_id)
+
+#Perform PCA on each dataset and construct covariates
+pca_list = purrr::map(normalised_list, ~performPCA(., sample_meta, n_pcs = 5)$pca_matrix %>% 
+                        dplyr::rename(genotype_id = sample_id) %>%
+                        dplyr::rename(sample_id = sample_id2))
+selected_covariates = purrr::map(pca_list, ~dplyr::select(.,genotype_id, PC1, PC2, PC3, PC4, PC5) %>%
+                                   fastqtlMetadataToCovariates())
+saveFastqtlMatrices(selected_covariates, "results/SL1344/salmon/fastqtl_input/", file_suffix = "covariates_prop")
+
+#Construct chunks table
+chunks_matrix = data.frame(chunk = seq(1:250), n = 250)
+write.table(chunks_matrix, "results/SL1344/salmon/fastqtl_input/all_chunk_table.txt", row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
+
+
 
 
