@@ -90,14 +90,35 @@ echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_
 
 #Sort files by SNP coordinates
 #awk command is necessary to change field separator from space to tab
-zcat results/SL1344/salmon/fastqtl_output/naive_100kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/SL1344/salmon/fastqtl_output/naive_100kb_pvalues.sorted.txt.gz &
-zcat results/SL1344/salmon/fastqtl_output/IFNg_100kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/SL1344/salmon/fastqtl_output/IFNg_100kb_pvalues.sorted.txt.gz &
-zcat results/SL1344/salmon/fastqtl_output/SL1344_100kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/SL1344/salmon/fastqtl_output/SL1344_100kb_pvalues.sorted.txt.gz &
-zcat results/SL1344/salmon/fastqtl_output/IFNg_SL1344_100kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/SL1344/salmon/fastqtl_output/IFNg_SL1344_100kb_pvalues.sorted.txt.gz &
+zcat results/SL1344/salmon/fastqtl_output/naive_100kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/SL1344/salmon/fastqtl_output/naive_100kb_pvalues.sorted.txt.gz
+zcat results/SL1344/salmon/fastqtl_output/IFNg_100kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/SL1344/salmon/fastqtl_output/IFNg_100kb_pvalues.sorted.txt.gz
+zcat results/SL1344/salmon/fastqtl_output/SL1344_100kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/SL1344/salmon/fastqtl_output/SL1344_100kb_pvalues.sorted.txt.gz
+zcat results/SL1344/salmon/fastqtl_output/IFNg_SL1344_100kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/SL1344/salmon/fastqtl_output/IFNg_SL1344_100kb_pvalues.sorted.txt.gz
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>3000] rusage[mem=3000]" -q normal -M 3000 -n 3 -o FarmOut/sort_fastqtl.%J.jobout  "bash sort.sh"
 
 
 
 
+### Run FastQTL on Ensenbl transcript annotations
+#Compress and index input files
+bgzip results/SL1344/salmon_ensembl85/fastqtl_input/naive.norm_prop.txt && tabix -p bed results/SL1344/salmon_ensembl85/fastqtl_input/naive.norm_prop.txt.gz
+bgzip results/SL1344/salmon_ensembl85/fastqtl_input/IFNg.norm_prop.txt && tabix -p bed results/SL1344/salmon_ensembl85/fastqtl_input/IFNg.norm_prop.txt.gz
+bgzip results/SL1344/salmon_ensembl85/fastqtl_input/SL1344.norm_prop.txt && tabix -p bed results/SL1344/salmon_ensembl85/fastqtl_input/SL1344.norm_prop.txt.gz
+bgzip results/SL1344/salmon_ensembl85/fastqtl_input/IFNg_SL1344.norm_prop.txt && tabix -p bed results/SL1344/salmon_ensembl85/fastqtl_input/IFNg_SL1344.norm_prop.txt.gz
 
+#Run FastQTL on all conditions
+cat results/SL1344/salmon_ensembl85/fastqtl_input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname salmon_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/naive.ASE.vcf.gz --bed results/SL1344/salmon_ensembl85/fastqtl_input/naive.norm_prop.txt.gz --cov results/SL1344/salmon_ensembl85/fastqtl_input/naive.covariates_prop.txt --W 100000 --permute '100 10000' --out results/SL1344/salmon_ensembl85/fastqtl_output/naive_100kb_perm --execute True"
+cat results/SL1344/salmon_ensembl85/fastqtl_input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname salmon_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/IFNg.ASE.vcf.gz --bed results/SL1344/salmon_ensembl85/fastqtl_input/IFNg.norm_prop.txt.gz --cov results/SL1344/salmon_ensembl85/fastqtl_input/IFNg.covariates_prop.txt --W 100000 --permute '100 10000' --out results/SL1344/salmon_ensembl85/fastqtl_output/IFNg_100kb_perm --execute True"
+cat results/SL1344/salmon_ensembl85/fastqtl_input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname leafcutter_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/SL1344.ASE.vcf.gz --bed results/SL1344/salmon_ensembl85/fastqtl_input/SL1344.norm_prop.txt.gz --cov results/SL1344/salmon_ensembl85/fastqtl_input/SL1344.covariates_prop.txt --W 100000 --permute '100 10000' --out results/SL1344/salmon_ensembl85/fastqtl_output/SL1344_100kb_perm --execute True"
+cat results/SL1344/salmon_ensembl85/fastqtl_input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname leafcutter_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/IFNg_SL1344.ASE.vcf.gz --bed results/SL1344/salmon_ensembl85/fastqtl_input/IFNg_SL1344.norm_prop.txt.gz --cov results/SL1344/salmon_ensembl85/fastqtl_input/IFNg_SL1344.covariates_prop.txt --W 100000 --permute '100 10000' --out results/SL1344/salmon_ensembl85/fastqtl_output/IFNg_SL1344_100kb_perm --execute True"
+
+#Merge chunks into single files
+zcat results/SL1344/salmon_ensembl85/fastqtl_output/naive_100kb_perm.chunk_*.txt.gz | bgzip > results/SL1344/salmon_ensembl85/fastqtl_output/naive_100kb_permuted.txt.gz
+zcat results/SL1344/salmon_ensembl85/fastqtl_output/IFNg_100kb_perm.chunk_*.txt.gz | bgzip > results/SL1344/salmon_ensembl85/fastqtl_output/IFNg_100kb_permuted.txt.gz
+zcat results/SL1344/salmon_ensembl85/fastqtl_output/SL1344_100kb_perm.chunk_*.txt.gz | bgzip > results/SL1344/salmon_ensembl85/fastqtl_output/SL1344_100kb_permuted.txt.gz
+zcat results/SL1344/salmon_ensembl85/fastqtl_output/IFNg_SL1344_100kb_perm.chunk_*.txt.gz | bgzip > results/SL1344/salmon_ensembl85/fastqtl_output/IFNg_SL1344_100kb_permuted.txt.gz
+
+#Remove chunks
+rm results/SL1344/salmon_ensembl85/fastqtl_output/*.chunk_*
 
 
