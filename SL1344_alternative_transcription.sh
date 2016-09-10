@@ -46,6 +46,7 @@ cat splice_batches.txt | python ~/software/utils/submitJobs.py --MEM 5000 --jobn
 
 
 #Run FASTQTL on the event ratios
+#Compress and index input files
 bgzip results/SL1344/salmon/fastqtl_input/naive.norm_prop.txt && tabix -p bed results/SL1344/salmon/fastqtl_input/naive.norm_prop.txt.gz
 bgzip results/SL1344/salmon/fastqtl_input/IFNg.norm_prop.txt && tabix -p bed results/SL1344/salmon/fastqtl_input/IFNg.norm_prop.txt.gz
 bgzip results/SL1344/salmon/fastqtl_input/SL1344.norm_prop.txt && tabix -p bed results/SL1344/salmon/fastqtl_input/SL1344.norm_prop.txt.gz
@@ -64,7 +65,7 @@ zcat results/SL1344/salmon/fastqtl_output/SL1344_100kb_perm.chunk_*.txt.gz | bgz
 zcat results/SL1344/salmon/fastqtl_output/IFNg_SL1344_100kb_perm.chunk_*.txt.gz | bgzip > results/SL1344/salmon/fastqtl_output/IFNg_SL1344_100kb_permuted.txt.gz
 
 #Remove chunks
-rm results/SL1344/leafcutter/fastqtl_output/*.chunk_*
+rm results/SL1344/salmon/fastqtl_output/*.chunk_*
 
 #Get full p-values from fastQTL
 cat results/SL1344/salmon/fastqtl_input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname leafcutter_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/naive.ASE.vcf.gz --bed results/SL1344/salmon/fastqtl_input/naive.norm_prop.txt.gz --cov results/SL1344/salmon/fastqtl_input/naive.covariates_prop.txt --W 100000 --out results/SL1344/salmon/fastqtl_output/naive_100kb_full --execute True"
