@@ -122,3 +122,26 @@ zcat results/SL1344/salmon_ensembl85/fastqtl_output/IFNg_SL1344_100kb_perm.chunk
 rm results/SL1344/salmon_ensembl85/fastqtl_output/*.chunk_*
 
 
+
+#Run FastQTL on full Ensembl transcript annotations without filtering
+#Compress and index input files
+bgzip results/SL1344/salmon_ensembl85_full/fastqtl_input/naive.norm_prop.txt && tabix -p bed results/SL1344/salmon_ensembl85_full/fastqtl_input/naive.norm_prop.txt.gz
+bgzip results/SL1344/salmon_ensembl85_full/fastqtl_input/IFNg.norm_prop.txt && tabix -p bed results/SL1344/salmon_ensembl85_full/fastqtl_input/IFNg.norm_prop.txt.gz
+bgzip results/SL1344/salmon_ensembl85_full/fastqtl_input/SL1344.norm_prop.txt && tabix -p bed results/SL1344/salmon_ensembl85_full/fastqtl_input/SL1344.norm_prop.txt.gz
+bgzip results/SL1344/salmon_ensembl85_full/fastqtl_input/IFNg_SL1344.norm_prop.txt && tabix -p bed results/SL1344/salmon_ensembl85_full/fastqtl_input/IFNg_SL1344.norm_prop.txt.gz
+
+#Run FastQTL on all conditions
+cat results/SL1344/salmon_ensembl85_full/fastqtl_input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname salmon_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/naive.ASE.vcf.gz --bed results/SL1344/salmon_ensembl85_full/fastqtl_input/naive.norm_prop.txt.gz --cov results/SL1344/salmon_ensembl85_full/fastqtl_input/naive.covariates_prop.txt --W 100000 --permute '100 10000' --out results/SL1344/salmon_ensembl85_full/fastqtl_output/naive_100kb_perm --execute True"
+cat results/SL1344/salmon_ensembl85_full/fastqtl_input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname salmon_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/IFNg.ASE.vcf.gz --bed results/SL1344/salmon_ensembl85_full/fastqtl_input/IFNg.norm_prop.txt.gz --cov results/SL1344/salmon_ensembl85_full/fastqtl_input/IFNg.covariates_prop.txt --W 100000 --permute '100 10000' --out results/SL1344/salmon_ensembl85_full/fastqtl_output/IFNg_100kb_perm --execute True"
+cat results/SL1344/salmon_ensembl85_full/fastqtl_input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname leafcutter_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/SL1344.ASE.vcf.gz --bed results/SL1344/salmon_ensembl85_full/fastqtl_input/SL1344.norm_prop.txt.gz --cov results/SL1344/salmon_ensembl85_full/fastqtl_input/SL1344.covariates_prop.txt --W 100000 --permute '100 10000' --out results/SL1344/salmon_ensembl85_full/fastqtl_output/SL1344_100kb_perm --execute True"
+cat results/SL1344/salmon_ensembl85_full/fastqtl_input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname leafcutter_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/IFNg_SL1344.ASE.vcf.gz --bed results/SL1344/salmon_ensembl85_full/fastqtl_input/IFNg_SL1344.norm_prop.txt.gz --cov results/SL1344/salmon_ensembl85_full/fastqtl_input/IFNg_SL1344.covariates_prop.txt --W 100000 --permute '100 10000' --out results/SL1344/salmon_ensembl85_full/fastqtl_output/IFNg_SL1344_100kb_perm --execute True"
+
+#Merge chunks into single files
+zcat results/SL1344/salmon_ensembl85_full/fastqtl_output/naive_100kb_perm.chunk_*.txt.gz | bgzip > results/SL1344/salmon_ensembl85_full/fastqtl_output/naive_100kb_permuted.txt.gz
+zcat results/SL1344/salmon_ensembl85_full/fastqtl_output/IFNg_100kb_perm.chunk_*.txt.gz | bgzip > results/SL1344/salmon_ensembl85_full/fastqtl_output/IFNg_100kb_permuted.txt.gz
+zcat results/SL1344/salmon_ensembl85_full/fastqtl_output/SL1344_100kb_perm.chunk_*.txt.gz | bgzip > results/SL1344/salmon_ensembl85_full/fastqtl_output/SL1344_100kb_permuted.txt.gz
+zcat results/SL1344/salmon_ensembl85_full/fastqtl_output/IFNg_SL1344_100kb_perm.chunk_*.txt.gz | bgzip > results/SL1344/salmon_ensembl85_full/fastqtl_output/IFNg_SL1344_100kb_permuted.txt.gz
+
+#Remove chunks
+rm results/SL1344/salmon_ensembl85_full/fastqtl_output/*.chunk_*
+
