@@ -12,12 +12,21 @@ cluster_meta = dplyr::select(prop_list$gene_metadata, gene_id, cluster_id, clust
 #Import min p-values
 fastqtl_pvalue_list = readRDS("results/SL1344/leafcutter/leafcutter_min_pvalues.rds")
 
+#Add metadata to leafcutter QTLs
+fastqtl_pvalue_meta = purrr::map(fastqtl_pvalue_list, ~dplyr::left_join(., cluster_meta, by = "gene_id"))
+
 #Apply bonferroni correction for p-values within cluster
-fastqtl_bonferroni = purrr::map(fastqtl_pvalue_list, ~leafcutterBonferroniCorrection(.,cluster_meta)) %>%
-  purrr::map_df(identity, .id = "condition_name")
+fastqtl_bonferroni = purrr::map(fastqtl_pvalue_meta, ~dplyr::group_by(., cluster_id) %>% 
+             dplyr::mutate(n_transcripts = length(gene_id)) %>% 
+             dplyr::arrange(cluster_id, p_beta) %>% dplyr::filter(row_number() == 1) %>% 
+             dplyr::ungroup() %>% dplyr::mutate(p_bonferroni = p_beta * n_transcripts) %>% 
+             dplyr::mutate(p_bonferroni = pmin(p_bonferroni, 1)) %>% 
+             dplyr::mutate(p_fdr = p.adjust(p_bonferroni, method = "fdr")) %>% 
+             dplyr::filter(p_fdr < 0.1))
+fastqtl_bonferroni_df = purrr::map_df(fastqtl_bonferroni, identity, .id = "condition_name")
 
 #Extract pairs
-joint_pairs = dplyr::select(fastqtl_bonferroni, gene_id, snp_id) %>% unique()
+joint_pairs = dplyr::select(fastqtl_bonferroni_df, gene_id, snp_id) %>% unique()
 
 #Import the VCF file
 vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
