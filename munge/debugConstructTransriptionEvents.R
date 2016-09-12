@@ -20,13 +20,13 @@ filtered_metadata = dplyr::filter(gene_metadata, transcript_biotype %in% c("linc
   reviseAnnotations::markLongestTranscripts()
 
 #Extract gene data from annotations
-gene_data = reviseAnnotations::extractGeneData("ENSG00000111912", filtered_metadata, exons, cdss)
+gene_data = reviseAnnotations::extractGeneData("ENSG00000128604", filtered_metadata, exons, cdss)
 
 #Extend truncated transcripts until the longest transcript
 gene_extended_tx = reviseAnnotations::extendTranscriptsPerGene(gene_data$metadata, gene_data$exons, gene_data$cdss)
 gene_data_ext = reviseAnnotations::replaceExtendedTranscripts(gene_data, gene_extended_tx)
 
-a = constructAlternativeEvents(gene_data_ext$exons, "ENSG00000111912")
+a = constructAlternativeEvents(gene_data_ext$exons, "ENSG00000128604")
 
 #Make some plots
 plotting_annotations = dplyr::select(filtered_metadata, ensembl_transcript_id, ensembl_gene_id, external_gene_name, strand) %>% 
@@ -35,6 +35,9 @@ plotting_annotations = dplyr::select(filtered_metadata, ensembl_transcript_id, e
 wiggleplotr::plotTranscripts(gene_data$exons, gene_data$cdss, plotting_annotations, rescale_introns = TRUE)
 wiggleplotr::plotTranscripts(gene_data_ext$exons, gene_data_ext$cdss, plotting_annotations, rescale_introns = TRUE)
 wiggleplotr::plotTranscripts(a[[1]]$upstream, a[[1]]$upstream, plotting_annotations, rescale_introns = TRUE)
+wiggleplotr::plotTranscripts(a[[1]]$downstream, a[[1]]$downstream, plotting_annotations, rescale_introns = TRUE)
+
+wiggleplotr::plotTranscripts(a[[1]]$contained, a[[1]]$contained, plotting_annotations, rescale_introns = TRUE)
 
 exons1 = findTranscriptCliques(gene_data_ext$exons)[[2]]
 wiggleplotr::plotTranscripts(gene_data_ext$exons[exons1], gene_data_ext$cdss[exons1], plotting_annotations, rescale_introns = TRUE)
