@@ -5,6 +5,7 @@ load_all("../reviseAnnotations/")
 load_all("../wiggleplotr/")
 load_all("../seqUtils/")
 library("ggplot2")
+library("SummarizedExperiment")
 
 #Import transcript annotations
 gene_metadata = readRDS("../../annotations/GRCh38/genes/Ensembl_85/Homo_sapiens.GRCh38.85.compiled_tx_metadata.filtered.rds")  
@@ -65,49 +66,71 @@ ggsave("figures/supplementary/IRF5_contained.pdf", plot = contained_events, widt
 
 
 
-#Make coverage plots
+#### Make coverage plots ####
+
+#3'UTR QTL
 #Construct metadata df for wiggleplotr
 samples_in_dir = data_frame(bigWig = dir("/Volumes/Ajamasin/bigwig/RNA//")) %>% 
   tidyr::separate(bigWig, c("sample_id", "strand","suffix"), sep = "\\.")
-track_data = wiggleplotrGenotypeColourGroup(rna_meta_str1_df, "rs10954213", vcf_file$genotypes, 1)
+track_data = wiggleplotrGenotypeColourGroup(rna_meta_str2_df, "rs10954213", vcf_file$genotypes, 1)
 track_data = dplyr::semi_join(track_data, samples_in_dir, by = "sample_id")
 
 #Filter by condtion
-filtered_tracks = dplyr::filter(track_data, track_id %in% c("IFNg"))
+filtered_tracks = dplyr::filter(track_data)
 
 #Make a coverage plot of the ATAC data
-selected_transcripts = c("ENST00000473745","ENST00000249375","ENST00000489702","ENST00000357234")
+selected_transcripts = c("ENST00000619830","ENST00000473745","ENST00000489702","ENST00000357234")
 IRF5_utr_plot = plotCoverage(exons = gene_data_ext$exons[selected_transcripts], 
                             cdss = gene_data_ext$cds[selected_transcripts], 
                             track_data = filtered_tracks, rescale_introns = TRUE, 
                             transcript_annotations = plotting_annotations, fill_palette = getGenotypePalette(), 
-                            plot_fraction = 0.2, heights = c(0.7,0.3), 
+                            plot_fraction = 0.2, heights = c(0.75,0.25), 
                             return_subplots_list = FALSE)
-ggsave("figures/supplementary/IRF5_UTR_qtl.pdf", plot = IRF5_utr_plot, width = 7, height = 6)
+ggsave("figures/supplementary/IRF5_UTR_qtl.pdf", plot = IRF5_utr_plot, width = 6, height = 7)
 
 
-
-track_data = wiggleplotrGenotypeColourGroup(rna_meta_str1_df, "rs3778754", vcf_file$genotypes, -1)
+# Alternative promoter QTL
+track_data = wiggleplotrGenotypeColourGroup(rna_meta_str2_df, "rs3778754", vcf_file$genotypes, -1)
 track_data = dplyr::semi_join(track_data, samples_in_dir, by = "sample_id")
 
 #Filter by condtion
-filtered_tracks = dplyr::filter(track_data, track_id %in% c("IFNg"))
+filtered_tracks = dplyr::filter(track_data)
 
 #Make a coverage plot of the ATAC data
-selected_transcripts = c("ENST00000473745","ENST00000249375","ENST00000489702","ENST00000357234")
+selected_transcripts = c("ENST00000473745","ENST00000489702","ENST00000357234")
 IRF5_promoter_plot = plotCoverage(exons = gene_data_ext$exons[selected_transcripts], 
                              cdss = gene_data_ext$cds[selected_transcripts], 
                              track_data = filtered_tracks, rescale_introns = TRUE, 
                              transcript_annotations = plotting_annotations, fill_palette = getGenotypePalette(), 
-                             plot_fraction = 0.2, heights = c(0.7,0.3), 
+                             plot_fraction = 0.2, heights = c(0.75,0.25), 
                              return_subplots_list = FALSE)
-ggsave("figures/supplementary/IRF5_promoter_qtl.pdf", plot = IRF5_promoter_plot, width = 7, height = 6)
+ggsave("figures/supplementary/IRF5_promoter_qtl.pdf", plot = IRF5_promoter_plot, width = 6, height = 7)
 
 
+#Make QTL plots for the IRF5 variants
+vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
+se_ensembl = readRDS("results/SL1344/combined_reviseAnnotations_transcript_quants.rds")
+ratio_matrix = assays(se_ensembl)$tpm_ratios
+normalised_matrix = ratio_matrix %>% replaceNAsWithRowMeans() %>% quantileNormaliseRows()
+sample_meta = colData(se_ensembl) %>% tbl_df2() %>%
+  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive", "IFNg", "SL1344", "IFNg_SL1344")))
+gene_meta = rowData(se_ensembl) %>% tbl_df2() %>%
+  dplyr::mutate(gene_id = transcript_id)
 
+#Import Salmon QTLs
+salmon_qtl_hits = readRDS("results/SL1344/salmon/salmon_qtl_hits.rds")
+salmon_qtl_df = purrr::map_df(salmon_qtl_hits, identity, .id = "condition_name")
+dplyr::filter(salmon_qtl_df, gene_name == "IRF5")
 
-
-
+#Make plots on raw data
+qtl_df_utr = constructQtlPlotDataFrame("ENSG00000128604.clique_1.downstream.ENST00000489702", "rs10954213", 
+                                   ratio_matrix, vcf_file$genotypes, sample_meta, gene_meta) %>% 
+  dplyr::filter(norm_exp < 0.75) %>%
+  plotQtlRow(ylabel = "Relative expression")
+ggsave("figures/supplementary/IRF5_UTR_boxplot.pdf", plot = qtl_df_utr, width = 5, height = 3)
+qtl_df_promoter = constructQtlPlotDataFrame("ENSG00000128604.clique_1.upstream.ENST00000249375", "rs3778754", 
+                                   ratio_matrix, vcf_file$genotypes, sample_meta, gene_meta) %>% plotQtlRow()
+ggsave("figures/supplementary/IRF5_promoter_boxplot.pdf", plot = qtl_df_promoter, width = 5, height = 3)
 
 
 
