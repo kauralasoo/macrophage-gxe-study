@@ -54,6 +54,15 @@ irf5_extended_transcripts = wiggleplotr::plotTranscripts(gene_data_ext$exons,
                           gene_data_ext$cdss, plotting_annotations, rescale_introns = TRUE)
 ggsave("figures/supplementary/IRF5_extended_transcripts.pdf", plot = irf5_extended_transcripts, width = 7, height = 5)
 
+#Plot events constructed from the IRF5 transcripts
+alt_events = constructAlternativeEvents(gene_data_ext$exons, "ENSG00000128604")
+up_events = wiggleplotr::plotTranscripts(alt_events[[1]]$upstream, alt_events[[1]]$upstream, plotting_annotations, rescale_introns = TRUE)
+down_events = wiggleplotr::plotTranscripts(alt_events[[1]]$downstream, alt_events[[1]]$downstream, plotting_annotations, rescale_introns = TRUE)
+contained_events = wiggleplotr::plotTranscripts(alt_events[[1]]$contained, alt_events[[1]]$contained, plotting_annotations, rescale_introns = TRUE)
+ggsave("figures/supplementary/IRF5_upstream.pdf", plot = up_events, width = 7, height = 4)
+ggsave("figures/supplementary/IRF5_downstream.pdf", plot = down_events, width = 7, height = 3)
+ggsave("figures/supplementary/IRF5_contained.pdf", plot = contained_events, width = 7, height = 2)
+
 
 
 #Make coverage plots
