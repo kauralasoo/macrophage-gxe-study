@@ -96,7 +96,11 @@ zcat results/SL1344/salmon/fastqtl_output/SL1344_100kb_pvalues.coords.txt.gz | a
 zcat results/SL1344/salmon/fastqtl_output/IFNg_SL1344_100kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/SL1344/salmon/fastqtl_output/IFNg_SL1344_100kb_pvalues.sorted.txt.gz
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>3000] rusage[mem=3000]" -q normal -M 3000 -n 3 -o FarmOut/sort_fastqtl.%J.jobout  "bash sort.sh"
 
-
+#Index the output files using Tabix
+tabix -s2 -b3 -e3 -f results/SL1344/salmon/fastqtl_output/naive_100kb_pvalues.coords.txt.gz
+tabix -s2 -b3 -e3 -f results/SL1344/salmon/fastqtl_output/IFNg_100kb_pvalues.coords.txt.gz
+tabix -s2 -b3 -e3 -f results/SL1344/salmon/fastqtl_output/SL1344_100kb_pvalues.coords.txt.gz
+tabix -s2 -b3 -e3 -f results/SL1344/salmon/fastqtl_output/IFNg_SL1344_100kb_pvalues.coords.txt.gz
 
 
 ### Run FastQTL on Ensenbl transcript annotations

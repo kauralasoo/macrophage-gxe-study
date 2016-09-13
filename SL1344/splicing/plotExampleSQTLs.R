@@ -4,6 +4,7 @@ library("devtools")
 load_all("../reviseAnnotations/")
 load_all("../wiggleplotr/")
 load_all("../seqUtils/")
+load_all("../../software/rasqual/rasqualTools/")
 library("ggplot2")
 library("SummarizedExperiment")
 
@@ -72,11 +73,11 @@ ggsave("figures/supplementary/IRF5_contained.pdf", plot = contained_events, widt
 #Construct metadata df for wiggleplotr
 samples_in_dir = data_frame(bigWig = dir("/Volumes/Ajamasin/bigwig/RNA//")) %>% 
   tidyr::separate(bigWig, c("sample_id", "strand","suffix"), sep = "\\.")
-track_data = wiggleplotrGenotypeColourGroup(rna_meta_str2_df, "rs10954213", vcf_file$genotypes, 1)
+track_data = wiggleplotrGenotypeColourGroup(rna_meta_str2_df, "rs10954213", vcf_file$genotypes, -1)
 track_data = dplyr::semi_join(track_data, samples_in_dir, by = "sample_id")
 
 #Filter by condtion
-filtered_tracks = dplyr::filter(track_data)
+filtered_tracks = dplyr::filter(track_data) %>% dplyr::filter(condition_name %in% c("naive","IFNg"))
 
 #Make a coverage plot of the ATAC data
 selected_transcripts = c("ENST00000619830","ENST00000473745","ENST00000489702","ENST00000357234")
@@ -84,9 +85,9 @@ IRF5_utr_plot = plotCoverage(exons = gene_data_ext$exons[selected_transcripts],
                             cdss = gene_data_ext$cds[selected_transcripts], 
                             track_data = filtered_tracks, rescale_introns = TRUE, 
                             transcript_annotations = plotting_annotations, fill_palette = getGenotypePalette(), 
-                            plot_fraction = 0.2, heights = c(0.75,0.25), 
-                            return_subplots_list = FALSE)
-ggsave("figures/supplementary/IRF5_UTR_qtl.pdf", plot = IRF5_utr_plot, width = 6, height = 7)
+                            plot_fraction = 0.2, heights = c(0.65,0.35), 
+                            return_subplots_list = FALSE, line_only = TRUE)
+ggsave("figures/supplementary/IRF5_UTR_qtl.pdf", plot = IRF5_utr_plot, width = 9, height = 5)
 
 
 # Alternative promoter QTL
@@ -94,7 +95,7 @@ track_data = wiggleplotrGenotypeColourGroup(rna_meta_str2_df, "rs3778754", vcf_f
 track_data = dplyr::semi_join(track_data, samples_in_dir, by = "sample_id")
 
 #Filter by condtion
-filtered_tracks = dplyr::filter(track_data)
+filtered_tracks = dplyr::filter(track_data) %>% dplyr::filter(condition_name %in% c("naive","IFNg"))
 
 #Make a coverage plot of the ATAC data
 selected_transcripts = c("ENST00000473745","ENST00000489702","ENST00000357234")
@@ -102,9 +103,9 @@ IRF5_promoter_plot = plotCoverage(exons = gene_data_ext$exons[selected_transcrip
                              cdss = gene_data_ext$cds[selected_transcripts], 
                              track_data = filtered_tracks, rescale_introns = TRUE, 
                              transcript_annotations = plotting_annotations, fill_palette = getGenotypePalette(), 
-                             plot_fraction = 0.2, heights = c(0.75,0.25), 
-                             return_subplots_list = FALSE)
-ggsave("figures/supplementary/IRF5_promoter_qtl.pdf", plot = IRF5_promoter_plot, width = 6, height = 7)
+                             plot_fraction = 0.2, heights = c(0.65,0.35), 
+                             return_subplots_list = FALSE, line_only = TRUE)
+ggsave("figures/supplementary/IRF5_promoter_qtl.pdf", plot = IRF5_promoter_plot, width = 9, height = 5)
 
 
 #Make QTL plots for the IRF5 variants
@@ -132,5 +133,33 @@ qtl_df_promoter = constructQtlPlotDataFrame("ENSG00000128604.clique_1.upstream.E
                                    ratio_matrix, vcf_file$genotypes, sample_meta, gene_meta) %>% plotQtlRow()
 ggsave("figures/supplementary/IRF5_promoter_boxplot.pdf", plot = qtl_df_promoter, width = 5, height = 3)
 
+#Fetch SNPs around the IRF5 gene
+fastqtl_meta = dplyr::transmute(gene_meta, gene_id, chr, start = transcript_start, end = transcript_end)
+region_coords = c(128935000,128952000)
+region_coords = c(128900000,128990000)
 
+utr_pvalues = fastqtlTabixFetchGenesQuick("ENSG00000128604.clique_1.downstream.ENST00000489702", 
+                                          "/Volumes/Ajamasin/databases/SL1344/salmon/naive_100kb_pvalues.sorted.txt.gz", 
+                                          gene_metadata = fastqtl_meta, cis_window = 1e5)[[1]] %>%
+  dplyr::mutate(track_id = "naive") %>% 
+  dplyr::select(gene_id, pos, p_nominal, track_id)
+promoter_pvalues = fastqtlTabixFetchGenesQuick("ENSG00000128604.clique_1.upstream.ENST00000249375", 
+                                          "/Volumes/Ajamasin/databases/SL1344/salmon/naive_100kb_pvalues.sorted.txt.gz", 
+                                          gene_metadata = fastqtl_meta, cis_window = 1e5)[[1]] %>%
+  dplyr::mutate(track_id = "naive") %>% 
+  dplyr::select(gene_id, pos, p_nominal, track_id)
 
+utr_manhatten = makeManhattanPlot(utr_pvalues, region_coords)
+promoter_manhattan = makeManhattanPlot(promoter_pvalues, region_coords)
+
+#Calculate the union of exons
+union_exons = list(ENST00000467002 = listUnion(gene_data_ext$exons))
+union_cds = list(ENST00000467002 = listUnion(gene_data_ext$cdss))
+union_transcripts = wiggleplotr::plotTranscripts(union_exons, union_cds, plotting_annotations, rescale_introns = FALSE, region_coords = region_coords)
+
+promoter_qtl_plot = cowplot::plot_grid(promoter_manhattan, union_transcripts, 
+    align = "v", rel_heights = c(0.6,0.4), ncol = 1)
+utr_qtl_plot = cowplot::plot_grid(utr_manhatten, union_transcripts, 
+                   align = "v", rel_heights = c(0.6,0.4), ncol = 1)
+ggsave("figures/supplementary/IRF5_promoter_manhattan.pdf", plot = promoter_qtl_plot, width = 9, height = 3)
+ggsave("figures/supplementary/IRF5_UTR_manhattan.pdf", plot = utr_qtl_plot, width = 9, height = 3)

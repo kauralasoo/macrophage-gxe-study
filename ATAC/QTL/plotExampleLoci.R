@@ -8,7 +8,6 @@ library("dplyr")
 library("ggplot2")
 library("GenomicFeatures")
 
-
 #Import data
 atac_data = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
 atac_meta_df = wiggleplotrConstructMetadata(atac_data$counts, atac_data$sample_metadata, "/Volumes/JetDrive/bigwigs/ATAC/")
