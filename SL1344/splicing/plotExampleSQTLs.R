@@ -68,6 +68,11 @@ ggsave("figures/supplementary/IRF5_contained.pdf", plot = contained_events, widt
 
 
 #### Make coverage plots ####
+#Calculate union exons
+union_exons = list("Union" = listUnion(gene_data_ext$exons))
+union_cds = list("Union" = listUnion(gene_data_ext$cdss))
+union_annotations = dplyr::bind_rows(plotting_annotations, 
+  data_frame(transcript_id = "Union", gene_id = "ENSG00000128604", gene_name = "IRF5", strand = 1))
 
 #3'UTR QTL
 #Construct metadata df for wiggleplotr
@@ -80,14 +85,15 @@ track_data = dplyr::semi_join(track_data, samples_in_dir, by = "sample_id")
 filtered_tracks = dplyr::filter(track_data) %>% dplyr::filter(condition_name %in% c("naive","IFNg"))
 
 #Make a coverage plot of the ATAC data
-selected_transcripts = c("ENST00000619830","ENST00000473745","ENST00000489702","ENST00000357234")
-IRF5_utr_plot = plotCoverage(exons = gene_data_ext$exons[selected_transcripts], 
-                            cdss = gene_data_ext$cds[selected_transcripts], 
+down_exons = c(union_exons, alt_events$ENSG00000128604.clique_1$downstream)
+down_cdss = c(union_cds, alt_events$ENSG00000128604.clique_1$downstream)
+IRF5_utr_plot = plotCoverage(exons = down_exons, 
+                            cdss = down_cdss, 
                             track_data = filtered_tracks, rescale_introns = TRUE, 
-                            transcript_annotations = plotting_annotations, fill_palette = getGenotypePalette(), 
-                            plot_fraction = 0.2, heights = c(0.65,0.35), 
+                            transcript_annotations = union_annotations, fill_palette = getGenotypePalette(), 
+                            plot_fraction = 0.2, heights = c(0.55,0.45), 
                             return_subplots_list = FALSE, line_only = TRUE)
-ggsave("figures/supplementary/IRF5_UTR_qtl.pdf", plot = IRF5_utr_plot, width = 9, height = 5)
+ggsave("figures/supplementary/IRF5_UTR_qtl.pdf", plot = IRF5_utr_plot, width = 9, height = 6)
 
 
 # Alternative promoter QTL
@@ -98,18 +104,18 @@ track_data = dplyr::semi_join(track_data, samples_in_dir, by = "sample_id")
 filtered_tracks = dplyr::filter(track_data) %>% dplyr::filter(condition_name %in% c("naive","IFNg"))
 
 #Make a coverage plot of the ATAC data
-selected_transcripts = c("ENST00000473745","ENST00000489702","ENST00000357234")
-IRF5_promoter_plot = plotCoverage(exons = gene_data_ext$exons[selected_transcripts], 
-                             cdss = gene_data_ext$cds[selected_transcripts], 
+up_exons = c(union_exons, alt_events$ENSG00000128604.clique_1$upstream)
+up_cdss = c(union_cds, alt_events$ENSG00000128604.clique_1$upstream)
+IRF5_promoter_plot = plotCoverage(exons = up_exons, 
+                             cdss = up_cdss, 
                              track_data = filtered_tracks, rescale_introns = TRUE, 
-                             transcript_annotations = plotting_annotations, fill_palette = getGenotypePalette(), 
-                             plot_fraction = 0.2, heights = c(0.65,0.35), 
+                             transcript_annotations = union_annotations, fill_palette = getGenotypePalette(), 
+                             plot_fraction = 0.2, heights = c(0.55,0.45), 
                              return_subplots_list = FALSE, line_only = TRUE)
-ggsave("figures/supplementary/IRF5_promoter_qtl.pdf", plot = IRF5_promoter_plot, width = 9, height = 5)
+ggsave("figures/supplementary/IRF5_promoter_qtl.pdf", plot = IRF5_promoter_plot, width = 9, height = 6.5)
 
 
 #Make QTL plots for the IRF5 variants
-vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 se_ensembl = readRDS("results/SL1344/combined_reviseAnnotations_transcript_quants.rds")
 ratio_matrix = assays(se_ensembl)$tpm_ratios
 normalised_matrix = ratio_matrix %>% replaceNAsWithRowMeans() %>% quantileNormaliseRows()
@@ -127,11 +133,14 @@ dplyr::filter(salmon_qtl_df, gene_name == "IRF5")
 qtl_df_utr = constructQtlPlotDataFrame("ENSG00000128604.clique_1.downstream.ENST00000489702", "rs10954213", 
                                    ratio_matrix, vcf_file$genotypes, sample_meta, gene_meta) %>% 
   dplyr::filter(norm_exp < 0.75) %>%
+  dplyr::filter(condition_name %in% c("naive","IFNg")) %>%
   plotQtlRow(ylabel = "Relative expression")
-ggsave("figures/supplementary/IRF5_UTR_boxplot.pdf", plot = qtl_df_utr, width = 5, height = 3)
+ggsave("figures/supplementary/IRF5_UTR_boxplot.pdf", plot = qtl_df_utr, width = 4.5, height = 3)
 qtl_df_promoter = constructQtlPlotDataFrame("ENSG00000128604.clique_1.upstream.ENST00000249375", "rs3778754", 
-                                   ratio_matrix, vcf_file$genotypes, sample_meta, gene_meta) %>% plotQtlRow()
-ggsave("figures/supplementary/IRF5_promoter_boxplot.pdf", plot = qtl_df_promoter, width = 5, height = 3)
+                                   ratio_matrix, vcf_file$genotypes, sample_meta, gene_meta) %>% 
+  dplyr::filter(condition_name %in% c("naive","IFNg")) %>%
+  plotQtlRow()
+ggsave("figures/supplementary/IRF5_promoter_boxplot.pdf", plot = qtl_df_promoter, width = 4.5, height = 3)
 
 #Fetch SNPs around the IRF5 gene
 fastqtl_meta = dplyr::transmute(gene_meta, gene_id, chr, start = transcript_start, end = transcript_end)
