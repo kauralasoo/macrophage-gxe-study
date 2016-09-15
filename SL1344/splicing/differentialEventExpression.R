@@ -44,7 +44,7 @@ SL1344_dte <- dmTest(sd, verbose = 1, BPPARAM = BiocParallel::SerialParam(), com
   results() %>% dplyr::transmute(gene_id, SL1344_lr = lr, SL1344_pvalue = pvalue)
 IFNg_dte <- dmTest(sd, verbose = 1, BPPARAM = BiocParallel::SerialParam(), compared_groups = c(1,2)) %>%
   results() %>% dplyr::transmute(gene_id, IFNg_lr = lr, IFNg_pvalue = pvalue)
-IFNg_SL1344_dte <- dmTest(sd, verbose = 1, BPPARAM = BiocParallel::SerialParam(), compared_groups = c(1,3)) %>%
+IFNg_SL1344_dte <- dmTest(sd, verbose = 1, BPPARAM = BiocParallel::SerialParam(), compared_groups = c(1,4)) %>%
   results() %>% dplyr::transmute(gene_id, IFNg_SL1344_lr = lr, IFNg_SL1344_pvalue = pvalue)
 all_dte <- dmTest(sd, verbose = 1, BPPARAM = BiocParallel::SerialParam()) %>%
   results() %>% dplyr::transmute(gene_id, all_lr = lr, all_pvalue = pvalue)

@@ -1,5 +1,6 @@
 library("devtools")
 library("dplyr")
+library("SummarizedExperiment")
 load_all("../seqUtils/")
 
 #Import event dataset
