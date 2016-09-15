@@ -2,18 +2,41 @@ library("readr")
 library("dplyr")
 library("tidyr")
 library("limma")
+library("devtools")
 library("purrr")
 load_all("../seqUtils/")
+library("GenomicRanges")
+
+#Import gene metadata
+combined_expression_data_filtered = readRDS("results/SL1344/combined_expression_data.rds")
+gene_ranges = dplyr::transmute(combined_expression_data_filtered$gene_metadata, gene_id, seqnames = chr, start, end, strand = "+") %>% 
+  dataFrameToGRanges()
 
 #Import proportion data
 prop_list = readRDS("results/SL1344/combined_proportions.row_quantile.rds")
 cluster_meta = dplyr::select(prop_list$gene_metadata, gene_id, cluster_id, cluster_size)
 
+#Link leafCutter clusters to genes
+cluster_ranges = tidyr::separate(cluster_meta, gene_id, c("seqnames", "start", "end", "cluster"), sep = ":") %>% 
+  dplyr::select(-cluster) %>% 
+  dplyr::group_by(cluster_id) %>% 
+  dplyr::summarise(seqnames = seqnames[1], start = min(as.numeric(start)), end = max(as.numeric(end)), cluster_size = cluster_size[1], strand = "+") %>% 
+  dataFrameToGRanges()
+olaps = findOverlaps(cluster_ranges, gene_ranges)
+
+cluster_gene_map = data_frame(cluster_id = cluster_ranges[queryHits(olaps),]$cluster_id, ensembl_gene_id = gene_ranges[subjectHits(olaps),]$gene_id) %>% 
+  dplyr::group_by(cluster_id) %>% 
+  dplyr::mutate(overlap_count = length(ensembl_gene_id)) %>% 
+  dplyr::filter(overlap_count == 1) %>% 
+  dplyr::select(-overlap_count)
+
+cluster_named_meta = dplyr::left_join(cluster_meta, cluster_gene_map, by = "cluster_id")
+
 #Import min p-values
 fastqtl_pvalue_list = readRDS("results/SL1344/leafcutter/leafcutter_min_pvalues.rds")
 
 #Add metadata to leafcutter QTLs
-fastqtl_pvalue_meta = purrr::map(fastqtl_pvalue_list, ~dplyr::left_join(., cluster_meta, by = "gene_id"))
+fastqtl_pvalue_meta = purrr::map(fastqtl_pvalue_list, ~dplyr::left_join(., cluster_named_meta, by = "gene_id"))
 
 #Apply bonferroni correction for p-values within cluster
 fastqtl_bonferroni = purrr::map(fastqtl_pvalue_meta, ~dplyr::group_by(., cluster_id) %>% 
@@ -21,8 +44,11 @@ fastqtl_bonferroni = purrr::map(fastqtl_pvalue_meta, ~dplyr::group_by(., cluster
              dplyr::arrange(cluster_id, p_beta) %>% dplyr::filter(row_number() == 1) %>% 
              dplyr::ungroup() %>% dplyr::mutate(p_bonferroni = p_beta * n_transcripts) %>% 
              dplyr::mutate(p_bonferroni = pmin(p_bonferroni, 1)) %>% 
-             dplyr::mutate(p_fdr = p.adjust(p_bonferroni, method = "fdr")) %>% 
-             dplyr::filter(p_fdr < 0.1))
+             dplyr::mutate(p_fdr = p.adjust(p_bonferroni, method = "fdr")))
+saveRDS(fastqtl_bonferroni,"results/SL1344/leafcutter/leafcutter_cluster_min_pvalues.rds")
+
+#%>% 
+#             dplyr::filter(p_fdr < 0.1))
 fastqtl_bonferroni_df = purrr::map_df(fastqtl_bonferroni, identity, .id = "condition_name")
 
 #Extract pairs
