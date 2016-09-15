@@ -1,4 +1,3 @@
-library("plyr")
 library("dplyr")
 library("devtools")
 load_all("../seqUtils/")
@@ -49,8 +48,7 @@ salmon_qtl_hits = purrr::map(fastqtl_pvalue_expressed, ~dplyr::group_by(., ensem
                                dplyr::arrange(ensembl_gene_id, p_beta) %>% dplyr::filter(row_number() == 1) %>% 
                                dplyr::ungroup() %>% dplyr::mutate(p_bonferroni = p_beta * n_transcripts) %>% 
                                dplyr::mutate(p_bonferroni = pmin(p_bonferroni, 1)) %>% 
-                               dplyr::mutate(p_fdr = p.adjust(p_bonferroni, method = "fdr")) %>% 
-                               dplyr::filter(p_fdr < 0.1))
+                               dplyr::mutate(p_fdr = p.adjust(p_bonferroni, method = "fdr")))
 saveRDS(salmon_qtl_hits, "results/SL1344/salmon/salmon_qtl_hits.rds")
 salmon_qtl_df = purrr::map_df(salmon_qtl_hits, identity, .id = "condition_name")
 
@@ -95,8 +93,7 @@ salmon_ensembl_qtl_hits = purrr::map(fastqtl_pvalue_expressed, ~dplyr::group_by(
                                dplyr::arrange(ensembl_gene_id, p_beta) %>% dplyr::filter(row_number() == 1) %>% 
                                dplyr::ungroup() %>% dplyr::mutate(p_bonferroni = p_beta * n_transcripts) %>% 
                                dplyr::mutate(p_bonferroni = pmin(p_bonferroni, 1)) %>% 
-                               dplyr::mutate(p_fdr = p.adjust(p_bonferroni, method = "fdr")) %>% 
-                               dplyr::filter(p_fdr < 0.1))
+                               dplyr::mutate(p_fdr = p.adjust(p_bonferroni, method = "fdr")))
 saveRDS(salmon_ensembl_qtl_hits, "results/SL1344/salmon/salmon_ensembl_qtl_hits.rds")
 salmon_ensembl_qtl_df = purrr::map_df(salmon_ensembl_qtl_hits, identity, .id = "condition_name")
 
@@ -141,8 +138,7 @@ salmon_ensembl_qtl_hits = purrr::map(fastqtl_pvalue_expressed, ~dplyr::group_by(
                                        dplyr::arrange(ensembl_gene_id, p_beta) %>% dplyr::filter(row_number() == 1) %>% 
                                        dplyr::ungroup() %>% dplyr::mutate(p_bonferroni = p_beta * n_transcripts) %>% 
                                        dplyr::mutate(p_bonferroni = pmin(p_bonferroni, 1)) %>% 
-                                       dplyr::mutate(p_fdr = p.adjust(p_bonferroni, method = "fdr")) %>% 
-                                       dplyr::filter(p_fdr < 0.1))
+                                       dplyr::mutate(p_fdr = p.adjust(p_bonferroni, method = "fdr")))
 saveRDS(salmon_ensembl_qtl_hits, "results/SL1344/salmon/salmon_ensembl_full_qtl_hits.rds")
 salmon_ensembl_qtl_df = purrr::map_df(salmon_ensembl_qtl_hits, identity, .id = "condition_name")
 
