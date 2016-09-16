@@ -34,8 +34,7 @@ fastqtl_genepos = tbl_df2(rowData(event_dataset)) %>%
 prop_list = purrr::map(event_conditions_renamed, ~assays(.)$tpm_ratios)
 
 #Quantile normalise and remove NAs
-normalised_list = purrr::map(prop_list, ~replaceNAsWithRowMeans(.)) %>%
-  purrr::map(~t(quantileNormaliseMatrix(t(.))))
+normalised_list = purrr::map(prop_list, ~replaceNAsWithRowMeans(.) %>% quantileNormaliseRows())
 fastqtl_norm_prop_list = purrr::map(normalised_list, prepareFastqtlMatrix, fastqtl_genepos)
 saveFastqtlMatrices(fastqtl_norm_prop_list, "results/SL1344/salmon/fastqtl_input/", file_suffix = "norm_prop")
 

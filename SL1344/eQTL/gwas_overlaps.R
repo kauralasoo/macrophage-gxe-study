@@ -89,3 +89,7 @@ overlap_count_plot = ggplot(overlap_counts, aes(x = condition, y = overlap_count
 ggsave("figures/supplementary/GWAS_overap_counts.pdf", plot = overlap_count_plot, width = 6, height = 4.5)
 
 
+#IRF5 overlaps
+irf5_variants = data_frame(gene_id = "IRF5", snp_id = c("rs199508964","rs3778754","rs10954213"))
+irf5_overlaps = findGWASOverlaps(irf5_variants, filtered_catalog, vcf_file, min_r2 = 0.8)
+
