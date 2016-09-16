@@ -52,6 +52,18 @@ salmon_qtl_hits = purrr::map(fastqtl_pvalue_expressed, ~dplyr::group_by(., ensem
 saveRDS(salmon_qtl_hits, "results/SL1344/salmon/salmon_qtl_hits.rds")
 salmon_qtl_df = purrr::map_df(salmon_qtl_hits, identity, .id = "condition_name")
 
+#Test if there are multiple independent variants
+gene_pairs = dplyr::group_by(b, ensembl_gene_id) %>% 
+  dplyr::mutate(qtl_count = length(ensembl_gene_id)) %>% 
+  dplyr::filter(qtl_count > 1) %>% 
+  dplyr::arrange(ensembl_gene_id, p_nominal) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::transmute(gene_id = ensembl_gene_id, snp_id)
+
+filterHitsR2(gene_pairs, vcf_file$genotypes) %>% 
+  dplyr::group_by(gene_id) %>% 
+  dplyr::mutate(qtl_count = length(gene_id)) %>% 
+  dplyr::filter(qtl_count > 1)
 
 
 #Call QTLs for the whole transcript quants

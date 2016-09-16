@@ -29,6 +29,9 @@ plotting_annotations = dplyr::select(filtered_metadata, ensembl_transcript_id, e
 #Import genotypes
 vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
+#Import gene level data
+combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
+
 #Make coverage metadata
 #Import data
 combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
@@ -114,6 +117,25 @@ IRF5_promoter_plot = plotCoverage(exons = up_exons,
                              return_subplots_list = FALSE, line_only = TRUE)
 ggsave("figures/supplementary/IRF5_promoter_qtl.pdf", plot = IRF5_promoter_plot, width = 9, height = 6.5)
 
+# RASQUAL QTL
+track_data = wiggleplotrGenotypeColourGroup(rna_meta_str2_df, "rs199508964", vcf_file$genotypes, -1)
+track_data = dplyr::semi_join(track_data, samples_in_dir, by = "sample_id")
+
+#Filter by condtion
+filtered_tracks = dplyr::filter(track_data) %>% dplyr::filter(condition_name %in% c("naive","IFNg"))
+
+#Make a coverage plot of the ATAC data
+up_exons = c(union_exons, as.list(gene_data_ext$exons)[c("ENST00000619830","ENST00000402030","ENST00000477535")])
+up_cdss = c(union_cds, as.list(gene_data_ext$cds)[c("ENST00000619830","ENST00000402030","ENST00000477535")])
+IRF5_rasqual_plot = plotCoverage(exons = up_exons, 
+                                  cdss = up_cdss, 
+                                  track_data = filtered_tracks, rescale_introns = TRUE, 
+                                  transcript_annotations = union_annotations, fill_palette = getGenotypePalette(), 
+                                  plot_fraction = 0.2, heights = c(0.55,0.45), 
+                                  return_subplots_list = FALSE, line_only = TRUE)
+ggsave("figures/supplementary/IRF5_rasqual_qtl.pdf", plot = IRF5_rasqual_plot, width = 9, height = 6.5)
+
+
 
 #Make QTL plots for the IRF5 variants
 se_ensembl = readRDS("results/SL1344/combined_reviseAnnotations_transcript_quants.rds")
@@ -158,8 +180,15 @@ promoter_pvalues = fastqtlTabixFetchGenesQuick("ENSG00000128604.clique_1.upstrea
   dplyr::mutate(track_id = "naive") %>% 
   dplyr::select(gene_id, pos, p_nominal, track_id)
 
+#Fetch rasqual SNPs around the lead variant
+rasqual_pvalues = tabixFetchGenesQuick("ENSG00000128604", qtlResults()$rna_rasqual$naive, 
+                            gene_metadata = combined_expression_data$gene_metadata, cis_window = 1e5)[[1]] %>%
+  dplyr::mutate(track_id = "naive") %>% 
+  dplyr::select(gene_id, pos, p_nominal, track_id)
+
 utr_manhatten = makeManhattanPlot(utr_pvalues, region_coords)
 promoter_manhattan = makeManhattanPlot(promoter_pvalues, region_coords)
+rasqual_manhattan = makeManhattanPlot(rasqual_pvalues, region_coords)
 
 #Calculate the union of exons
 union_exons = list(ENST00000467002 = listUnion(gene_data_ext$exons))
@@ -170,5 +199,26 @@ promoter_qtl_plot = cowplot::plot_grid(promoter_manhattan, union_transcripts,
     align = "v", rel_heights = c(0.6,0.4), ncol = 1)
 utr_qtl_plot = cowplot::plot_grid(utr_manhatten, union_transcripts, 
                    align = "v", rel_heights = c(0.6,0.4), ncol = 1)
+rasqual_qtl_plot = cowplot::plot_grid(rasqual_manhattan, union_transcripts, 
+                                  align = "v", rel_heights = c(0.6,0.4), ncol = 1)
 ggsave("figures/supplementary/IRF5_promoter_manhattan.pdf", plot = promoter_qtl_plot, width = 9, height = 3)
 ggsave("figures/supplementary/IRF5_UTR_manhattan.pdf", plot = utr_qtl_plot, width = 9, height = 3)
+ggsave("figures/supplementary/IRF5_rasqual_manhattan.pdf", plot = rasqual_qtl_plot, width = 9, height = 3)
+
+
+#Look at the LeafCutter QTLs as well
+leafcutter_min_pvalues = readRDS("results/SL1344/leafcutter/leafcutter_cluster_min_pvalues.rds")
+leafcutter_gene_pvalues = purrr::map(leafcutter_min_pvalues, ~dplyr::arrange(., ensembl_gene_id, p_nominal) %>%
+                                       dplyr::filter(!is.na(ensembl_gene_id)) %>%
+                                       dplyr::group_by(ensembl_gene_id) %>% 
+                                       dplyr::filter(row_number() == 1) %>%
+                                       dplyr::ungroup())
+purrr::map_df(leafcutter_gene_pvalues, identity, .id = "condition_name") %>% dplyr::filter(ensembl_gene_id == "ENSG00000128604")
+
+prop_list = readRDS("results/SL1344/combined_proportions.row_quantile.rds")
+cluster_meta = dplyr::select(prop_list$gene_metadata, gene_id, cluster_id, cluster_size)                                     
+                                     
+
+wiggleplotr::plotTranscripts(gene_data_ext$exons, gene_data_ext$cdss, plotting_annotations, rescale_introns = FALSE, region_coords = c(128946056,128948278))
+
+
