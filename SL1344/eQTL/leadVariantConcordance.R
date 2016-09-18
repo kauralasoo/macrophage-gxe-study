@@ -22,7 +22,8 @@ salmon_gene_pvalues = purrr::map(salmon_min_pvalues, ~dplyr::arrange(., ensembl_
                                    dplyr::ungroup() %>%
                                    dplyr::mutate(gene_id = ensembl_gene_id))
 salmon_ensembl_pvalues = readRDS("results/SL1344/salmon/salmon_ensembl_qtl_hits.rds")
-leafcutter_min_pvalues = readRDS("results/SL1344/leafcutter/leafcutter_cluster_min_pvalues.rds")
+leafcutter_min_pvalues = readRDS("results/SL1344/leafcutter/leafcutter_cluster_min_pvalues.rds") %>%
+  purrr::map(~dplyr::rename(.,gene_id = cluster_id))
 leafcutter_gene_pvalues = purrr::map(leafcutter_min_pvalues, ~dplyr::arrange(., ensembl_gene_id, p_nominal) %>%
                                    dplyr::filter(!is.na(ensembl_gene_id)) %>%
                                    dplyr::group_by(ensembl_gene_id) %>% 
@@ -69,7 +70,7 @@ rasqual_fastqtl_concordance = purrr::map(paired_list,
   dplyr::filter(first != second) %>% 
   dplyr::mutate(comparison = paste(first, second, sep = " - "))
 
-#Concordance betweeb tQTLs and eQTLs
+#Concordance between tQTLs and eQTLs
 paired_list = purrr::map2(fastqtl_100kb, salmon_ensembl_pvalues, function(x,y){return(list(FastQTL = x, Ensembl_85 = y))})
 fastqtl_ensembl85_pairwise_concordance = purrr::map(paired_list, 
                                             ~calculatePairwiseConcordance(.,~p_fdr < 0.01, vcf_file$genotypes, tidy = TRUE, R2_thresh = 0.8)) %>%
@@ -77,7 +78,7 @@ fastqtl_ensembl85_pairwise_concordance = purrr::map(paired_list,
   dplyr::filter(first != second) %>% 
   dplyr::mutate(comparison = paste(first, second, sep = " - "))
 
-#Concordance betweeb tQTLs and eQTLs
+#Concordance between tQTLs and eQTLs
 paired_list = purrr::map2(fastqtl_100kb, salmon_gene_pvalues, function(x,y){return(list(FastQTL = x, reviseAnnotations = y))})
 eQTL_tQTL_pairwise_concordance = purrr::map(paired_list, 
       ~calculatePairwiseConcordance(.,~p_fdr < 0.01, vcf_file$genotypes, tidy = TRUE, R2_thresh = 0.8)) %>%
@@ -85,7 +86,7 @@ eQTL_tQTL_pairwise_concordance = purrr::map(paired_list,
   dplyr::filter(first != second) %>% 
   dplyr::mutate(comparison = paste(first, second, sep = " - "))
 
-#Concordance between Salmon and leafCutter estimates
+#Concordance between fastqtl and leafCutter estimates
 paired_list = purrr::map2(fastqtl_100kb, leafcutter_gene_pvalues, function(x,y){return(list(FastQTL = x, LeafCutter = y))})
 FastQTL_leafcutter_concordance = purrr::map(paired_list, 
                                             ~calculatePairwiseConcordance(.,~p_fdr < 0.01, vcf_file$genotypes, tidy = TRUE, R2_thresh = 0.8)) %>%
@@ -116,7 +117,7 @@ concordance_df = dplyr::bind_rows(rasqual_fastqtl_concordance, revised_ensembl_c
                                   eQTL_tQTL_pairwise_concordance, FastQTL_leafcutter_concordance) %>%
   dplyr::mutate(comparison = factor(comparison, levels = unique(comparison))) %>%
   dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344","IFNg_SL1344"))) %>%
-  dplyr::mutate(type = c(rep("Gene expression",8), rep("Trancsript ratio",16), rep("Comparison",16))) %>%
+  dplyr::mutate(type = c(rep("eQTLs",8), rep("trQTLs",16), rep("eQTLs vs trQTLs",16))) %>%
   dplyr::mutate(type = factor(type, levels = unique(type)))
 
 concordance_plot = ggplot(concordance_df, aes(x = comparison, y = concordance, color = condition_name)) + 

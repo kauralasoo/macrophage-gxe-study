@@ -9,6 +9,25 @@ library("purrr")
 leafcutter_se = readRDS("results/SL1344/leafCutter_summarized_experiment.rds")
 event_metadata = rowData(leafcutter_se) %>% tbl_df2()
 
+#Import gene metadata
+combined_expression_data_filtered = readRDS("results/SL1344/combined_expression_data.rds")
+gene_ranges = dplyr::transmute(combined_expression_data_filtered$gene_metadata, gene_id, seqnames = chr, start, end, strand = "+") %>% 
+  dataFrameToGRanges()
+
+#Link leafCutter clusters to genes
+cluster_ranges = event_metadata %>% 
+  dplyr::transmute(cluster_id, seqnames = chr, start = cluster_start, end = cluster_end, strand = "+") %>% 
+  unique() %>% 
+  dataFrameToGRanges()
+olaps = findOverlaps(cluster_ranges, gene_ranges)
+
+cluster_gene_map = data_frame(cluster_id = cluster_ranges[queryHits(olaps),]$cluster_id, ensembl_gene_id = gene_ranges[subjectHits(olaps),]$gene_id) %>% 
+  dplyr::group_by(cluster_id) %>% 
+  dplyr::mutate(overlap_count = length(ensembl_gene_id)) %>% 
+  dplyr::filter(overlap_count == 1) %>% 
+  dplyr::select(-overlap_count)
+event_metadata_names = dplyr::left_join(event_metadata, cluster_gene_map, by = "cluster_id")
+
 #Find minimal p-values from fastQTL results
 naive_fqtl = importFastQTLTable("results/SL1344/leafcutter/fastqtl_output/naive_100kb_permuted.txt.gz") %>%
   dplyr::rename(transcript_id = gene_id)
@@ -29,7 +48,7 @@ fastqtl_pvalue_unique = purrr::map(fastqtl_pvalue_list, ~dplyr::group_by(.,trans
                                      dplyr::filter(row_number() == 1) %>% ungroup())
 
 #Add transcript metadata to QTLs
-fastqtl_pvalue_meta = purrr::map(fastqtl_pvalue_unique, ~dplyr::left_join(.,event_metadata, by = "transcript_id"))
+fastqtl_pvalue_meta = purrr::map(fastqtl_pvalue_unique, ~dplyr::left_join(.,event_metadata_names, by = "transcript_id"))
 saveRDS(fastqtl_pvalue_meta, "results/SL1344/leafcutter/leafcutter_min_pvalues_meta.rds")
 
 #Apply bonferroni correction for p-values within cluster
