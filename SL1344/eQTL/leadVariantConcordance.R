@@ -166,16 +166,16 @@ ggsave("figures/supplementary/concordance_between_methods.pdf", concordance_plot
 concordance_df = dplyr::bind_rows(rasqual_fastqtl_concordance, atac_rasqual_fastqtl_concordance) %>%
   dplyr::mutate(comparison = factor(comparison, levels = unique(comparison))) %>%
   dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344","IFNg_SL1344"))) %>%
-  dplyr::mutate(type = c(rep("eQTLs",8), rep("caQTLs",8))) %>%
+  dplyr::mutate(type = c(rep("Gene expression",8), rep("Chromatin",8))) %>%
   dplyr::mutate(type = factor(type, levels = unique(type)))
 
 concordance_plot = ggplot(concordance_df, aes(x = comparison, y = concordance, color = condition_name)) + 
-  geom_point(position = position_jitter(width = 0.2)) + 
+  geom_point() + 
   theme_light() +
   facet_grid(.~ type, scales = "free_x", space = "free_x") +
   scale_color_manual(values = conditionPalette()) + 
   theme(axis.text.x = element_text(angle = 50, hjust = 1)) +
   scale_y_continuous(limit = c(0,0.9))
-ggsave("figures/supplementary/concordance_between_methods_atac.pdf", concordance_plot, width = 8, height = 5)
+ggsave("figures/supplementary/concordance_between_methods_atac.pdf", concordance_plot, width = 6, height = 4)
 
 
