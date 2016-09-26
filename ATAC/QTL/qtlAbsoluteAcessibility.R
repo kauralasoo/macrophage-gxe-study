@@ -37,7 +37,7 @@ caqtl_mean_accessibility = ggplot(joint_access, aes(x = condition_name, y = log(
   facet_grid(new_cluster_id~.) +
   theme_light() +
   scale_color_manual(values = conditionPalette()) +
-  ylab("Mean accessibility (Log2 TPM)") +
+  ylab(expression(paste("Mean accessibility (",Log[2], "(TPM+1))", sep = ""))) +
   theme(axis.text.x = element_text(angle = 15), legend.position = "none", axis.title.x = element_blank())
 
 ggsave("figures/supplementary/caQTL_appear_mean_accessibility.pdf", plot = caqtl_mean_accessibility, width = 3.5, height = 7)
@@ -71,7 +71,7 @@ eqtl_mean_accessibility = ggplot(joint_access, aes(x = condition_name, y = log(t
   facet_grid(new_cluster_id~.) +
   theme_light() +
   scale_color_manual(values = conditionPalette()) +
-  ylab("Mean accessibility (Log2 TPM)") +
+  ylab(expression(paste("Mean expression (",Log[2], "(TPM+1))", sep = ""))) +
   theme(axis.text.x = element_text(angle = 15), legend.position = "none", axis.title.x = element_blank())
 
 ggsave("figures/supplementary/eQTL_appear_mean_accessibility.pdf", plot = eqtl_mean_accessibility, width = 3.5, height = 7)
