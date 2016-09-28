@@ -70,9 +70,11 @@ qqplot_df = purrr::map_df(qqplot_lists, identity, .id = "condition_name") %>%
 qqplot = ggplot(qqplot_df, aes(x = -log(p_expected,10), y = -log(p_eigen, 10),color = method)) + 
   geom_point() + 
   geom_abline(slope = 1, intercept = 0, color = "black") + 
-  facet_wrap(~condition_name, ncol = 2) +
-  theme_hc() + scale_colour_hc()
-ggsave("results/ATAC/QTLs/properties/fastQTL_vs_rasqual_eQTL_qqplots.png", plot = qqplot, width = 8, height = 8)
+  facet_wrap(~condition_name, ncol = 4) +
+  theme_light() +
+  ylab(expression(paste(Log[10], " observed p-value", sep = ""))) +
+  xlab(expression(paste(Log[10], " expected p-value", sep = "")))
+ggsave("figures/supplementary/fastQTL_vs_rasqual_caQTL_qqplots.png", plot = qqplot, width = 8, height = 4)
 ggsave("results/ATAC/QTLs/properties/fastQTL_vs_rasqual_eQTL_qqplots.pdf", plot = qqplot, width = 10, height = 10)
 
 
