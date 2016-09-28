@@ -80,7 +80,7 @@ peak_annot = wiggpleplotrConstructPeakAnnotations(selected_peaks)
 
 #Add lead SNP genotype
 track_data = wiggleplotrGenotypeColourGroup(atac_meta_df, "rs28834970", vcf_file$genotypes, -1) %>%
-  dplyr::filter(track_id %in% c("naive", "IFNg"))
+  dplyr::filter(track_id %in% c("naive"))
 
 #Make fragment coverage plot
 ptk2b_plot = plotCoverage(exons = peak_annot$peak_list, cdss = peak_annot$peak_list, track_data = track_data, rescale_introns = FALSE, 
@@ -108,8 +108,8 @@ associated_variants = makeManhattanPlot(naive_peak_pvals, ptk2b_coords)
 
 #Join all of the subplots together
 ptk2b_full = cowplot::plot_grid(associated_variants, ptk2b_plot$coverage_plot, cebpb_plot$coverage_plot, 
-                                ptk2b_plot$tx_structure, align = "v", rel_heights = c(0.1,0.4,0.1,0.2), ncol = 1)
-ggsave("figures/main_figures/PTK2B_region_coverage.pdf", ptk2b_full, width = 8, height = 8)
+                                ptk2b_plot$tx_structure, align = "v", rel_heights = c(0.25,0.25,0.1,0.2), ncol = 1)
+ggsave("figures/main_figures/PTK2B_region_coverage.pdf", ptk2b_full, width = 4.5, height = 5)
 
 #Make a read coverage plot for RNA-Seq
 txdb = loadDb("../../annotations/GRCh38/genes/Ensembl_79/TranscriptDb_GRCh38_79.db")

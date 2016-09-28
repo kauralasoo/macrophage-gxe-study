@@ -222,3 +222,34 @@ cluster_meta = dplyr::select(prop_list$gene_metadata, gene_id, cluster_id, clust
 wiggleplotr::plotTranscripts(gene_data_ext$exons, gene_data_ext$cdss, plotting_annotations, rescale_introns = FALSE, region_coords = c(128946056,128948278))
 
 
+#Plot PTK2B e QTL
+#Extract gene data from annotations
+gene_data = reviseAnnotations::extractGeneData("ENSG00000120899", filtered_metadata, exons, cdss)
+
+#Extend truncated transcripts until the longest transcript
+gene_extended_tx = reviseAnnotations::extendTranscriptsPerGene(gene_data$metadata, gene_data$exons, gene_data$cdss)
+gene_data_ext = reviseAnnotations::replaceExtendedTranscripts(gene_data, gene_extended_tx)
+
+#Plot raw protein coding transcript annotations
+irf5_raw_transcripts = wiggleplotr::plotTranscripts(gene_data$exons, gene_data$cdss, 
+                                                    plotting_annotations, rescale_introns = FALSE)
+
+
+#Construct metadata df for wiggleplotr
+samples_in_dir = data_frame(bigWig = dir("/Volumes/Ajamasin/bigwig/RNA//")) %>% 
+  tidyr::separate(bigWig, c("sample_id", "strand","suffix"), sep = "\\.")
+track_data = wiggleplotrGenotypeColourGroup(rna_meta_str2_df, "rs28834970", vcf_file$genotypes, 1)
+track_data = dplyr::semi_join(track_data, samples_in_dir, by = "sample_id") %>%
+  dplyr::filter(condition_name == "naive")
+
+selected_exons = as.list(gene_data$exons)[c("ENST00000346049")]
+selected_cdss = as.list(gene_data$cds)[c("ENST00000346049")]
+PTK2B_rasqual_plot = plotCoverage(exons = selected_exons, 
+                                 cdss = selected_cdss, 
+                                 track_data = track_data, rescale_introns = TRUE, 
+                                 transcript_annotations = plotting_annotations, fill_palette = getGenotypePalette(), 
+                                 plot_fraction = 0.2, heights = c(0.6,0.45), 
+                                 return_subplots_list = FALSE, line_only = FALSE)
+ggsave("figures/supplementary/PTK2B_RNA_coverage.pdf", plot = PTK2B_rasqual_plot, width = 4.5, height = 2.5)
+
+
