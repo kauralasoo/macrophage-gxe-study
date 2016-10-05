@@ -260,8 +260,8 @@ PTK2B_rasqual_plot2 = plotCoverage(exons = selected_exons,
                                   track_data = track_data, rescale_introns = FALSE, 
                                   transcript_annotations = plotting_annotations, fill_palette = getGenotypePalette(), 
                                   plot_fraction = 0.2, heights = c(0.6,0.45), 
-                                  return_subplots_list = FALSE, line_only = FALSE)
-ggsave("figures/PTKB2_raw.pdf", plot = PTK2B_rasqual_plot, width = 5.5, height = 2.5)
+                                  return_subplots_list = FALSE, line_only = FALSE, flanking_length = c(200,200))
+ggsave("figures/PTKB2_raw.pdf", plot = PTK2B_rasqual_plot2, width = 5.5, height = 2.5)
 
 
 
