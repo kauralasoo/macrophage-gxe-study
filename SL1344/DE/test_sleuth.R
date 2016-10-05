@@ -1,5 +1,9 @@
 library('seluth')
 library('wasabi')
+library("devtools")
+library("cqn")
+library("dplyr")
+load_all("../seqUtils/")
 
 #Import sailfish quants
 sf_dirs = dir("results/PRJDB2508_quants/")
@@ -47,4 +51,3 @@ sleuth_live(so)
 
 #Extract gene lists
 results_table <- sleuth_results(so, 'reduced:full', test_type = 'lrt')
-

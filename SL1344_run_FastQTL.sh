@@ -20,6 +20,21 @@ zcat results/SL1344/fastqtl/output/IFNg_SL1344_500kb_cqn_perm.chunk_*.txt.gz | b
 #Remove chunks
 rm results/SL1344/fastqtl/output/*.chunk_*
 
+#Run FastQTL on each condition in 100kb window for comaprison with tQTLs
+cat results/SL1344/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/naive.ASE.vcf.gz --bed results/SL1344/fastqtl/input/naive.expression_cqn.txt.gz --cov results/SL1344/fastqtl/input/naive.covariates.txt --W 100000 --permute '100 10000' --out results/SL1344/fastqtl/output/naive_100kb_cqn_perm --execute True"
+cat results/SL1344/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/IFNg.ASE.vcf.gz --bed results/SL1344/fastqtl/input/IFNg.expression_cqn.txt.gz --cov results/SL1344/fastqtl/input/IFNg.covariates.txt --W 100000 --permute '100 10000' --out results/SL1344/fastqtl/output/IFNg_100kb_cqn_perm --execute True"
+cat results/SL1344/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/SL1344.ASE.vcf.gz --bed results/SL1344/fastqtl/input/SL1344.expression_cqn.txt.gz --cov results/SL1344/fastqtl/input/SL1344.covariates.txt --W 100000 --permute '100 10000' --out results/SL1344/fastqtl/output/SL1344_100kb_cqn_perm --execute True"
+cat results/SL1344/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/IFNg_SL1344.ASE.vcf.gz --bed results/SL1344/fastqtl/input/IFNg_SL1344.expression_cqn.txt.gz --cov results/SL1344/fastqtl/input/IFNg_SL1344.covariates.txt --W 100000 --permute '100 10000' --out results/SL1344/fastqtl/output/IFNg_SL1344_100kb_cqn_perm --execute True"
+
+#Merge chunks into single files
+zcat results/SL1344/fastqtl/output/naive_100kb_cqn_perm.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output/naive_100kb_permuted.txt.gz
+zcat results/SL1344/fastqtl/output/IFNg_100kb_cqn_perm.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output/IFNg_100kb_permuted.txt.gz
+zcat results/SL1344/fastqtl/output/SL1344_100kb_cqn_perm.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output/SL1344_100kb_permuted.txt.gz
+zcat results/SL1344/fastqtl/output/IFNg_SL1344_100kb_cqn_perm.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output/IFNg_SL1344_100kb_permuted.txt.gz
+
+#Remove chunks
+rm results/SL1344/fastqtl/output/*.chunk_*
+
 
 #Get full p-values from fastQTL
 cat results/SL1344/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/naive.ASE.vcf.gz --bed results/SL1344/fastqtl/input/naive.expression_cqn.txt.gz --cov results/SL1344/fastqtl/input/naive.covariates.txt --W 500000 --out results/SL1344/fastqtl/output/naive_500kb_full --execute True"
@@ -124,10 +139,6 @@ zcat results/SL1344/leafcutter/fastqtl_output/naive_100kb_pvalues.coords.txt.gz 
 zcat results/SL1344/leafcutter/fastqtl_output/IFNg_100kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/SL1344/leafcutter/fastqtl_output/IFNg_100kb_pvalues.sorted.txt.gz &
 zcat results/SL1344/leafcutter/fastqtl_output/SL1344_100kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/SL1344/leafcutter/fastqtl_output/SL1344_100kb_pvalues.sorted.txt.gz &
 zcat results/SL1344/leafcutter/fastqtl_output/IFNg_SL1344_100kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/SL1344/leafcutter/fastqtl_output/IFNg_SL1344_100kb_pvalues.sorted.txt.gz &
-
-
-
-
 
 
 

@@ -4,6 +4,7 @@ library("devtools")
 library("dplyr")
 load_all("../seqUtils/")
 load_all("~/software/rasqual/rasqualTools/")
+load_all("macrophage-gxe-study/housekeeping/")
 load_all("../wiggleplotr/")
 
 #Import ATAC data

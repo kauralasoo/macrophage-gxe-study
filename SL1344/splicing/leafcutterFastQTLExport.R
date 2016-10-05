@@ -5,28 +5,46 @@ library("limma")
 library("purrr")
 load_all("../seqUtils/")
 
-#Import proportion data
-prop_list = readRDS("results/SL1344/combined_proportions.row_quantile.rds")
+#Import leafCutter data
+leafcutter_se = readRDS("results/SL1344/leafCutter_summarized_experiment.rds")
+event_metadata = rowData(leafcutter_se) %>% tbl_df2()
 
-#Put each condition into a separate list
-condition_list = list(naive = "naive",SL1344 = "SL1344",IFNg = "IFNg", IFNg_SL1344 = "IFNg_SL1344")
-prop_conditions = purrr::map(condition_list, ~extractConditionFromExpressionList(.,prop_list))
-prop_conditions_renamed = lapply(prop_conditions, renameMatrixColumnsInExpressionList, "sample_id", "genotype_id")
+#Remove events on X and Y chromosomes
+event_dataset = leafcutter_se[event_metadata[!event_metadata$chr %in% c("X","Y"),]$transcript_id,]
 
-#### Export data for FastQTL ####
-fastqtl_genepos = constructFastQTLGenePos(prop_conditions_renamed$naive$gene_metadata)
-norm_prop_list = lapply(prop_conditions_renamed, function(x){x$cqn})
-fastqtl_norm_prop_list = lapply(norm_prop_list, prepareFastqtlMatrix, fastqtl_genepos)
+#Extract lists for each condition
+condition_list = idVectorToList(c("naive","IFNg", "SL1344","IFNg_SL1344"))
+event_conditions = purrr::map(condition_list, ~extractConditionFromSummarizedExperiment(.,event_dataset))
+
+#Rename columns
+event_conditions_renamed = purrr::map(event_conditions, function(x){
+  colnames(x) = x$genotype_id
+  return(x)
+})
+
+#Construct gene positions for QTL mapping
+fastqtl_genepos = tbl_df2(rowData(event_dataset)) %>% 
+  dplyr::rename(start = cluster_start, end = cluster_end) %>% 
+  dplyr::transmute(gene_id = transcript_id, start, end, chr) %>%
+  constructFastQTLGenePos()
+
+#Extract ratio matrices
+prop_list = purrr::map(event_conditions_renamed, ~assays(.)$count_ratios)
+
+#Quantile normalise and remove NAs
+normalised_list = purrr::map(prop_list, ~replaceNAsWithRowMeans(.) %>% quantileNormaliseRows())
+fastqtl_norm_prop_list = purrr::map(normalised_list, prepareFastqtlMatrix, fastqtl_genepos)
 saveFastqtlMatrices(fastqtl_norm_prop_list, "results/SL1344/leafcutter/fastqtl_input/", file_suffix = "norm_prop")
 
-#Save covariates
-covariate_names = c("genotype_id", "norm_PC1", "norm_PC2", "norm_PC3", "norm_PC4","norm_PC5","sex_binary")
-covariate_list = lapply(prop_conditions_renamed, function(x, names){x$sample_metadata[,names]}, covariate_names)
-fastqtl_covariates = lapply(covariate_list, fastqtlMetadataToCovariates)
-saveFastqtlMatrices(fastqtl_covariates, "results/SL1344/leafcutter/fastqtl_input/", file_suffix = "covariates_prop")
+#Calculate covariates
+sample_meta = tbl_df2(colData(event_conditions_renamed$naive))
+covariates_list = purrr::map(normalised_list, 
+                             ~performPCA(., sample_meta, n_pcs = 6, feature_id = "genotype_id")$pca_matrix %>%
+                               dplyr::select(genotype_id, PC1, PC2, PC3, PC4, PC5, PC6) %>%
+                               fastqtlMetadataToCovariates())
+saveFastqtlMatrices(covariates_list, "results/SL1344/leafcutter/fastqtl_input/", file_suffix = "covariates_prop")
 
 #Construct chunks table
 chunks_matrix = data.frame(chunk = seq(1:250), n = 250)
-write.table(chunks_matrix, "results/SL1344/leafcutter/fastqtl_input/all_chunk_table.txt", row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
-
-
+write.table(chunks_matrix, "results/SL1344/leafcutter/fastqtl_input/all_chunk_table.txt", 
+            row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")

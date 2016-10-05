@@ -44,7 +44,7 @@ SL1344_dte <- dmTest(sd, verbose = 1, BPPARAM = BiocParallel::SerialParam(), com
   results() %>% dplyr::transmute(gene_id, SL1344_lr = lr, SL1344_pvalue = pvalue)
 IFNg_dte <- dmTest(sd, verbose = 1, BPPARAM = BiocParallel::SerialParam(), compared_groups = c(1,2)) %>%
   results() %>% dplyr::transmute(gene_id, IFNg_lr = lr, IFNg_pvalue = pvalue)
-IFNg_SL1344_dte <- dmTest(sd, verbose = 1, BPPARAM = BiocParallel::SerialParam(), compared_groups = c(1,3)) %>%
+IFNg_SL1344_dte <- dmTest(sd, verbose = 1, BPPARAM = BiocParallel::SerialParam(), compared_groups = c(1,4)) %>%
   results() %>% dplyr::transmute(gene_id, IFNg_SL1344_lr = lr, IFNg_SL1344_pvalue = pvalue)
 all_dte <- dmTest(sd, verbose = 1, BPPARAM = BiocParallel::SerialParam()) %>%
   results() %>% dplyr::transmute(gene_id, all_lr = lr, all_pvalue = pvalue)
@@ -58,3 +58,6 @@ results_df = dplyr::left_join(prop_df, SL1344_dte, by = "gene_id") %>%
 #Save output from each batch
 output_file = file.path("results/SL1344/diff_splicing", paste0("differential_events_batch",gsub(" ","_",batch_string), ".gff3"))
 write.table(results_df, output_file, row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
+
+#Construct list of batches
+#write.table(data_frame(a = c(1:200), b = 200), "splice_batches.txt", sep = " ", quote = FALSE, row.names = FALSE, col.names = FALSE)

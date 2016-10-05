@@ -43,3 +43,13 @@ write.table(pi1_matrix_tidy, "results/SL1344/eQTLs/properties/pi1_matrix_tidy.tx
 ggplot(naive_qtls, aes(x = p_expected, y = p_beta_log10)) +
   geom_point() +
   stat_abline(slope = 1, intercept = 0, color = "red")
+
+
+#Import permutation p-values from 100kb window
+naive_qtls = importFastQTLTable("results/SL1344/fastqtl/output/naive_100kb_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_name_map)
+IFNg_qtls = importFastQTLTable("results/SL1344/fastqtl/output/IFNg_100kb_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_name_map)
+SL1344_qtls = importFastQTLTable("results/SL1344/fastqtl/output/SL1344_100kb_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_name_map)
+IFNg_SL1344_qtls = importFastQTLTable("results/SL1344/fastqtl/output/IFNg_SL1344_100kb_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_name_map)
+qtl_list = list(naive = naive_qtls, IFNg = IFNg_qtls, SL1344 = SL1344_qtls, IFNg_SL1344 = IFNg_SL1344_qtls)
+saveRDS(qtl_list, "results/SL1344/eQTLs/fastqtl_min_pvalues_100kb.rds")
+
