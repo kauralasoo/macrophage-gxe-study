@@ -2,15 +2,37 @@ library("devtools")
 library("plyr")
 library("dplyr")
 load_all("../seqUtils/")
-library("MatrixEQTL")
 load_all("macrophage-gxe-study/housekeeping/")
 library("ggplot2")
 load_all("~/software/rasqual/rasqualTools/")
 library("GenomicRanges")
 
 #Load gene-peak pairs
-pairs = readRDS("results/SL1344/eQTLs/interaction_peak_gene_pairs.rds")
-atac_list = readRDS("../macrophage-chromatin/results/ATAC/ATAC_combined_accessibility_data.rds")
+pairs = readRDS("results/ATAC_RNA_overlaps/condition_specific_pairs.rds")
+atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
+
+#Import all shared eQTLs-caQTLs
+rna_atac_overlaps = readRDS("results/ATAC_RNA_overlaps/QTL_overlap_list_R2.rds")
+
+#Import ATAC interaction test p-values
+interaction_df = readRDS("results/ATAC/QTLs/rasqual_interaction_results.rds")
+no_interaction_peaks = dplyr::filter(interaction_df, p_fdr > 0.1)
+
+#Find minimal p-values
+atac_min_pvalues = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
+peak_min_pvalues = purrr::map_df(atac_min_pvalues, ~dplyr::semi_join(., rna_atac_overlaps, by = c("gene_id" = "peak_id"))) %>% 
+  dplyr::select(gene_id, p_nominal) %>% 
+  dplyr::group_by(gene_id) %>% 
+  dplyr::arrange(p_nominal) %>% 
+  dplyr::filter(row_number() == 1) %>% 
+  dplyr::rename(peak_id = gene_id)
+
+#Find the most associated peak for each gene
+rna_atac_min_pairs = dplyr::left_join(rna_atac_overlaps, peak_min_pvalues, by = "peak_id") %>% 
+  dplyr::group_by(gene_id) %>% 
+  dplyr::arrange(p_nominal) %>% 
+  dplyr::filter(row_number() == 1) %>% 
+  dplyr::ungroup()
 
 #IFNg
 #Calculate diffs
@@ -36,14 +58,52 @@ sl1344_atac_diff = dplyr::filter(pairs$SL1344, phenotype == "ATAC") %>%
 #IFNg
 ifng_gained_peaks = dplyr::filter(ifng_atac_diff, diff > 0.32, scaled_diff > 0.2) %>% dplyr::select(peak_id) %>%
   dplyr::rename(gene_id = peak_id)
-ifng_persistent_peaks = dplyr::filter(ifng_atac_diff, abs(diff) < 0.32) %>% dplyr::select(peak_id) %>%
+ifng_persistent_peaks = dplyr::filter(ifng_atac_diff, diff < 0.32) %>% dplyr::select(peak_id) %>%
   dplyr::rename(gene_id = peak_id)
 
 #SL1344
 sl1344_gained_peaks = dplyr::filter(sl1344_atac_diff, diff > 0.32, scaled_diff > 0.2) %>% dplyr::select(peak_id) %>%
   dplyr::rename(gene_id = peak_id)
-sl1344_persistent_peaks = dplyr::filter(sl1344_atac_diff, abs(diff) < 0.32) %>% dplyr::select(peak_id) %>%
+sl1344_persistent_peaks = dplyr::filter(sl1344_atac_diff, diff < 0.32) %>% dplyr::select(peak_id) %>%
   dplyr::rename(gene_id = peak_id)
+
+#Are persistent peaks for condition-specific eQTLs enriched for condition-specific TF motifs
+
+#Import FIMO motif matches
+fimo_hits = readr::read_delim("results/ATAC/cisBP/FIMO_CISBP_results.long.txt.gz", delim = "\t", col_types = c("cciicddcc"), 
+                              col_names = c("motif_id","seq_name","start","end","strand","score","p_value","dummy","matched_seq"), skip = 1)
+fimo_hits_clean = tidyr::separate(fimo_hits, seq_name, c("prefix","gene_id"), sep = "=") 
+
+#Import motif metadata
+TF_information = readr::read_tsv("~/annotations/CisBP/Homo_sapiens_2016_03_10_11-59_am/TF_Information.txt")
+colnames(TF_information)[6] = "gene_id"
+unique_motifs = dplyr::select(TF_information, Motif_ID, gene_id, TF_Name) %>% dplyr::filter(Motif_ID != ".") %>%
+  dplyr::rename(motif_id = Motif_ID, tf_name = TF_Name)
+
+#Calculate enrichments
+bg_peaks = dplyr::select(rna_atac_min_pairs, peak_id) %>% dplyr::rename(gene_id = peak_id) %>% 
+  dplyr::semi_join(no_interaction_peaks, by = "gene_id") %>% unique() 
+bg_peaks = dplyr::bind_rows(sl1344_persistent_peaks, ifng_persistent_peaks, bg_peaks) %>% unique()
+
+sl1344_enrichment = fimoRelativeEnrichment(sl1344_persistent_peaks, bg_peaks, fimo_hits_clean, 
+                                           atac_list$gene_metadata)
+
+dplyr::left_join(sl1344_enrichment, unique_motifs, by = "motif_id") %>% 
+  dplyr::arrange(fisher_pvalue) %>% 
+  dplyr::filter(tf_name %in% c("RELA", "FOS", "IRF1", "SPI1")) %>% 
+  dplyr::select(OR, fisher_pvalue, tf_name)
+
+ifng_enrichment = fimoRelativeEnrichment(ifng_persistent_peaks, bg_peaks, fimo_hits_clean, 
+                                         atac_list$gene_metadata)
+dplyr::left_join(ifng_enrichment, unique_motifs, by = "motif_id") %>% 
+  dplyr::arrange(fisher_pvalue) %>% 
+  dplyr::filter(tf_name %in% c("RELA", "FOS", "IRF1", "SPI1")) %>% 
+  dplyr::select(OR, fisher_pvalue, tf_name)
+
+
+
+
+
 
 #Persistent
 all_persistent = dplyr::bind_rows(sl1344_persistent_peaks, ifng_persistent_peaks) %>% unique()

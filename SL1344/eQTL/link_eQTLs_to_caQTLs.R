@@ -128,7 +128,7 @@ sl1344_effects = prepareBetasDf(sl1344_appear_qtls, rna_betas, atac_snp_tables, 
   dplyr::mutate(beta_std = (beta - mean(beta))/sd(beta), beta_scaled = beta/max(beta)) %>%
   dplyr::ungroup() %>%
   dplyr::mutate(beta_binary = ifelse(beta >= 0.59, 1, 0)) %>%
-  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg")))
+  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","SL1344")))
   #dplyr::semi_join(shared_qtls, by = c("gene_id", "peak_id")) #Keep only shared QTLs
 
 
