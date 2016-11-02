@@ -155,3 +155,24 @@ ptk2b_enh2 = cowplot::plot_grid(enh2_associated_variants, ptk2b_plot$coverage_pl
 ggsave("figures/main_figures/PTK2B_second_enhancer.pdf", ptk2b_enh2, width = 8, height = 8)
 
 
+
+
+#Some simple QTL plots
+plot = plotEQTL("ENSG00000150782", "rs71478720", combined_expression_data$cqn, vcf_file$genotypes, 
+                combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+ggsave("IL18.pdf", plot = plot, width = 8, height = 8)
+
+
+plot = plotEQTL("ENSG00000150782", "rs10891343", combined_expression_data$cqn, vcf_file$genotypes, 
+                combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+ggsave("IL18_lead.pdf", plot = plot, width = 8, height = 8)
+
+
+plot = plotEQTL("ENSG00000091106", "rs385076", combined_expression_data$cqn, vcf_file$genotypes, 
+                combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+ggsave("NLRC4.pdf", plot = plot, width = 8, height = 8)
+
+plot = plotEQTL("ENSG00000150782", "rs385076", combined_expression_data$cqn, vcf_file$genotypes, 
+                combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+ggsave("IL18_rs385076.pdf", plot = plot, width = 8, height = 8)
+
