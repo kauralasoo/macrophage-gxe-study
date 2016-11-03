@@ -18,6 +18,11 @@ rna_atac_overlaps = readRDS("results/ATAC_RNA_overlaps/QTL_overlap_list_R2.rds")
 interaction_df = readRDS("results/ATAC/QTLs/rasqual_interaction_results.rds")
 no_interaction_peaks = dplyr::filter(interaction_df, p_fdr > 0.1)
 
+#Import RNA interaction test p-values
+rna_interaction_df = readRDS("results/SL1344/eQTLs/SL1344_interaction_pvalues.rds")
+no_interaction_genes = dplyr::filter(rna_interaction_df, p_fdr > 0.5)
+no_interaction_pairs = dplyr::semi_join(rna_atac_overlaps, no_interaction_genes, by = "gene_id")
+
 #Find minimal p-values
 atac_min_pvalues = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
 peak_min_pvalues = purrr::map_df(atac_min_pvalues, ~dplyr::semi_join(., rna_atac_overlaps, by = c("gene_id" = "peak_id"))) %>% 
@@ -81,8 +86,11 @@ unique_motifs = dplyr::select(TF_information, Motif_ID, gene_id, TF_Name) %>% dp
   dplyr::rename(motif_id = Motif_ID, tf_name = TF_Name)
 
 #Calculate enrichments
-bg_peaks = dplyr::select(rna_atac_min_pairs, peak_id) %>% dplyr::rename(gene_id = peak_id) %>% 
-  dplyr::semi_join(no_interaction_peaks, by = "gene_id") %>% unique() 
+bg_peaks = dplyr::select(rna_atac_min_pairs, peak_id) %>% 
+  dplyr::semi_join(no_interaction_pairs, by = "peak_id") %>% 
+  dplyr::rename(gene_id = peak_id) %>% 
+  #dplyr::semi_join(no_interaction_peaks, by = "gene_id") %>% 
+  unique() 
 bg_peaks = dplyr::bind_rows(sl1344_persistent_peaks, ifng_persistent_peaks, bg_peaks) %>% unique()
 
 sl1344_enrichment = fimoRelativeEnrichment(sl1344_persistent_peaks, bg_peaks, fimo_hits_clean, 
@@ -90,18 +98,15 @@ sl1344_enrichment = fimoRelativeEnrichment(sl1344_persistent_peaks, bg_peaks, fi
 
 dplyr::left_join(sl1344_enrichment, unique_motifs, by = "motif_id") %>% 
   dplyr::arrange(fisher_pvalue) %>% 
-  dplyr::filter(tf_name %in% c("RELA", "FOS", "IRF1", "SPI1")) %>% 
-  dplyr::select(OR, fisher_pvalue, tf_name)
+  dplyr::filter(tf_name %in% c("RELA", "FOS", "IRF1", "SPI1", "STAT1")) %>% 
+  dplyr::select(OR, ci_lower, ci_higher, fisher_pvalue, tf_name)
 
 ifng_enrichment = fimoRelativeEnrichment(ifng_persistent_peaks, bg_peaks, fimo_hits_clean, 
                                          atac_list$gene_metadata)
 dplyr::left_join(ifng_enrichment, unique_motifs, by = "motif_id") %>% 
   dplyr::arrange(fisher_pvalue) %>% 
-  dplyr::filter(tf_name %in% c("RELA", "FOS", "IRF1", "SPI1")) %>% 
-  dplyr::select(OR, fisher_pvalue, tf_name)
-
-
-
+  dplyr::filter(tf_name %in% c("RELA", "FOS", "IRF1", "SPI1", "STAT1")) %>% 
+  dplyr::select(OR, ci_lower, ci_higher, fisher_pvalue, tf_name)
 
 
 
