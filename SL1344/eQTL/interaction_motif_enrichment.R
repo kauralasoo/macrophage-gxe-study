@@ -93,20 +93,55 @@ bg_peaks = dplyr::select(rna_atac_min_pairs, peak_id) %>%
   unique() 
 bg_peaks = dplyr::bind_rows(sl1344_persistent_peaks, ifng_persistent_peaks, bg_peaks) %>% unique()
 
+#Add friendly names for motifs
+interesting_tfs = c("RELA","IRF1","FOS","SPI1")
+tf_name_casual = data_frame(new_name = c("NF-kB","IRF","AP-1","PU.1"), tf_name = interesting_tfs) %>%
+  dplyr::mutate(new_name = factor(new_name, levels = rev(new_name)))
+
 sl1344_enrichment = fimoRelativeEnrichment(sl1344_persistent_peaks, bg_peaks, fimo_hits_clean, 
                                            atac_list$gene_metadata)
 
-dplyr::left_join(sl1344_enrichment, unique_motifs, by = "motif_id") %>% 
+sl1344_motifs = dplyr::left_join(sl1344_enrichment, unique_motifs, by = "motif_id") %>% 
   dplyr::arrange(fisher_pvalue) %>% 
-  dplyr::filter(tf_name %in% c("RELA", "FOS", "IRF1", "SPI1", "STAT1")) %>% 
-  dplyr::select(OR, ci_lower, ci_higher, fisher_pvalue, tf_name)
+  dplyr::filter(tf_name %in% c("RELA", "FOS", "IRF1", "SPI1")) %>% 
+  dplyr::select(OR_log2, ci_lower_log2, ci_higher_log2, fisher_pvalue, tf_name) %>% 
+  dplyr::left_join(tf_name_casual, by = "tf_name") %>%
+  dplyr::mutate(condition_name = "SL1344")
 
 ifng_enrichment = fimoRelativeEnrichment(ifng_persistent_peaks, bg_peaks, fimo_hits_clean, 
                                          atac_list$gene_metadata)
-dplyr::left_join(ifng_enrichment, unique_motifs, by = "motif_id") %>% 
+ifng_motifs = dplyr::left_join(ifng_enrichment, unique_motifs, by = "motif_id") %>% 
   dplyr::arrange(fisher_pvalue) %>% 
-  dplyr::filter(tf_name %in% c("RELA", "FOS", "IRF1", "SPI1", "STAT1")) %>% 
-  dplyr::select(OR, ci_lower, ci_higher, fisher_pvalue, tf_name)
+  dplyr::filter(tf_name %in% c("RELA", "FOS", "IRF1", "SPI1")) %>% 
+  dplyr::select(OR_log2, ci_lower_log2, ci_higher_log2, fisher_pvalue, tf_name) %>% 
+  dplyr::left_join(tf_name_casual, by = "tf_name") %>%
+  dplyr::mutate(condition_name = "SL1344") %>%
+  dplyr::mutate(ci_lower_log2 = ifelse(ci_lower_log2 < -3.99, -3.99, ci_lower_log2))
+
+
+sl1344_enrichment_plot = ggplot(sl1344_motifs, aes(y = new_name, x = OR_log2, xmin = ci_lower_log2, xmax = ci_higher_log2)) + 
+  geom_point() + 
+  geom_errorbarh(aes(height = 0)) +
+  xlab(expression(paste(Log[2], " fold enrichment", sep = ""))) +
+  ylab("TF motif name") + 
+  theme_light() +
+  scale_x_continuous(expand = c(0, 0), limits = c(-4,4)) +
+  theme(legend.key = element_blank()) + 
+  theme(panel.margin = unit(0.2, "lines")) + 
+  geom_vline(aes(xintercept = 0), size = 0.3)
+ggsave("figures/main_figures/caQTL_primed_SL1344_motfis.pdf", plot = sl1344_enrichment_plot, width = 3.5, height = 3.5)
+
+ifng_enrichment_plot = ggplot(ifng_motifs, aes(y = new_name, x = OR_log2, xmin = ci_lower_log2, xmax = ci_higher_log2)) + 
+  geom_point() + 
+  geom_errorbarh(aes(height = 0)) +
+  xlab(expression(paste(Log[2], " fold enrichment", sep = ""))) +
+  ylab("TF motif name") + 
+  theme_light() +
+  scale_x_continuous(expand = c(0, 0), limits = c(-4,4)) +
+  theme(legend.key = element_blank()) + 
+  theme(panel.margin = unit(0.2, "lines")) + 
+  geom_vline(aes(xintercept = 0), size = 0.3)
+ggsave("figures/main_figures/caQTL_primed_IFNg_motfis.pdf", plot = ifng_enrichment_plot, width = 3.5, height = 3.5)
 
 
 
