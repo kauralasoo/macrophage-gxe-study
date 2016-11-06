@@ -12,13 +12,6 @@ combined_expression_data$sample_metadata$condition_name = factor(combined_expres
                                                                  levels = c("naive", "IFNg", "SL1344", "IFNg_SL1344"))
 gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name)
 
-#Import genotypes
-#SNPRelate::snpgdsVCF2GDS("results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.vcf.gz", 
-#                         "results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.gds", method = "copy.num.of.ref")
-#vcf_file = gdsToMatrix("results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.gds")
-#saveRDS(vcf_file, "results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.rds")
-#vcf_file = readRDS("results/SL1344/fastqtl/input/fastqtl_genotypes.INFO_08.named.rds")
-
 #Import the VCF file
 vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
@@ -52,4 +45,22 @@ SL1344_qtls = importFastQTLTable("results/SL1344/fastqtl/output/SL1344_100kb_per
 IFNg_SL1344_qtls = importFastQTLTable("results/SL1344/fastqtl/output/IFNg_SL1344_100kb_permuted.txt.gz") %>% enrichFastQTLPvalues(gene_name_map)
 qtl_list = list(naive = naive_qtls, IFNg = IFNg_qtls, SL1344 = SL1344_qtls, IFNg_SL1344 = IFNg_SL1344_qtls)
 saveRDS(qtl_list, "results/SL1344/eQTLs/fastqtl_min_pvalues_100kb.rds")
+
+#Import min p-values from fastqtl 100kb and 500kb windows centred around the TSS
+fastqtl_100kb_list = list(
+  naive = "/Volumes/JetDrive/databases/SL1344/fastqtl/tss_centre/naive_100kb_permuted.txt.gz",
+  IFNg = "/Volumes/JetDrive/databases/SL1344/fastqtl/tss_centre/IFNg_100kb_permuted.txt.gz",
+  SL1344 = "/Volumes/JetDrive/databases/SL1344/fastqtl/tss_centre/SL1344_100kb_permuted.txt.gz",
+  IFNg_SL1344 = "/Volumes/JetDrive/databases/SL1344/fastqtl/tss_centre/IFNg_SL1344_100kb_permuted.txt.gz")
+fastqtl_100kb_min_pvalues = purrr::map(fastqtl_100kb_list, ~importFastQTLTable(.) %>% enrichFastQTLPvalues(gene_name_map))
+saveRDS(fastqtl_100kb_min_pvalues, "results/SL1344/eQTLs/fastqtl_min_pvalues_100kb.rds")
+
+fastqtl_500kb_list = list(
+  naive = "/Volumes/JetDrive/databases/SL1344/fastqtl/tss_centre/naive_500kb_permuted.txt.gz",
+  IFNg = "/Volumes/JetDrive/databases/SL1344/fastqtl/tss_centre/IFNg_500kb_permuted.txt.gz",
+  SL1344 = "/Volumes/JetDrive/databases/SL1344/fastqtl/tss_centre/SL1344_500kb_permuted.txt.gz",
+  IFNg_SL1344 = "/Volumes/JetDrive/databases/SL1344/fastqtl/tss_centre/IFNg_SL1344_500kb_permuted.txt.gz")
+fastqtl_500kb_min_pvalues = purrr::map(fastqtl_500kb_list, ~importFastQTLTable(.) %>% enrichFastQTLPvalues(gene_name_map))
+saveRDS(fastqtl_500kb_min_pvalues, "results/SL1344/eQTLs/fastqtl_min_pvalues_500kb.rds")
+
 

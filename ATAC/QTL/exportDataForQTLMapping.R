@@ -19,19 +19,13 @@ atac_conditions = list(naive = naive_list, IFNg = IFNg_list, SL1344 = SL1344_lis
 atac_conditions_renamed = lapply(atac_conditions, renameMatrixColumnsInExpressionList, "sample_id", "genotype_id")
 
 #### Export data for FastQTL ####
-fastqtl_genepos = constructFastQTLGenePos(naive_list$gene_metadata)
-tpm_list = lapply(atac_conditions_renamed, function(x){log(x$tpm + 0.01, 2)})
+#Calculate peak centre points
+peak_centres_meta = dplyr::mutate(atac_list$gene_metadata, centre = floor((start + end)/2)) %>% 
+  dplyr::mutate(start = centre, end = centre)
+fastqtl_genepos = constructFastQTLGenePos(peak_centres_meta)
 cqn_list = lapply(atac_conditions_renamed, function(x){x$cqn})
-fastqtl_tpm_list = lapply(tpm_list, prepareFastqtlMatrix, fastqtl_genepos)
 fastqtl_cqn_list = lapply(cqn_list, prepareFastqtlMatrix, fastqtl_genepos)
-saveFastqtlMatrices(fastqtl_tpm_list, "results/ATAC/fastqtl/input/", file_suffix = "expression_tpm")
 saveFastqtlMatrices(fastqtl_cqn_list, "results/ATAC/fastqtl/input/", file_suffix = "expression_cqn")
-
-#Save covariates
-covariate_names = c("genotype_id", "TPM_PC1", "TPM_PC2", "TPM_PC3", "sex_binary")
-covariate_list = lapply(atac_conditions_renamed, function(x, names){x$sample_metadata[,names]}, covariate_names)
-fastqtl_covariates = lapply(covariate_list, fastqtlMetadataToCovariates)
-saveFastqtlMatrices(fastqtl_covariates, "results/ATAC/fastqtl/input/", file_suffix = "covariates_tpm")
 
 #Save covariates
 covariate_names = c("genotype_id", "cqn_PC1", "cqn_PC2", "cqn_PC3", "sex_binary")
