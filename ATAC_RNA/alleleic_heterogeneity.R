@@ -6,22 +6,6 @@ load_all("../seqUtils/")
 load_all("macrophage-gxe-study/housekeeping/")
 load_all("~/software/rasqual/rasqualTools/")
 
-#Helper functions
-pToZ <- function(pvalue_df, n_top_snps = 200){
-  result = pvalue_df %>% 
-    dplyr::arrange(p_nominal) %>%
-    head(n_top_snps) %>% 
-    dplyr::arrange(pos) %>%
-    dplyr::mutate(z = qnorm(p_nominal)*sign(beta)) %>%
-    dplyr::select(snp_id, z)
-  return(result)
-}
-
-zToLD <- function(z_df, genotypes){
-  cor_mat = cor(t(genotypes[z_df$snp_id,]), method = "pearson", use = "pairwise.complete.obs")
-  return(cor_mat)
-}
-
 #Load the raw eQTL dataset
 combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
 atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
@@ -38,7 +22,7 @@ vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.
 #Import variant information
 snp_info = importVariantInformation("genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz")
 
-#Import QTL lists
+#Import eQTL lists
 rna_fastqtl_100kb = readRDS("results/SL1344/eQTLs/fastqtl_min_pvalues_100kb.rds")
 naive_eqtls = dplyr::filter(rna_fastqtl_100kb$naive, p_nominal < 1e-8) %>% dplyr::select(gene_id)
 naive_eqtl_ranges = constructGeneRanges(naive_eqtls, tss_coords, 1e5)
@@ -48,36 +32,41 @@ rna_pvals = fastqtlTabixFetchGenes(naive_eqtl_ranges, qtlResults()$rna_fastqtl$n
 rna_z = purrr::map(rna_pvals, pToZ)
 rna_z = rna_z[unlist(map(rna_z, nrow)) > 0] #Remove genes with 0 variants
 rna_ld = purrr::map(rna_z, zToLD, vcf_file$genotypes)
+saveFinemapMatrices(rna_z, "results/SL1344/finemap/", file_suffix = "z")
+saveFinemapMatrices(rna_ld, "results/SL1344/finemap/", file_suffix = "ld")
+
+#Make a master data frame pointing to all of the files
+rna_meta = finemapConstructMeta(names(rna_z), "results/SL1344/finemap/", 41)
+write.table(rna_meta, "results/SL1344/finemap/data.txt", sep = ";", row.names = FALSE, col.names = TRUE, quote = FALSE)
+
+#Process caQTLs
+atac_fastqtl_100kb = readRDS("results/ATAC/QTLs/fastqtl_min_pvalues_100kb.rds")
+naive_caqtls = dplyr::filter(atac_fastqtl_100kb$naive, p_nominal < 1e-8) %>% dplyr::select(gene_id)
+naive_caqtls = naive_caqtls[sample(3605,849),]
+naive_caqtl_ranges = constructGeneRanges(naive_caqtls, peak_centres, 1e5)
+atac_pvals = fastqtlTabixFetchGenes(naive_caqtl_ranges, qtlResults()$atac_fastqtl$naive)
+
+#Convert p-values to z-scores and compute LD matrices
+atac_z = purrr::map(atac_pvals, pToZ)
+atac_z = atac_z[unlist(map(atac_z, nrow)) > 0] #Remove genes with 0 variants
+atac_ld = purrr::map(atac_z, zToLD, vcf_file$genotypes)
+saveFinemapMatrices(atac_z, "results/ATAC/finemap/", file_suffix = "z")
+saveFinemapMatrices(atac_ld, "results/ATAC/finemap/", file_suffix = "ld")
+
+#Construct metadata
+atac_meta = finemapConstructMeta(names(atac_z), "results/ATAC/finemap/", 41)
+write.table(atac_meta, "results/ATAC/finemap/data.txt", sep = ";", row.names = FALSE, col.names = TRUE, quote = FALSE)
 
 
+#Import FINEMAP posterior probabilities
+atac_post = read.table("ATAC_posteriors.txt", stringsAsFactors = FALSE) %>% dplyr::mutate(type = "caQTLs")
+rna_post = read.table("RNA_posteriors.txt", stringsAsFactors = FALSE) %>% dplyr::mutate(type = "eQTLs")
+post_df = dplyr::bind_rows(atac_post, rna_post) %>% dplyr::transmute(p_more = 1-V4, type)
+posterior_plot = ggplot(post_df, aes(x = p_more, color = type)) + 
+  geom_density() + 
+  theme_light() +
+  xlab("Posterior probability")
+ggsave("figures/main_figures/causal_variant_count_posterior.pdf", plot = posterior_plot, width = 5, height = 4)
 
-#Construct gene ranges
-ptk2b_region = constructGeneRanges(data_frame(gene_id = "ENSG00000120899"), tss_coords, 2e5)
-peak1_region = constructGeneRanges(data_frame(gene_id = "ATAC_peak_261927"), peak_centres, 1e5)
-ptk2b_region = constructGeneRanges(data_frame(gene_id = "ENSG00000170458"), tss_coords, 2e5)
 
-rna_variants = fastqtlTabixFetchGenes(ptk2b_region, qtlResults()$rna_fastqtl$naive)[[1]] %>% 
-  dplyr::arrange(p_nominal) %>%
-  head(200) %>% 
-  dplyr::arrange(pos) %>%
-  dplyr::mutate(z = qnorm(p_nominal)*sign(beta))
-write.table(dplyr::select(rna_variants, snp_id, z), "../../software/finemap_v1.1_MacOSX/example/rna.z", sep = " ", 
-            quote = FALSE, row.names = FALSE, col.names = FALSE) 
-
-#Calculate correlations between variants
-rna_cor = cor(t(vcf_file$genotypes[rna_variants$snp_id,]), method = "pearson")
-write.table(rna_cor, "../../software/finemap_v1.1_MacOSX/example/rna.ld", 
-            quote = FALSE, sep = " ", row.names = FALSE, col.names = FALSE)
-
-atac_variants = fastqtlTabixFetchGenes(peak1_region, qtlResults()$atac_fastqtl$naive)[[1]] %>% 
-  dplyr::arrange(p_nominal) %>%
-  head(100) %>%
-  dplyr::arrange(pos) %>%
-  dplyr::mutate(z = qnorm(p_nominal)*sign(beta))
-write.table(dplyr::select(atac_variants, snp_id, z), "../../software/finemap_v1.1_MacOSX/example/atac.z", sep = " ", 
-            quote = FALSE, row.names = FALSE, col.names = FALSE) 
-
-atac_cor = cor(t(vcf_file$genotypes[atac_variants$snp_id,]), method = "pearson")
-write.table(atac_cor, "../../software/finemap_v1.1_MacOSX/example/atac.ld", 
-            quote = FALSE, sep = " ", row.names = FALSE, col.names = FALSE)
 
