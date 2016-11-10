@@ -36,8 +36,26 @@ saveFinemapMatrices(rna_z, "results/SL1344/finemap/", file_suffix = "z")
 saveFinemapMatrices(rna_ld, "results/SL1344/finemap/", file_suffix = "ld")
 
 #Make a master data frame pointing to all of the files
-rna_meta = finemapConstructMeta(names(rna_z), "results/SL1344/finemap/", 41)
+rna_meta = finemapConstructMeta(names(rna_z), "results/SL1344/finemap/", 84)
 write.table(rna_meta, "results/SL1344/finemap/data.txt", sep = ";", row.names = FALSE, col.names = TRUE, quote = FALSE)
+
+#Import eQTL lists (42 samples)
+rna_fastqtl_100kb = readRDS("results/SL1344/eQTLs/fastqtl_min_pvalues_100kb_42.rds")
+naive_eqtls = dplyr::filter(rna_fastqtl_100kb$naive, p_nominal < 1e-8) %>% dplyr::select(gene_id)
+naive_eqtl_ranges = constructGeneRanges(naive_eqtls, tss_coords, 1e5)
+rna_pvals = fastqtlTabixFetchGenes(naive_eqtl_ranges, "/Volumes/JetDrive/databases/SL1344/fastqtl/tss_42/naive_500kb_pvalues.sorted.txt.gz")
+
+#Convert p-values to z-scores and compute LD matrices
+rna_z = purrr::map(rna_pvals, pToZ)
+rna_z = rna_z[unlist(map(rna_z, nrow)) > 0] #Remove genes with 0 variants
+rna_ld = purrr::map(rna_z, zToLD, vcf_file$genotypes)
+saveFinemapMatrices(rna_z, "results/SL1344/finemap_n42/", file_suffix = "z")
+saveFinemapMatrices(rna_ld, "results/SL1344/finemap_n42/", file_suffix = "ld")
+
+#Make a master data frame pointing to all of the files
+rna_meta = finemapConstructMeta(names(rna_z), "results/SL1344/finemap_n42/", 84)
+write.table(rna_meta, "results/SL1344/finemap_n42/data.txt", sep = ";", row.names = FALSE, col.names = TRUE, quote = FALSE)
+
 
 #Process caQTLs
 atac_fastqtl_100kb = readRDS("results/ATAC/QTLs/fastqtl_min_pvalues_100kb.rds")
@@ -54,7 +72,7 @@ saveFinemapMatrices(atac_z, "results/ATAC/finemap/", file_suffix = "z")
 saveFinemapMatrices(atac_ld, "results/ATAC/finemap/", file_suffix = "ld")
 
 #Construct metadata
-atac_meta = finemapConstructMeta(names(atac_z), "results/ATAC/finemap/", 41)
+atac_meta = finemapConstructMeta(names(atac_z), "results/ATAC/finemap/", 42)
 write.table(atac_meta, "results/ATAC/finemap/data.txt", sep = ";", row.names = FALSE, col.names = TRUE, quote = FALSE)
 
 

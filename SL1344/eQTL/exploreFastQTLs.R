@@ -2,7 +2,6 @@ library("devtools")
 library("qvalue")
 library("dplyr")
 library("ggplot2")
-library("SNPRelate")
 load_all("../seqUtils/")
 load_all("macrophage-gxe-study/housekeeping/")
 
@@ -62,5 +61,13 @@ fastqtl_500kb_list = list(
   IFNg_SL1344 = "/Volumes/JetDrive/databases/SL1344/fastqtl/tss_centre/IFNg_SL1344_500kb_permuted.txt.gz")
 fastqtl_500kb_min_pvalues = purrr::map(fastqtl_500kb_list, ~importFastQTLTable(.) %>% enrichFastQTLPvalues(gene_name_map))
 saveRDS(fastqtl_500kb_min_pvalues, "results/SL1344/eQTLs/fastqtl_min_pvalues_500kb.rds")
+
+fastqtl_100kb_n42_list = list(
+  naive = "/Volumes/JetDrive/databases/SL1344/fastqtl/tss_42/naive_100kb_permuted.txt.gz",
+  IFNg = "/Volumes/JetDrive/databases/SL1344/fastqtl/tss_42/IFNg_100kb_permuted.txt.gz",
+  SL1344 = "/Volumes/JetDrive/databases/SL1344/fastqtl/tss_42/SL1344_100kb_permuted.txt.gz",
+  IFNg_SL1344 = "/Volumes/JetDrive/databases/SL1344/fastqtl/tss_42/IFNg_SL1344_100kb_permuted.txt.gz")
+fastqtl_100kb_42_min_pvalues = purrr::map(fastqtl_100kb_n42_list, ~importFastQTLTable(.) %>% enrichFastQTLPvalues(gene_name_map))
+saveRDS(fastqtl_100kb_42_min_pvalues, "results/SL1344/eQTLs/fastqtl_min_pvalues_100kb_42.rds")
 
 
