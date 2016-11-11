@@ -53,7 +53,7 @@ saveFinemapMatrices(rna_z, "results/SL1344/finemap_n42/", file_suffix = "z")
 saveFinemapMatrices(rna_ld, "results/SL1344/finemap_n42/", file_suffix = "ld")
 
 #Make a master data frame pointing to all of the files
-rna_meta = finemapConstructMeta(names(rna_z), "results/SL1344/finemap_n42/", 84)
+rna_meta = finemapConstructMeta(names(rna_z), "results/SL1344/finemap_n42/", 42)[sample(224),]
 write.table(rna_meta, "results/SL1344/finemap_n42/data.txt", sep = ";", row.names = FALSE, col.names = TRUE, quote = FALSE)
 
 
@@ -77,8 +77,8 @@ write.table(atac_meta, "results/ATAC/finemap/data.txt", sep = ";", row.names = F
 
 
 #Import FINEMAP posterior probabilities
-atac_post = read.table("ATAC_posteriors.txt", stringsAsFactors = FALSE) %>% dplyr::mutate(type = "caQTLs")
-rna_post = read.table("RNA_posteriors.txt", stringsAsFactors = FALSE) %>% dplyr::mutate(type = "eQTLs")
+atac_post = read.table("results/ATAC/finemap/log/ATAC_posteriors.txt", stringsAsFactors = FALSE) %>% dplyr::mutate(type = "caQTLs")
+rna_post = read.table("results/SL1344/finemap_n42/log/RNA_posteriors.txt", stringsAsFactors = FALSE) %>% dplyr::mutate(type = "eQTLs")
 post_df = dplyr::bind_rows(atac_post, rna_post) %>% dplyr::transmute(p_more = 1-V4, type)
 posterior_plot = ggplot(post_df, aes(x = p_more, color = type)) + 
   geom_density() + 
@@ -86,5 +86,5 @@ posterior_plot = ggplot(post_df, aes(x = p_more, color = type)) +
   xlab("Posterior probability")
 ggsave("figures/main_figures/causal_variant_count_posterior.pdf", plot = posterior_plot, width = 5, height = 4)
 
-
+#Conclusion: 42 samples is not enough to do finemapping, detect multiple causal variants.
 
