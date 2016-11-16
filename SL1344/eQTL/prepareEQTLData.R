@@ -21,6 +21,7 @@ rasqual_input_folder = "results/SL1344/rasqual/input/"
 #Count SNPs overlapping genes
 snp_coords = readr::read_delim("genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz", 
                              delim = "\t", col_types = "cdccc", col_names = c("chr","pos","snp_id","ref","alt"))
+#snp_coords = importVariantInformation("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz")
 exon_df = countSnpsOverlapingExons(rna_conditions_renamed$naive$gene_metadata, snp_coords, cis_window = 500000) %>% 
   dplyr::arrange(chromosome_name, range_start)
 write.table(exon_df, file.path(rasqual_input_folder, "gene_snp_count_500kb.txt"), row.names = FALSE, sep = "\t", quote = FALSE)
@@ -91,7 +92,50 @@ fastqtl_input_folder = "results/SL1344/fastqtl/input/"
 #exportDataForFastQTL(rna_conditions_renamed, fastqtl_input_folder, n_chunks = 200)
 
 #### Export data for FastQTL ####
-fastqtl_genepos = constructFastQTLGenePos(rna_conditions_renamed$naive$gene_metadata)
+tss_coords = dplyr::mutate(rna_conditions_renamed$naive$gene_metadata, tss = ifelse(strand == 1, start, end)) %>%
+  dplyr::mutate(start = tss, end = tss)
+fastqtl_genepos = constructFastQTLGenePos(tss_coords)
+cqn_list = lapply(rna_conditions_renamed, function(x){x$cqn})
+fastqtl_cqn_list = lapply(cqn_list, prepareFastqtlMatrix, fastqtl_genepos)
+saveFastqtlMatrices(fastqtl_cqn_list, fastqtl_input_folder, file_suffix = "expression_cqn")
+
+#Save covariates
+covariate_names = c("genotype_id", "PEER_factor_1", "PEER_factor_2", "PEER_factor_3","PEER_factor_4", "PEER_factor_5","PEER_factor_6", "sex_binary")
+covariate_list = lapply(rna_conditions_renamed, function(x, names){x$sample_metadata[,names]}, covariate_names)
+fastqtl_covariates = lapply(covariate_list, fastqtlMetadataToCovariates)
+saveFastqtlMatrices(fastqtl_covariates, fastqtl_input_folder, file_suffix = "covariates")
+
+#Construct chunks table
+chunks_matrix = data.frame(chunk = seq(1:250), n = 250)
+write.table(chunks_matrix, file.path(fastqtl_input_folder, "all_chunk_table.txt"), row.names = FALSE, quote = FALSE, col.names = FALSE, sep = " ")
+
+
+### Rerun FASTQTL with only 42 samples that are shared with ATAC-seq
+atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
+naive_atac_samples = dplyr::filter(atac_list$sample_metadata, condition_name == "naive")
+shared_rna_samples = dplyr::filter(combined_expression_data$sample_metadata, donor %in% naive_atac_samples$donor)
+
+#Filter expression list by samples
+filtered_data = combined_expression_data
+filtered_data$counts = combined_expression_data$counts[,shared_rna_samples$sample_id]
+filtered_data$cqn = combined_expression_data$cqn[,shared_rna_samples$sample_id]
+filtered_data$tpm = combined_expression_data$tpm[,shared_rna_samples$sample_id]
+filtered_data$sample_metadata = shared_rna_samples
+
+#Extract separate lists for each condition
+condition_names = idVectorToList(c("naive","IFNg","SL1344","IFNg_SL1344"))
+rna_conditions = lapply(condition_names, extractConditionFromExpressionList, filtered_data)
+
+#Rename column names to genotype ids
+rna_conditions_renamed = lapply(rna_conditions, renameMatrixColumnsInExpressionList, "sample_id", "genotype_id")
+
+#Set fastqtl input folder
+fastqtl_input_folder = "results/SL1344/fastqtl/input/"
+
+#### Export data for FastQTL ####
+tss_coords = dplyr::mutate(rna_conditions_renamed$naive$gene_metadata, tss = ifelse(strand == 1, start, end)) %>%
+  dplyr::mutate(start = tss, end = tss)
+fastqtl_genepos = constructFastQTLGenePos(tss_coords)
 cqn_list = lapply(rna_conditions_renamed, function(x){x$cqn})
 fastqtl_cqn_list = lapply(cqn_list, prepareFastqtlMatrix, fastqtl_genepos)
 saveFastqtlMatrices(fastqtl_cqn_list, fastqtl_input_folder, file_suffix = "expression_cqn")

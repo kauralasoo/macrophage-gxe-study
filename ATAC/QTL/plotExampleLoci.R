@@ -11,6 +11,7 @@ library("GenomicFeatures")
 #Import data
 atac_data = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
 atac_meta_df = wiggleplotrConstructMetadata(atac_data$counts, atac_data$sample_metadata, "/Volumes/JetDrive/bigwigs/ATAC/")
+combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
 
 #Import genotypes
 vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
@@ -70,6 +71,35 @@ plot = cowplot::plot_grid(associated_variants, spopl_region$coverage_plot, spopl
 ggsave("figures/main_figures/SPOPL_region_coverage.pdf", plot, width = 4.5, height = 5)
 
 
+
+#Make Manhattan plots of the SPOPL region
+#Import chromatin QTL pvalues
+region_coords = c(138643635, 138743158)
+naive_peak_pvalues = tabixFetchGenesQuick(c("ATAC_peak_145162"),
+                                          tabix_file = qtlResults()$atac_rasqual$naive, 
+                                          gene_metadata = atac_data$gene_metadata, cis_window = 1e5) %>%
+  purrr::map_df(., ~dplyr::mutate(., track_id = "naive caQTL"))
+IFNg_peak_pvalues = tabixFetchGenesQuick(c("ATAC_peak_145162"),
+                                          tabix_file = qtlResults()$atac_rasqual$IFNg, 
+                                          gene_metadata = atac_data$gene_metadata, cis_window = 1e5) %>%
+  purrr::map_df(., ~dplyr::mutate(., track_id = "IFNg caQTL"))
+
+#Import gene expression p-values
+naive_gene_pvalues = tabixFetchGenesQuick(c("ENSG00000144228"),
+                                          tabix_file = qtlResults()$rna_rasqual$naive, 
+                                          gene_metadata = combined_expression_data$gene_metadata, cis_window = 5e5) %>%
+  purrr::map_df(., ~dplyr::mutate(., track_id = "naive eQTL"))
+IFNg_gene_pvalues = tabixFetchGenesQuick(c("ENSG00000144228"),
+                                         tabix_file = qtlResults()$rna_rasqual$IFNg, 
+                                         gene_metadata = combined_expression_data$gene_metadata, cis_window = 5e5) %>%
+  purrr::map_df(., ~dplyr::mutate(., track_id = "IFNg eQTL"))
+
+peak_pvals = dplyr::bind_rows(naive_peak_pvalues, IFNg_peak_pvalues, naive_gene_pvalues, IFNg_gene_pvalues) %>% 
+  dplyr::select(gene_id, pos, p_nominal, track_id) %>%
+  dplyr::mutate(track_id = factor(track_id, levels = c("naive caQTL", "naive eQTL","IFNg caQTL","IFNg eQTL")))
+
+spopl_manhattan = makeManhattanPlot(peak_pvals, region_coords)
+ggsave("figures/main_figures/SPOPL_manhattan.pdf", spopl_manhattan, width = 4, height = 6)
 
 
 
@@ -154,4 +184,25 @@ ptk2b_enh2 = cowplot::plot_grid(enh2_associated_variants, ptk2b_plot$coverage_pl
                    ptk2b_plot$tx_structure, align = "v", rel_heights = c(0.1,0.4,0.2), ncol = 1)
 ggsave("figures/main_figures/PTK2B_second_enhancer.pdf", ptk2b_enh2, width = 8, height = 8)
 
+
+
+
+#Some simple QTL plots
+plot = plotEQTL("ENSG00000150782", "rs71478720", combined_expression_data$cqn, vcf_file$genotypes, 
+                combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+ggsave("IL18.pdf", plot = plot, width = 8, height = 8)
+
+
+plot = plotEQTL("ENSG00000150782", "rs10891343", combined_expression_data$cqn, vcf_file$genotypes, 
+                combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+ggsave("IL18_lead.pdf", plot = plot, width = 8, height = 8)
+
+
+plot = plotEQTL("ENSG00000091106", "rs385076", combined_expression_data$cqn, vcf_file$genotypes, 
+                combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+ggsave("NLRC4.pdf", plot = plot, width = 8, height = 8)
+
+plot = plotEQTL("ENSG00000150782", "rs385076", combined_expression_data$cqn, vcf_file$genotypes, 
+                combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
+ggsave("IL18_rs385076.pdf", plot = plot, width = 8, height = 8)
 

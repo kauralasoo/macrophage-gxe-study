@@ -18,14 +18,16 @@ vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.
 
 #Make some boxplots
 #SPOPL gene
-spopl_data = plotEQTL("ENSG00000144228", "rs12621644", combined_expression_data$cqn, vcf_file$genotypes, 
-                      combined_expression_data$sample_metadata, combined_expression_data$gene_metadata, return_df = TRUE) 
+spopl_data = constructQtlPlotDataFrame("ENSG00000144228", "rs12621644", combined_expression_data$cqn, vcf_file$genotypes, 
+                      combined_expression_data$sample_metadata, combined_expression_data$gene_metadata) 
 plotQtlRow(spopl_data) %>% 
-  ggplot2::ggsave("results/SL1344/eQTLs/example_loci/presentation/SPOPL_eQTL.pdf", ., width = 6, height = 2.5)
+  ggplot2::ggsave("results/SL1344/eQTLs/example_loci/presentation/SPOPL_eQTL.pdf", ., width = 6, height = 2)
 dplyr::filter(spopl_data, condition_name %in% c("naive","IFNg")) %>% 
   plotQtlCol() %>%
-  ggplot2::ggsave("results/SL1344/eQTLs/example_loci/presentation/SPOPL_eQTL_col.pdf", ., width = 2, height = 4)
+  ggplot2::ggsave("figures/main_figures/SPOPL_eQTL_col.pdf", ., width = 2, height = 3.5)
 
+
+  
 
 plotEQTL("ENSG00000169220", "rs12654812",combined_expression_data$cqn, vcf_file$genotypes, 
          combined_expression_data$sample_metadata, combined_expression_data$gene_metadata, return_df = TRUE) %>%

@@ -259,17 +259,12 @@ gzip results/ATAC/rasqual/output/IFNg_SL1344_100kb/IFNg_SL1344_100kb.eigenMT_inp
 
 ##### Run FASTQTL #####
 #prepare expression data
-bgzip results/ATAC/fastqtl/input/naive.expression_tpm.txt && tabix -p bed results/ATAC/fastqtl/input/naive.expression_tpm.txt.gz
-bgzip results/ATAC/fastqtl/input/IFNg.expression_tpm.txt && tabix -p bed results/ATAC/fastqtl/input/IFNg.expression_tpm.txt.gz
-bgzip results/ATAC/fastqtl/input/SL1344.expression_tpm.txt && tabix -p bed results/ATAC/fastqtl/input/SL1344.expression_tpm.txt.gz
-bgzip results/ATAC/fastqtl/input/IFNg_SL1344.expression_tpm.txt && tabix -p bed results/ATAC/fastqtl/input/IFNg_SL1344.expression_tpm.txt.gz
-
 bgzip results/ATAC/fastqtl/input/naive.expression_cqn.txt && tabix -p bed results/ATAC/fastqtl/input/naive.expression_cqn.txt.gz
 bgzip results/ATAC/fastqtl/input/IFNg.expression_cqn.txt && tabix -p bed results/ATAC/fastqtl/input/IFNg.expression_cqn.txt.gz
 bgzip results/ATAC/fastqtl/input/SL1344.expression_cqn.txt && tabix -p bed results/ATAC/fastqtl/input/SL1344.expression_cqn.txt.gz
 bgzip results/ATAC/fastqtl/input/IFNg_SL1344.expression_cqn.txt && tabix -p bed results/ATAC/fastqtl/input/IFNg_SL1344.expression_cqn.txt.gz
 
-#Run FastQTL with CQN-normalised data and covariates (3 PCs + sex)
+#Run FastQTL with CQN-normalised data and covariates (3 PCs + sex) (50kb window)
 cat results/ATAC/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/ATAC/rasqual/input/naive.ASE.vcf.gz --bed results/ATAC/fastqtl/input/naive.expression_cqn.txt.gz --cov results/ATAC/fastqtl/input/naive.covariates_cqn.txt --W 50000 --permute '100 10000' --out results/ATAC/fastqtl/output/naive_50kb_cqn_perm --execute True"
 cat results/ATAC/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/ATAC/rasqual/input/IFNg.ASE.vcf.gz --bed results/ATAC/fastqtl/input/IFNg.expression_cqn.txt.gz --cov results/ATAC/fastqtl/input/IFNg.covariates_cqn.txt --W 50000 --permute '100 10000' --out results/ATAC/fastqtl/output/IFNg_50kb_cqn_perm --execute True"
 cat results/ATAC/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/ATAC/rasqual/input/SL1344.ASE.vcf.gz --bed results/ATAC/fastqtl/input/SL1344.expression_cqn.txt.gz --cov results/ATAC/fastqtl/input/SL1344.covariates_cqn.txt --W 50000 --permute '100 10000' --out results/ATAC/fastqtl/output/SL1344_50kb_cqn_perm --execute True"
@@ -282,7 +277,20 @@ zcat results/ATAC/fastqtl/output/SL1344_50kb_cqn_perm.chunk_*.txt.gz | bgzip > r
 zcat results/ATAC/fastqtl/output/IFNg_SL1344_50kb_cqn_perm.chunk_*.txt.gz | bgzip > results/ATAC/fastqtl/output/IFNg_SL1344_50kb_cqn_perm.txt.gz
 rm results/ATAC/fastqtl/output/*chunk_*
 
-#Get fastqtl results for all SNP-peak pairs
+#Run FastQTL with CQN-normalised data and covariates (3 PCs + sex) (100kb window)
+cat results/ATAC/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/ATAC/rasqual/input/naive.ASE.vcf.gz --bed results/ATAC/fastqtl/input/naive.expression_cqn.txt.gz --cov results/ATAC/fastqtl/input/naive.covariates_cqn.txt --W 100000 --permute '100 10000' --out results/ATAC/fastqtl/output/naive_100kb_cqn_perm --execute True"
+cat results/ATAC/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/ATAC/rasqual/input/IFNg.ASE.vcf.gz --bed results/ATAC/fastqtl/input/IFNg.expression_cqn.txt.gz --cov results/ATAC/fastqtl/input/IFNg.covariates_cqn.txt --W 100000 --permute '100 10000' --out results/ATAC/fastqtl/output/IFNg_100kb_cqn_perm --execute True"
+cat results/ATAC/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/ATAC/rasqual/input/SL1344.ASE.vcf.gz --bed results/ATAC/fastqtl/input/SL1344.expression_cqn.txt.gz --cov results/ATAC/fastqtl/input/SL1344.covariates_cqn.txt --W 100000 --permute '100 10000' --out results/ATAC/fastqtl/output/SL1344_100kb_cqn_perm --execute True"
+cat results/ATAC/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/ATAC/rasqual/input/IFNg_SL1344.ASE.vcf.gz --bed results/ATAC/fastqtl/input/IFNg_SL1344.expression_cqn.txt.gz --cov results/ATAC/fastqtl/input/IFNg_SL1344.covariates_cqn.txt --W 100000 --permute '100 10000' --out results/ATAC/fastqtl/output/IFNg_SL1344_100kb_cqn_perm --execute True"
+
+#Merge batches
+zcat results/ATAC/fastqtl/output/naive_100kb_cqn_perm.chunk_*.txt.gz | bgzip > results/ATAC/fastqtl/output/naive_100kb_cqn_perm.txt.gz
+zcat results/ATAC/fastqtl/output/IFNg_100kb_cqn_perm.chunk_*.txt.gz | bgzip > results/ATAC/fastqtl/output/IFNg_100kb_cqn_perm.txt.gz
+zcat results/ATAC/fastqtl/output/SL1344_100kb_cqn_perm.chunk_*.txt.gz | bgzip > results/ATAC/fastqtl/output/SL1344_100kb_cqn_perm.txt.gz
+zcat results/ATAC/fastqtl/output/IFNg_SL1344_100kb_cqn_perm.chunk_*.txt.gz | bgzip > results/ATAC/fastqtl/output/IFNg_SL1344_100kb_cqn_perm.txt.gz
+rm results/ATAC/fastqtl/output/*chunk_*
+
+#Get fastqtl results for all SNP-peak pairs in a 100kb window
 cat results/ATAC/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/ATAC/rasqual/input/naive.ASE.vcf.gz --bed results/ATAC/fastqtl/input/naive.expression_cqn.txt.gz --cov results/ATAC/fastqtl/input/naive.covariates_cqn.txt --W 100000 --out results/ATAC/fastqtl/output/naive_100kb_full --execute True"
 cat results/ATAC/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/ATAC/rasqual/input/IFNg.ASE.vcf.gz --bed results/ATAC/fastqtl/input/IFNg.expression_cqn.txt.gz --cov results/ATAC/fastqtl/input/IFNg.covariates_cqn.txt --W 100000 --out results/ATAC/fastqtl/output/IFNg_100kb_full --execute True"
 cat results/ATAC/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/ATAC/rasqual/input/SL1344.ASE.vcf.gz --bed results/ATAC/fastqtl/input/SL1344.expression_cqn.txt.gz --cov results/ATAC/fastqtl/input/SL1344.covariates_cqn.txt --W 100000 --out results/ATAC/fastqtl/output/SL1344_100kb_full --execute True"

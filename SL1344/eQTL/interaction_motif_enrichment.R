@@ -2,15 +2,42 @@ library("devtools")
 library("plyr")
 library("dplyr")
 load_all("../seqUtils/")
-library("MatrixEQTL")
 load_all("macrophage-gxe-study/housekeeping/")
 library("ggplot2")
 load_all("~/software/rasqual/rasqualTools/")
 library("GenomicRanges")
 
 #Load gene-peak pairs
-pairs = readRDS("results/SL1344/eQTLs/interaction_peak_gene_pairs.rds")
-atac_list = readRDS("../macrophage-chromatin/results/ATAC/ATAC_combined_accessibility_data.rds")
+pairs = readRDS("results/ATAC_RNA_overlaps/condition_specific_pairs.rds")
+atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
+
+#Import all shared eQTLs-caQTLs
+rna_atac_overlaps = readRDS("results/ATAC_RNA_overlaps/QTL_overlap_list_R2.rds")
+
+#Import ATAC interaction test p-values
+interaction_df = readRDS("results/ATAC/QTLs/rasqual_interaction_results.rds")
+no_interaction_peaks = dplyr::filter(interaction_df, p_fdr > 0.1)
+
+#Import RNA interaction test p-values
+rna_interaction_df = readRDS("results/SL1344/eQTLs/SL1344_interaction_pvalues.rds")
+no_interaction_genes = dplyr::filter(rna_interaction_df, p_fdr > 0.5)
+no_interaction_pairs = dplyr::semi_join(rna_atac_overlaps, no_interaction_genes, by = "gene_id")
+
+#Find minimal p-values
+atac_min_pvalues = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
+peak_min_pvalues = purrr::map_df(atac_min_pvalues, ~dplyr::semi_join(., rna_atac_overlaps, by = c("gene_id" = "peak_id"))) %>% 
+  dplyr::select(gene_id, p_nominal) %>% 
+  dplyr::group_by(gene_id) %>% 
+  dplyr::arrange(p_nominal) %>% 
+  dplyr::filter(row_number() == 1) %>% 
+  dplyr::rename(peak_id = gene_id)
+
+#Find the most associated peak for each gene
+rna_atac_min_pairs = dplyr::left_join(rna_atac_overlaps, peak_min_pvalues, by = "peak_id") %>% 
+  dplyr::group_by(gene_id) %>% 
+  dplyr::arrange(p_nominal) %>% 
+  dplyr::filter(row_number() == 1) %>% 
+  dplyr::ungroup()
 
 #IFNg
 #Calculate diffs
@@ -36,14 +63,87 @@ sl1344_atac_diff = dplyr::filter(pairs$SL1344, phenotype == "ATAC") %>%
 #IFNg
 ifng_gained_peaks = dplyr::filter(ifng_atac_diff, diff > 0.32, scaled_diff > 0.2) %>% dplyr::select(peak_id) %>%
   dplyr::rename(gene_id = peak_id)
-ifng_persistent_peaks = dplyr::filter(ifng_atac_diff, abs(diff) < 0.32) %>% dplyr::select(peak_id) %>%
+ifng_persistent_peaks = dplyr::filter(ifng_atac_diff, diff < 0.32) %>% dplyr::select(peak_id) %>%
   dplyr::rename(gene_id = peak_id)
 
 #SL1344
 sl1344_gained_peaks = dplyr::filter(sl1344_atac_diff, diff > 0.32, scaled_diff > 0.2) %>% dplyr::select(peak_id) %>%
   dplyr::rename(gene_id = peak_id)
-sl1344_persistent_peaks = dplyr::filter(sl1344_atac_diff, abs(diff) < 0.32) %>% dplyr::select(peak_id) %>%
+sl1344_persistent_peaks = dplyr::filter(sl1344_atac_diff, diff < 0.32) %>% dplyr::select(peak_id) %>%
   dplyr::rename(gene_id = peak_id)
+
+#Are persistent peaks for condition-specific eQTLs enriched for condition-specific TF motifs
+
+#Import FIMO motif matches
+fimo_hits = readr::read_delim("results/ATAC/cisBP/FIMO_CISBP_results.long.txt.gz", delim = "\t", col_types = c("cciicddcc"), 
+                              col_names = c("motif_id","seq_name","start","end","strand","score","p_value","dummy","matched_seq"), skip = 1)
+fimo_hits_clean = tidyr::separate(fimo_hits, seq_name, c("prefix","gene_id"), sep = "=") 
+
+#Import motif metadata
+TF_information = readr::read_tsv("~/annotations/CisBP/Homo_sapiens_2016_03_10_11-59_am/TF_Information.txt")
+colnames(TF_information)[6] = "gene_id"
+unique_motifs = dplyr::select(TF_information, Motif_ID, gene_id, TF_Name) %>% dplyr::filter(Motif_ID != ".") %>%
+  dplyr::rename(motif_id = Motif_ID, tf_name = TF_Name)
+
+#Calculate enrichments
+bg_peaks = dplyr::select(rna_atac_min_pairs, peak_id) %>% 
+  dplyr::semi_join(no_interaction_pairs, by = "peak_id") %>% 
+  dplyr::rename(gene_id = peak_id) %>% 
+  #dplyr::semi_join(no_interaction_peaks, by = "gene_id") %>% 
+  unique() 
+bg_peaks = dplyr::bind_rows(sl1344_persistent_peaks, ifng_persistent_peaks, bg_peaks) %>% unique()
+
+#Add friendly names for motifs
+interesting_tfs = c("RELA","IRF1","FOS","SPI1")
+tf_name_casual = data_frame(new_name = c("NF-kB","IRF","AP-1","PU.1"), tf_name = interesting_tfs) %>%
+  dplyr::mutate(new_name = factor(new_name, levels = rev(new_name)))
+
+sl1344_enrichment = fimoRelativeEnrichment(sl1344_persistent_peaks, bg_peaks, fimo_hits_clean, 
+                                           atac_list$gene_metadata)
+
+sl1344_motifs = dplyr::left_join(sl1344_enrichment, unique_motifs, by = "motif_id") %>% 
+  dplyr::arrange(fisher_pvalue) %>% 
+  dplyr::filter(tf_name %in% c("RELA", "FOS", "IRF1", "SPI1")) %>% 
+  dplyr::select(OR_log2, ci_lower_log2, ci_higher_log2, fisher_pvalue, tf_name) %>% 
+  dplyr::left_join(tf_name_casual, by = "tf_name") %>%
+  dplyr::mutate(condition_name = "SL1344")
+
+ifng_enrichment = fimoRelativeEnrichment(ifng_persistent_peaks, bg_peaks, fimo_hits_clean, 
+                                         atac_list$gene_metadata)
+ifng_motifs = dplyr::left_join(ifng_enrichment, unique_motifs, by = "motif_id") %>% 
+  dplyr::arrange(fisher_pvalue) %>% 
+  dplyr::filter(tf_name %in% c("RELA", "FOS", "IRF1", "SPI1")) %>% 
+  dplyr::select(OR_log2, ci_lower_log2, ci_higher_log2, fisher_pvalue, tf_name) %>% 
+  dplyr::left_join(tf_name_casual, by = "tf_name") %>%
+  dplyr::mutate(condition_name = "SL1344") %>%
+  dplyr::mutate(ci_lower_log2 = ifelse(ci_lower_log2 < -3.99, -3.99, ci_lower_log2))
+
+
+sl1344_enrichment_plot = ggplot(sl1344_motifs, aes(y = new_name, x = OR_log2, xmin = ci_lower_log2, xmax = ci_higher_log2)) + 
+  geom_point() + 
+  geom_errorbarh(aes(height = 0)) +
+  xlab(expression(paste(Log[2], " fold enrichment", sep = ""))) +
+  ylab("TF motif name") + 
+  theme_light() +
+  scale_x_continuous(expand = c(0, 0), limits = c(-4,4)) +
+  theme(legend.key = element_blank()) + 
+  theme(panel.margin = unit(0.2, "lines")) + 
+  geom_vline(aes(xintercept = 0), size = 0.3)
+ggsave("figures/main_figures/caQTL_primed_SL1344_motfis.pdf", plot = sl1344_enrichment_plot, width = 3.5, height = 3.5)
+
+ifng_enrichment_plot = ggplot(ifng_motifs, aes(y = new_name, x = OR_log2, xmin = ci_lower_log2, xmax = ci_higher_log2)) + 
+  geom_point() + 
+  geom_errorbarh(aes(height = 0)) +
+  xlab(expression(paste(Log[2], " fold enrichment", sep = ""))) +
+  ylab("TF motif name") + 
+  theme_light() +
+  scale_x_continuous(expand = c(0, 0), limits = c(-4,4)) +
+  theme(legend.key = element_blank()) + 
+  theme(panel.margin = unit(0.2, "lines")) + 
+  geom_vline(aes(xintercept = 0), size = 0.3)
+ggsave("figures/main_figures/caQTL_primed_IFNg_motfis.pdf", plot = ifng_enrichment_plot, width = 3.5, height = 3.5)
+
+
 
 #Persistent
 all_persistent = dplyr::bind_rows(sl1344_persistent_peaks, ifng_persistent_peaks) %>% unique()

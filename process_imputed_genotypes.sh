@@ -92,8 +92,11 @@ cat macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/softwa
 #Convert vcfs to GDS
 /software/R-3.1.2/bin/Rscript ~/software/utils/vcf/vcfToGds.R --vcf-directory chromosomes_IFNO_07 --chr-list 
 
-
 #Extract samples from the GRCh37 VCF files for Luke
 cut -f1 genotypes/file_list.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname filterVCF --command "python ~/software/utils/vcf/filterVcf.py  --sampleList macrophage-gxe-study/data/sample_lists/SL1344/SL1344_gt_list.txt --indir /nfs/users/nfs_k/ka8/group-scratch/hipsci/genotypes/REL-2014-11 --outdir genotypes/SL1344/GRCh37/ --execute True --vcfSuffix .vcf.gz"
 
+#Lift VCF back to GRCh37 to facilitate GWAS coloc analyses:
+echo "imputed.86_samples.sorted.filtered.named" | python ~/software/utils/submitJobs.py --MEM 5000 --jobname liftOverVCF --command "python ~/software/utils/vcf/liftoverVcfGenotypes.py --chrMapFwd macrophage-gxe-study/data/liftOver_genotypes/GRCh38ToHg38_chromosome_map.txt --chrMapRev macrophage-gxe-study/data/liftOver_genotypes/Hg38ToGRCh38_chromosome_map.txt --liftOver macrophage-gxe-study/data/liftOver_genotypes/hg38ToHg19.over.chain --reference ../../annotations/hg19/hg19.fa --vcfSuffix .vcf.gz --indir genotypes/SL1344/imputed_20151005/ --outdir genotypes/SL1344/imputed_20151005/GRCh37 --execute True"
 
+#Extract variant information
+bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%TYPE\t%AC\t%AN\n' genotypes/SL1344/imputed_20151005/GRCh37/imputed.86_samples.sorted.filtered.named.GRCh37.vcf.gz | bgzip > genotypes/SL1344/imputed_20151005/GRCh37/imputed.86_samples.variant_information.GRCh37.vcf.gz
