@@ -145,5 +145,5 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q norm
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q normal -M 1000 -o FarmOut/run_finemap.%J.jobout "finemap --sss --in-files results/SL1344/finemap_n42/data.txt --log"
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q normal -M 1000 -o FarmOut/run_finemap.%J.jobout "finemap --sss --in-files results/ATAC/finemap/data.txt --log"
 
-python ~/software/utils/parseFinemapLogs.py --logDir results/logs_rna/ > RNA_posteriors.txt
-python ~/software/utils/parseFinemapLogs.py --logDir results/logs > ATAC_posteriors.txt
+python ~/software/utils/parseFinemapLogs.py --logDir results/SL1344/finemap_n42/log/ > results/SL1344/finemap_n42/log/RNA_posteriors.txt
+python ~/software/utils/parseFinemapLogs.py --logDir results/ATAC/finemap/log/ > results/ATAC/finemap/log/ATAC_posteriors.txt
