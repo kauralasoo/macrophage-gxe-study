@@ -5,11 +5,8 @@ library("purrr")
 library("devtools")
 load_all("../seqUtils/")
 
-h5f = H5Fopen("databases/Fairfax/hdf5/300_036.hdf5")
-H5Fclose(h5f)
-
 importBlueprintSummary <- function(summary_path){
-  colnames = c("snp_string", "snp_id", "peak_id","p_nominal","beta", "p_bonferroni", "FDR", "alt_AF","std_error")
+  colnames = c("snp_string", "old_snp_id", "peak_id","p_nominal","beta", "p_bonferroni", "FDR", "alt_AF","std_error")
   data = readr::read_delim(summary_path, delim = "\t", col_names = colnames, col_types = "cccdddddd") %>%
     dplyr::filter(p_bonferroni <= 1) %>%
     dplyr::mutate(p_fdr = p.adjust(p_bonferroni, "fdr")) %>%
@@ -82,13 +79,20 @@ k27ac = importBlueprintSummary("databases/BLUEPRINT/mono_K27AC_min_pvalues.txt.g
 #Import GRCh37 variant information
 GRCh37_variants = importVariantInformation("genotypes/SL1344/imputed_20151005/GRCh37/imputed.86_samples.variant_information.GRCh37.vcf.gz")
 
+#Filter k4me1 and k27ac results for SNPs that have genotype data
+new_snps = dplyr::select(GRCh37_variants, chr, pos, snp_id) %>% dplyr::filter(pos %in% k4me1$pos)
+k4me1_filtered = dplyr::left_join(k4me1, new_snps, by = c("chr","pos")) %>% dplyr::filter(!is.na(snp_id))
+
+new_snps = dplyr::select(GRCh37_variants, chr, pos, snp_id) %>% dplyr::filter(pos %in% k27ac$pos)
+k27ac_filtered = dplyr::left_join(k27ac, new_snps, by = c("chr","pos")) %>% dplyr::filter(!is.na(snp_id))
+
 #Import genotypes
 vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
 #Construct metadata for chromatin qtls
-k4me1_meta = dplyr::select(k4me1, peak_id) %>% 
+k4me1_meta = dplyr::select(k4me1_filtered, peak_id) %>% 
   tidyr::separate(peak_id, c("chr","start","end"), sep = ":", remove = FALSE, convert = TRUE)
-k27ac_meta = dplyr::select(k27ac, peak_id) %>% 
+k27ac_meta = dplyr::select(k27ac_filtered, peak_id) %>% 
   tidyr::separate(peak_id, c("chr","start","end"), sep = ":", remove = FALSE, convert = TRUE)
 
 #Import Fairfax lead variant results
@@ -174,6 +178,74 @@ file_list = (dplyr::mutate(fairfax_files, file_name2 = file_name) %>%
 
 #Extract summary stats for all variants
 summaries = purrr::map_df(file_list, ~extractBatchSummaries(., hdf5_folder = "databases/Fairfax/hdf5/"))
+saveRDS(summaries, "databases/Fairfax/snp_level_summaries.rds")
+summaries = readRDS("databases/Fairfax/snp_level_summaries.rds")
+
+#Add metadata
+summaries_df = dplyr::select(fairfax_files, -file_name) %>%
+  dplyr::left_join(summaries, by = c("probe_id","old_snp_id"))
+
+#Calculate bonferroni pvalues
+summaries_df_bonferroni = dplyr::mutate(summaries_df, CD14_pvalue = pmin(CD14_pvalue*n_snps,1),
+              IFN_pvalue = pmin(IFN_pvalue*n_snps,1),
+              LPS2_pvalue = pmin(LPS2_pvalue*n_snps,1),
+              LPS24_pvalue = pmin(LPS24_pvalue*n_snps,1))
+
+#Extract condition-specific eQTLs
+IFN_eqtls = dplyr::filter(summaries_df_bonferroni, 
+                          IFN_pvalue < 0.01, CD14_pvalue > 0.1, 
+                          abs(CD14_beta) < 0.5, abs(IFN_beta) > 0.7)
+LPS2_eqtls = dplyr::filter(summaries_df_bonferroni, 
+                          LPS2_pvalue < 0.01, CD14_pvalue > 0.1, 
+                          abs(CD14_beta) < 0.5, abs(LPS2_beta) > 0.7)
+LPS24_eqtls = dplyr::filter(summaries_df_bonferroni, 
+                           LPS24_pvalue < 0.01, CD14_pvalue > 0.1, 
+                           abs(CD14_beta) < 0.5, abs(LPS24_beta) > 0.7)
+CD14_eqtls = dplyr::filter(summaries_df_bonferroni, CD14_pvalue < 0.01, abs(CD14_beta) > 0.7)
+
+other_eqtls =  dplyr::filter(summaries_df_bonferroni, 
+                          CD14_pvalue > 0.1, 
+                          abs(CD14_beta) < 0.5, 
+                          pmax(abs(IFN_beta), abs(LPS2_beta), abs(LPS24_beta)) > 0.7,
+                          min(IFN_pvalue, LPS2_pvalue, LPS24_pvalue) < 0.01)
+
+CD14_not_eqtls = dplyr::filter(summaries_df_bonferroni, CD14_pvalue > 0.1, abs(CD14_beta) < 0.5)
 
 
+#FInd overlaps between K4ME1 QTLs and eQTLs
+k4me1_qtls = dplyr::filter(k4me1_filtered, p_fdr < 0.1)
+k4me1_overlaps = findGWASOverlaps(dplyr::transmute(summaries_df_bonferroni, gene_id = probe_id, snp_id), 
+                                     dplyr::select(k4me1_qtls, peak_id, snp_id, chr, pos), 
+                                  vcf_file, max_distance = 5e5, min_r2 = 0.8)
+
+k27ac_qtls = dplyr::filter(k27ac_filtered, p_fdr < 0.1)
+k27ac_overlaps = findGWASOverlaps(dplyr::transmute(summaries_df_bonferroni, gene_id = probe_id, snp_id), 
+                                  dplyr::select(k27ac_qtls, peak_id, snp_id, chr, pos), 
+                                  vcf_file, max_distance = 5e5, min_r2 = 0.8)
+
+
+k4me1_olaps_filtered = dplyr::rename(k4me1_overlaps, probe_id = gene_id) %>% 
+  dplyr::filter(R2 > 0.8) %>%
+  dplyr::select(probe_id, snp_id) %>%
+  unique()
+k27ac_olaps_filtered = dplyr::rename(k27ac_overlaps, probe_id = gene_id) %>% 
+  dplyr::filter(R2 > 0.8) %>%
+  dplyr::select(probe_id, snp_id) %>%
+  unique()
+
+dplyr::semi_join(k4me1_olaps_filtered, IFN_eqtls, by = c("probe_id", "snp_id"))
+dplyr::semi_join(k27ac_olaps_filtered, IFN_eqtls, by = c("probe_id", "snp_id"))
+
+dplyr::semi_join(k4me1_olaps_filtered, CD14_eqtls, by = c("probe_id", "snp_id"))
+dplyr::semi_join(k27ac_olaps_filtered, CD14_eqtls, by = c("probe_id", "snp_id"))
+
+dplyr::semi_join(k4me1_olaps_filtered, other_eqtls, by = c("probe_id", "snp_id"))
+dplyr::semi_join(k27ac_olaps_filtered, other_eqtls, by = c("probe_id", "snp_id"))
+
+
+dplyr::semi_join(k4me1_olaps_filtered, LPS2_eqtls, by = c("probe_id", "snp_id"))
+dplyr::semi_join(k27ac_olaps_filtered, LPS2_eqtls, by = c("probe_id", "snp_id"))
+
+dplyr::semi_join(k4me1_olaps_filtered, LPS24_eqtls, by = c("probe_id", "snp_id"))
+dplyr::semi_join(k27ac_olaps_filtered, LPS24_eqtls, by = c("probe_id", "snp_id"))
 
