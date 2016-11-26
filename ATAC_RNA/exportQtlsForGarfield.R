@@ -24,7 +24,7 @@ for (chr in chromosomes){
   coords = readr::read_tsv(file.path(variant_coords_dir, chr_string), col_names = "pos", col_types = "i")
   
   #Process summary stats
-  garfield_results = rasqualSummariesToGarfieldByChr("21", rasqual_min_pvalues, qtlResults()$rna_rasqual, 
+  garfield_results = rasqualSummariesToGarfieldByChr(chr, rasqual_min_pvalues, qtlResults()$rna_rasqual, 
                         GRCh37_variants, combined_expression_data$gene_metadata, coords)
   
   #Export annotations
