@@ -53,6 +53,65 @@ coloc_hits = purrr::map_df(coloc_res_list, ~dplyr::filter(.,PP.H4.abf > 0.8) %>%
                              dplyr::left_join(gene_name_map, by = "gene_id"), .id = "condition_name")
 write.table(coloc_hits, "results/SL1344/coloc/coloc_lists/SLE.coloc.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 
+####### RA ######
+#Import eQTLs
+qtl_min_pvalues = readRDS("results/SL1344/eQTLs/fastqtl_min_pvalues.rds")
+
+#Prefilter potential GWAS overlaps
+gwas_prefix = "databases/GWAS/GWAS/Rheumatoid_Arthritis_Okada_2014_Nature_GWAS_meta"
+qtl_df_list = prefilterColocCandidates(qtl_min_pvalues, gwas_prefix, 
+                                       GRCh37_variants, fdr_thresh = 0.1, overlap_dist = 1e5, gwas_thresh = 1e-5)
+
+#Test for coloc
+coloc_res_list = purrr::map2(qtl_df_list, qtlResults()$rna_fastqtl, ~colocMolecularQTLsByRow(.x, qtl_summary_path = .y, 
+                     gwas_summary_path = paste0(gwas_prefix, ".sorted.txt.gz"), GRCh37_variants = GRCh37_variants, 
+                     GRCh38_variants = GRCh38_variants, qtl_type = "fastqtl", N_qtl = 84, cis_dist = 1e5))
+
+#Identify all unique coloc hits
+coloc_hits = purrr::map_df(coloc_res_list, ~dplyr::filter(.,PP.H4.abf > 0.8) %>% 
+                             dplyr::left_join(gene_name_map, by = "gene_id"), .id = "condition_name")
+write.table(coloc_hits, "results/SL1344/coloc/coloc_lists/RA.coloc.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+####### RA ######
+#Import eQTLs
+qtl_min_pvalues = readRDS("results/SL1344/eQTLs/fastqtl_min_pvalues.rds")
+
+#Prefilter potential GWAS overlaps
+gwas_prefix = "databases/GWAS/GWAS/Primary_biliary_cirrhosis_Cordell_2015_NatCommun_GWAS_meta"
+qtl_df_list = prefilterColocCandidates(qtl_min_pvalues, gwas_prefix, 
+                                       GRCh37_variants, fdr_thresh = 0.1, overlap_dist = 1e5, gwas_thresh = 1e-5)
+
+#Test for coloc
+coloc_res_list = purrr::map2(qtl_df_list, qtlResults()$rna_fastqtl, ~colocMolecularQTLsByRow(.x, qtl_summary_path = .y, 
+                  gwas_summary_path = paste0(gwas_prefix, ".sorted.txt.gz"), GRCh37_variants = GRCh37_variants, 
+                  GRCh38_variants = GRCh38_variants, qtl_type = "fastqtl", N_qtl = 84, cis_dist = 1e5))
+
+#Identify all unique coloc hits
+coloc_hits = purrr::map_df(coloc_res_list, ~dplyr::filter(.,PP.H4.abf > 0.8) %>% 
+                             dplyr::left_join(gene_name_map, by = "gene_id"), .id = "condition_name")
+write.table(coloc_hits, "results/SL1344/coloc/coloc_lists/PBC.coloc.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+####### RA ######
+#Import eQTLs
+qtl_min_pvalues = readRDS("results/SL1344/eQTLs/fastqtl_min_pvalues.rds")
+
+#Prefilter potential GWAS overlaps
+gwas_prefix = "databases/GWAS/GWAS/Schizophrenia_Ripke_2014_Nature_GWAS"
+qtl_df_list = prefilterColocCandidates(qtl_min_pvalues, gwas_prefix, 
+                                       GRCh37_variants, fdr_thresh = 0.1, overlap_dist = 1e5, gwas_thresh = 1e-5)
+
+#Test for coloc
+coloc_res_list = purrr::map2(qtl_df_list, qtlResults()$rna_fastqtl, ~colocMolecularQTLsByRow(.x, qtl_summary_path = .y, 
+                        gwas_summary_path = paste0(gwas_prefix, ".sorted.txt.gz"), GRCh37_variants = GRCh37_variants, 
+                        GRCh38_variants = GRCh38_variants, qtl_type = "fastqtl", N_qtl = 84, cis_dist = 1e5))
+
+#Identify all unique coloc hits
+coloc_hits = purrr::map_df(coloc_res_list, ~dplyr::filter(.,PP.H4.abf > 0.8) %>% 
+                             dplyr::left_join(gene_name_map, by = "gene_id"), .id = "condition_name")
+write.table(coloc_hits, "results/SL1344/coloc/coloc_lists/SCZ.coloc.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+
+
 ###### AZ ######
 #Import eQTLs
 qtl_min_pvalues = readRDS("results/SL1344/eQTLs/fastqtl_min_pvalues.rds")
