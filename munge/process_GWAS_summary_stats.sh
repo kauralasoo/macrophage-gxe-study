@@ -29,7 +29,7 @@ cut -f1 -d" " chr8 > variant_coords/chr8
 cut -f1 -d" " chr9 > variant_coords/chr9
 cut -f1 -d" " chrX > variant_coords/chrX
 
-#
+#Perform GARFIELD enrichments
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>6000] rusage[mem=6000]" -q normal -M 6000 -o garfield_test.%J.jobout "./garfield"
 
 echo "GIANT_HEIGHT" | python ~/software/utils/submitJobs.py --MEM 6000 --jobname run_GARFIELD --command "./garfield"
