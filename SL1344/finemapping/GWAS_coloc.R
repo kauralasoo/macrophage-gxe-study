@@ -2,10 +2,9 @@ library("dplyr")
 library("tidyr")
 library("purrr")
 library("coloc")
+library("readr")
 library("devtools")
 load_all("../seqUtils/")
-load_all("~/software/rasqual/rasqualTools/")
-load_all("macrophage-gxe-study/housekeeping/")
 
 gwas_id = NULL
 
@@ -44,7 +43,7 @@ qtl_summary_list = list(naive = "results/SL1344/fastqtl/output_start_end/naive_5
                         IFNg_SL1344 = "results/SL1344/fastqtl/output_start_end/IFNg_SL1344_500kb_pvalues.sorted.txt.gz")
 
 #Test for coloc
-coloc_res_list = purrr::map(qtl_summary_list, ~colocMolecularQTLsByRow(qtl_pairs[1:5,], qtl_summary_path = ., 
+coloc_res_list = purrr::map(qtl_summary_list, ~colocMolecularQTLsByRow(qtl_pairs, qtl_summary_path = ., 
                    gwas_summary_path = paste0(gwas_prefix, ".sorted.txt.gz"), GRCh37_variants = GRCh37_variants, 
                    GRCh38_variants = GRCh38_variants, qtl_type = "fastqtl", N_qtl = 84, cis_dist = 1e5))
 
