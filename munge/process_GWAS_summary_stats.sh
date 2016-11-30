@@ -34,3 +34,6 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>6000] rusage[mem=6000]" -q norm
 
 echo "GIANT_HEIGHT" | python ~/software/utils/submitJobs.py --MEM 6000 --jobname run_GARFIELD --command "./garfield"
 cat ../../macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.txt | python ~/software/utils/submitJobs.py --MEM 6000 --jobname run_GARFIELD --command "./garfield"
+
+#Extract top SNPs form each GWAS study for faster coloc analysis:
+cat macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.txt  | python ~/software/utils/GWAS/extractTopVariants.py --indir databases/GWAS/summary/ --outdir databases/GWAS/summary/
