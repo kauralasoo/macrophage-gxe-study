@@ -38,23 +38,21 @@ coloc_output = file.path("results/SL1344/coloc/coloc_lists/", paste0(gwas_id, ".
 GRCh38_variants = importVariantInformation("genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz")
 GRCh37_variants = importVariantInformation("genotypes/SL1344/imputed_20151005/GRCh37/imputed.86_samples.variant_information.GRCh37.vcf.gz")
 
-#Import eQTLs
-qtl_min_pvalues = readRDS("results/SL1344/eQTLs/fastqtl_min_pvalues.rds")
-
-#Prefilter potential GWAS overlaps
-qtl_df_list = prefilterColocCandidates(qtl_min_pvalues, gwas_prefix, 
-                                       GRCh37_variants, fdr_thresh = 0.1, overlap_dist = 1e5, gwas_thresh = 1e-5)
-#Identify all unique pairs
-qtl_pairs = purrr::map_df(qtl_df_list, identity) %>% unique()
-
 #Specify location of the QTL summary files
 if(trait == "eQTL"){
+  #Import eQTLs
+  qtl_min_pvalues = readRDS("results/SL1344/eQTLs/fastqtl_min_pvalues.rds")
+  
   qtl_summary_list = list(naive = "results/SL1344/fastqtl/output_start_end/naive_500kb_pvalues.sorted.txt.gz",
                           IFNg = "results/SL1344/fastqtl/output_start_end/IFNg_500kb_pvalues.sorted.txt.gz",
                           SL1344 = "results/SL1344/fastqtl/output_start_end/SL1344_500kb_pvalues.sorted.txt.gz",
                           IFNg_SL1344 = "results/SL1344/fastqtl/output_start_end/IFNg_SL1344_500kb_pvalues.sorted.txt.gz")
   sample_sizes = list(naive = 84, IFNg = 84, SL1344 = 84, IFNg_SL1344 = 84)
 } else if (trait == "caQTL"){
+  #Import caQTLs
+  qtl_min_pvalues = readRDS("results/ATAC/QTLs/fastqtl_min_pvalues.rds")
+  
+  #Specify path to summary stats
   qtl_summary_list = list(naive = "results/ATAC/fastqtl/output_start_end/naive_100kb_pvalues.sorted.txt.gz",
                           IFNg = "results/ATAC/fastqtl/output_start_end/IFNg_100kb_pvalues.sorted.txt.gz",
                           SL1344 = "results/ATAC/fastqtl/output_start_end/SL1344_100kb_pvalues.sorted.txt.gz",
@@ -62,6 +60,11 @@ if(trait == "eQTL"){
   sample_sizes = list(naive = 42, IFNg = 41, SL1344 = 31, IFNg_SL1344 = 31)
 }
 
+#Prefilter potential GWAS overlaps
+qtl_df_list = prefilterColocCandidates(qtl_min_pvalues, gwas_prefix, 
+                                       GRCh37_variants, fdr_thresh = 0.1, overlap_dist = 1e5, gwas_thresh = 1e-5)
+#Identify all unique pairs
+qtl_pairs = purrr::map_df(qtl_df_list, identity) %>% unique()
 
 #Test for coloc
 coloc_res_list = purrr::map2(qtl_summary_list, sample_sizes, ~colocMolecularQTLsByRow(qtl_pairs, qtl_summary_path = .x, 
