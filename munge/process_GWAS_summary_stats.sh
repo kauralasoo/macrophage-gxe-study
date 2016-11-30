@@ -37,3 +37,5 @@ cat ../../macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.txt | py
 
 #Extract top SNPs form each GWAS study for faster coloc analysis:
 cat macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.txt  | python ~/software/utils/GWAS/extractTopVariants.py --indir databases/GWAS/summary/ --outdir databases/GWAS/summary/
+
+cat macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.txt | tail -n 5 | python ~/software/utils/GWAS/extractTopVariants.py --indir databases/GWAS/summary/ --outdir databases/GWAS/summary/

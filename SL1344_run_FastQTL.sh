@@ -147,3 +147,12 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q norm
 
 python ~/software/utils/parseFinemapLogs.py --logDir results/SL1344/finemap_n42/log/ > results/SL1344/finemap_n42/log/RNA_posteriors.txt
 python ~/software/utils/parseFinemapLogs.py --logDir results/ATAC/finemap/log/ > results/ATAC/finemap/log/ATAC_posteriors.txt
+
+
+#Run coloc against all traits
+cut -f1 macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt | python ~/software/utils/submitJobs.py --MEM 6000 --jobname coloc_diseases --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/finemapping/GWAS_coloc.R"
+
+#Run coloc for caQTLs as well
+cut -f1 macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt | python ~/software/utils/submitJobs.py --MEM 6000 --jobname coloc_diseases --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/finemapping/GWAS_coloc.R --type caQTL"
+
+
