@@ -4,6 +4,7 @@ library("devtools")
 load_all("../seqUtils/")
 library("Rsamtools")
 library("purrr")
+library("SummarizedExperiment")
 
 #Import leafCutter data
 leafcutter_se = readRDS("results/SL1344/leafCutter_summarized_experiment.rds")
@@ -62,6 +63,12 @@ saveRDS(fastqtl_bonferroni,"results/SL1344/leafcutter/leafcutter_cluster_min_pva
 
 #Call significant QTLs
 leafcutter_qtl_hits = purrr::map_df(fastqtl_bonferroni, ~dplyr::filter(.,p_fdr < 0.1), .id = "condition_name")
+
+
+#Export count data for Danilo
+write.table(rowData(leafcutter_se), "results/SL1344/datasets/LeafCutter/leafcutter_cluster_metadata.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(colData(leafcutter_se), "results/SL1344/datasets/LeafCutter/leafcutter_sample_metadata.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(assays(leafcutter_se)$counts, "results/SL1344/datasets/LeafCutter/leafcutter_counts.txt", sep = "\t", quote = FALSE)
 
 
 
