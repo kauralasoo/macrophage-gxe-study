@@ -155,4 +155,5 @@ cut -f1 macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.tx
 #Run coloc for caQTLs as well
 cut -f1 macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt | python ~/software/utils/submitJobs.py --MEM 6000 --jobname coloc_diseases --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/finemapping/GWAS_coloc.R --type caQTL"
 
+echo 'SCZ' | python ~/software/utils/submitJobs.py --MEM 10000 --jobname coloc_diseases --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/finemapping/GWAS_coloc.R --type caQTL"
 

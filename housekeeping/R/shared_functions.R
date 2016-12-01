@@ -37,3 +37,8 @@ qtlResults <- function(){
                 rna_fastqtl = rna_fastqtl, rna_rasqual = rna_rasqual)
   return(result)
 }
+
+figureNames<- function(){
+  data_frame(condition_name = c("naive", "IFNg", "SL1344", "IFNg_SL1344"), 
+             figure_name = factor(c("N","I","S","I+S"), levels = c("N","I","S","I+S")))
+  }
