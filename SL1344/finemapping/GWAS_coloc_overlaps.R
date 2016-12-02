@@ -7,20 +7,20 @@ load_all("~/software/rasqual/rasqualTools/")
 load_all("macrophage-gxe-study/housekeeping/")
 
 #Functions
-identifyColocHits <- function(coloc_df, PP4_thresh = 0.8, PP5_thresh = .9, nsnps_thresh = 10){
-  coloc_hits = dplyr::filter(coloc_df, PP.H4.abf > PP4_thresh) %>% 
+identifyColocHits <- function(coloc_df, PP_power_thresh = 0.8, PP_coloc_thresh = 0.9, nsnps_thresh = 10){
+  coloc_hits = dplyr::filter(coloc_df, PP_power > PP_power_thresh) %>% 
     dplyr::group_by(trait, gwas_lead, gene_id) %>% 
     dplyr::arrange(trait, gene_id, gwas_lead, -PP.H4.abf) %>% 
     dplyr::filter(row_number() == 1) %>% 
-    dplyr::filter(PP5 > PP5_thresh) %>%
+    dplyr::filter(PP_coloc > PP_coloc_thresh) %>%
     dplyr::filter(nsnps > nsnps_thresh) %>%
     dplyr::ungroup()
   return(coloc_hits)
 }
 
-countConditionSpecificOverlaps <- function(coloc_filtered, PP4_thresh = 0.8, PP5_thresh = 0.9){
+countConditionSpecificOverlaps <- function(coloc_filtered, PP_power_thresh = 0.8, PP_coloc_thresh = 0.9){
   #Count the number of overlaps added by each additional condition
-  coloc_counts = dplyr::mutate(coloc_filtered, is_hit = ifelse(PP.H4.abf > PP4_thresh & PP5 > PP5_thresh, 1, 0)) %>% 
+  coloc_counts = dplyr::mutate(coloc_filtered, is_hit = ifelse(PP_power > PP_power_thresh & PP_coloc > PP_coloc_thresh, 1, 0)) %>% 
     dplyr::select(trait, gene_id, snp_id, condition_name, is_hit) %>% 
     tidyr::spread(condition_name, is_hit) %>%
     dplyr::mutate(naive_IFNg = pmax(naive, IFNg)) %>%
@@ -53,17 +53,19 @@ names(file_names) = gwas_stats_labeled$trait
 
 #Import enrichments
 coloc_df = purrr::map_df(file_names, ~readr::read_delim(., delim = "\t"), .id = "trait") %>%
-  dplyr::mutate(PP5 = PP.H4.abf/(PP.H4.abf + PP.H3.abf))
+  dplyr::mutate(PP_power = (PP.H4.abf + PP.H3.abf), PP_coloc = PP.H4.abf/PP_power)
 
 #Identify one overlap GWAS lead varaint
-coloc_hits = identifyColocHits(coloc_df, PP4_thresh = 0.8, PP5_thresh = .9, nsnps_thresh = 10)
+coloc_hits = identifyColocHits(coloc_df, PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 10) %>%
+  dplyr::filter(gwas_pval < 1e-5)
 
 #Retreive posterior probabilitites in all conditions
 coloc_filtered = dplyr::semi_join(coloc_df, coloc_hits, by = c("trait", "gene_id", "snp_id")) %>%
   dplyr::left_join(gene_name_map, by = "gene_id")
+saveRDS(coloc_filtered, "results/SL1344/coloc/eQTL_coloc_posterior_hits.rds")
 
 #Partition into conditions
-coloc_counts = countConditionSpecificOverlaps(coloc_filtered, PP4_thresh = 0.8, PP5_thresh = 0.9)
+coloc_counts = countConditionSpecificOverlaps(coloc_filtered, PP_power_thresh = 0.8, PP_coloc_thresh = .9)
 
 #Make a barplot with overlap counts
 eqtl_coloc_counts = ggplot(coloc_counts, aes(x = figure_name, fill = trait)) + 
@@ -81,17 +83,18 @@ names(file_names) = gwas_stats_labeled$trait
 
 #Import enrichments
 caqtl_coloc_df = purrr::map_df(file_names, ~readr::read_delim(., delim = "\t"), .id = "trait") %>%
-  dplyr::mutate(PP5 = PP.H4.abf/(PP.H4.abf + PP.H3.abf))
+  dplyr::mutate(PP_power = (PP.H4.abf + PP.H3.abf), PP_coloc = PP.H4.abf/PP_power)
 
 #Identify one overlap GWAS lead varaint
-caqtl_coloc_hits = identifyColocHits(caqtl_coloc_df, PP4_thresh = 0.8, PP5_thresh = .9, nsnps_thresh = 10)
+caqtl_coloc_hits = identifyColocHits(caqtl_coloc_df, PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 10) %>%
+  dplyr::filter(gwas_pval < 1e-5)
 
 #Retreive posterior probabilitites in all conditions
-caqtl_coloc_filtered = dplyr::semi_join(caqtl_coloc_df, caqtl_coloc_hits, by = c("trait", "gene_id", "snp_id")) %>%
-  dplyr::left_join(gene_name_map, by = "gene_id")
+caqtl_coloc_filtered = dplyr::semi_join(caqtl_coloc_df, caqtl_coloc_hits, by = c("trait", "gene_id", "snp_id"))
+saveRDS(caqtl_coloc_filtered, "results/SL1344/coloc/caQTL_coloc_posterior_hits.rds")
 
 #Partition into conditions
-caqtl_coloc_counts = countConditionSpecificOverlaps(caqtl_coloc_filtered, PP4_thresh = 0.8, PP5_thresh = 0.9)
+caqtl_coloc_counts = countConditionSpecificOverlaps(caqtl_coloc_filtered, PP_power_thresh = 0.8, PP_coloc_thresh = .9)
 
 #Make a barplot with overlap counts
 caqtl_coloc_counts = ggplot(caqtl_coloc_counts, aes(x = figure_name, fill = trait)) + 
