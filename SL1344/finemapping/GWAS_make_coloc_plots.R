@@ -8,29 +8,19 @@ load_all("../seqUtils/")
 load_all("~/software/rasqual/rasqualTools/")
 load_all("macrophage-gxe-study/housekeeping/")
 
-#Import eQTLs
-rasqual_min_pvalues = readRDS("results/SL1344/eQTLs/rasqual_min_pvalues.rds")
-fastqtl_min_pvalues = readRDS("results/SL1344/eQTLs/fastqtl_min_pvalues.rds")
+#Functions
+plotColoc <- function(df, plot_title){
+  plot = ggplot(df, aes(x = pos, y = log10p)) + 
+    geom_point() + 
+    facet_grid(condition_name~.) +
+    labs(title = plot_title) + 
+    theme_light()
+  return(plot)
+}
 
-
-#Make colocalisation plots
-qtl_df = dplyr::filter(rasqual_min_pvalues$naive, gene_id == "ENSG00000179344") %>% 
-  dplyr::select(gene_id, snp_id) 
-
-results = colocMolecularQTLs(qtl_df ,qtl_summary_path = qtlResults()$rna_rasqual$naive, 
-                             gwas_summary_path = "databases/GWAS/GWAS/Alzheimers_disease_Lambert_2013_NatGen_GWAS_meta_stage1.sorted.txt.gz"
-                             ,GRCh37_variants, GRCh38_variants, qtl_type = "rasqual")
-
-#Join data together
-trait_df = purrr::map_df(results$data, ~dplyr::select(.,chr, pos, p_nominal), .id = "trait") %>%
-  dplyr::mutate(log10p = -log(p_nominal, 10))
-
-#Make a plot
-ggplot(trait_df, aes(x = pos, y = log10p)) + 
-  geom_point() + facet_wrap(~trait, ncol = 1, scales = "free_y")
-
-
-
+#Import expression data
+combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
+gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name)
 
 #Import old and new variant coordinates
 GRCh38_variants = importVariantInformation("genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz")
@@ -38,14 +28,31 @@ GRCh37_variants = importVariantInformation("genotypes/SL1344/imputed_20151005/GR
 
 #Import list of colocalised eQTLs and caQTLs
 eqtl_coloc_hits = readRDS("results/SL1344/coloc/eQTL_coloc_posterior_hits.rds") %>%
-  dplyr::select(gene_id, snp_id, trait, gwas_lead) %>% unique()
+  dplyr::select(gene_id, snp_id, trait, gwas_lead, gene_name) %>% unique() %>%
+  dplyr::mutate(plot_title = paste(gene_name, trait, gwas_lead, sep = "_"))
 caqtl_coloc_hits = readRDS("results/SL1344/coloc/caQTL_coloc_posterior_hits.rds") %>%
   dplyr::select(gene_id, snp_id, trait, gwas_lead) %>% unique()
 
-#Make variant ranges object
-#Make GRanges object to fetch data
-qtl_ranges = constructVariantRanges(eqtl_coloc_hits[1,], GRCh38_variants, cis_dist = cis_dist)
-gwas_ranges = constructVariantRanges(eqtl_coloc_hits[1,], GRCh37_variants, cis_dist = cis_dist)
+#Import list of GWAS studies
+gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt", col_names = c("trait","file_name"))
 
+#Variables
+cis_dist = 1e5
+qtl_df = eqtl_coloc_hits[1,]
+qtl_paths = qtlResults()$rna_fastqtl
+
+plot_summaries = importSummariesForPlotting(qtl_df, gwas_stats_labeled, qtl_paths = qtlResults()$rna_fastqtl, 
+                                            GRCh37_variants = GRCh37_variants, GRCh38_variants = GRCh38_variants, cis_dist = 1e5)
+
+#Fetch data for all hits
+plot_data = purrr::by_row(eqtl_coloc_hits, 
+           ~importSummariesForPlotting(., gwas_stats_labeled, qtl_paths = qtlResults()$rna_fastqtl, 
+                GRCh37_variants = GRCh37_variants, GRCh38_variants = GRCh38_variants, cis_dist = 1e5), .to = "data")
+
+#Make plots
+plots = purrr::by_row(plot_data, ~plotColoc(.$data[[1]], .$plot_title), .to = "plot")
+plot_list = plots$plot
+names(plot_list) = plots$plot_title
+savePlotList(plot_list, "results/SL1344/coloc/coloc_plots/")
 
 
