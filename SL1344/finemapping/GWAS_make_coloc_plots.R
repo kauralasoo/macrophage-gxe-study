@@ -29,22 +29,15 @@ GRCh37_variants = importVariantInformation("genotypes/SL1344/imputed_20151005/GR
 #Import list of colocalised eQTLs and caQTLs
 eqtl_coloc_hits = readRDS("results/SL1344/coloc/eQTL_coloc_posterior_hits.rds") %>%
   dplyr::select(gene_id, snp_id, trait, gwas_lead, gene_name) %>% unique() %>%
-  dplyr::mutate(plot_title = paste(gene_name, trait, gwas_lead, sep = "_"))
+  dplyr::mutate(plot_title = paste(trait, gene_name, gwas_lead, sep = "_"))
 caqtl_coloc_hits = readRDS("results/SL1344/coloc/caQTL_coloc_posterior_hits.rds") %>%
-  dplyr::select(gene_id, snp_id, trait, gwas_lead) %>% unique()
+  dplyr::select(gene_id, snp_id, trait, gwas_lead, gene_name) %>% unique() %>%
+  dplyr::mutate(plot_title = paste(trait, gene_name, gwas_lead, sep = "_"))
 
 #Import list of GWAS studies
 gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt", col_names = c("trait","file_name"))
 
-#Variables
-cis_dist = 1e5
-qtl_df = eqtl_coloc_hits[1,]
-qtl_paths = qtlResults()$rna_fastqtl
-
-plot_summaries = importSummariesForPlotting(qtl_df, gwas_stats_labeled, qtl_paths = qtlResults()$rna_fastqtl, 
-                                            GRCh37_variants = GRCh37_variants, GRCh38_variants = GRCh38_variants, cis_dist = 1e5)
-
-#Fetch data for all hits
+#Fetch data for all eqtl hits
 plot_data = purrr::by_row(eqtl_coloc_hits, 
            ~importSummariesForPlotting(., gwas_stats_labeled, qtl_paths = qtlResults()$rna_fastqtl, 
                 GRCh37_variants = GRCh37_variants, GRCh38_variants = GRCh38_variants, cis_dist = 1e5), .to = "data")
@@ -54,5 +47,18 @@ plots = purrr::by_row(plot_data, ~plotColoc(.$data[[1]], .$plot_title), .to = "p
 plot_list = plots$plot
 names(plot_list) = plots$plot_title
 savePlotList(plot_list, "results/SL1344/coloc/coloc_plots/")
+
+
+#Fetch data for all eqtl hits
+caqtl_plot_data = purrr::by_row(caqtl_coloc_hits, 
+       ~importSummariesForPlotting(., gwas_stats_labeled, qtl_paths = qtlResults()$atac_fastqtl, 
+             GRCh37_variants = GRCh37_variants, GRCh38_variants = GRCh38_variants, cis_dist = 1e5), .to = "data")
+
+#Make plots
+caqtl_plots = purrr::by_row(caqtl_plot_data, ~plotColoc(.$data[[1]], .$plot_title), .to = "plot")
+plot_list = caqtl_plots$plot
+names(plot_list) = caqtl_plots$plot_title
+savePlotList(plot_list, "results/SL1344/coloc/caqtl_coloc_plots/")
+
 
 

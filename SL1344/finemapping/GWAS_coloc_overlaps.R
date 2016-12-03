@@ -63,7 +63,7 @@ coloc_df = purrr::map_df(file_names, ~readr::read_delim(., delim = "\t"), .id = 
   dplyr::mutate(PP_power = (PP.H4.abf + PP.H3.abf), PP_coloc = PP.H4.abf/PP_power)
 
 #Identify one overlap GWAS lead varaint
-coloc_hits = identifyColocHits(coloc_df, PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 10) %>%
+coloc_hits = identifyColocHits(coloc_df, PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 50) %>%
   dplyr::filter(gwas_pval < 1e-6) %>%
   dplyr::filter(!(gene_id %in% mhc_genes$gene_id))
 
@@ -94,7 +94,7 @@ caqtl_coloc_df = purrr::map_df(file_names, ~readr::read_delim(., delim = "\t"), 
   dplyr::mutate(PP_power = (PP.H4.abf + PP.H3.abf), PP_coloc = PP.H4.abf/PP_power)
 
 #Identify one overlap GWAS lead varaint
-caqtl_coloc_hits = identifyColocHits(caqtl_coloc_df, PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 10) %>%
+caqtl_coloc_hits = identifyColocHits(caqtl_coloc_df, PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 50) %>%
   dplyr::filter(gwas_pval < 1e-6) %>%
   dplyr::filter(!(gene_id %in% mhc_peaks$gene_id))
 
