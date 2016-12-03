@@ -326,6 +326,44 @@ tabix -s2 -b3 -e3 -f results/ATAC/fastqtl/output/SL1344_100kb_pvalues.sorted.txt
 tabix -s2 -b3 -e3 -f results/ATAC/fastqtl/output/IFNg_SL1344_100kb_pvalues.sorted.txt.gz
 
 
+#Run FastQTL with CQN-normalised data and covariates (3 PCs + sex) (500kb window)
+
+#Get fastqtl results for all SNP-peak pairs in a 500kb window
+cat results/ATAC/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/ATAC/rasqual/input/naive.ASE.vcf.gz --bed results/ATAC/fastqtl/input/naive.expression_cqn.txt.gz --cov results/ATAC/fastqtl/input/naive.covariates_cqn.txt --W 500000 --out results/ATAC/fastqtl/output/naive_500kb_full --execute True"
+cat results/ATAC/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/ATAC/rasqual/input/IFNg.ASE.vcf.gz --bed results/ATAC/fastqtl/input/IFNg.expression_cqn.txt.gz --cov results/ATAC/fastqtl/input/IFNg.covariates_cqn.txt --W 500000 --out results/ATAC/fastqtl/output/IFNg_500kb_full --execute True"
+cat results/ATAC/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/ATAC/rasqual/input/SL1344.ASE.vcf.gz --bed results/ATAC/fastqtl/input/SL1344.expression_cqn.txt.gz --cov results/ATAC/fastqtl/input/SL1344.covariates_cqn.txt --W 500000 --out results/ATAC/fastqtl/output/SL1344_500kb_full --execute True"
+cat results/ATAC/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/ATAC/rasqual/input/IFNg_SL1344.ASE.vcf.gz --bed results/ATAC/fastqtl/input/IFNg_SL1344.expression_cqn.txt.gz --cov results/ATAC/fastqtl/input/IFNg_SL1344.covariates_cqn.txt --W 500000 --out results/ATAC/fastqtl/output/IFNg_SL1344_500kb_full --execute True"
+
+#Merge chunks into single files
+zcat results/ATAC/fastqtl/output/naive_500kb_full.chunk_*.txt.gz | bgzip > results/ATAC/fastqtl/output/naive_500kb_pvalues.txt.gz &
+zcat results/ATAC/fastqtl/output/IFNg_500kb_full.chunk_*.txt.gz | bgzip > results/ATAC/fastqtl/output/IFNg_500kb_pvalues.txt.gz &
+zcat results/ATAC/fastqtl/output/SL1344_500kb_full.chunk_*.txt.gz | bgzip > results/ATAC/fastqtl/output/SL1344_500kb_pvalues.txt.gz &
+zcat results/ATAC/fastqtl/output/IFNg_SL1344_500kb_full.chunk_*.txt.gz | bgzip > results/ATAC/fastqtl/output/IFNg_SL1344_500kb_pvalues.txt.gz &
+
+#Remove chunks
+rm results/ATAC/fastqtl/output/*.chunk_*
+
+#Add SNP coordinates
+echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/ATAC/rasqual/input/naive.ASE.vcf.gz --fastqtl results/ATAC/fastqtl/output/naive_500kb_pvalues.txt.gz | bgzip > results/ATAC/fastqtl/output/naive_500kb_pvalues.coords.txt.gz"
+echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/ATAC/rasqual/input/IFNg.ASE.vcf.gz --fastqtl results/ATAC/fastqtl/output/IFNg_500kb_pvalues.txt.gz | bgzip > results/ATAC/fastqtl/output/IFNg_500kb_pvalues.coords.txt.gz"
+echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/ATAC/rasqual/input/SL1344.ASE.vcf.gz --fastqtl results/ATAC/fastqtl/output/SL1344_500kb_pvalues.txt.gz | bgzip > results/ATAC/fastqtl/output/SL1344_500kb_pvalues.coords.txt.gz"
+echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/ATAC/rasqual/input/IFNg_SL1344.ASE.vcf.gz --fastqtl results/ATAC/fastqtl/output/IFNg_SL1344_500kb_pvalues.txt.gz | bgzip > results/ATAC/fastqtl/output/IFNg_SL1344_500kb_pvalues.coords.txt.gz"
+
+#Sort files by SNP coordinates
+#awk command is necessary to change field separator from space to tab
+zcat results/ATAC/fastqtl/output/naive_500kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/ATAC/fastqtl/output/naive_500kb_pvalues.sorted.txt.gz
+zcat results/ATAC/fastqtl/output/IFNg_500kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/ATAC/fastqtl/output/IFNg_500kb_pvalues.sorted.txt.gz
+zcat results/ATAC/fastqtl/output/SL1344_500kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/ATAC/fastqtl/output/SL1344_500kb_pvalues.sorted.txt.gz
+zcat results/ATAC/fastqtl/output/IFNg_SL1344_500kb_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/ATAC/fastqtl/output/IFNg_SL1344_500kb_pvalues.sorted.txt.gz
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -M 1000 -o FarmOut/sort_fastqtl.%J.jobout "./sort_fastqtl.sh"
+
+#Index the output files using Tabix
+tabix -s2 -b3 -e3 -f results/ATAC/fastqtl/output/naive_500kb_pvalues.sorted.txt.gz
+tabix -s2 -b3 -e3 -f results/ATAC/fastqtl/output/IFNg_500kb_pvalues.sorted.txt.gz
+tabix -s2 -b3 -e3 -f results/ATAC/fastqtl/output/SL1344_500kb_pvalues.sorted.txt.gz
+tabix -s2 -b3 -e3 -f results/ATAC/fastqtl/output/IFNg_SL1344_500kb_pvalues.sorted.txt.gz
+
+
 #Extract FASTA sequence corresponding to peaks
 /software/CGP/external-apps/cufflinks-1.3.0/bin/gffread ATAC_consensus_peaks.gff3  -g ../../../annotations/GRCh38/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa -w ATAC_consnesus_peaks.fasta
 
