@@ -9,5 +9,7 @@ unique_peaks = readRDS("results/ATAC/QTLs/unique_qtl_peaks.rds")
 clustered_peaks = readRDS("results/ATAC/QTLs/clustered_qtl_peaks.rds")
 
 #Count overlaps
-unique_olaps = dplyr::left_join(caqtl_coloc_hits, unique_peaks$lead_snps, by = "gene_id") %>% dplyr::filter(!is.na(snp_count))
-cluster_olaps = dplyr::left_join(caqtl_coloc_hits, unique_peaks$lead_snps, by = "gene_id")
+unique_olaps = dplyr::left_join(caqtl_coloc_hits, unique_peaks$lead_snps, by = "gene_id") %>% 
+  dplyr::filter(!is.na(snp_count))
+cluster_olaps = dplyr::left_join(caqtl_coloc_hits, clustered_peaks$cluster_memberships, by = "gene_id") %>% 
+  dplyr::filter(!is.na(cluster_snp_count))
