@@ -39,11 +39,18 @@ countConditionSpecificOverlaps <- function(coloc_filtered, PP_power_thresh = 0.8
 combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
 gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name)
 
+#Import atac data
+atac_data = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
+
+#Identify genes in the MHC region that should be excluded
+mhc_genes = dplyr::filter(combined_expression_data$gene_metadata, chr == "6", start > 28510120, end < 33480577)
+mhc_peaks = dplyr::filter(atac_data$gene_metadata, chr == "6", start > 28510120, end < 33480577)
+
 #Import GWAS traits
 gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt",
                                      col_names = c("trait","file_name")) %>%
-  dplyr::filter(!(trait %in% c("UC_2014","UC_2012", "CEL_2010","PS", "RA_2012", "CD_2012", "T2D_1", "MS", "T1D", "T1D_2"))) %>%
-  dplyr::filter(!(trait %in% c("UC","CD", "NAR"))) #Remove UC and CD, because there might be a lot of sharing with IBD
+  dplyr::filter(!(trait %in% c("UC_2014","UC_2012", "CEL_2010","PS", "RA_2012", "CD_2012", "T2D_1", "MS", "T1D", "T1D_2")))# %>%
+  #dplyr::filter(!(trait %in% c("UC","CD", "NAR"))) #Remove UC and CD, because there might be a lot of sharing with IBD
 
 ##### eQTL overlaps ####
 #Import coloc output
@@ -57,7 +64,8 @@ coloc_df = purrr::map_df(file_names, ~readr::read_delim(., delim = "\t"), .id = 
 
 #Identify one overlap GWAS lead varaint
 coloc_hits = identifyColocHits(coloc_df, PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 10) %>%
-  dplyr::filter(gwas_pval < 1e-5)
+  dplyr::filter(gwas_pval < 1e-6) %>%
+  dplyr::filter(!(gene_id %in% mhc_genes$gene_id))
 
 #Retreive posterior probabilitites in all conditions
 coloc_filtered = dplyr::semi_join(coloc_df, coloc_hits, by = c("trait", "gene_id", "snp_id")) %>%
@@ -87,17 +95,19 @@ caqtl_coloc_df = purrr::map_df(file_names, ~readr::read_delim(., delim = "\t"), 
 
 #Identify one overlap GWAS lead varaint
 caqtl_coloc_hits = identifyColocHits(caqtl_coloc_df, PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 10) %>%
-  dplyr::filter(gwas_pval < 1e-5)
+  dplyr::filter(gwas_pval < 1e-6) %>%
+  dplyr::filter(!(gene_id %in% mhc_peaks$gene_id))
 
 #Retreive posterior probabilitites in all conditions
-caqtl_coloc_filtered = dplyr::semi_join(caqtl_coloc_df, caqtl_coloc_hits, by = c("trait", "gene_id", "snp_id"))
+caqtl_coloc_filtered = dplyr::semi_join(caqtl_coloc_df, caqtl_coloc_hits, by = c("trait", "gene_id", "snp_id")) %>%
+  dplyr::mutate(gene_name = gene_id)
 saveRDS(caqtl_coloc_filtered, "results/SL1344/coloc/caQTL_coloc_posterior_hits.rds")
 
 #Partition into conditions
 caqtl_coloc_counts = countConditionSpecificOverlaps(caqtl_coloc_filtered, PP_power_thresh = 0.8, PP_coloc_thresh = .9)
 
 #Make a barplot with overlap counts
-caqtl_coloc_counts = ggplot(caqtl_coloc_counts, aes(x = figure_name, fill = trait)) + 
+caqtl_coloc_plot = ggplot(caqtl_coloc_counts, aes(x = figure_name, fill = trait)) + 
   geom_bar() +
   xlab("Condition")
-ggsave("figures/main_figures/coloc_caQTL_counts.pdf", plot = caqtl_coloc_counts, width = 4.5, height = 4)
+ggsave("figures/main_figures/coloc_caQTL_counts.pdf", plot = caqtl_coloc_plot, width = 4.5, height = 4)
