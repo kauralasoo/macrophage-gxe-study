@@ -72,7 +72,7 @@ qtl_pairs = purrr::map_df(qtl_df_list, identity) %>% unique()
 #Test for coloc
 coloc_res_list = purrr::map2(qtl_summary_list, sample_sizes, ~colocMolecularQTLsByRow(qtl_pairs, qtl_summary_path = .x, 
                    gwas_summary_path = paste0(gwas_prefix, ".sorted.txt.gz"), GRCh37_variants = GRCh37_variants, 
-                   GRCh38_variants = GRCh38_variants, qtl_type = "fastqtl", N_qtl = .y, cis_dist = cis_window))
+                   GRCh38_variants = GRCh38_variants, N_qtl = .y, cis_dist = cis_window))
 
 coloc_hits = purrr::map_df(coloc_res_list, identity, .id = "condition_name") %>% arrange(gwas_lead)
 write.table(coloc_hits, coloc_output, sep = "\t", quote = FALSE, row.names = FALSE)
