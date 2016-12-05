@@ -153,7 +153,7 @@ python ~/software/utils/parseFinemapLogs.py --logDir results/ATAC/finemap/log/ >
 cut -f1 macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt | python ~/software/utils/submitJobs.py --MEM 6000 --jobname coloc_diseases --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/finemapping/GWAS_coloc.R"
 
 #Run coloc for caQTLs as well
-cut -f1 macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt | python ~/software/utils/submitJobs.py --MEM 6000 --jobname coloc_diseases --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/finemapping/GWAS_coloc.R --type caQTL"
+cut -f1 macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt | python ~/software/utils/submitJobs.py --MEM 6000 --jobname coloc_diseases --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/finemapping/GWAS_coloc.R --type caQTL --window 1e-5"
 
 echo 'SCZ' | python ~/software/utils/submitJobs.py --MEM 10000 --jobname coloc_diseases --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/finemapping/GWAS_coloc.R --type caQTL"
 

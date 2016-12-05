@@ -10,13 +10,16 @@ load_all("../seqUtils/")
 #Parse command-line options
 option_list <- list(
   make_option(c("-t", "--type"), type="character", default=NULL,
-              help="Type of the QTLs used for coloc.", metavar = "type")
+              help="Type of the QTLs used for coloc.", metavar = "type"),
+  make_option(c("-w", "--window"), type="character", default=NULL,
+              help="Size of the cis window.", metavar = "type")
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 
 #Parse variables
 gwas_id = NULL
 trait = opt$t
+cis_window = as.numeric(opt$w)
 print(trait)
 
 ####### Get GWAS id form STDIN ######
@@ -32,7 +35,7 @@ gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWA
 #Set intput and output files
 gwas_file_name = dplyr::filter(gwas_stats_labeled, trait == gwas_id)$file_name
 gwas_prefix = file.path("databases/GWAS/summary", gwas_file_name)
-coloc_output = file.path("results/SL1344/coloc/coloc_lists/", paste0(gwas_id, ".", trait, ".coloc.txt"))
+coloc_output = file.path("results/SL1344/coloc/coloc_lists/", paste0(gwas_id, ".", trait, ".",as.character(cis_window), ".coloc.txt"))
 
 #Import old and new variant coordinates
 GRCh38_variants = importVariantInformation("genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz")
@@ -53,10 +56,10 @@ if(trait == "eQTL"){
   qtl_min_pvalues = readRDS("results/ATAC/QTLs/fastqtl_min_pvalues.rds")
   
   #Specify path to summary stats
-  qtl_summary_list = list(naive = "results/ATAC/fastqtl/output_start_end/naive_100kb_pvalues.sorted.txt.gz",
-                          IFNg = "results/ATAC/fastqtl/output_start_end/IFNg_100kb_pvalues.sorted.txt.gz",
-                          SL1344 = "results/ATAC/fastqtl/output_start_end/SL1344_100kb_pvalues.sorted.txt.gz",
-                          IFNg_SL1344 = "results/ATAC/fastqtl/output_start_end/IFNg_SL1344_100kb_pvalues.sorted.txt.gz")
+  qtl_summary_list = list(naive = "results/ATAC/fastqtl/output_start_end/naive_500kb_pvalues.sorted.txt.gz",
+                          IFNg = "results/ATAC/fastqtl/output_start_end/IFNg_500kb_pvalues.sorted.txt.gz",
+                          SL1344 = "results/ATAC/fastqtl/output_start_end/SL1344_500kb_pvalues.sorted.txt.gz",
+                          IFNg_SL1344 = "results/ATAC/fastqtl/output_start_end/IFNg_SL1344_500kb_pvalues.sorted.txt.gz")
   sample_sizes = list(naive = 42, IFNg = 41, SL1344 = 31, IFNg_SL1344 = 31)
 }
 
@@ -69,7 +72,7 @@ qtl_pairs = purrr::map_df(qtl_df_list, identity) %>% unique()
 #Test for coloc
 coloc_res_list = purrr::map2(qtl_summary_list, sample_sizes, ~colocMolecularQTLsByRow(qtl_pairs, qtl_summary_path = .x, 
                    gwas_summary_path = paste0(gwas_prefix, ".sorted.txt.gz"), GRCh37_variants = GRCh37_variants, 
-                   GRCh38_variants = GRCh38_variants, qtl_type = "fastqtl", N_qtl = .y, cis_dist = 1e5))
+                   GRCh38_variants = GRCh38_variants, qtl_type = "fastqtl", N_qtl = .y, cis_dist = cis_window))
 
 coloc_hits = purrr::map_df(coloc_res_list, identity, .id = "condition_name") %>% arrange(gwas_lead)
 write.table(coloc_hits, coloc_output, sep = "\t", quote = FALSE, row.names = FALSE)
