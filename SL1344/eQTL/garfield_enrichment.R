@@ -25,15 +25,15 @@ ranked_enrichments = dplyr::mutate(low_enrichments, trait = factor(trait, levels
 #Make plots
 enrichment_plot = ggplot(ranked_enrichments, aes(x = log(FE,2), y = trait, color = Annotation)) + 
   geom_point() +
-  scale_x_continuous(limits = c(0, 7)) + 
+  scale_x_continuous(limits = c(0, 6)) + 
   theme_light()
-ggsave("figures/main_figures/grafield_enrichment.pdf", plot = enrichment_plot, width = 6, height = 7)
+ggsave("figures/main_figures/grafield_enrichment-5.pdf", plot = enrichment_plot, width = 6, height = 7)
 
 enrichment_plot = ggplot(ranked_enrichments, aes(x = FE, y = trait, color = Annotation)) + 
   geom_point() +
   scale_x_continuous(limits = c(0, 41)) + 
   theme_light()
-ggsave("figures/main_figures/grafield_enrichment_FE.pdf", plot = enrichment_plot, width = 6, height = 7)
+ggsave("figures/main_figures/grafield_enrichment_FE-5.pdf", plot = enrichment_plot, width = 6, height = 7)
 
 
 #High threshold
