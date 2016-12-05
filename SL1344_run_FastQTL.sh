@@ -150,10 +150,14 @@ python ~/software/utils/parseFinemapLogs.py --logDir results/ATAC/finemap/log/ >
 
 
 #Run coloc against all traits
-cut -f1 macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt | python ~/software/utils/submitJobs.py --MEM 6000 --jobname coloc_diseases --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/finemapping/GWAS_coloc.R"
+cut -f1 macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt | python ~/software/utils/submitJobs.py --MEM 6000 --jobname coloc_diseases --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/finemapping/GWAS_run_coloc.R --type eQTL --window 1e-5"
+cut -f1 macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt | python ~/software/utils/submitJobs.py --MEM 6000 --jobname coloc_diseases --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/finemapping/GWAS_run_coloc.R --type eQTL --window 2e-5"
 
 #Run coloc for caQTLs as well
-cut -f1 macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt | python ~/software/utils/submitJobs.py --MEM 6000 --jobname coloc_diseases --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/finemapping/GWAS_coloc.R --type caQTL --window 1e-5"
+cut -f1 macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt | grep -v SCZ | python ~/software/utils/submitJobs.py --MEM 6000 --jobname coloc_diseases --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/finemapping/GWAS_run_coloc.R --type caQTL --window 1e-5"
+echo 'SCZ' | python ~/software/utils/submitJobs.py --MEM 10000 --jobname coloc_diseases --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/finemapping/GWAS_run_coloc.R --type caQTL --window 1e-5"
 
-echo 'SCZ' | python ~/software/utils/submitJobs.py --MEM 10000 --jobname coloc_diseases --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/finemapping/GWAS_coloc.R --type caQTL"
+cut -f1 macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt | grep -v SCZ | python ~/software/utils/submitJobs.py --MEM 6000 --jobname coloc_diseases --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/finemapping/GWAS_run_coloc.R --type caQTL --window 2e-5"
+echo 'SCZ' | python ~/software/utils/submitJobs.py --MEM 10000 --jobname coloc_diseases --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/finemapping/GWAS_run_coloc.R --type caQTL --window 2e-5"
+
 

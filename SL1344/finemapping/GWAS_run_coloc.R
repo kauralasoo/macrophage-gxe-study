@@ -56,10 +56,10 @@ if(trait == "eQTL"){
   qtl_min_pvalues = readRDS("results/ATAC/QTLs/fastqtl_min_pvalues.rds")
   
   #Specify path to summary stats
-  qtl_summary_list = list(naive = "results/ATAC/fastqtl/output_start_end/naive_500kb_pvalues.sorted.txt.gz",
-                          IFNg = "results/ATAC/fastqtl/output_start_end/IFNg_500kb_pvalues.sorted.txt.gz",
-                          SL1344 = "results/ATAC/fastqtl/output_start_end/SL1344_500kb_pvalues.sorted.txt.gz",
-                          IFNg_SL1344 = "results/ATAC/fastqtl/output_start_end/IFNg_SL1344_500kb_pvalues.sorted.txt.gz")
+  qtl_summary_list = list(naive = "results/ATAC/fastqtl/output/naive_500kb_pvalues.sorted.txt.gz",
+                          IFNg = "results/ATAC/fastqtl/output/IFNg_500kb_pvalues.sorted.txt.gz",
+                          SL1344 = "results/ATAC/fastqtl/output/SL1344_500kb_pvalues.sorted.txt.gz",
+                          IFNg_SL1344 = "results/ATAC/fastqtl/output/IFNg_SL1344_500kb_pvalues.sorted.txt.gz")
   sample_sizes = list(naive = 42, IFNg = 41, SL1344 = 31, IFNg_SL1344 = 31)
 }
 
