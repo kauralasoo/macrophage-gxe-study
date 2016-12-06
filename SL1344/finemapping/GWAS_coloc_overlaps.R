@@ -35,6 +35,28 @@ countConditionSpecificOverlaps <- function(coloc_filtered, PP_power_thresh = 0.8
     dplyr::left_join(figureNames(), by = "condition_name")
 }
 
+importAndFilterColocHits <- function(gwas_stats, coloc_suffix = ".eQTL.1e+05.coloc.txt", coloc_prefix = "results/SL1344/coloc/coloc_lists/",
+                                     PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 50, gwas_pval_thresh = 1e-6){
+  #Import coloc hits
+  
+  #Name all files
+  file_names = as.list(paste0(coloc_prefix, gwas_stats_labeled$trait, coloc_suffix))
+  names(file_names) = gwas_stats_labeled$trait
+  
+  #Import enrichments
+  coloc_df = purrr::map_df(file_names, ~readr::read_delim(., delim = "\t"), .id = "trait") %>%
+    dplyr::mutate(PP_power = (PP.H4.abf + PP.H3.abf), PP_coloc = PP.H4.abf/PP_power)
+  
+  #Identify one overlap GWAS lead varaint
+  coloc_hits = identifyColocHits(coloc_df, PP_power_thresh, PP_coloc_thresh, nsnps_thresh) %>%
+    dplyr::filter(gwas_pval < 1e-6) %>%
+    dplyr::filter(!(gene_id %in% mhc_genes$gene_id))
+  
+  #Retreive posterior probabilitites in all conditions
+  coloc_filtered = dplyr::semi_join(coloc_df, coloc_hits, by = c("trait", "gene_id", "snp_id"))
+  return(list(coloc_filtered = coloc_filtered, coloc_df = coloc_df))
+}
+
 #Import expression data
 combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
 gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name)
@@ -49,28 +71,38 @@ mhc_peaks = dplyr::filter(atac_data$gene_metadata, chr == "6", start > 28510120,
 #Import GWAS traits
 gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt",
                                      col_names = c("trait","file_name")) %>%
-  dplyr::filter(!(trait %in% c("UC_2014","UC_2012", "CEL_2010","PS", "RA_2012", "CD_2012", "T2D_1", "MS", "T1D", "T1D_2")))# %>%
-  #dplyr::filter(!(trait %in% c("UC","CD", "NAR"))) #Remove UC and CD, because there might be a lot of sharing with IBD
+  dplyr::filter(!(trait %in% c("UC_2014","UC_2012", "CEL_2010","PS", "RA_2012", "CD_2012", "T2D_1", "MS", "T1D", "T1D_2")))
 
 ##### eQTL overlaps ####
 #Import coloc output
-#Name all files
-file_names = as.list(paste0("results/SL1344/coloc/coloc_lists/", gwas_stats_labeled$trait, ".coloc.txt"))
-names(file_names) = gwas_stats_labeled$trait
-
-#Import enrichments
-coloc_df = purrr::map_df(file_names, ~readr::read_delim(., delim = "\t"), .id = "trait") %>%
-  dplyr::mutate(PP_power = (PP.H4.abf + PP.H3.abf), PP_coloc = PP.H4.abf/PP_power)
-
-#Identify one overlap GWAS lead varaint
-coloc_hits = identifyColocHits(coloc_df, PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 50) %>%
-  dplyr::filter(gwas_pval < 1e-6) %>%
-  dplyr::filter(!(gene_id %in% mhc_genes$gene_id))
-
-#Retreive posterior probabilitites in all conditions
-coloc_filtered = dplyr::semi_join(coloc_df, coloc_hits, by = c("trait", "gene_id", "snp_id")) %>%
+eqtl_100kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".eQTL.1e+05.coloc.txt", 
+                                           PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 50, 
+                                           gwas_pval_thresh = 1e-6)$coloc_filtered %>%
   dplyr::left_join(gene_name_map, by = "gene_id")
-saveRDS(coloc_filtered, "results/SL1344/coloc/eQTL_coloc_posterior_hits.rds")
+saveRDS(eqtl_100kb_hits, "results/SL1344/coloc/eQTL_coloc_100kb_hits.rds")
+
+eqtl_200kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".eQTL.2e+05.coloc.txt", 
+                                           PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 50, 
+                                           gwas_pval_thresh = 1e-6)$coloc_filtered %>%
+  dplyr::left_join(gene_name_map, by = "gene_id")
+saveRDS(eqtl_200kb_hits, "results/SL1344/coloc/eQTL_coloc_200kb_hits.rds")
+
+##### caQTL overlaps ####
+#Import coloc output
+caqtl_100kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".caQTL.1e+05.coloc.txt", 
+                                           PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 50, 
+                                           gwas_pval_thresh = 1e-6)$coloc_filtered %>%
+  dplyr::mutate(gene_name = gene_id)
+saveRDS(caqtl_100kb_hits, "results/SL1344/coloc/caQTL_coloc_100kb_hits.rds")
+
+caqtl_200kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".caQTL.2e+05.coloc.txt", 
+                                           PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 50, 
+                                           gwas_pval_thresh = 1e-6)$coloc_filtered %>%
+  dplyr::mutate(gene_name = gene_id)
+saveRDS(caqtl_200kb_hits, "results/SL1344/coloc/caQTL_coloc_200kb_hits.rds")
+
+
+
 
 #Partition into conditions
 coloc_counts = countConditionSpecificOverlaps(coloc_filtered, PP_power_thresh = 0.8, PP_coloc_thresh = .9)
