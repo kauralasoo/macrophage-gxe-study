@@ -45,7 +45,8 @@ plot_list = plots$plot
 names(plot_list) = plots$plot_title
 savePlotList(plot_list, "results/SL1344/coloc/eQTL_100kb/")
 
-#Import list of colocalised eQTLs in 2002b window
+
+#### Import list of colocalised eQTLs in 200kb window ####
 eqtl_coloc_hits_200kb = readRDS("results/SL1344/coloc/eQTL_coloc_200kb_hits.rds") %>%
   dplyr::select(gene_id, snp_id, trait, gwas_lead, gene_name) %>% unique() %>%
   dplyr::mutate(plot_title = paste(trait, gene_name, gwas_lead, sep = "_"))
