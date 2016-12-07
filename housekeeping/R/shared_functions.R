@@ -18,10 +18,10 @@ qtlResults <- function(){
                       SL1344 = "/Volumes/JetDrive/databases/ATAC/rasqual/SL1344_100kb.sorted.txt.gz",
                       IFNg_SL1344 = "/Volumes/JetDrive/databases/ATAC/rasqual/IFNg_SL1344_100kb.sorted.txt.gz")
   
-  atac_fastqtl = list(naive = "/Volumes/JetDrive/databases/ATAC/fastqtl/naive_100kb_pvalues.sorted.txt.gz",
-                      IFNg = "/Volumes/JetDrive/databases/ATAC/fastqtl/IFNg_100kb_pvalues.sorted.txt.gz",
-                      SL1344 = "/Volumes/JetDrive/databases/ATAC/fastqtl/SL1344_100kb_pvalues.sorted.txt.gz",
-                      IFNg_SL1344 = "/Volumes/JetDrive/databases/ATAC/fastqtl/IFNg_SL1344_100kb_pvalues.sorted.txt.gz")
+  atac_fastqtl = list(naive = "/Volumes/JetDrive/databases/ATAC/fastqtl/naive_500kb_pvalues.sorted.txt.gz",
+                      IFNg = "/Volumes/JetDrive/databases/ATAC/fastqtl/IFNg_500kb_pvalues.sorted.txt.gz",
+                      SL1344 = "/Volumes/JetDrive/databases/ATAC/fastqtl/SL1344_500kb_pvalues.sorted.txt.gz",
+                      IFNg_SL1344 = "/Volumes/JetDrive/databases/ATAC/fastqtl/IFNg_SL1344_500kb_pvalues.sorted.txt.gz")
   
   rna_rasqual = list(naive = "/Volumes/JetDrive/databases/SL1344/rasqual/naive_500kb.sorted.txt.gz",
                      IFNg = "/Volumes/JetDrive/databases/SL1344/rasqual/IFNg_500kb.sorted.txt.gz",

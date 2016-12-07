@@ -26,12 +26,8 @@ gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, g
 GRCh38_variants = importVariantInformation("genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz")
 GRCh37_variants = importVariantInformation("genotypes/SL1344/imputed_20151005/GRCh37/imputed.86_samples.variant_information.GRCh37.vcf.gz")
 
-#Import list of colocalised eQTLs and caQTLs
+#Import list of colocalised eQTLs in 100kb window
 eqtl_coloc_hits = readRDS("results/SL1344/coloc/eQTL_coloc_100kb_hits.rds") %>%
-  dplyr::select(gene_id, snp_id, trait, gwas_lead, gene_name) %>% unique() %>%
-  dplyr::mutate(plot_title = paste(trait, gene_name, gwas_lead, sep = "_"))
-
-caqtl_coloc_hits = readRDS("results/SL1344/coloc/caQTL_coloc_posterior_hits.rds") %>%
   dplyr::select(gene_id, snp_id, trait, gwas_lead, gene_name) %>% unique() %>%
   dplyr::mutate(plot_title = paste(trait, gene_name, gwas_lead, sep = "_"))
 
@@ -49,7 +45,7 @@ plot_list = plots$plot
 names(plot_list) = plots$plot_title
 savePlotList(plot_list, "results/SL1344/coloc/eQTL_100kb/")
 
-#Import list of colocalised eQTLs and caQTLs
+#Import list of colocalised eQTLs in 2002b window
 eqtl_coloc_hits_200kb = readRDS("results/SL1344/coloc/eQTL_coloc_200kb_hits.rds") %>%
   dplyr::select(gene_id, snp_id, trait, gwas_lead, gene_name) %>% unique() %>%
   dplyr::mutate(plot_title = paste(trait, gene_name, gwas_lead, sep = "_"))
@@ -65,19 +61,36 @@ plot_list = plots$plot
 names(plot_list) = plots$plot_title
 savePlotList(plot_list, "results/SL1344/coloc/eQTL_200kb/")
 
-
-
+#Import list of colocalised caQTLs in 100kb window
+caqtl_coloc_hits_100kb = readRDS("results/SL1344/coloc/caQTL_coloc_100kb_hits.rds") %>%
+  dplyr::select(gene_id, snp_id, trait, gwas_lead, gene_name) %>% unique() %>%
+  dplyr::mutate(plot_title = paste(trait, gene_name, gwas_lead, sep = "_"))
 
 #Fetch data for all eqtl hits
-caqtl_plot_data = purrr::by_row(caqtl_coloc_hits, 
-       ~importSummariesForPlotting(., gwas_stats_labeled, qtl_paths = qtlResults()$atac_fastqtl, 
-             GRCh37_variants = GRCh37_variants, GRCh38_variants = GRCh38_variants, cis_dist = 1e5), .to = "data")
+plot_data = purrr::by_row(caqtl_coloc_hits_100kb, 
+                          ~importSummariesForPlotting(., gwas_stats_labeled, qtl_paths = qtlResults()$atac_fastqtl, 
+                        GRCh37_variants = GRCh37_variants, GRCh38_variants = GRCh38_variants, cis_dist = 1e5), .to = "data")
 
 #Make plots
-caqtl_plots = purrr::by_row(caqtl_plot_data, ~plotColoc(.$data[[1]], .$plot_title), .to = "plot")
-plot_list = caqtl_plots$plot
-names(plot_list) = caqtl_plots$plot_title
-savePlotList(plot_list, "results/SL1344/coloc/caqtl_coloc_plots/")
+plots = purrr::by_row(plot_data, ~plotColoc(.$data[[1]], .$plot_title), .to = "plot")
+plot_list = plots$plot
+names(plot_list) = plots$plot_title
+savePlotList(plot_list, "results/SL1344/coloc/caQTL_100kb/")
 
 
+#Import list of colocalised caQTLs in 200kb window
+caqtl_coloc_hits_200kb = readRDS("results/SL1344/coloc/caQTL_coloc_200kb_hits.rds") %>%
+  dplyr::select(gene_id, snp_id, trait, gwas_lead, gene_name) %>% unique() %>%
+  dplyr::mutate(plot_title = paste(trait, gene_name, gwas_lead, sep = "_"))
+
+#Fetch data for all eqtl hits
+plot_data = purrr::by_row(caqtl_coloc_hits_200kb, 
+                          ~importSummariesForPlotting(., gwas_stats_labeled, qtl_paths = qtlResults()$atac_fastqtl, 
+                        GRCh37_variants = GRCh37_variants, GRCh38_variants = GRCh38_variants, cis_dist = 2e5), .to = "data")
+
+#Make plots
+plots = purrr::by_row(plot_data, ~plotColoc(.$data[[1]], .$plot_title), .to = "plot")
+plot_list = plots$plot
+names(plot_list) = plots$plot_title
+savePlotList(plot_list, "results/SL1344/coloc/caQTL_200kb/")
 
