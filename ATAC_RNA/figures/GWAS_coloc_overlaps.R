@@ -133,7 +133,7 @@ eqtl_coloc_counts = countConditionSpecificOverlaps(eqtl_200kb_hits, PP_power_thr
 eqtl_total_counts = group_by(eqtl_coloc_counts, figure_name) %>% 
   dplyr::summarise(overlap_count = sum(is_hit)) %>% 
   dplyr::mutate(total_overlap = cumsum(overlap_count)) %>%
-  dplyr::mutate(phenotype = "eQTL")
+  dplyr::mutate(phenotype = "RNA-seq")
 
 #Total counts for caQTLs
 caqtl_coloc_counts = countConditionSpecificOverlaps(caqtl_200kb_filtered_hits, PP_power_thresh = 0.8, PP_coloc_thresh = .9)
@@ -141,7 +141,7 @@ caqtl_total_counts = dplyr::group_by(caqtl_coloc_counts, figure_name) %>%
   dplyr::summarise(overlap_count = sum(is_hit)) 
 caqtl_totals = dplyr::bind_rows(caqtl_total_counts, data_frame(figure_name = c("S","I+S"), overlap_count = c(0,0))) %>%
   dplyr::mutate(total_overlap = cumsum(overlap_count)) %>%
-  dplyr::mutate(phenotype = "caQTL") %>%
+  dplyr::mutate(phenotype = "ATAC-seq") %>%
   dplyr::mutate(figure_name = factor(figure_name, levels = c("N","I","S","I+S")))
 
 #Merge both counts
@@ -154,19 +154,40 @@ coloc_counts_plot = ggplot(coloc_detection_counts, aes(x = figure_name, y = tota
   xlab("Condition") + 
   ylab("Cumulative number of overlaps") +
   scale_y_continuous(limits = c(0,25)) +
-  theme_light()
-ggsave("figures/main_figures/coloc_QTL_counts.pdf", plot = coloc_counts_plot, width = 4.5, height = 4)
+  theme_light() + 
+  scale_color_manual(values = c("#e66101","#5e3c99"), name = "") +
+  theme(legend.position = "top")
+ggsave("figures/main_figures/coloc_QTL_counts.pdf", plot = coloc_counts_plot, width = 3, height = 3.5)
 
 
 #Count overlaps by trait
 eqtl_by_trait = dplyr::group_by(eqtl_coloc_counts, summarised_trait) %>% 
   dplyr::summarise(overlap_count = length(summarised_trait)) %>% 
-  dplyr::mutate(phenotype = "eQTL")
+  dplyr::mutate(phenotype = "RNA-seq")
 
 caqtl_by_trait = dplyr::group_by(caqtl_coloc_counts, summarised_trait) %>% 
   dplyr::summarise(overlap_count = length(summarised_trait)) %>% 
-  dplyr::mutate(phenotype = "caQTL")
+  dplyr::mutate(phenotype = "ATAC-seq")
 
+
+#Merge counts
+merged_counts = dplyr::bind_rows(eqtl_by_trait, caqtl_by_trait) %>% 
+  dplyr::mutate(summarised_trait = factor(summarised_trait, levels = rev(c("IBD","RA","SCZ","CEL","SLE","AD","NAR","T2D"))))
+
+#Make a plot of coloc counts per trait
+coloc_traits_plot = ggplot(merged_counts, aes(x = summarised_trait, y = overlap_count, fill = phenotype)) + 
+  geom_bar(stat = "identity", position = "dodge") +
+  coord_flip() +
+  theme_light() +
+  xlab("Trait") +
+  ylab("Number of colocalised loci")  + 
+  scale_fill_manual(values = c("#e66101","#5e3c99"), name = "", guide = guide_legend(reverse = TRUE)) +
+  theme(legend.position = "top") 
+ggsave("figures/main_figures/coloc_trait_counts.pdf", plot = coloc_traits_plot, width = 3, height = 3.5)
+
+
+
+#Identify and count shared QTLs
 shared_qtls = dplyr::semi_join(eqtl_200kb_hits, condensed_caqtl_hits, by = "gwas_lead")
 
 #Count chared eQTL and caQTL overlaps
@@ -176,16 +197,4 @@ shared_counts = dplyr::select(shared_qtls, summarised_trait, gene_id) %>%
   dplyr::summarise(overlap_count = length(summarised_trait)) %>% 
   dplyr::mutate(phenotype = "shared")
 
-#Merge counts
-merged_counts = dplyr::bind_rows(eqtl_by_trait, caqtl_by_trait, shared_counts) %>% 
-  dplyr::mutate(summarised_trait = factor(summarised_trait, levels = rev(c("IBD","RA","SCZ","CEL","SLE","AZ","NAR","T2D"))))
-
-#Make a plot of coloc counts per trait
-coloc_traits_plot = ggplot(merged_counts, aes(x = summarised_trait, y = overlap_count, fill = phenotype)) + 
-  geom_bar(stat = "identity", position = "dodge") + 
-  coord_flip() +
-  theme_light() +
-  xlab("Trait") +
-  ylab("Number of colocalised loci")
-ggsave("figures/main_figures/coloc_trait_counts.pdf", plot = coloc_traits_plot, width = 4, height = 4)
 
