@@ -42,6 +42,19 @@ caqtl_mean_accessibility = ggplot(joint_access, aes(x = condition_name, y = log(
 
 ggsave("figures/supplementary/caQTL_appear_mean_accessibility.pdf", plot = caqtl_mean_accessibility, width = 4, height = 7)
 
+##### Extract TPMs only in the naive and one stimulated condition
+#Map cluster_ids to maximal conditions
+max_effect_df = data_frame(new_cluster_id = c(1,2,3,4,5,6), max_effect = c("IFNg_SL1344", "IFNg_SL1344", "SL1344", "IFNg", "IFNg","IFNg"))
+joint_max_df = dplyr::left_join(joint_access, max_effect_df, by = "new_cluster_id")
+
+#Extract relevant TPMs
+naive_tpms = dplyr::filter(joint_max_df, condition_name == "naive") %>% 
+  dplyr::mutate(state = "Naive")
+stimulated_tpms = dplyr::filter(joint_max_df, condition_name == max_effect) %>% dplyr::mutate(state = "Stimulated")
+caqtl_stimulated_df = dplyr::bind_rows(naive_tpms, stimulated_tpms) %>% dplyr::mutate(phenotype = "ATAC-seq")
+
+
+
 
 #### Perform the same analysis for eQTL data
 #Import condition-specific QTLs
@@ -64,6 +77,18 @@ cluster_access = dplyr::filter(mean_tpm, gene_id %in% appear_qtls$gene_id) %>%
   dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344","IFNg_SL1344")))
 joint_access = dplyr::left_join(appear_qtls, cluster_access, by = "gene_id")
 
+##### Extract TPMs only in the naive and one stimulated condition
+#Map cluster_ids to maximal conditions
+max_effect_df = data_frame(new_cluster_id = c(1,2,3,4,5,6), max_effect = c("IFNg_SL1344", "IFNg_SL1344", "SL1344", "IFNg", "IFNg","IFNg"))
+joint_max_df = dplyr::left_join(joint_access, max_effect_df, by = "new_cluster_id")
+
+#Extract relevant TPMs
+naive_tpms = dplyr::filter(joint_max_df, condition_name == "naive") %>% 
+  dplyr::mutate(state = "Naive")
+stimulated_tpms = dplyr::filter(joint_max_df, condition_name == max_effect) %>% dplyr::mutate(state = "Stimulated")
+eqtl_stimulated_df = dplyr::bind_rows(naive_tpms, stimulated_tpms) %>% dplyr::mutate(phenotype = "RNA-seq")
+
+
 #Make a plot
 eqtl_mean_accessibility = ggplot(joint_access, aes(x = condition_name, y = log(tpm + 1,2) , color = condition_name)) + 
   geom_violin(scale = "width") + 
@@ -75,6 +100,20 @@ eqtl_mean_accessibility = ggplot(joint_access, aes(x = condition_name, y = log(t
   theme(axis.text.x = element_text(angle = 15), legend.position = "none", axis.title.x = element_blank())
 
 ggsave("figures/supplementary/eQTL_appear_mean_accessibility.pdf", plot = eqtl_mean_accessibility, width = 4.3, height = 7)
+
+
+#Combine ATAC-seq and RNA-seq stimulated dfs together
+combined_df = dplyr::bind_rows(eqtl_stimulated_df, caqtl_stimulated_df) %>%
+  dplyr::mutate(phenotype = factor(phenotype, levels = c("RNA-seq", "ATAC-seq")))
+combined_plot = ggplot(combined_df, aes(x = state, y = log(tpm + 1,2))) + 
+  geom_violin(scale = "width") + 
+  geom_boxplot(width = .15, outlier.shape = NA) +
+  theme_light() +
+  facet_wrap(~phenotype, scale = "free_y") +
+  ylab(expression(paste("Mean signal [",Log[2], "(TPM+1)]", sep = ""))) +
+  xlab("Condition")
+ggsave("figures/main_figures/mean_signal_by_phenotype.pdf", plot = combined_plot, width = 3.5, height = 3)
+
 
 
 
