@@ -1,10 +1,9 @@
 library("devtools")
 library("plyr")
 library("dplyr")
-load_all("../seqUtils/")
-library("MatrixEQTL")
-load_all("macrophage-gxe-study/housekeeping/")
 library("ggplot2")
+load_all("../seqUtils/")
+load_all("macrophage-gxe-study/housekeeping/")
 load_all("~/software/rasqual/rasqualTools/")
 
 #### Import data ####
@@ -54,7 +53,7 @@ qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_nominal,10))) +
   theme_light() + 
   xlab("-log10 exptected p-value") + 
   ylab("-log10 observed p-value")
-ggsave("figures/supplementary/eQTL_interaction_Q-Q_plot.pdf", width = 5, height = 5)
+ggsave("figures/supplementary/eQTL_interaction_Q-Q_plot.pdf", plot = qq_plot, width = 4, height = 4)
 
 #Extract effect sizes for all gene-snp pairs from RASQUAL data
 beta_list = extractAndProcessBetas(dplyr::select(interaction_hits, gene_id, snp_id), rasqual_selected_pvalues, "naive")
@@ -66,33 +65,32 @@ appear_qtls = dplyr::filter(beta_list$beta_summaries, abs(naive) <= 0.59, max_ab
 appear_betas = dplyr::semi_join(beta_list$beta_summaries[,1:6], appear_qtls, by = c("gene_id", "snp_id"))
 appear_clusters = clusterBetasKmeans(appear_betas, 6) %>% dplyr::select(gene_id, snp_id, cluster_id) %>%
   dplyr::left_join(beta_list$beta_df, by = c("gene_id", "snp_id"))
-appear_plot = ggplot(appear_clusters, aes(x = condition_name, y = beta, group = paste(gene_id, snp_id))) + 
-  geom_line() + facet_wrap(~cluster_id)
-ggsave("results/SL1344/eQTLs/properties/eQTLs_appear_kmeans.pdf",appear_plot, width = 10, height = 10)
-
-#Make heatmap of effect sizes
-appear_betas = appear_clusters %>% dplyr::group_by(gene_id, snp_id) %>% dplyr::mutate(beta_scaled = beta/max(beta)) %>%
-  dplyr::left_join(gene_name_map, by = "gene_id")
 
 #Reorder clusters
 cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(1,4,6,2,5,3))
-appear_betas = dplyr::left_join(appear_betas, cluster_reorder, by = "cluster_id")
+
+#Make heatmap of effect sizes
+appear_betas = appear_clusters %>% 
+  dplyr::group_by(gene_id, snp_id) %>% 
+  dplyr::mutate(beta_scaled = beta/max(beta)) %>%
+  dplyr::left_join(gene_name_map, by = "gene_id") %>%
+  dplyr::left_join(cluster_reorder, by = "cluster_id") %>% #Reorder clusters
+  dplyr::left_join(figureNames(), by = "condition_name") #Add figure names
 
 #Count the number of qtls
 appear_count = dplyr::select(appear_betas, gene_id, snp_id) %>% unique() %>% nrow()
 ylabel = paste(appear_count, "eQTLs")
-effect_size_heatmap = ggplot(appear_betas, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + 
+effect_size_heatmap = ggplot(appear_betas, aes(x = figure_name, y = gene_name, fill = beta_scaled)) + 
   facet_grid(new_cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
   ylab(ylabel) + 
   scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Relative effect", midpoint = 0) +
-  theme_grey() +
-  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), 
-        axis.title.x = element_blank(), axis.text.x=element_text(angle = 15)) +
-  theme(panel.margin = unit(0.2, "lines"))
-ggsave("figures/main_figures/eQTLs_appear_kmeans_heatmap.pdf",effect_size_heatmap, width = 4.5, height = 5.5)
-ggsave("figures/main_figures/eQTLs_appear_kmeans_heatmap.png",effect_size_heatmap, width = 4.5, height = 5.5)
+  theme_light() +
+  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), axis.title.x = element_blank()) +
+  theme(panel.spacing = unit(0.1, "lines"))
+ggsave("figures/main_figures/eQTLs_appear_kmeans_heatmap.pdf",effect_size_heatmap, width = 3.5, height = 4)
+ggsave("figures/main_figures/eQTLs_appear_kmeans_heatmap.png",effect_size_heatmap, width = 3.5, height = 4)
 
 
 #Calculate mean effect size in each cluster and condition

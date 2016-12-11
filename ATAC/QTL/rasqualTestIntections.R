@@ -1,10 +1,10 @@
 library("devtools")
 library("plyr")
 library("dplyr")
-load_all("../seqUtils/")
-load_all("../macrophage-gxe-study/macrophage-gxe-study/housekeeping/")
 library("ggplot2")
 library("purrr")
+load_all("../seqUtils/")
+load_all("../macrophage-gxe-study/macrophage-gxe-study/housekeeping/")
 
 #Import data
 atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
@@ -44,6 +44,17 @@ interaction_results = testMultipleInteractions(filtered_pairs, trait_matrix = at
 interaction_df = postProcessInteractionPvalues(interaction_results)
 saveRDS(interaction_df, "results/ATAC/QTLs/rasqual_interaction_results.rds")
 interaction_df = readRDS("results/ATAC/QTLs/rasqual_interaction_results.rds")
+interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
+
+#Make a Q-Q plot for the interaction p-values
+qq_df = dplyr::mutate(interaction_df, p_eigen = p_nominal) %>% addExpectedPvalue()
+qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_nominal,10))) + 
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "black") + 
+  theme_light() + 
+  xlab("-log10 exptected p-value") + 
+  ylab("-log10 observed p-value")
+ggsave("figures/supplementary/caQTL_interaction_Q-Q_plot.pdf", plot = qq_plot, width = 4, height = 4)
 
 
 #### Cluster effect sizes ####
@@ -56,36 +67,36 @@ appear_qtls = dplyr::filter(beta_list$beta_summaries, abs(naive) <= 0.59, max_ab
 appear_betas = dplyr::semi_join(beta_list$beta_summaries[,1:6], appear_qtls, by = c("gene_id", "snp_id"))
 appear_clusters = clusterBetasKmeans(appear_betas, 6) %>% dplyr::select(gene_id, snp_id, cluster_id) %>%
   dplyr::left_join(beta_list$beta_df, by = c("gene_id", "snp_id"))
-appear_plot = ggplot(appear_clusters, aes(x = condition_name, y = beta, group = paste(gene_id, snp_id))) + 
-  geom_line() + facet_wrap(~cluster_id)
 
 #Calculate mean effect size in each cluster and condition
 appear_cluster_means = calculateClusterMeans(appear_clusters)
 cluster_sizes = calculateClusterSizes(appear_clusters)
 
-#Make heatmap of effect sizes
-appear_betas = appear_clusters %>% dplyr::group_by(gene_id, snp_id) %>% dplyr::mutate(beta_scaled = beta/max(beta)) %>%
-  dplyr::left_join(gene_name_map, by = "gene_id") %>% 
-  dplyr::semi_join(cluster_sizes, by = "cluster_id") %>% 
-  ungroup()
-
 #Reorder clusters
 cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(1,6,4,3,5,2))
-appear_betas = dplyr::left_join(appear_betas, cluster_reorder, by = "cluster_id")
+
+#Make heatmap of effect sizes
+appear_betas = appear_clusters %>% dplyr::group_by(gene_id, snp_id) %>% 
+  dplyr::mutate(beta_scaled = beta/max(beta)) %>%
+  dplyr::left_join(gene_name_map, by = "gene_id") %>% 
+  dplyr::semi_join(cluster_sizes, by = "cluster_id") %>% 
+  ungroup() %>%
+  dplyr::left_join(cluster_reorder, by = "cluster_id") %>%
+  dplyr::left_join(figureNames(), by = "condition_name") #Add figure names
+
 
 #Make a plot of effect sizes
 ylabel = paste(sum(cluster_sizes$count), "caQTLs")
-effect_size_heatmap = ggplot(appear_betas, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + 
+effect_size_heatmap = ggplot(appear_betas, aes(x = figure_name, y = gene_name, fill = beta_scaled)) + 
   facet_grid(new_cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
   ylab(ylabel) + 
   scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Relative effect", midpoint = 0) +
-  theme_grey() +
-  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), 
-        axis.title.x = element_blank(), axis.text.x=element_text(angle = 15)) +
-  theme(panel.margin = unit(0.2, "lines"))
-ggsave("results/ATAC/QTLs/properties/caQTLs_appear_kmeans_heatmap.png",effect_size_heatmap, width = 4.5, height = 5.5)
+  theme_light() +
+  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), axis.title.x = element_blank()) +
+  theme(panel.spacing = unit(0.1, "lines"))
+ggsave("figures/main_figures/caQTLs_appear_kmeans_heatmap.png",effect_size_heatmap, width = 3.5, height = 4)
 
 
 #Find QTLs that disappear
