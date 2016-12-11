@@ -1,12 +1,12 @@
 library("devtools")
-load_all("../seqUtils/")
-load_all("../wiggleplotr/")
-load_all("~/software/rasqual/rasqualTools/")
-load_all("macrophage-gxe-study/housekeeping/")
 library("GenomicRanges")
 library("dplyr")
 library("ggplot2")
 library("GenomicFeatures")
+load_all("../seqUtils/")
+load_all("../wiggleplotr/")
+load_all("~/software/rasqual/rasqualTools/")
+load_all("macrophage-gxe-study/housekeeping/")
 
 #Import data
 atac_data = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
