@@ -77,3 +77,13 @@ joint_plot = cowplot::plot_grid(peak_manhattan, gene_manhattan, peak_plot, tx_pl
 ggsave("figures/main_figures/NXPH2_manhattan_plots.pdf", plot = joint_plot, width = 4, height = 4.5)
 
 
+
+#### eQTL boxplot ####
+#Make eQTL boxplot
+NXPH2_data = constructQtlPlotDataFrame("ENSG00000144227", "rs7594476", combined_expression_data$cqn, vcf_file$genotypes, 
+                                      combined_expression_data$sample_metadata, combined_expression_data$gene_metadata) %>%
+  dplyr::filter(condition_name %in% c("naive","IFNg"))
+NXPH2_plot = plotQtlCol(NXPH2_data)
+ggsave("figures/main_figures/NXPH2_expression_boxplot.pdf", plot = NXPH2_plot, width = 2.5, height = 3.5)
+
+

@@ -1,11 +1,11 @@
 library("devtools")
 library("purrr")
 library("dplyr")
-load_all("../seqUtils/")
-library("MatrixEQTL")
-load_all("../macrophage-gxe-study/macrophage-gxe-study/housekeeping/")
 library("ggplot2")
+library("scales")
+load_all("../seqUtils/")
 load_all("~/software/rasqual/rasqualTools/")
+load_all("../macrophage-gxe-study/macrophage-gxe-study/housekeeping/")
 
 #Import the VCF file
 vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
@@ -157,49 +157,72 @@ summary_stats = data_frame("total" = total_peak_count, "overlap_any_peak" = over
   dplyr::mutate(other_not_qtl = overlap_other_peak - other_is_qtl)
 write.table(summary_stats, "results/ATAC/QTLs/properties/credible_set_peak_overlaps.txt", sep = "\t", row.names = FALSE, quote = FALSE)
 
-#Make a plot of counts
-summary_df = dplyr::select(summary_stats, unique_masters, shared_masters, other_is_qtl, other_not_qtl, overlap_no_peak) %>% 
-  tidyr::gather("type", "count")
-plot = ggplot(summary_df, aes(x = factor(1), fill = type, y = count)) + 
-  geom_bar(stat = "identity", position = "stack") +
-  scale_fill_brewer(palette="Set1") +
-  theme(legend.position="none")
-ggsave("results/ATAC/QTLs/properties/caQTL_classification.pdf", plot = plot, width = 1.4, height = 4)
+
+##### Count the number of master caQTLs #####
+summary_df = dplyr::select(summary_stats, unique_masters, shared_masters, overlap_other_peak, overlap_no_peak) %>% 
+  tidyr::gather("type", "count") %>%
+  dplyr::mutate(fraction = count/sum(count)) %>% 
+  dplyr::mutate(caqtl_type = factor(c("Same peak", "Multiple peaks", "Other peak", "No peak"),levels = c("Same peak", "Multiple peaks", "Other peak", "No peak")))
+
+#Make a plot of fractions
+cs_plot = ggplot(summary_df, aes(x = caqtl_type, y = fraction)) + 
+  geom_bar(stat = "identity") + 
+  scale_y_continuous(labels=percent, breaks=pretty_breaks(n=6)) +
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 15)) +
+  xlab("Credible set contains") +
+  ylab("Precent of caQTLs")
+ggsave("figures/main_figures/caQTL_credible_set_contents.pdf", cs_plot, width = 3.5, height = 3.5)
 
 
-#Plot the number of peaks per cluster
+
+#### Plot the number of peaks per cluster ####
 cluster_size_df = dplyr::transmute(atac_clusters_counted, cluster_id, peak_count = factor(peak_count)) %>% unique()
-count_plot = ggplot(cluster_size_df, aes(x = peak_count)) + geom_bar() + theme_hc() +
+count_plot = ggplot(cluster_size_df, aes(x = peak_count)) + geom_bar() + theme_light() +
   xlab("Number of peaks")
 ggsave("results/ATAC/QTLs/properties/number_of_peaks_per_cluster.pdf", plot = count_plot, width = 4, height = 4)
 
-#Plot the number of SNPs per unique QTL peak
-snp_count_df = dplyr::select(unique_masters_counted, gene_id, snp_count) %>% unique() %>%
-  dplyr::filter(snp_count <= 10) %>%
-  dplyr::mutate(snp_count = factor(snp_count))
-snp_count_plot = ggplot(snp_count_df, aes(x = snp_count)) + 
-  geom_bar() + 
-  theme_light() +
-  ylab("Number of master caQTL regions") +
-  xlab("Number of variants within region")
-ggsave("figures/supplementary/caQTL_number_of_variants_per_unqiue_master.pdf", plot = snp_count_plot, width = 4, height = 4)
-ggsave("figures/supplementary/caQTL_number_of_variants_per_unqiue_master.png", plot = snp_count_plot, width = 4, height = 4)
 
-#Count the number of dependent peaks per master
+
+##### Plot the number of SNPs per unique QTL peak ####
+#Count the numbers of peaks with different numbers of SNPs in them
+snp_count_df = dplyr::select(unique_masters_counted, gene_id, snp_count) %>% unique() %>% 
+  dplyr::mutate(snp_count = ifelse(snp_count > 9, 10, snp_count)) %>% 
+  dplyr::group_by(snp_count) %>% 
+  dplyr::summarise(peak_count = length(snp_count)) %>% 
+  dplyr::mutate(snp_count = ifelse(snp_count == 10, ">9", as.character(snp_count))) %>%
+  dplyr::mutate(snp_count = factor(snp_count, snp_count))
+
+#Make a plot
+snp_count_plot = ggplot(snp_count_df, aes(x = snp_count, y = peak_count)) + 
+  geom_bar(stat = "identity") + 
+  theme_light() +
+  ylab("Number of caQTL peaks") +
+  xlab("Number of variants in peak") +
+  scale_y_continuous(breaks=pretty_breaks(n=6))
+ggsave("figures/main_figures/caQTL_number_of_variants_per_unqiue_master.pdf", plot = snp_count_plot, width = 3, height = 3)
+
+
+
+
+
+##### Count the number of dependent peaks per master ####
 master_dependent_pairs = rbind(dplyr::select(dependent_uniq_masters, dependent_id, master_id), dplyr::select(dependent_cluster_masters, dependent_id, master_id))
 dependent_peak_count = master_dependent_pairs %>% 
   dplyr::group_by(master_id) %>% 
   dplyr::summarise(dependent_peak_count = length(dependent_id)) %>% 
   arrange(-dependent_peak_count)
-dependent_plot = ggplot(dependent_peak_count, aes(x = dependent_peak_count)) + geom_bar() + theme_hc() +
-  xlab("Number of dependent peaks")
-ggsave("results/ATAC/QTLs/properties/number_of_dependent_peaks_per_unqiue_master.pdf", plot = dependent_plot, width = 4, height = 4)
+dependent_plot = ggplot(dependent_peak_count, aes(x = dependent_peak_count)) + geom_bar() + theme_light() +
+  xlab("Number of dependent peaks") +
+  ylab("Master peak count")
+ggsave("figures/main_figures/caQTL_number_of_dependent_peaks_per_unqiue_master.pdf", plot = dependent_plot, width = 3, height = 3)
 
 #Plot distances between master and dependent peaks
 dependent_distances = calculatePeakDistance(master_dependent_pairs, atac_data$gene_metadata)
-dependent_distance_plot = ggplot(dependent_distances, aes(x = distance/1000)) + geom_histogram(binwidth = 2) + theme_hc() +
-  xlab("Distance from master peak")
-ggsave("results/ATAC/QTLs/properties/master_dependent_peak_distance.pdf", plot = dependent_distance_plot, width = 4, height = 4)
+dependent_distance_plot = ggplot(dependent_distances, aes(x = distance/1000)) + geom_histogram(binwidth = 2) + theme_light() +
+  xlab("Distance from master peak (kb)") +
+  ylab("Dependent peak count")
+ggsave("figures/main_figures/caQTL_master_dependent_peak_distance.pdf", plot = dependent_distance_plot, width = 3, height = 3)
 
 #Plot the number of variants per cluster
 cluster_variants = ggplot(cluster_lead_snps, aes(x = cluster_snp_count)) + 
@@ -212,7 +235,7 @@ ggsave("results/ATAC/QTLs/properties/number_of_variants_per_cluster.pdf", plot =
 #Calculate distances within clusters
 cluster_dist = dplyr::rename(shared_masters, master_id = master_peak_id, dependent_id = overlap_peak_id) %>% 
   calculatePeakDistance(atac_list$gene_metadata)
-cluster_dist_plot = ggplot(cluster_dist, aes(x = distance/1000)) + geom_histogram(binwidth = 2) + theme_hc() +
+cluster_dist_plot = ggplot(cluster_dist, aes(x = distance/1000)) + geom_histogram(binwidth = 2) + theme_light() +
   xlab("Distance between two peaks in cluster") + 
   scale_x_continuous(limits = c(-50, 50))
 ggsave("results/ATAC/QTLs/properties/within_cluster_distances.pdf", plot = cluster_dist_plot, width = 4, height = 4)
