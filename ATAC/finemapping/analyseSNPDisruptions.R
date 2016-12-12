@@ -2,9 +2,9 @@ library("Biostrings")
 library("TFBSTools")
 library("dplyr")
 library("devtools")
-load_all("../seqUtils/")
 library("purrr")
 library("ggplot2")
+load_all("../seqUtils/")
 
 #Import snp info and identify indels
 snp_info = importVariantInformation("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz")
@@ -129,8 +129,26 @@ plot = ggplot(relative_enrichment_renamed, aes(y = motif_name, x = OR_log2, xmin
   theme(legend.key = element_blank()) + 
   theme(panel.margin = unit(0.2, "lines"))  + 
   geom_vline(aes(xintercept = 0), size = 0.3)
-ggsave("figures/main_figures/caQTL_clusters_disrupted_motifs.pdf", plot = plot, height = 5.5, width = 3)
+ggsave("figures/supplementary/caQTL_all_clusters_disrupted_motifs.pdf", plot = plot, height = 5.5, width = 3)
 
+
+#Make a lineplot for Salmonella and IFNg specific clusters
+filtered_df = dplyr::filter(relative_enrichment_renamed, new_cluster_id %in% c("2-3", "5-6")) %>% 
+  dplyr::mutate(cluster_name = ifelse(new_cluster_id == "2-3", "Salmonella-specific", "IFNg-specific")) %>%
+  dplyr::mutate(cluster_name = factor(cluster_name, levels = c("Salmonella-specific", "IFNg-specific")))
+
+compact_enrichment_plot = ggplot(filtered_df, aes(y = motif_name, x = OR_log2, xmin = ci_lower_log2, xmax = ci_higher_log2)) + 
+  facet_wrap(~cluster_name, ncol = 1) + 
+  geom_point() + 
+  geom_errorbarh(aes(height = 0)) +
+  xlab(expression(paste(Log[2], " fold enrichment"))) +
+  ylab("TF motif name") + 
+  theme_light() +
+  scale_x_continuous(expand = c(0, 0), limits = c(-4,4)) +
+  theme(legend.key = element_blank()) + 
+  theme(panel.spacing = unit(0.2, "lines"))  + 
+  geom_vline(aes(xintercept = 0), size = 0.3)
+ggsave("figures/main_figures/caQTL_clusters_disrupted_motifs.pdf", plot = compact_enrichment_plot, height = 3.5, width = 3)
 
 
 
