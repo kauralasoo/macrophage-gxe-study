@@ -1,9 +1,9 @@
 library("readr")
 library("dplyr")
 library("devtools")
-load_all("../seqUtils/")
 library("purrr")
 library("ggplot2")
+load_all("../seqUtils/")
 load_all("~/software/rasqual/rasqualTools/")
 
 #Import p-value from both methods

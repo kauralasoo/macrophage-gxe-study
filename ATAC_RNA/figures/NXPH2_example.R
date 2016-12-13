@@ -21,6 +21,8 @@ atac_list$sample_metadata$condition_name = factor(atac_list$sample_metadata$cond
                                                   levels = c("naive", "IFNg", "SL1344", "IFNg_SL1344"))
 atac_meta_df = wiggleplotrConstructMetadata(atac_list$counts, atac_list$sample_metadata, "/Volumes/Ajamasin/bigwig/ATAC/")
 
+#Import the VCF file
+vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
 
 #Import transcript annotations and metadata
@@ -35,7 +37,7 @@ cdss = cdsBy(txdb, by = "tx", use.names = TRUE)
 #Filter transcripts for NXPH2
 nxph2_tx = dplyr::filter(tx_metadata, gene_name == "NXPH2", 
                          transcript_biotype == "protein_coding", transcript_status == "KNOWN")
-region_coords = c(138670000,138782000)
+region_coords = c(138662000,138790000)
 
 #Make a plot of the transcript structure
 tx_plot = plotTranscripts(exons[nxph2_tx$transcript_id], cdss[nxph2_tx$transcript_id], tx_metadata, rescale_introns = FALSE, 
@@ -45,6 +47,17 @@ tx_plot = plotTranscripts(exons[nxph2_tx$transcript_id], cdss[nxph2_tx$transcrip
 peak_annot = wiggleplotrExtractPeaks(region_coords, chrom = 2, atac_list$gene_metadata)
 peak_plot = plotTranscripts(peak_annot$peak_list, peak_annot$peak_list, peak_annot$peak_annot, rescale_introns = FALSE, 
                             region_coords = region_coords, connect_exons = FALSE, label_type = "peak") + dataTrackTheme()
+
+#Make a coverage plot of the region
+#Construct metadata df for wiggleplotr
+atac_track_data = wiggleplotrGenotypeColourGroup(atac_meta_df, "rs7594476", vcf_file$genotypes, 1) %>%
+  dplyr::filter(track_id %in% c("naive")) %>%
+  dplyr::mutate(track_id = "peaks")
+
+ATAC_coverage = plotCoverage(exons = peak_annot$peak_list, cdss = peak_annot$peak_list, track_data = atac_track_data, rescale_introns = FALSE, 
+  transcript_annotations = peak_annot$peak_annot, fill_palette = getGenotypePalette(), 
+  connect_exons = FALSE, label_type = "peak", plot_fraction = 0.1, heights = c(0.7,0.3), 
+  region_coords = region_coords, return_subplots_list = TRUE, coverage_type = "both")
 
 
 #Import ATAC-seq p-values from the region
@@ -72,9 +85,9 @@ peak_manhattan = makeManhattanPlot(peak_pvalues, region_coords, color_R2 = TRUE)
 gene_manhattan = makeManhattanPlot(gene_pvalues, region_coords, color_R2 = TRUE)
 
 #Join all plots together
-joint_plot = cowplot::plot_grid(peak_manhattan, gene_manhattan, peak_plot, tx_plot, 
+joint_plot = cowplot::plot_grid(peak_manhattan, gene_manhattan, ATAC_coverage$coverage_plot, tx_plot, 
                                 align = "v", ncol = 1, rel_heights = c(3,3,1.25,2.5))
-ggsave("figures/main_figures/NXPH2_manhattan_plots.pdf", plot = joint_plot, width = 4, height = 4.5)
+ggsave("figures/main_figures/NXPH2_manhattan_plots.png", plot = joint_plot, width = 4, height = 4.5)
 
 
 
@@ -87,3 +100,10 @@ NXPH2_plot = plotQtlCol(NXPH2_data)
 ggsave("figures/main_figures/NXPH2_expression_boxplot.pdf", plot = NXPH2_plot, width = 2.5, height = 3.5)
 
 
+#Make a coverage plot of the whole SPOPL-NXPH2 locus
+region_coords = c(138501000, 138781348)
+both_tx = dplyr::filter(tx_metadata, gene_name %in% c("NXPH2","SPOPL"), 
+                                    transcript_biotype == "protein_coding", transcript_status == "KNOWN")
+
+
+plotTranscripts(exons[both_tx$transcript_id], cdss[both_tx$transcript_id], tx_metadata, rescale_introns = FALSE, region_coords = region_coords)
