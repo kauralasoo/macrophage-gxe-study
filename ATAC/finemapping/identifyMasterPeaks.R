@@ -156,23 +156,27 @@ summary_stats = data_frame("total" = total_peak_count, "overlap_any_peak" = over
   dplyr::mutate(overlap_other_peak = overlap_any_peak-overlap_same_peak, overlap_no_peak = total - overlap_any_peak) %>%
   dplyr::mutate(other_not_qtl = overlap_other_peak - other_is_qtl)
 write.table(summary_stats, "results/ATAC/QTLs/properties/credible_set_peak_overlaps.txt", sep = "\t", row.names = FALSE, quote = FALSE)
-
+summary_stats = read.table("results/ATAC/QTLs/properties/credible_set_peak_overlaps.txt", header = TRUE, stringsAsFactors = FALSE)
 
 ##### Count the number of master caQTLs #####
-summary_df = dplyr::select(summary_stats, unique_masters, shared_masters, overlap_other_peak, overlap_no_peak) %>% 
+summary_df = dplyr::select(summary_stats, unique_masters, shared_masters, other_is_qtl, other_not_qtl, overlap_no_peak) %>% 
   tidyr::gather("type", "count") %>%
   dplyr::mutate(fraction = count/sum(count)) %>% 
-  dplyr::mutate(caqtl_type = factor(c("Same peak", "Multiple peaks", "Other peak", "No peak"),levels = c("Same peak", "Multiple peaks", "Other peak", "No peak")))
+  dplyr::mutate(caqtl_type = factor(c("Same peak", "Multiple peaks", "Other QTL", "Other not QTL", "No peak"),
+                                    levels = rev(c("Same peak", "Multiple peaks", "Other QTL", "Other not QTL", "No peak"))))
 
 #Make a plot of fractions
-cs_plot = ggplot(summary_df, aes(x = caqtl_type, y = fraction)) + 
-  geom_bar(stat = "identity") + 
-  scale_y_continuous(labels=percent, breaks=pretty_breaks(n=6)) +
+cs_plot = ggplot(summary_df, aes(x = caqtl_type, y = fraction, label = count)) + 
+  geom_bar(stat = "identity", width = 0.7) + 
+  scale_y_continuous(labels=percent, breaks=pretty_breaks(n=4), limits = c(0,0.7)) +
   theme_light() +
-  theme(axis.text.x = element_text(angle = 15)) +
   xlab("Credible set contains") +
-  ylab("Precent of caQTLs")
-ggsave("figures/main_figures/caQTL_credible_set_contents.pdf", cs_plot, width = 3.5, height = 3.5)
+  ylab("Fraction of caQTLs") + 
+  coord_flip() +
+  geom_text(nudge_y = 0.08) +
+  theme(axis.text.y = element_blank(), axis.title.y = element_blank())
+
+ggsave("figures/main_figures/caQTL_credible_set_contents.pdf", cs_plot, width = 2, height = 3.5)
 
 
 
