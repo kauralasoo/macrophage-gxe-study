@@ -22,9 +22,9 @@ fastqtl_pvalues_filtered = purrr::map2(fastqtl_pvalues, rasqual_pvalues, functio
   return(res)
 })
 
-#Count the number of eQTLs detected with each method
-fastqtl_qtl_count = map(fastqtl_pvalues_filtered, ~dplyr::filter(., p_eigen_fdr < 0.1) %>% nrow()) %>% unlist()
-rasqual_qtl_count = map(rasqual_pvalues, ~dplyr::filter(., p_fdr < 0.1) %>% nrow()) %>% unlist()
+#Count the number of caQTLs detected with each method
+fastqtl_qtl_count = map(fastqtl_pvalues_filtered, ~dplyr::filter(., p_eigen < fdr_thresh) %>% nrow()) %>% unlist()
+rasqual_qtl_count = map(rasqual_pvalues, ~dplyr::filter(., p_eigen < fdr_thresh) %>% nrow()) %>% unlist()
 qtl_counts = rbind(fastqtl_qtl_count, rasqual_qtl_count) %>% t() %>% as.data.frame()
 qtl_counts = dplyr::mutate(qtl_counts, condition = rownames(qtl_counts)) %>% 
   dplyr::select(condition, everything()) %>% 

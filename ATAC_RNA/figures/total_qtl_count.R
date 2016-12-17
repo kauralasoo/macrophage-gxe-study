@@ -31,6 +31,6 @@ qtl_plot = ggplot(qtl_counts, aes(x = figure_name, y = qtl_count, fill = method)
   ylab("Number of QTLs") + 
   xlab("Condition") +
   theme(legend.position = "top") +
-  scale_fill_manual(values = c("#a6cee3", "#1f78b4"))
+  scale_fill_manual(values = c("#ca0020","#404040"))
 ggsave("figures/main_figures/qtl_count_total.pdf", plot = qtl_plot, width = 4, height = 3.5)
 
