@@ -251,9 +251,9 @@ rm results/ATAC/rasqual/output/*_100kb/*_100kb.txt
 #Run eigenMT chromosome-by-chromosme
 #Make sure that peak locations are properly exported
 cat ../macrophage-gxe-study/macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/submitJobs.py --MEM 2000 --ncores 4 --jobname eigenMTbyChromosome --command "python ~/software/utils/eigenMTbyChromosome.py --chromosome_dir ../macrophage-gxe-study/results/SL1344/eigenMT/input/ --genepos results/ATAC/eigenMT/input/gene_positions.txt --QTL results/ATAC/rasqual/output/naive_100kb/naive_100kb.eigenMT_input.txt --out_prefix results/ATAC/rasqual/output/naive_100kb/naive_50kb --cis_dist 5e4 --eigenMT_path ~/software/eigenMT/eigenMT.py --external"
-cat ../macrophage-gxe-study/macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/submitJobs.py --MEM 2000 --jobname eigenMTbyChromosome --command "python ~/software/utils/eigenMTbyChromosome.py --chromosome_dir ../macrophage-gxe-study/results/SL1344/eigenMT/input/ --genepos results/ATAC/eigenMT/input/gene_positions.txt --QTL results/ATAC/rasqual/output/IFNg_100kb/IFNg_100kb.eigenMT_input.txt --out_prefix results/ATAC/rasqual/output/IFNg_100kb/IFNg_50kb --cis_dist 5e4 --eigenMT_path ~/software/eigenMT/eigenMT.py --external"
-cat ../macrophage-gxe-study/macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/submitJobs.py --MEM 2000 --jobname eigenMTbyChromosome --command "python ~/software/utils/eigenMTbyChromosome.py --chromosome_dir ../macrophage-gxe-study/results/SL1344/eigenMT/input/ --genepos results/ATAC/eigenMT/input/gene_positions.txt --QTL results/ATAC/rasqual/output/SL1344_100kb/SL1344_100kb.eigenMT_input.txt --out_prefix results/ATAC/rasqual/output/SL1344_100kb/SL1344_50kb --cis_dist 5e4 --eigenMT_path ~/software/eigenMT/eigenMT.py --external"
-cat ../macrophage-gxe-study/macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/submitJobs.py --MEM 2000 --jobname eigenMTbyChromosome --command "python ~/software/utils/eigenMTbyChromosome.py --chromosome_dir ../macrophage-gxe-study/results/SL1344/eigenMT/input/ --genepos results/ATAC/eigenMT/input/gene_positions.txt --QTL results/ATAC/rasqual/output/IFNg_SL1344_100kb/IFNg_SL1344_100kb.eigenMT_input.txt --out_prefix results/ATAC/rasqual/output/IFNg_SL1344_100kb/IFNg_SL1344_50kb --cis_dist 5e4 --eigenMT_path ~/software/eigenMT/eigenMT.py --external"
+cat ../macrophage-gxe-study/macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/submitJobs.py --MEM 2000 --ncores 4 --jobname eigenMTbyChromosome --command "python ~/software/utils/eigenMTbyChromosome.py --chromosome_dir ../macrophage-gxe-study/results/SL1344/eigenMT/input/ --genepos results/ATAC/eigenMT/input/gene_positions.txt --QTL results/ATAC/rasqual/output/IFNg_100kb/IFNg_100kb.eigenMT_input.txt --out_prefix results/ATAC/rasqual/output/IFNg_100kb/IFNg_50kb --cis_dist 5e4 --eigenMT_path ~/software/eigenMT/eigenMT.py --external"
+cat ../macrophage-gxe-study/macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/submitJobs.py --MEM 2000 --ncores 4 --jobname eigenMTbyChromosome --command "python ~/software/utils/eigenMTbyChromosome.py --chromosome_dir ../macrophage-gxe-study/results/SL1344/eigenMT/input/ --genepos results/ATAC/eigenMT/input/gene_positions.txt --QTL results/ATAC/rasqual/output/SL1344_100kb/SL1344_100kb.eigenMT_input.txt --out_prefix results/ATAC/rasqual/output/SL1344_100kb/SL1344_50kb --cis_dist 5e4 --eigenMT_path ~/software/eigenMT/eigenMT.py --external"
+cat ../macrophage-gxe-study/macrophage-gxe-study/data/sample_lists/chromosome_list.txt | python ~/software/utils/submitJobs.py --MEM 2000 --ncores 4 --jobname eigenMTbyChromosome --command "python ~/software/utils/eigenMTbyChromosome.py --chromosome_dir ../macrophage-gxe-study/results/SL1344/eigenMT/input/ --genepos results/ATAC/eigenMT/input/gene_positions.txt --QTL results/ATAC/rasqual/output/IFNg_SL1344_100kb/IFNg_SL1344_100kb.eigenMT_input.txt --out_prefix results/ATAC/rasqual/output/IFNg_SL1344_100kb/IFNg_SL1344_50kb --cis_dist 5e4 --eigenMT_path ~/software/eigenMT/eigenMT.py --external"
 
 #Merge eigenMT output 
 cat results/ATAC/rasqual/output/naive_100kb/naive_50kb.chr_*.eigenMT.txt | grep -v snps > results/ATAC/rasqual/output/naive_100kb/naive_50kb.eigenMT.txt
@@ -380,6 +380,27 @@ tabix -s2 -b3 -e3 -f results/ATAC/fastqtl/output/IFNg_SL1344_500kb_pvalues.sorte
 
 #Calculate nucleotide content for each peak
 bedtools nuc -fi ../../../annotations/GRCh38/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa -bed ATAC_consensus_peaks.gff3  > ATAC_consensus_peaks.nuc_content.txt
+
+##### FASTQTL single permutation run #####
+bcftools query -l naive.ASE.vcf.gz | sort -R > naive.sample_names.txt
+bcftools reheader -s naive.sample_names.txt naive.ASE.vcf.gz > naive.ASE.permuted.vcf.gz
+
+bcftools query -l IFNg.ASE.vcf.gz | sort -R > IFNg.sample_names.txt
+bcftools reheader -s IFNg.sample_names.txt IFNg.ASE.vcf.gz > IFNg.ASE.permuted.vcf.gz
+
+bcftools query -l SL1344.ASE.vcf.gz | sort -R > SL1344.sample_names.txt
+bcftools reheader -s SL1344.sample_names.txt SL1344.ASE.vcf.gz > SL1344.ASE.permuted.vcf.gz
+
+bcftools query -l IFNg_SL1344.ASE.vcf.gz | sort -R > IFNg_SL1344.sample_names.txt
+bcftools reheader -s IFNg_SL1344.sample_names.txt IFNg_SL1344.ASE.vcf.gz > IFNg_SL1344.ASE.permuted.vcf.gz
+
+
+#Run FastQTL with CQN-normalised data and covariates (3 PCs + sex) (50kb window)
+cat results/ATAC/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/ATAC/rasqual/input/naive.ASE.permuted.vcf.gz --bed results/ATAC/fastqtl/input/naive.expression_cqn.txt.gz --cov results/ATAC/fastqtl/input/naive.covariates_cqn.txt --W 50000 --permute '100 10000' --out results/ATAC/fastqtl/output_permutation/naive_50kb_cqn_perm --execute True"
+cat results/ATAC/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/ATAC/rasqual/input/IFNg.ASE.permuted.vcf.gz --bed results/ATAC/fastqtl/input/IFNg.expression_cqn.txt.gz --cov results/ATAC/fastqtl/input/IFNg.covariates_cqn.txt --W 50000 --permute '100 10000' --out results/ATAC/fastqtl/output_permutation/IFNg_50kb_cqn_perm --execute True"
+cat results/ATAC/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/ATAC/rasqual/input/SL1344.ASE.permuted.vcf.gz --bed results/ATAC/fastqtl/input/SL1344.expression_cqn.txt.gz --cov results/ATAC/fastqtl/input/SL1344.covariates_cqn.txt --W 50000 --permute '100 10000' --out results/ATAC/fastqtl/output_permutation/SL1344_50kb_cqn_perm --execute True"
+cat results/ATAC/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/ATAC/rasqual/input/IFNg_SL1344.ASE.permuted.vcf.gz --bed results/ATAC/fastqtl/input/IFNg_SL1344.expression_cqn.txt.gz --cov results/ATAC/fastqtl/input/IFNg_SL1344.covariates_cqn.txt --W 50000 --permute '100 10000' --out results/ATAC/fastqtl/output_permutation/IFNg_SL1344_50kb_cqn_perm --execute True"
+
 
 ##### MOTIFS #####
 #Scan all ATAC peaks using FIMO

@@ -1,9 +1,9 @@
 library("plyr")
 library("dplyr")
 library("devtools")
-load_all("../seqUtils/")
 library("Rsamtools")
 library("purrr")
+load_all("../seqUtils/")
 
 #Import data
 atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
@@ -11,7 +11,7 @@ atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
 #Import SNP coordinates
 snp_coords = importVariantInformation("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz")
 
-### Genotypes optimised by RASQUAL
+### RASQUAL nominal run
 #Extract minimal p-value for each condition
 naive_eigen_pvalue = eigenMTImportResults("/Volumes/JetDrive/databases/ATAC/rasqual/naive_50kb.eigenMT.txt.gz")
 ifng_eigen_pvalue = eigenMTImportResults("/Volumes/JetDrive/databases/ATAC/rasqual/IFNg_50kb.eigenMT.txt.gz")
@@ -23,6 +23,20 @@ min_pvalue_list = list(naive = naive_eigen_pvalue,
                        SL1344 = sl1344_eigen_pvalue,
                        IFNg_SL1344 = ifng_sl1344_eigen_pvalue)
 saveRDS(min_pvalue_list, "results/ATAC/QTLs/rasqual_min_pvalues.rds")
+
+### RASQUAL permutation run
+#Extract minimal p-value for each condition
+naive_eigen_pvalue = eigenMTImportResults("/Volumes/JetDrive/databases/ATAC/rasqual/random_permutation/naive_50kb.eigenMT.txt.gz")
+ifng_eigen_pvalue = eigenMTImportResults("/Volumes/JetDrive/databases/ATAC/rasqual/random_permutation/IFNg_50kb.eigenMT.txt.gz")
+sl1344_eigen_pvalue = eigenMTImportResults("/Volumes/JetDrive/databases/ATAC/rasqual/random_permutation/SL1344_50kb.eigenMT.txt.gz")
+ifng_sl1344_eigen_pvalue = eigenMTImportResults("/Volumes/JetDrive/databases/ATAC/rasqual/random_permutation/IFNg_SL1344_50kb.eigenMT.txt.gz")
+
+min_pvalue_list_random = list(naive = naive_eigen_pvalue,
+                       IFNg = ifng_eigen_pvalue,
+                       SL1344 = sl1344_eigen_pvalue,
+                       IFNg_SL1344 = ifng_sl1344_eigen_pvalue)
+saveRDS(min_pvalue_list_random, "results/ATAC/QTLs/rasqual_min_pvalues.random.rds")
+
 
 #Extract the number of tests performed by eigenMT for each peak
 n_tests = map(min_pvalue_list, ~dplyr::select(.,gene_id, n_tests)) %>% reduce(rbind) %>% unique()
