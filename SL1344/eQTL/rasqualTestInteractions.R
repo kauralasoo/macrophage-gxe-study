@@ -15,21 +15,19 @@ gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, g
 
 #Load p-values from disk
 rasqual_min_pvalues = readRDS("results/SL1344/eQTLs/rasqual_min_pvalues.rds")
-rasqual_qtl_df = extractQTLsFromList(rasqual_min_pvalues, fdr_cutoff = 0.1)
-joint_pairs = dplyr::select(rasqual_qtl_df, gene_id, snp_id) %>% unique() 
+min_pvalue_hits = lapply(rasqual_min_pvalues, function(x){dplyr::filter(x, p_eigen < fdr_thresh)})
+min_pvalues_df = purrr::map_df(min_pvalue_hits, identity, .id = "condition_name") %>%
+  dplyr::arrange(gene_id, p_nominal)
+joint_pairs = dplyr::select(min_pvalues_df, gene_id, snp_id) %>% unique()
 
+#Import summary stats for each pair in each condition
 rasqual_selected_pvalues = readRDS("results/SL1344/eQTLs/rasqual_selected_pvalues.rds")
 
 #Import the VCF file
 vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
-#Filter VCF
-genotypes = vcf_file$genotypes[unique(joint_pairs$snp_id),]
-snps_pos = dplyr::filter(vcf_file$snpspos, snpid %in% rownames(genotypes))
-filtered_vcf = list(snpspos = snps_pos, genotypes = genotypes)
-
 #Prune SNPs
-filtered_pairs = filterHitsR2(joint_pairs, filtered_vcf$genotypes, .8)
+filtered_pairs = filterHitsR2(joint_pairs, vcf_file$genotypes, .8)
 
 #Naive vs IFNg
 covariate_names = c("PEER_factor_1", "PEER_factor_2", "PEER_factor_3","PEER_factor_4", "PEER_factor_5","PEER_factor_6", "sex_binary")
@@ -39,8 +37,10 @@ formula_interaction = as.formula(paste("expression ~ genotype + condition_name +
                                       paste(covariate_names, collapse = " + "), sep = "+ "))
 
 #Test for interactions
-interaction_results = testMultipleInteractions(tbl_df(filtered_pairs), combined_expression_data$cqn, combined_expression_data$sample_metadata, filtered_vcf, formula_qtl, formula_interaction)
-interaction_df = postProcessInteractionPvalues(interaction_results)
+interaction_results = testMultipleInteractions(tbl_df(filtered_pairs), combined_expression_data$cqn, 
+                                               combined_expression_data$sample_metadata, 
+                                               vcf_file, formula_qtl, formula_interaction, id_field_separator = "-")
+interaction_df = postProcessInteractionPvalues(interaction_results, id_field_separator = "-")
 saveRDS(interaction_df, "results/SL1344/eQTLs/SL1344_interaction_pvalues.rds")
 interaction_df = readRDS("results/SL1344/eQTLs/SL1344_interaction_pvalues.rds")
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
@@ -67,7 +67,7 @@ appear_clusters = clusterBetasKmeans(appear_betas, 6) %>% dplyr::select(gene_id,
   dplyr::left_join(beta_list$beta_df, by = c("gene_id", "snp_id"))
 
 #Reorder clusters
-cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(1,4,6,2,5,3))
+cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(4,3,6,5,1,2))
 
 #Make heatmap of effect sizes
 appear_betas = appear_clusters %>% 
@@ -103,7 +103,6 @@ appear_means_plot = ggplot(appear_cluster_means, aes(x = condition_name, y = bet
   geom_text(aes(label = paste("n = ", count, sep = ""), x = condition_name, y = 1.5), data = cluster_sizes) +
   xlab("Condition") + 
   ylab("Log2 fold-change")
-ggsave("results/SL1344/eQTLs/properties/eQTLs_appear_cluster_means.pdf",appear_means_plot, width = 9, height = 6)
 
 #Find QTLs that disappear
 #Look for QTLs that disappear after stimulation
@@ -114,7 +113,6 @@ disappear_clusters = clusterBetasKmeans(disappear_betas, 7) %>% dplyr::select(ge
   dplyr::left_join(beta_list$beta_df, by = c("gene_id", "snp_id"))
 disappear_plot = ggplot(disappear_clusters, aes(x = condition_name, y = abs(beta), group = paste(gene_id, snp_id))) + 
   geom_line() + facet_wrap(~cluster_id)
-ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_kmeans.pdf",disappear_plot, width = 10, height = 10)
 
 
 #Calculate mean effect size in each cluster and condition
@@ -148,67 +146,9 @@ disappear_means_plot = ggplot(disappear_cluster_means, aes(x = condition_name, y
   geom_text(aes(label = paste("n = ", count, sep = ""), x = condition_name, y = 1.5), data = disappear_cluster_sizes) +
   xlab("Condition") + 
   ylab("Log2 fold-change")
-ggsave("results/SL1344/eQTLs/properties/eQTLs_disappear_cluster_means.pdf",disappear_means_plot, width = 6, height = 6)
 
 #Export clustering results
 variable_qtls = list(appear = appear_betas, disappear = disappear_betas)
 saveRDS(variable_qtls, "results/SL1344/eQTLs/appeat_disappear_eQTLs.rds")
-
-
-
-
-#### ASE data ####
-#Fetch ASE data from disk
-exon_ranges = constructExonRanges("ENSG00000144228", "rs12621644", combined_expression_data$gene_metadata)
-sample_meta = dplyr::select(combined_expression_data$sample_metadata, sample_id, condition_name, genotype_id)
-ase_data = fetchGeneASEData(exon_ranges, "results/SL1344/combined_ASE_counts.sorted.txt.gz", sample_meta) %>%
-  aseDataAddGenotypes(vcf_file$genotypes)
-
-
-#Make plot
-ase_data = fetchGeneASEData(exon_ranges, "results/SL1344/combined_ASE_counts.sorted.txt.gz", sample_meta) %>%
-  aseDataAddGenotypes(vcf_file$genotypes)
-plotting_data = filterASEforPlotting(ase_data) %>% dplyr::filter(lead_snp_value == 1)
-new_data_plot = ggplot(plotting_data, aes(x = factor(lead_snp_value), y = abs(0.5-ratio), label = sample_id)) + 
-  facet_grid(feature_snp_id~condition_name) +
-  geom_boxplot(outlier.shape = NA) + 
-  geom_text() +
-  geom_jitter(position = position_jitter(width = .1)) +
-  xlab("Feature SNP id") + 
-  ylab("Allelic imbalance")
-ggsave("results/SL1344/SPOPL_AI_new.pdf", new_data_plot, width = 8, height = 10)
-
-
-new_samples = unique(b$genotype_id)
-old_sample_meta = dplyr::filter(sample_meta, !(sample_meta$genotype_id %in% new_samples))
-
-ase_data_old = fetchGeneASEData(exon_ranges, "results/SL1344/combined_ASE_counts.sorted.old.txt.gz", old_sample_meta) %>%
-  aseDataAddGenotypes(vcf_file$genotypes)
-plotting_data = filterASEforPlotting(ase_data_old) %>% dplyr::filter(lead_snp_value == 1)
-old_data_plot = ggplot(plotting_data, aes(x = factor(lead_snp_value), y = abs(0.5-ratio), label = sample_id)) + 
-  facet_grid(feature_snp_id~condition_name) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_text() +
-  geom_jitter(position = position_jitter(width = .1)) +
-  xlab("Feature SNP id") + 
-  ylab("Allelic imbalance")
-ggsave("results/SL1344/SPOPL_AI_old.pdf", old_data_plot, width = 8, height = 10)
-
-SPOPL_read_counts = plotEQTL("ENSG00000144228", "rs12621644", combined_expression_data$cqn, vcf_file$genotypes, 
-         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
-ggsave("results/SL1344/SPOPL_between_individual.pdf", SPOPL_read_counts, width = 8, height = 8)
-
-
-SPOPL_read_counts = plotEQTL("ENSG00000168310", "rs34156200", combined_expression_data$cqn, vcf_file$genotypes, 
-                             combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
-
-plotEQTL("ENSG00000005844", "rs11574938", combined_expression_data$cqn, vcf_file$genotypes, 
-         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
-
-
-#IRF2 eQTL
-plotEQTL("ENSG00000168310", "rs13149699", combined_expression_data$cqn, vcf_file$genotypes, 
-         combined_expression_data$sample_metadata, combined_expression_data$gene_metadata)
-
 
 
