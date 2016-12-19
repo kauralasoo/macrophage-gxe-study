@@ -35,6 +35,24 @@ zcat results/SL1344/fastqtl/output/IFNg_SL1344_100kb_cqn_perm.chunk_*.txt.gz | b
 #Remove chunks
 rm results/SL1344/fastqtl/output/*.chunk_*
 
+##### FASTQTL single permutation run #####
+bcftools query -l naive.ASE.vcf.gz | sort -R > naive.sample_names.txt
+bcftools reheader -s naive.sample_names.txt naive.ASE.vcf.gz > naive.ASE.permuted.vcf.gz
+tabix -p vcf naive.ASE.permuted.vcf.gz
+
+#Run FastQTL on each condition
+cat results/SL1344/fastqtl/input_start_end/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/naive.ASE.permuted.vcf.gz --bed results/SL1344/fastqtl/input_start_end/naive.expression_cqn.txt.gz --cov results/SL1344/fastqtl/input_start_end/naive.covariates.txt --W 500000 --permute '100 10000' --out results/SL1344/fastqtl/output_permutation/naive_500kb_cqn_perm --execute True"
+cat results/SL1344/fastqtl/input_start_end/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/naive.ASE.permuted.vcf.gz --bed results/SL1344/fastqtl/input_start_end/IFNg.expression_cqn.txt.gz --cov results/SL1344/fastqtl/input_start_end/IFNg.covariates.txt --W 500000 --permute '100 10000' --out results/SL1344/fastqtl/output_permutation/IFNg_500kb_cqn_perm --execute True"
+cat results/SL1344/fastqtl/input_start_end/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/naive.ASE.permuted.vcf.gz --bed results/SL1344/fastqtl/input_start_end/SL1344.expression_cqn.txt.gz --cov results/SL1344/fastqtl/input_start_end/SL1344.covariates.txt --W 500000 --permute '100 10000' --out results/SL1344/fastqtl/output_permutation/SL1344_500kb_cqn_perm --execute True"
+cat results/SL1344/fastqtl/input_start_end/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/naive.ASE.permuted.vcf.gz --bed results/SL1344/fastqtl/input_start_end/IFNg_SL1344.expression_cqn.txt.gz --cov results/SL1344/fastqtl/input_start_end/IFNg_SL1344.covariates.txt --W 500000 --permute '100 10000' --out results/SL1344/fastqtl/output_permutation/IFNg_SL1344_500kb_cqn_perm --execute True"
+
+#Merge chunks into single files
+zcat results/SL1344/fastqtl/output_permutation/naive_500kb_cqn_perm.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output_permutation/naive_500kb_permuted.txt.gz
+zcat results/SL1344/fastqtl/output_permutation/IFNg_500kb_cqn_perm.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output_permutation/IFNg_500kb_permuted.txt.gz
+zcat results/SL1344/fastqtl/output_permutation/SL1344_500kb_cqn_perm.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output_permutation/SL1344_500kb_permuted.txt.gz
+zcat results/SL1344/fastqtl/output_permutation/IFNg_SL1344_500kb_cqn_perm.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output_permutation/IFNg_SL1344_500kb_permuted.txt.gz
+
+
 
 #Get full p-values from fastQTL
 cat results/SL1344/fastqtl/input/all_chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf results/SL1344/rasqual/input/naive.ASE.vcf.gz --bed results/SL1344/fastqtl/input/naive.expression_cqn.txt.gz --cov results/SL1344/fastqtl/input/naive.covariates.txt --W 500000 --out results/SL1344/fastqtl/output/naive_500kb_full --execute True"

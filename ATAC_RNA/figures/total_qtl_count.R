@@ -21,7 +21,8 @@ eqtl_counts = read.table("figures/supplementary/rna_fastQTL_vs_rasqual_eQTL_coun
 #Merge counts
 qtl_counts = dplyr::bind_rows(eqtl_counts, caqtl_counts) %>% 
   dplyr::rename(condition_name = condition) %>%
-  dplyr::left_join(housekeeping::figureNames(), by = "condition_name")
+  dplyr::left_join(housekeeping::figureNames(), by = "condition_name") %>%
+  dplyr::mutate(phenotype = factor(phenotype, levels = c("RNA-seq", "ATAC-seq")))
 
 #Make a barplot with the numbers of QTLs
 qtl_plot = ggplot(qtl_counts, aes(x = figure_name, y = qtl_count, fill = method)) + 

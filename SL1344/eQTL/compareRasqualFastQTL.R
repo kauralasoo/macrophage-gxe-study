@@ -14,28 +14,22 @@ gene_id_list = purrr::map(rasqual_pvalues, ~dplyr::select(., gene_id) %>% unlist
 intersect_genes = purrr::reduce(gene_id_list, intersect)
 union_genes = purrr::reduce(gene_id_list, union)
 
-#Keep only those fastQTl results that were also present in rasqual output
+#Keep only those fastQTL results that were also present in rasqual output
 fastqtl_pvalues_filtered = purrr::map2(fastqtl_pvalues, rasqual_pvalues, function(x,y){
-  test_df = dplyr::select(y, gene_id, n_tests)
   res = dplyr::filter(x, gene_id %in% y$gene_id) %>%
-    dplyr::group_by(gene_id) %>%
-    dplyr::filter(row_number() == 1) %>%
-    dplyr::left_join(test_df, by = "gene_id") %>%
-    dplyr::mutate(p_eigen = p.adjust(p_nominal, method = "bonferroni", n = n_tests)) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(p_eigen_fdr = p.adjust(p_eigen, method = "fdr")) %>%
     dplyr::arrange(p_nominal)
   return(res)
-  })
+})
 
-#Count the number of eQTLs detected with each method
-fastqtl_qtl_count = map(fastqtl_pvalues_filtered, ~dplyr::filter(., p_eigen_fdr < 0.1) %>% nrow()) %>% unlist()
-rasqual_qtl_count = map(rasqual_pvalues, ~dplyr::filter(., p_fdr < 0.1) %>% nrow()) %>% unlist()
+#Count the number of caQTLs detected with each method
+fastqtl_qtl_count = map(fastqtl_pvalues_filtered, ~dplyr::filter(., p_eigen < fdr_thresh) %>% nrow()) %>% unlist()
+rasqual_qtl_count = map(rasqual_pvalues, ~dplyr::filter(., p_eigen < fdr_thresh) %>% nrow()) %>% unlist()
 qtl_counts = rbind(fastqtl_qtl_count, rasqual_qtl_count) %>% t() %>% as.data.frame()
 qtl_counts = dplyr::mutate(qtl_counts, condition = rownames(qtl_counts)) %>% 
   dplyr::select(condition, everything()) %>% 
-  dplyr::mutate(extra_qtls = round((rasqual_qtl_count - fastqtl_qtl_count)/fastqtl_qtl_count,2))
+  dplyr::mutate(extra_qtls = (rasqual_qtl_count - fastqtl_qtl_count)/fastqtl_qtl_count)
 write.table(qtl_counts, "figures/supplementary/rna_fastQTL_vs_rasqual_eQTL_counts.txt", quote = FALSE, row.names = FALSE, sep ="\t")
+
 
 #Join rasqual and fastqtl data frames for scatter plots
 joint_pvalues = purrr::map2(rasqual_pvalues, fastqtl_pvalues_filtered, function(rasqual, fastqtl){
