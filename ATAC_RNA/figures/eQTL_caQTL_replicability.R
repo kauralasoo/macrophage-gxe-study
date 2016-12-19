@@ -1,9 +1,9 @@
 library("devtools")
 library("dplyr")
 library("ggplot2")
+load_all("../seqUtils/")
 load_all("~/software/rasqual/rasqualTools/")
 load_all("macrophage-gxe-study/housekeeping/")
-load_all("../seqUtils/")
 
 #Import the VCF file
 vcf_file = readRDS("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
@@ -20,7 +20,7 @@ atac_rasqual_50kb = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
 
 #Calculate chromatin concordances
 atac_rasqual_concordance = 
-  calculatePairwiseConcordance(atac_rasqual_50kb, ~p_fdr < 0.01, vcf_file$genotypes, tidy = TRUE) %>%
+  calculatePairwiseConcordance(atac_rasqual_50kb, ~p_nominal < 1e-5, vcf_file$genotypes, tidy = TRUE) %>%
   dplyr::filter(first != second) %>% dplyr::mutate(method = "RASQUAL (50kb)", class = "caQTL")
 atac_fastqtl_50kb_concordance = 
   calculatePairwiseConcordance(atac_fastqtl_50kb, ~p_fdr < 0.01, vcf_file$genotypes, tidy = TRUE) %>%
@@ -49,7 +49,8 @@ concordance_df = readRDS("results/ATAC_RNA_overlaps/concordance_df.rds")
 
 #Make a clean concordance df
 concordance_df_clean = tidyr::separate(concordance_df, method, into = c("method", "window"), sep = " ") %>% 
-  dplyr::mutate(phenotype = ifelse(class == "caQTL", "ATAC-seq", "RNA-seq"))
+  dplyr::mutate(phenotype = ifelse(class == "caQTL", "ATAC-seq", "RNA-seq"))  %>%
+  dplyr::mutate(phenotype = factor(phenotype, levels = c("RNA-seq", "ATAC-seq")))
 
 #Make a concordance plot
 concordance_filtered = dplyr::filter(concordance_df_clean, window != "(100kb)")
@@ -58,7 +59,7 @@ concordance_plot = ggplot(concordance_filtered, aes(x = method, y = concordance,
   geom_point(position = position_jitter(width = 0.2)) + 
   facet_wrap(~phenotype) +
   ylab("Lead variant concordance") +
-  scale_color_manual(values = c("#a6cee3", "#1f78b4")) +
+  scale_color_manual(values = c("#ca0020","#404040")) +
   scale_y_continuous(limits = c(0,1)) + 
   theme_light() +
   theme(legend.position = "top", axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank())
