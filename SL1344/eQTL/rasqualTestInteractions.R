@@ -26,6 +26,11 @@ rasqual_selected_pvalues = readRDS("results/SL1344/eQTLs/rasqual_selected_pvalue
 #Import the VCF file
 vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
 
+#Calculate R2
+genotypes = vcf_file$genotypes[unique(joint_pairs$snp_id),]
+snps_pos = dplyr::filter(vcf_file$snpspos, snpid %in% rownames(genotypes))
+filtered_vcf = list(snpspos = snps_pos, genotypes = genotypes)
+
 #Prune SNPs
 filtered_pairs = filterHitsR2(joint_pairs, vcf_file$genotypes, .8)
 
@@ -39,7 +44,7 @@ formula_interaction = as.formula(paste("expression ~ genotype + condition_name +
 #Test for interactions
 interaction_results = testMultipleInteractions(tbl_df(filtered_pairs), combined_expression_data$cqn, 
                                                combined_expression_data$sample_metadata, 
-                                               vcf_file, formula_qtl, formula_interaction, id_field_separator = "-")
+                                               filtered_vcf, formula_qtl, formula_interaction, id_field_separator = "-")
 interaction_df = postProcessInteractionPvalues(interaction_results, id_field_separator = "-")
 saveRDS(interaction_df, "results/SL1344/eQTLs/SL1344_interaction_pvalues.rds")
 interaction_df = readRDS("results/SL1344/eQTLs/SL1344_interaction_pvalues.rds")
@@ -121,12 +126,16 @@ disappear_cluster_sizes = calculateClusterSizes(disappear_clusters, selected_con
 disappear_cluster_means = calculateClusterMeans(disappear_clusters) %>%
   dplyr::semi_join(disappear_cluster_sizes, by = "cluster_id")
 
-disappear_betas = disappear_clusters %>% dplyr::group_by(gene_id, snp_id) %>% dplyr::mutate(beta_scaled = beta/max(beta)) %>%
+disappear_betas = disappear_clusters %>% 
+  dplyr::group_by(gene_id, snp_id) %>% 
+  dplyr::mutate(beta_scaled = beta/max(beta)) %>%
   dplyr::left_join(gene_name_map, by = "gene_id") %>%
-  dplyr::semi_join(disappear_cluster_sizes, by = "cluster_id")
+  dplyr::semi_join(disappear_cluster_sizes, by = "cluster_id") %>%
+  dplyr::left_join(figureNames(), by = "condition_name") #Add figure names
+
 disappear_count = disappear_cluster_sizes$count %>% sum()
 ylabel = paste(disappear_count, "eQTLs")
-dis_effect_size_heatmap = ggplot(disappear_betas, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + 
+dis_effect_size_heatmap = ggplot(disappear_betas, aes(x = figure_name, y = gene_name, fill = beta_scaled)) + 
   facet_grid(cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
@@ -134,10 +143,9 @@ dis_effect_size_heatmap = ggplot(disappear_betas, aes(x = condition_name, y = ge
   scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Relative effect", midpoint = 0) +
   theme_grey() +
   theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), 
-        axis.title.x = element_blank(), axis.text.x=element_text(angle = 15)) +
-  theme(panel.margin = unit(0.2, "lines"))
-ggsave("figures/supplementary/eQTLs_disappear_kmeans_heatmap.pdf",dis_effect_size_heatmap, width = 4.5, height = 3)
-ggsave("figures/supplementary/eQTLs_disappear_kmeans_heatmap.png",dis_effect_size_heatmap, width = 4.5, height = 3)
+        axis.title.x = element_blank()) +
+  theme(panel.spacing = unit(0.2, "lines"))
+ggsave("figures/supplementary/eQTLs_disappear_kmeans_heatmap.png",dis_effect_size_heatmap, width = 3.5, height = 3)
 
 
 disappear_means_plot = ggplot(disappear_cluster_means, aes(x = condition_name, y = beta_mean, group = cluster_id)) + 

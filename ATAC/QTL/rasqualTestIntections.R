@@ -132,9 +132,9 @@ dis_effect_size_heatmap = ggplot(disappear_betas, aes(x = figure_name, y = gene_
   scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Relative effect", midpoint = 0) +
   theme_grey() +
   theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), 
-        axis.title.x = element_blank(), axis.text.x=element_text(angle = 15)) +
+        axis.title.x = element_blank()) +
   theme(panel.spacing = unit(0.2, "lines"))
-ggsave("results/ATAC/QTLs/properties/caQTLs_disappear_kmeans_heatmap.png",dis_effect_size_heatmap, width = 4.5, height = 4)
+ggsave("figures/supplementary/caQTLs_disappear_kmeans_heatmap.png",dis_effect_size_heatmap, width = 3.5, height = 4)
 
 #Export variable qtls
 variable_qtls = list(appear = appear_betas, disappear = disappear_betas)

@@ -52,6 +52,8 @@ zcat results/SL1344/fastqtl/output_permutation/IFNg_500kb_cqn_perm.chunk_*.txt.g
 zcat results/SL1344/fastqtl/output_permutation/SL1344_500kb_cqn_perm.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output_permutation/SL1344_500kb_permuted.txt.gz
 zcat results/SL1344/fastqtl/output_permutation/IFNg_SL1344_500kb_cqn_perm.chunk_*.txt.gz | bgzip > results/SL1344/fastqtl/output_permutation/IFNg_SL1344_500kb_permuted.txt.gz
 
+#Remove chunks
+rm results/SL1344/fastqtl/output_permutation/*.chunk_*
 
 
 #Get full p-values from fastQTL
