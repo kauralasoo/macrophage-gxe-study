@@ -43,7 +43,8 @@ joint_enrichments = dplyr::bind_rows(eqtl_filtered_enrichments, caqtl_filtered_e
 mean_fe_df = dplyr::group_by(joint_enrichments, trait) %>% 
   dplyr::mutate(mean_FE = mean(FE)) %>% arrange(mean_FE) %>%
   dplyr::ungroup()
-ranked_enrichments = dplyr::mutate(joint_enrichments, trait = factor(trait, levels = unique(mean_fe_df$trait)))
+ranked_enrichments = dplyr::mutate(joint_enrichments, trait = factor(trait, levels = unique(mean_fe_df$trait))) %>%
+  dplyr::mutate(phenotype = factor(phenotype, levels = c("RNA-seq", "ATAC-seq")))
 
 #Make plots
 enrichment_plot = ggplot(ranked_enrichments, aes(x = FE, y = trait, color = figure_name, size = log10p)) + 

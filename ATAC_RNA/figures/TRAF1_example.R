@@ -86,9 +86,8 @@ qtl_summary = importSummariesForPlotting(qtl_df, gwas_stats_labeled, qtl_paths =
   addR2FromLead(vcf_file$genotypes) %>%
   dplyr::filter(condition_name %in% c("RA","naive","IFNg_SL1344")) %>%
   dplyr::rename(track_id = condition_name)
-plotColoc(qtl_summary, "TRAF1")
 
 #See if there are any associated ATAC peaks (apparently not)
-a = tabixFetchSNPsQuick("rs10985070", qtlResults()$atac_rasqual$naive, vcf_file$snpspos)
+a = tabixFetchSNPsQuick("rs4511811", qtlResults()$atac_rasqual$naive, vcf_file$snpspos)
 a = tabixFetchSNPsQuick("rs10985070", qtlResults()$atac_rasqual$IFNg, vcf_file$snpspos)
 
