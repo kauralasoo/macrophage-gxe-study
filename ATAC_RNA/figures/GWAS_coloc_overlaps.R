@@ -86,32 +86,24 @@ unconvincing_coloc = read.table("macrophage-gxe-study/data/gwas_catalog/unconvin
 
 ##### eQTL overlaps ####
 #Import coloc output
-eqtl_100kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".eQTL.1e+05.coloc.txt", 
-                                           PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 50, 
-                                           gwas_pval_thresh = 1e-6)$coloc_filtered %>%
-  dplyr::left_join(gene_name_map, by = "gene_id")
-saveRDS(eqtl_100kb_hits, "results/SL1344/coloc/eQTL_coloc_100kb_hits.rds")
-
 eqtl_200kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".eQTL.2e+05.coloc.txt", 
                                            PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 50, 
                                            gwas_pval_thresh = 1e-6)$coloc_filtered %>%
   dplyr::left_join(gene_name_map, by = "gene_id") %>%
-  dplyr::anti_join(unconvincing_coloc, by = c("gene_name", "trait"))
+  dplyr::anti_join(unconvincing_coloc, by = c("gene_name", "trait")) %>%
+  dplyr::select(-.row)
 saveRDS(eqtl_200kb_hits, "results/SL1344/coloc/eQTL_coloc_200kb_hits.rds")
+write.table(eqtl_200kb_hits, "figures/tables/eQTL_coloc_200kb_hits.txt", sep = "\t", 
+            row.names = FALSE, col.names = TRUE, quote = FALSE)
 
 ##### caQTL overlaps ####
 #Import coloc output
-caqtl_100kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".caQTL.1e+05.coloc.txt", 
-                                           PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 50, 
-                                           gwas_pval_thresh = 1e-6)$coloc_filtered %>%
-  dplyr::mutate(gene_name = gene_id)
-saveRDS(caqtl_100kb_hits, "results/SL1344/coloc/caQTL_coloc_100kb_hits.rds")
-
 caqtl_200kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".caQTL.2e+05.coloc.txt", 
                                            PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 50, 
                                            gwas_pval_thresh = 1e-6)$coloc_filtered %>%
   dplyr::mutate(gene_name = gene_id) %>%
-  dplyr::anti_join(unconvincing_coloc, by = c("gene_name", "trait"))
+  dplyr::anti_join(unconvincing_coloc, by = c("gene_name", "trait"))  %>%
+  dplyr::select(-.row)
 saveRDS(caqtl_200kb_hits, "results/SL1344/coloc/caQTL_coloc_200kb_hits.rds")
 
 #Condense multi-peak caQTLs to a single hit
@@ -124,7 +116,8 @@ condensed_caqtl_hits = dplyr::group_by(caqtl_200kb_hits, summarised_trait, gene_
   dplyr::ungroup()
 caqtl_200kb_filtered_hits = dplyr::semi_join(caqtl_200kb_hits, condensed_caqtl_hits, by = c("gene_id", "trait"))
 saveRDS(caqtl_200kb_filtered_hits, "results/SL1344/coloc/caQTL_coloc_200kb_hits.rds")
-
+write.table(caqtl_200kb_filtered_hits, "figures/tables/caQTL_coloc_200kb_hits.txt", sep = "\t", 
+            row.names = FALSE, col.names = TRUE, quote = FALSE)
 
 #### Count the number of coloc hits by condition and by trait ####
 
@@ -196,5 +189,12 @@ shared_counts = dplyr::select(shared_qtls, summarised_trait, gene_id) %>%
   dplyr::group_by(summarised_trait) %>% 
   dplyr::summarise(overlap_count = length(summarised_trait)) %>% 
   dplyr::mutate(phenotype = "shared")
+
+
+#Show that ICOSLG eQTL is not colocalised with the UC GWAS hit
+a = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".eQTL.2e+05.coloc.txt", 
+                         PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 50, 
+                         gwas_pval_thresh = 1e-6)$coloc_df
+View(dplyr::filter(a, gene_id == "ENSG00000160223", trait == "UC", snp_id == "rs4819387"))
 
 
