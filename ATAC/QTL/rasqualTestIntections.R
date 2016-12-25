@@ -32,14 +32,15 @@ filtered_vcf = list(snpspos = snps_pos, genotypes = genotypes)
 filtered_pairs = filterHitsR2(joint_pairs, filtered_vcf$genotypes, .8)
 
 #### Test for interactions ####
-covariate_names = c("sex_binary","short_long_ratio","assigned_frac","mt_frac")
+#covariate_names = c("sex_binary","short_long_ratio","assigned_frac","mt_frac")
+covariate_names = c("sex_binary", "cqn_PC1", "cqn_PC2", "cqn_PC3")
 formula_qtl = as.formula(paste("expression ~ genotype + condition_name ", 
                                paste(covariate_names, collapse = " + "), sep = "+ "))
 formula_interaction = as.formula(paste("expression ~ genotype + condition_name + condition_name:genotype ", 
                                        paste(covariate_names, collapse = " + "), sep = "+ "))
 
 #Run model
-interaction_results = testMultipleInteractions(filtered_pairs, trait_matrix = log(atac_list$tpm + 0.01, 2), 
+interaction_results = testMultipleInteractions(filtered_pairs, trait_matrix = atac_list$cqn, 
                     sample_metadata = atac_list$sample_metadata, filtered_vcf, formula_qtl, formula_interaction, id_field_separator = "-")
 interaction_df = postProcessInteractionPvalues(interaction_results, id_field_separator = "-")
 saveRDS(interaction_df, "results/ATAC/QTLs/rasqual_interaction_results.rds")
@@ -76,7 +77,7 @@ appear_cluster_means = calculateClusterMeans(appear_clusters)
 cluster_sizes = calculateClusterSizes(appear_clusters)
 
 #Reorder clusters
-cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(4,3,2,1,6,5))
+cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(5,1,2,3,6,4))
 
 #Make heatmap of effect sizes
 appear_betas = appear_clusters %>% dplyr::group_by(gene_id, snp_id) %>% 
