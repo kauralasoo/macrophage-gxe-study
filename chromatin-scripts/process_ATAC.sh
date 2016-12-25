@@ -439,3 +439,6 @@ gat-run.py --segments=results/ATAC/DA/ATAC_clustered_peaks.bed --annotations=res
 gat-run.py --segments=annotations/ATAC_consensus_peaks.bed  --annotations=results/ATAC/ChIP_enrichment/naive_combined_peaks.bed --workspace=../../annotations/blacklists/GRCh38_filtered_gapped_genome.bed --num-samples=100 --log=results/ATAC/ChIP_enrichment/gat_output/ATAC_naive_overlap.gat_log.txt --with-segment-tracks > results/ATAC/ChIP_enrichment/gat_output/ATAC_naive_overlap.gat.txt
 gat-run.py --segments=results/ATAC/ChIP_enrichment/naive_combined_peaks.bed  --annotations=results/ATAC/ChIP_enrichment/naive_combined_peaks.bed --workspace=../../annotations/blacklists/GRCh38_filtered_gapped_genome.bed --num-samples=100 --log=results/ATAC/ChIP_enrichment/gat_output/naive_naive_overlap.gat_log.txt --with-segment-tracks > results/ATAC/ChIP_enrichment/gat_output/naive_naive_overlap.gat.txt
 
+#### Construct credible sets #####
+echo "hello" | python ~/software/utils/submitJobs.py --MEM 12000 --jobname construct_credible_sets --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/ATAC/finemapping/ATAC_construct_credible_sets.R"
+

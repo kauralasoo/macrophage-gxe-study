@@ -24,7 +24,7 @@ atac_tabix_list = list(naive = "results/ATAC/rasqual/output/naive_100kb/naive_10
                       IFNg_SL1344 = "results/ATAC/rasqual/output/IFNg_SL1344_100kb/IFNg_SL1344_100kb.sorted.txt.gz")
 
 #Import ATAC data
-atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
+atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
 min_pvalues_list = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
 min_pvalues_hits = purrr::map(min_pvalues_list, ~dplyr::filter(., p_eigen < fdr_thresh))
 
