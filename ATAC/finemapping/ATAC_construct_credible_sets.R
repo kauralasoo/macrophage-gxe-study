@@ -29,11 +29,17 @@ min_pvalues_list = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
 min_pvalues_hits = purrr::map(min_pvalues_list, ~dplyr::filter(., p_eigen < fdr_thresh))
 
 #Fetch p-values for each gene
-pvalues_list = purrr::map2(min_pvalues_hits, atac_tabix_list, function(x,y){
-  rasqualTools::constructGeneRanges(x, atac_list$gene_metadata, cis_window = 5e4) %>%
-    rasqualTools::tabixFetchGenes(y)
-})
-saveRDS(pvalues_list, "results/ATAC/QTLs/rasqual_QTL_pvalues.rds")
+fetch_pvalues = FALSE
+if(fetch_pvalues){
+  pvalues_list = purrr::map2(min_pvalues_hits, atac_tabix_list, function(x,y){
+    rasqualTools::constructGeneRanges(x, atac_list$gene_metadata, cis_window = 5e4) %>%
+      rasqualTools::tabixFetchGenes(y)
+  })
+  saveRDS(pvalues_list, "results/ATAC/QTLs/rasqual_QTL_pvalues.rds")
+}
+
+#Import p-values from disk
+pvalues_list = readRDS("results/ATAC/QTLs/rasqual_QTL_pvalues.rds")
 
 #Construct credible sets
 naive_cs = purrr::map(pvalues_list$naive, ~dplyr::arrange(.,p_nominal) %>%
