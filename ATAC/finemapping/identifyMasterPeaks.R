@@ -13,7 +13,7 @@ vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.
 #Import ATAC data
 atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
 min_pvalues_list = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
-min_pvalues_hits = purrr::map(min_pvalues_list, ~dplyr::filter(., p_fdr < 0.1))
+min_pvalues_hits = purrr::map(min_pvalues_list, ~dplyr::filter(., p_eigen < fdr_thresh))
 
 #Import credible sets from disk
 credible_sets = readRDS("results/ATAC/QTLs/rasqual_credible_sets.rds")
@@ -155,8 +155,8 @@ summary_stats = data_frame("total" = total_peak_count, "overlap_any_peak" = over
                            "shared_masters" = shared_master_peaks, "unique_masters" = unique_master_peaks, "other_is_qtl" = other_is_qtl) %>%
   dplyr::mutate(overlap_other_peak = overlap_any_peak-overlap_same_peak, overlap_no_peak = total - overlap_any_peak) %>%
   dplyr::mutate(other_not_qtl = overlap_other_peak - other_is_qtl)
-write.table(summary_stats, "results/ATAC/QTLs/properties/credible_set_peak_overlaps.txt", sep = "\t", row.names = FALSE, quote = FALSE)
-summary_stats = read.table("results/ATAC/QTLs/properties/credible_set_peak_overlaps.txt", header = TRUE, stringsAsFactors = FALSE)
+#write.table(summary_stats, "results/ATAC/QTLs/properties/credible_set_peak_overlaps.txt", sep = "\t", row.names = FALSE, quote = FALSE)
+#summary_stats = read.table("results/ATAC/QTLs/properties/credible_set_peak_overlaps.txt", header = TRUE, stringsAsFactors = FALSE)
 
 ##### Count the number of master caQTLs #####
 summary_df = dplyr::select(summary_stats, unique_masters, shared_masters, other_is_qtl, other_not_qtl, overlap_no_peak) %>% 
@@ -222,7 +222,7 @@ dependent_plot = ggplot(dependent_peak_count, aes(x = dependent_peak_count)) + g
 ggsave("figures/main_figures/caQTL_number_of_dependent_peaks_per_unqiue_master.pdf", plot = dependent_plot, width = 3, height = 3)
 
 #Plot distances between master and dependent peaks
-dependent_distances = calculatePeakDistance(master_dependent_pairs, atac_data$gene_metadata)
+dependent_distances = calculatePeakDistance(master_dependent_pairs, atac_list$gene_metadata)
 dependent_distance_plot = ggplot(dependent_distances, aes(x = distance/1000)) + geom_histogram(binwidth = 2) + theme_light() +
   xlab("Distance from master peak (kb)") +
   ylab("Dependent peak count")

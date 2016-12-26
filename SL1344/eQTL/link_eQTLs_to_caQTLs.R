@@ -1,6 +1,7 @@
 library("devtools")
 library("plyr")
 library("dplyr")
+library("purrr")
 library("ggplot2")
 load_all("../seqUtils/")
 load_all("macrophage-gxe-study/housekeeping/")
@@ -19,13 +20,17 @@ vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.
 #### Link eQTLs to caQTLs based on R2 overlap ####
 #Import lead eQTL SNPs
 rasqual_min_pvalues = readRDS("results/SL1344/eQTLs/rasqual_min_pvalues.rds")
-rasqual_qtl_df = extractQTLsFromList(rasqual_min_pvalues, fdr_cutoff = 0.1)
+rasqual_qtl_df = purrr::map_df(rasqual_min_pvalues, 
+                                ~dplyr::filter(., p_eigen < fdr_thresh), .id = "condition_name") %>% 
+  dplyr::arrange(p_nominal)
 joint_pairs = dplyr::select(rasqual_qtl_df, gene_id, snp_id) %>% unique() 
 filtered_pairs = filterHitsR2(joint_pairs, vcf_file$genotypes, .8)
 
 #Import ATAC QTL variants
 atac_min_pvalues = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
-atac_qtl_df = extractQTLsFromList(atac_min_pvalues, fdr_cutoff = 0.1)
+atac_qtl_df = purrr::map_df(atac_min_pvalues, 
+                               ~dplyr::filter(., p_eigen < fdr_thresh), .id = "condition_name") %>% 
+  dplyr::arrange(p_nominal)
 atac_joint_pairs = dplyr::select(atac_qtl_df, gene_id, snp_id) %>% unique() 
 atac_filtered_pairs = filterHitsR2(atac_joint_pairs, vcf_file$genotypes, .8)
 
@@ -34,9 +39,9 @@ atac_trait_pairs = addVariantCoords(atac_filtered_pairs, vcf_file$snpspos) %>%
   dplyr::rename(peak_id = gene_id)
 rna_atac_overlaps = findGWASOverlaps(filtered_pairs, atac_trait_pairs, vcf_file, max_distance = 5e5, min_r2 = 0.8)
 saveRDS(rna_atac_overlaps, "results/ATAC_RNA_overlaps/QTL_overlap_list_R2.rds")
-rna_atac_overlaps = readRDS("results/ATAC_RNA_overlaps/QTL_overlap_list_R2.rds")
 
 #Identify shared QTLs
+rna_atac_overlaps = readRDS("results/ATAC_RNA_overlaps/QTL_overlap_list_R2.rds")
 shared_qtls = dplyr::select(rna_atac_overlaps, gene_id, peak_id) %>% unique()
 
 
@@ -52,11 +57,11 @@ qtl_clusters = readRDS("results/SL1344/eQTLs/appeat_disappear_eQTLs.rds")
 #Import ATAC data
 atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
 min_pvalues_list = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
-min_pvalues_hits = lapply(min_pvalues_list, function(x){dplyr::filter(x, p_fdr < 0.1)})
+min_pvalues_hits = purrr::map(atac_min_pvalues, ~dplyr::filter(., p_eigen < fdr_thresh))
 
 #### Find most associated peaks for each gene ####
 rna_betas = extractAndProcessBetas(dplyr::select(interaction_hits, gene_id, snp_id), rasqual_selected_pvalues, "naive")
-rna_appear_qtls = dplyr::filter(rna_betas$beta_summaries, abs(naive) <= 0.59, max_abs_beta - abs(naive) >= 0.32)
+rna_appear_qtls = dplyr::filter(rna_betas$beta_summaries, abs(naive) <= 0.64, max_abs_beta - abs(naive) >= 0.32)
 
 #Extract most associated peaks for each of the eQTL genes
 appear_hits = dplyr::left_join(rna_appear_qtls, gene_name_map, by = "gene_id")
@@ -92,8 +97,14 @@ ifng_effects = prepareBetasDf(ifng_appear_qtls, rna_betas, atac_snp_tables, gene
   dplyr::mutate(beta_std = (beta - mean(beta))/sd(beta), beta_scaled = beta/max(beta)) %>%
   dplyr::ungroup() %>%
   dplyr::mutate(beta_binary = ifelse(beta >= 0.59, 1, 0)) %>%
-  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg")))
-  #dplyr::semi_join(shared_qtls, by = c("gene_id", "peak_id")) #Keep only shared QTLs
+  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg"))) %>%
+  dplyr::semi_join(shared_qtls, by = c("gene_id", "peak_id")) #Keep only shared QTLs
+
+#Calculate R2 between lead eQTL and lead ATAC SNPs
+#lead_snps = min_pvalues_list[["IFNg"]] %>% dplyr::transmute(peak_id = gene_id, peak_snp_id = snp_id)
+#ifng_effects = dplyr::left_join(ifng_effects, lead_snps, by = "peak_id") %>% 
+#  purrr::by_row(~calculatePairR2(.$snp_id, .$peak_snp_id, vcf_file$genotypes), .collate = "rows", .to = "R2")
+#ifng_effects = dplyr::filter(ifng_effects, R2 > 0.8)
 
 #Calculate scaled ATAC diff
 scaled_diff = dplyr::filter(ifng_effects, phenotype == "ATAC") %>% 
@@ -103,12 +114,15 @@ scaled_diff = dplyr::filter(ifng_effects, phenotype == "ATAC") %>%
   dplyr::filter(condition_name == "naive") %>% 
   dplyr::ungroup() %>% 
   dplyr::arrange(scaled_diff)
-ifng_effects_sorted = dplyr::mutate(ifng_effects, gene_name = factor(as.character(gene_name), levels = as.character(scaled_diff$gene_name)))
+ifng_effects_sorted = dplyr::mutate(ifng_effects, gene_name = factor(as.character(gene_name), 
+                                    levels = as.character(scaled_diff$gene_name))) %>%
+  dplyr::mutate(phenotype = ifelse(phenotype == "ATAC", "ATAC-seq", "RNA-seq")) %>%
+  dplyr::left_join(figureNames(), by = "condition_name")
 
 #Make a heatmap
 n_pairs = nrow(dplyr::select(ifng_effects_sorted, gene_id, snp_id) %>% unique())
 ylabel = paste(n_pairs, "eQTL-caQTL pairs")
-effect_size_heatmap = ggplot(ifng_effects_sorted, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + 
+ifng_effect_size_heatmap = ggplot(ifng_effects_sorted, aes(x = figure_name, y = gene_name, fill = beta_scaled)) + 
   facet_wrap(~phenotype) + 
   geom_tile() + 
   ylab(ylabel) + 
@@ -117,8 +131,8 @@ effect_size_heatmap = ggplot(ifng_effects_sorted, aes(x = condition_name, y = ge
   scale_y_discrete(expand = c(0, 0)) +
   scale_fill_gradient2(space = "Lab", low = "#4575B4", 
                        mid = "#FFFFBF", high = "#E24C36", name = "Relative effect", midpoint = 0) +
-  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank() )
-ggsave("figures/main_figures/eQTLs_vs_caQTL_IFNg_heatmap.pdf", effect_size_heatmap, width = 4, height = 4)
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.x = element_blank())
+ggsave("figures/main_figures/eQTLs_vs_caQTL_IFNg_heatmap.pdf", ifng_effect_size_heatmap, width = 3.5, height = 3.5)
 
 #SL1344 - find corresponding ATAC peaks
 sl1344_effects = prepareBetasDf(sl1344_appear_qtls, rna_betas, atac_snp_tables, gene_name_map, 
@@ -128,8 +142,8 @@ sl1344_effects = prepareBetasDf(sl1344_appear_qtls, rna_betas, atac_snp_tables, 
   dplyr::mutate(beta_std = (beta - mean(beta))/sd(beta), beta_scaled = beta/max(beta)) %>%
   dplyr::ungroup() %>%
   dplyr::mutate(beta_binary = ifelse(beta >= 0.59, 1, 0)) %>%
-  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","SL1344")))
-  #dplyr::semi_join(shared_qtls, by = c("gene_id", "peak_id")) #Keep only shared QTLs
+  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","SL1344"))) %>%
+  dplyr::semi_join(shared_qtls, by = c("gene_id", "peak_id")) #Keep only shared QTLs
 
 
 #Calculate scaled ATAC diff
@@ -140,11 +154,13 @@ scaled_diff = dplyr::filter(sl1344_effects, phenotype == "ATAC") %>%
   dplyr::filter(condition_name == "naive") %>% 
   dplyr::ungroup() %>% 
   dplyr::arrange(scaled_diff)
-sl1344_effects_sorted = dplyr::mutate(sl1344_effects, gene_name = factor(as.character(gene_name), levels = as.character(scaled_diff$gene_name)))
+sl1344_effects_sorted = dplyr::mutate(sl1344_effects, gene_name = factor(as.character(gene_name), levels = as.character(scaled_diff$gene_name))) %>%
+  dplyr::mutate(phenotype = ifelse(phenotype == "ATAC", "ATAC-seq", "RNA-seq")) %>%
+  dplyr::left_join(figureNames(), by = "condition_name")
 
 n_pairs = nrow(dplyr::select(sl1344_effects_sorted, gene_id, snp_id) %>% unique())
 ylabel = paste(n_pairs, "eQTL-caQTL pairs")
-effect_size_heatmap = ggplot(sl1344_effects_sorted, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + 
+sl1344_effect_size_heatmap = ggplot(sl1344_effects_sorted, aes(x = figure_name, y = gene_name, fill = beta_scaled)) + 
   facet_wrap(~phenotype) + 
   geom_tile() + 
   ylab(ylabel) + 
@@ -153,8 +169,8 @@ effect_size_heatmap = ggplot(sl1344_effects_sorted, aes(x = condition_name, y = 
   scale_y_discrete(expand = c(0, 0)) +
   scale_fill_gradient2(space = "Lab", low = "#4575B4", 
                        mid = "#FFFFBF", high = "#E24C36", name = "Relative effect", midpoint = 0) +
-  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank() )
-ggsave("figures/main_figures/eQTLs_vs_caQTL_SL1344_heatmap.pdf", effect_size_heatmap, width = 4, height = 4)
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.x = element_blank())
+ggsave("figures/main_figures/eQTLs_vs_caQTL_SL1344_heatmap.pdf", sl1344_effect_size_heatmap, width = 3.5, height = 3.5)
 
 #IFNg_SL1344 - find corresponding ATAC peaks
 ifng_sl1344_effects = prepareBetasDf(ifng_sl1344_appear_qtls, rna_betas, atac_snp_tables, gene_name_map, 
