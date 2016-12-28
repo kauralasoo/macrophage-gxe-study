@@ -90,14 +90,15 @@ saveRDS(result_list, "results/ATAC/QTLs/qtl_peak_type_assignment.rds")
 
 
 ##### Do summary stats ####
-total_peak_count = map_df(credible_sets_df, identity) %>% dplyr::select(gene_id) %>% unique() %>% nrow()
+total_peak_count = purrr::map_df(credible_sets_df, identity) %>% dplyr::select(gene_id) %>% unique() %>% nrow()
 overlap_peak_count = purrr::map(credible_sets_df, ~dplyr::filter(.,!is.na(overlap_peak_id))) %>% 
   purrr::map_df(., identity) %>% 
   dplyr::select(gene_id) %>% unique() %>% nrow()
-overlap_same_peak = dplyr::select(potential_master_peaks, gene_id) %>% unique() %>% nrow()
-unique_master_peaks = length(unique_masters_counted$gene_id %>% unique)
-shared_master_peaks = nrow(atac_clusters_counted)
-other_is_qtl = length(unique(dependent_uniq_masters$dependent_id)) + length(unique(dependent_cluster_masters$dependent_id))
+overlap_same_peak = all_master_peaks %>% nrow()
+unique_master_peaks = nrow(result_list$unique_masters$lead_snps)
+shared_master_peaks = nrow(result_list$ambiguous_masters$cluster_memberships)
+other_is_qtl = length(unique(result_list$dependents$unique_masters$dependent_id)) + 
+  length(unique(result_list$dependents$cluster_master$dependent_id))
 
 #Compile stats
 summary_stats = data_frame("total" = total_peak_count, "overlap_any_peak" = overlap_peak_count, "overlap_same_peak" = overlap_same_peak, 
@@ -128,26 +129,17 @@ cs_plot = ggplot(summary_df, aes(x = caqtl_type, y = fraction, label = count)) +
 ggsave("figures/main_figures/caQTL_credible_set_contents.pdf", cs_plot, width = 2, height = 3.5)
 
 
-
-#### Plot the number of peaks per cluster ####
-cluster_size_df = dplyr::transmute(atac_clusters_counted, cluster_id, peak_count = factor(peak_count)) %>% unique()
-count_plot = ggplot(cluster_size_df, aes(x = peak_count)) + geom_bar() + theme_light() +
-  xlab("Number of peaks")
-ggsave("results/ATAC/QTLs/properties/number_of_peaks_per_cluster.pdf", plot = count_plot, width = 4, height = 4)
-
-
-
 ##### Plot the number of SNPs per unique QTL peak ####
 #Count the numbers of peaks with different numbers of SNPs in them
-snp_count_df = dplyr::select(unique_masters_counted, gene_id, snp_count) %>% unique() %>% 
-  dplyr::mutate(snp_count = ifelse(snp_count > 9, 10, snp_count)) %>% 
-  dplyr::group_by(snp_count) %>% 
-  dplyr::summarise(peak_count = length(snp_count)) %>% 
-  dplyr::mutate(snp_count = ifelse(snp_count == 10, ">9", as.character(snp_count))) %>%
-  dplyr::mutate(snp_count = factor(snp_count, snp_count))
+snp_count_df = dplyr::select(result_list$unique_masters$lead_snps, gene_id, overlap_snp_count) %>% unique() %>% 
+  dplyr::mutate(overlap_snp_count = ifelse(overlap_snp_count > 9, 10, overlap_snp_count)) %>% 
+  dplyr::group_by(overlap_snp_count) %>% 
+  dplyr::summarise(peak_count = length(overlap_snp_count)) %>% 
+  dplyr::mutate(overlap_snp_count = ifelse(overlap_snp_count == 10, ">9", as.character(overlap_snp_count))) %>%
+  dplyr::mutate(overlap_snp_count = factor(overlap_snp_count, overlap_snp_count))
 
 #Make a plot
-snp_count_plot = ggplot(snp_count_df, aes(x = snp_count, y = peak_count)) + 
+snp_count_plot = ggplot(snp_count_df, aes(x = overlap_snp_count, y = peak_count)) + 
   geom_bar(stat = "identity") + 
   theme_light() +
   ylab("Number of caQTL peaks") +
@@ -156,11 +148,9 @@ snp_count_plot = ggplot(snp_count_df, aes(x = snp_count, y = peak_count)) +
 ggsave("figures/main_figures/caQTL_number_of_variants_per_unqiue_master.pdf", plot = snp_count_plot, width = 3, height = 3)
 
 
-
-
-
 ##### Count the number of dependent peaks per master ####
-master_dependent_pairs = rbind(dplyr::select(dependent_uniq_masters, dependent_id, master_id), dplyr::select(dependent_cluster_masters, dependent_id, master_id))
+master_dependent_pairs = rbind(dplyr::select(result_list$dependents$unique_masters, dependent_id, master_id), 
+                               dplyr::select(result_list$dependents$cluster_master, dependent_id, master_id))
 dependent_peak_count = master_dependent_pairs %>% 
   dplyr::group_by(master_id) %>% 
   dplyr::summarise(dependent_peak_count = length(dependent_id)) %>% 
@@ -176,6 +166,9 @@ dependent_distance_plot = ggplot(dependent_distances, aes(x = distance/1000)) + 
   xlab("Distance from master peak (kb)") +
   ylab("Dependent peak count")
 ggsave("figures/main_figures/caQTL_master_dependent_peak_distance.pdf", plot = dependent_distance_plot, width = 3, height = 3)
+
+
+
 
 #Plot the number of variants per cluster
 cluster_variants = ggplot(cluster_lead_snps, aes(x = cluster_snp_count)) + 
