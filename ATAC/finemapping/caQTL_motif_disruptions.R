@@ -2,8 +2,8 @@
 library("devtools")
 library("dplyr")
 library("purrr")
-load_all("../seqUtils/")
 library("TFBSTools")
+load_all("../seqUtils/")
 
 batch_id = NULL
 
@@ -21,11 +21,7 @@ atac_data = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rd
 cisbp_pwm_list = readRDS("results/ATAC/cisBP/cisBP_PWMatrixList.rds")
 
 #Import SNP coords and alleles
-snp_info = readr::read_delim("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz", 
-                             delim = "\t", col_types = "cdccc", col_names = c("chr","pos","snp_id","ref","alt"))
-#Find indels
-snp_info = dplyr::mutate(snp_info, indel_length = pmax(nchar(alt), nchar(ref))) %>%
-  dplyr::mutate(is_indel = ifelse(indel_length > 1, TRUE, FALSE))
+snp_info = importVariantInformation("genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz")
 
 #Keep only motfis that are enriched in macrophages
 mf_enriched_motifs = read.table("results/ATAC/motif_analysis/cisBP_selected_enriched_motifs.txt", header = TRUE, stringsAsFactors = FALSE)
@@ -33,24 +29,26 @@ motif_names = dplyr::select(mf_enriched_motifs, motif_id, tf_name)
 cisbp_pwm_enriched = cisbp_pwm_list[mf_enriched_motifs$motif_id]
 
 #Import putative causal variants
-unique_peaks = readRDS("results/ATAC/QTLs/unique_qtl_peaks.rds")
-unique_peaks_filtered = dplyr::filter(unique_peaks$peak_snp_pairs, snp_count <= 3)
+unique_peaks = readRDS("results/ATAC/QTLs/qtl_peak_type_assignment.rds")$unique_masters
+unique_peaks_filtered = dplyr::filter(unique_peaks$lead_snps, overlap_snp_count <= 3)
+unique_overlapping_snps = dplyr::semi_join(unique_peaks$lead_credible_sets, unique_peaks_filtered, by = "gene_id") %>% 
+  dplyr::filter(gene_id == overlap_peak_id) %>%
+  dplyr::select(gene_id, snp_id)
 
 #### Split genes into batches ####
-batches = splitIntoBatches(nrow(unique_peaks_filtered), 50)
+batches = splitIntoBatches(nrow(unique_overlapping_snps), 50)
 if(!is.null(batch_id)){
   selection = batches == batch_id
-  unique_peaks_filtered = unique_peaks_filtered[selection,]
+  unique_overlapping_snps = unique_overlapping_snps[selection,]
 }
 
 #Import ATAC peak sequences from disk
-sequences = Biostrings::readDNAStringSet("annotations/ATAC_consensus_peaks.fasta")
+sequences = Biostrings::readDNAStringSet("annotations/chromatin/ATAC_consensus_peaks.fasta")
 peak_ids = strsplit(names(sequences), "=") %>% lapply(function(x) x[2]) %>% unlist()
 names(sequences) = peak_ids
 
 #Calculate motif disruptions
-motif_disruptions = quantifyMultipleVariants(unique_peaks_filtered, cisbp_pwm_enriched, atac_data$gene_metadata, sequences, snp_info)
-#saveRDS(motif_disruptions, "results/ATAC/motif_analysis/unique_peaks_disrupted_motifs.rds")
+motif_disruptions = quantifyMultipleVariants(unique_overlapping_snps, cisbp_pwm_enriched, atac_data$gene_metadata, sequences, snp_info)
 
 #Save output from each batch
 if(!is.null(batch_id)){
