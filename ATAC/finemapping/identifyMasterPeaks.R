@@ -85,6 +85,7 @@ result_list = list(unique_masters = unique_peaks,
                    ambiguous_masters = ambiguous_masters_clustered, 
                    dependents = dependent_list)
 saveRDS(result_list, "results/ATAC/QTLs/qtl_peak_type_assignment.rds")
+result_list = readRDS("results/ATAC/QTLs/qtl_peak_type_assignment.rds")
 
 
 

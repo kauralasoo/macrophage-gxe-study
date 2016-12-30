@@ -421,7 +421,7 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q long
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>1000] rusage[mem=1000]" -q long -M 1000 -o FarmOut/FIMO_scan_long.%J.jobout "~/software/meme/bin/fimo --max-stored-scores 100000000 --thresh 1e-5 --text --verbosity 2 annotations/motif_databases/CIS-BP/Homo_sapiens.meme annotations/PWMEnrich_promoter_regions.fasta > results/ATAC/FIMO_CISBP_promoter_matches.txt" 
 
 #Scan QTL peaks for motif disruption events
-cat motif_batches.txt | python ~/software/utils/submitJobs.py --MEM 4000 --jobname calculate_motif_disruptions --command "/software/R-3.3.0/bin/Rscript macrophage-chromatin/ATAC/finemapping/caQTL_motif_disruptions.R"
+cat motif_batches.txt | head -n 1 | python ~/software/utils/submitJobs.py --MEM 4000 --jobname calculate_motif_disruptions --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/ATAC/finemapping/caQTL_motif_disruptions.R"
 cat results/ATAC/motif_analysis/motif_disruption_batch_*.txt > results/ATAC/motif_analysis/motif_disruption.txt
 rm results/ATAC/motif_analysis/motif_disruption_batch_*.txt
 

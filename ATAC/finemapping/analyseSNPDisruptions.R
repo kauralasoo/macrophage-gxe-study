@@ -11,16 +11,20 @@ snp_info = importVariantInformation("../macrophage-gxe-study/genotypes/SL1344/im
 indels = dplyr::filter(snp_info, is_indel == TRUE) %>% dplyr::select(snp_id, is_indel)
 
 #Import putative causal peaks/variants
-unique_peaks = readRDS("results/ATAC/QTLs/unique_qtl_peaks.rds")
-unique_peaks_filtered = dplyr::filter(unique_peaks$peak_snp_pairs, snp_count <= 3) %>%
+unique_peaks = readRDS("results/ATAC/QTLs/qtl_peak_type_assignment.rds")$unique_masters
+unique_peaks_filtered = dplyr::filter(unique_peaks$lead_snps, overlap_snp_count <= 3)
+unique_overlapping_snps = dplyr::semi_join(unique_peaks$lead_credible_sets, unique_peaks_filtered, by = "gene_id") %>% 
+  dplyr::filter(gene_id == overlap_peak_id) %>%
+  dplyr::select(gene_id, snp_id)  %>%
   dplyr::left_join(indels, by = "snp_id") %>%
   dplyr::mutate(is_indel = ifelse(is.na(is_indel),FALSE, TRUE))
+
 #Exluced peaks with indels from the analysis
-indel_peaks = unique_peaks_filtered %>% 
+indel_peaks = unique_overlapping_snps %>% 
   dplyr::group_by(gene_id) %>% 
   dplyr::summarise(has_indel = max(is_indel)) %>% 
   dplyr::filter(has_indel == 1)
-unique_peaks_no_indels = dplyr::anti_join(unique_peaks_filtered, indel_peaks, by = "gene_id")
+unique_peaks_no_indels = dplyr::anti_join(unique_overlapping_snps, indel_peaks, by = "gene_id")
 
 #Import variable chromatin QTLs
 variable_qtls = readRDS("results/ATAC/QTLs/rasqual_appear_disappear_qtls.rds")
@@ -32,9 +36,9 @@ interaction_df = readRDS("results/ATAC/QTLs/rasqual_interaction_results.rds")
 no_interaction = dplyr::filter(interaction_df, p_nominal > 0.5)
 
 #Import motif matches
-motif_colnames = c("gene_id","snp_id","snp_count",".row","start","strand","motif_id","ref_abs_score","ref_rel_score",
+motif_colnames = c("gene_id","snp_id","snp_count",".row","strand","motif_id","ref_abs_score","ref_rel_score",
                    "ref_match","alt_abs_score","alt_rel_score","alt_match","rel_diff","max_rel_score")
-motif_disruptions = readr::read_delim("results/ATAC/motif_analysis/motif_disruption.txt", delim = "\t", col_names = motif_colnames) %>%
+motif_disruptions = readr::read_delim("results/ATAC/motif_analysis/motif_disruption.txt.gz", delim = "\t", col_names = motif_colnames) %>%
   dplyr::anti_join(indels, by = "snp_id")
 
 #Load TF names
