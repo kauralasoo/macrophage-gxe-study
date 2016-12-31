@@ -30,4 +30,4 @@ atac_qc_metadata = readRDS("macrophage-gxe-study/data/chromatin/ATAC/compiled_at
     c("qolg","vass","kuxp","cicb", "febc","eiwy","oapg","nukw","hayt","bima","pamv","guss","eipl","iill","podx","pelm"),"yes","no")) %>%
   dplyr::select(-donor) %>%
   dplyr::arrange(sample_id)
-write.table(atac_qc_metadata, "results/ATAC/clean_data/atac_qc_metadata.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(atac_qc_metadata, "figures/tables/ATAC_QC_metadata.txt", sep = "\t", quote = FALSE, row.names = FALSE)
