@@ -1,13 +1,12 @@
 library("devtools")
 library("plyr")
 library("dplyr")
-load_all("../seqUtils/")
-library("MatrixEQTL")
-load_all("macrophage-gxe-study/housekeeping/")
 library("ggplot2")
 library("DESeq2")
 library("Mfuzz")
 library("pheatmap")
+load_all("../seqUtils/")
+load_all("macrophage-gxe-study/housekeeping/")
 
 #### Import data ####
 #Load the raw eQTL dataset
@@ -18,6 +17,7 @@ gene_name_map = dplyr::select(combined_expression_data_filtered$gene_metadata, g
 #Use DESeq to identify genes that vary between conditions
 design = combined_expression_data_filtered$sample_metadata %>% as.data.frame()
 rownames(design) = design$sample_id
+
 dds = DESeq2::DESeqDataSetFromMatrix(combined_expression_data_filtered$counts, design, ~condition_name) 
 dds = DESeq2::DESeq(dds, test = "LRT", reduced = ~ 1)
 saveRDS(dds, "results/SL1344/DE/DESeq2_condition_name_LRT_results.rds")
@@ -49,6 +49,7 @@ cqn_set = ExpressionSet(as.matrix(variable_cqn))
 cqn_set_std = standardise(cqn_set)
 
 #Cluster the expression data
+set.seed(1)
 clusters = mfuzz(cqn_set_std, c = 9, m = 1.5, iter = 1000)
 cluster_cores = acore(cqn_set_std, clusters, min.acore = 0)
 names(cluster_cores) = c(1:length(cluster_cores))
@@ -69,26 +70,28 @@ cluster_order = tidyr::spread(cluster_means, condition_name, expression) %>% dpl
   dplyr::mutate(SL1344_bin = ifelse(IFNg < SL1344, 0, 1)) %>%
   dplyr::mutate(IFNg_SL1344_bin = ifelse(IFNg_SL1344 < 0, 0, 1)) %>%
   arrange(naive_bin, IFNg_bin, SL1344_bin) %>%
+  dplyr::ungroup() %>%
   dplyr::mutate(new_cluster_id = c(1:9)) %>%
   dplyr::select(cluster_id, new_cluster_id)
 
 cluster_plot_data = dplyr::left_join(cluster_exp, cluster_order, by = "cluster_id") %>% 
+  dplyr::left_join(figureNames(), by = "condition_name") %>%
   dplyr::group_by(new_cluster_id)
 saveRDS(cluster_plot_data, "results/SL1344/DE/mFuzz_cluster_plot_data.rds")
 cluster_plot_data = readRDS("results/SL1344/DE/mFuzz_cluster_plot_data.rds")
 
-diff_exp_heatmap = ggplot(cluster_plot_data %>% dplyr::sample_frac(0.4), aes(x = condition_name, y = gene_id, fill = expression)) + 
+diff_exp_heatmap = ggplot(cluster_plot_data %>% dplyr::sample_frac(0.4), aes(x = figure_name, y = gene_id, fill = expression)) + 
   facet_grid(new_cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
-  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Expression", midpoint = 0) +
-  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 15)) + 
+  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", 
+                       high = "#E24C36", name = "Expression", midpoint = 0) +
+  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), legend.title = element_text(angle = 90)) + 
   theme(axis.title.x = element_blank()) + 
   ylab("8758 genes") + 
-  theme(panel.margin = unit(0.2, "lines"))
+  theme(panel.spacing = unit(0.2, "lines"))
 
-ggsave("results/SL1344/DE/DE_clusters.pdf",diff_exp_heatmap, width = 4, height = 5.5)
-ggsave("results/SL1344/DE/DE_clusters.png",diff_exp_heatmap, width = 4, height = 5.5)
+ggsave("figures/main_figures/DE_clusters.png",diff_exp_heatmap, width = 2.7, height = 4)
 
 #Perform GO analysis
 clusters = dplyr::select(cluster_plot_data, new_cluster_id, gene_id) %>% unique() %>%
