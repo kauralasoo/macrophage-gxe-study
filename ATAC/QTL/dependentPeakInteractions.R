@@ -17,9 +17,10 @@ vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.
 atac_tabix_list = qtlResults()$atac_rasqual
 
 #Import minimal p-values
-min_pvalue_list = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
-min_pvalue_hits = lapply(min_pvalue_list, function(x){dplyr::filter(x, p_fdr < 0.1)})
-min_pvalues_df = purrr::map_df(min_pvalue_hits, identity, .id = "condition_name")
+rasqual_min_pvalues = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
+min_pvalue_hits = lapply(rasqual_min_pvalues, function(x){dplyr::filter(x, p_eigen < fdr_thresh)})
+min_pvalues_df = purrr::map_df(min_pvalue_hits, identity, .id = "condition_name") %>%
+  dplyr::arrange(gene_id, p_nominal)
 
 #Extract data
 naive_ifng_atac = extractConditionFromExpressionList(c("naive","IFNg"), atac_data)
@@ -33,7 +34,8 @@ model0 = as.formula("cqn ~genotype + peak_type + condition_name  + cqn_PC1 + cqn
                     genotype*peak_type + genotype*condition_name")
 
 #Import list of dependent peaks
-dependent_peaks = readRDS("results/ATAC/QTLs/depdendent_peaks.rds")
+result_list = readRDS("results/ATAC/QTLs/qtl_peak_type_assignment.rds")
+dependent_peaks = result_list$dependents
 
 #Test peak-peak-genotype interactions in naive_vs_IFNg setting
 ifng_interactions = purrr::by_row(dependent_peaks$unique_masters, testThreewayInteraction, naive_ifng_atac$cqn, 
@@ -99,9 +101,11 @@ savePlotList(plot_list, "results/ATAC/QTLs/peak-peak_interactions/selected_inter
 
 ##### Distances between master and dependent peaks ####
 #Calculated distances between master and dependent peaks
-peak_distances = calculatePeakDistance(dependent_peaks$unique_masters, atac_data$gene_metadata) %>%
+peak_distances = dplyr::select(dependent_peaks$unique_masters, dependent_id, master_id) %>%
+  calculatePeakDistance(atac_data$gene_metadata) %>%
   dplyr::select(dependent_id, master_id, distance)
-peak_distances_cl = calculatePeakDistance(dependent_peaks$cluster_master, atac_data$gene_metadata) %>%
+peak_distances_cl = dplyr::select(dependent_peaks$cluster_master, dependent_id, master_id) %>%
+  calculatePeakDistance(atac_data$gene_metadata) %>%
   dplyr::select(dependent_id, master_id, distance)
 
 #Make a histogram of distances
@@ -130,7 +134,7 @@ ggsave("results/ATAC/QTLs/properties/cluster_dependent_peak_distance.pdf", plot 
 #Make coverage plots of master and dependent peak pairs
 
 #Construct metadata df for wiggleplotr
-meta = wiggleplotrConstructMetadata(atac_data$counts, atac_data$sample_metadata, "/Volumes/JetDrive/bigwigs/ATAC/")
+meta = wiggleplotrConstructMetadata(atac_data$counts, atac_data$sample_metadata, "/Volumes/Ajamasin/bigwig/ATAC/")
 
 #Add peak coords to the dependent pairs
 peak_coords = dplyr::select(atac_data$gene_metadata, gene_id, chr, start, end) %>% tbl_df()
@@ -157,7 +161,7 @@ coverageByRow <- function(row_df, meta_df, gene_metadata, genotypes){
   #Make coverage plot
   coverage = plotCoverage(exons = peak_annot$peak_list, cdss = peak_annot$peak_list, track_data = track_data, rescale_introns = FALSE, 
                           transcript_annotations = peak_annot$peak_annot, fill_palette = getGenotypePalette(), flanking_length = c(500,500), 
-                          connect_exons = FALSE, label_type = "peak", plot_fraction = 0.2, heights = c(0.8,0.2))
+                          connect_exons = FALSE, label_type = "peak", plot_fraction = 0.2, heights = c(0.8,0.2), coverage_type = "line")
   return(coverage)
 }
 
@@ -167,7 +171,7 @@ plot_list = coverage_df$.out
 names(plot_list) = paste(coverage_df$master_id, coverage_df$dependent_id, sep = "-")
 
 #Save them to disk
-savePlotList(plot_list, "results/ATAC/QTLs/peak-peak_interactions/selected_coverage/", width = 6, height = 7)
+savePlotList(plot_list, "results/ATAC/QTLs/peak-peak_interactions/selected_coverage/", width = 5, height = 6, suffix = ".png")
 
 #Make single example plot
 coverage_df = purrr::by_row(joint_regions[1,], ~coverageByRow(.,meta, atac_data$gene_metadata, vcf_file$genotypes))
