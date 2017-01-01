@@ -32,6 +32,13 @@ GRCh37_variants = importVariantInformation("genotypes/SL1344/imputed_20151005/GR
 #Import list of GWAS studies
 gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt", col_names = c("trait","file_name"))
 
+#Import eQTL min p-values
+#Load p-values from disk
+rasqual_min_pvalues = readRDS("results/SL1344/eQTLs/fastqtl_min_pvalues.rds")
+min_pvalue_hits = lapply(rasqual_min_pvalues, function(x){dplyr::filter(x, p_eigen < fdr_thresh)})
+min_pvalues_df = purrr::map_df(min_pvalue_hits, identity, .id = "condition_name") %>%
+  dplyr::arrange(gene_id, p_nominal)
+
 #Make a read coverage plot
 region_coords = c(44175000, 44250000) 
 
@@ -125,7 +132,9 @@ ICOSLG_data = constructQtlPlotDataFrame("ENSG00000160223", "rs4819387",
   dplyr::left_join(constructGenotypeText("rs4819387", GRCh38_variants), by = "genotype_value")
 plotQtlCol(ICOSLG_data, scales = "free_y")
 
-cor(vcf_file$genotypes["rs4819387",], vcf_file$genotypes["rs7282490",])
+#Calculate R2 between the GWAS lead variant and both eQTL lead variant
+calculatePairR2("rs4819387", "rs7282490", vcf_file$genotypes)
+calculatePairR2("rs6518352", "rs7282490", vcf_file$genotypes)
 
 
 
