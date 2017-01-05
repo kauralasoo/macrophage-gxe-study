@@ -1,9 +1,16 @@
 library("dplyr")
 library("devtools")
-load_all("../seqUtils/")
 library("ggplot2")
+load_all("../seqUtils/")
 
 #This file makes a bunch of QC figures for the technical paper.
+
+#Import expression and ATAC datasets
+combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
+atac_data = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
+final_lines = dplyr::bind_rows(dplyr::select(combined_expression_data$sample_metadata, line_id, replicate), 
+                               dplyr::select(atac_data$sample_metadata, line_id, replicate)) %>%
+  unique()
 
 #Set up a single output folder for all of the figures
 figure_folder = "figures/supplementary/"
@@ -67,18 +74,15 @@ ggsave(paste(figure_folder, "monthly_success_plot.pdf"), plot = monthly_success_
 
 #Look at how were the flow cytometry purity scores distributed
 #Keep only lines where flow cytometry was performed within 2 weeks of salmonella infection
-flow_df = line_metadata %>% 
-  dplyr::filter(donor != "mijn") %>%
-  dplyr::filter(status %in% c("Success", "FC_QC_fail"), !is.na(max_purity)) %>%
-  dplyr::filter((status == "Success" & abs(flow_date - salmonella_date) < 14) | status == "FC_QC_fail") %>%
-  dplyr::mutate(flow_QC = ifelse(status == "Success", "Pass", "Fail"))
+flow_df = dplyr::semi_join(line_metadata, final_lines, by = c("line_id", "replicate")) %>%
+  dplyr::filter(!is.na(max_purity))
 
-flow_purity_plot = ggplot(flow_df, aes(x = mean_purity, fill = flow_QC)) + 
+flow_purity_plot = ggplot(flow_df, aes(x = mean_purity)) + 
   geom_histogram(binwidth = 0.01) + 
   xlab("Mean purity") + 
   theme_light() +
   theme(legend.position = "top")
-ggsave(paste0(figure_folder, "diff_flow_purity_histogram.pdf"), plot = flow_purity_plot, width = 4.5, height = 4.5)
+ggsave(paste0(figure_folder, "diff_flow_purity_histogram.pdf"), plot = flow_purity_plot, width = 4, height = 4)
 
 
 #Look at sources of variation in the RNA-Seq data
