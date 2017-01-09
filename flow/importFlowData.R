@@ -5,12 +5,22 @@ library("dplyr")
 library("devtools")
 load_all("macrophage-gxe-study/housekeeping/")
 
+#Import line metadata
+donor_line_map = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds") %>% 
+  dplyr::select(donor, genotype_id) %>% unique()
+
 #Construct a flow metadata data.frame:
 file_names = data.frame(file_name = list.files("flow/fcs/"), stringsAsFactors = FALSE)
 metadata = tidyr::separate(file_names, file_name, c("name", "suffix"), sep = "\\.", remove = FALSE) %>% 
   tidyr::separate(name, into = c("donor", "date", "staining"), sep = "_", remove = FALSE) %>% 
   dplyr::mutate(sample = paste(donor, date, sep = "_")) %>% 
-  dplyr::select(name, sample, donor, date, staining, file_name)
+  dplyr::select(name, sample, donor, date, staining, file_name) %>%
+  dplyr::left_join(donor_line_map, by = "donor")
+
+#Save sample metadata to disk for uploading
+meta_export = dplyr::select(metadata, -name) %>% 
+  dplyr::filter(donor != "piun-SN")
+write.table(meta_export, "figures/tables/flow_sample_metadata.txt", quote = FALSE, row.names = FALSE, sep = "\t")
 
 #Read all FCS files into a list
 flow_files_list = as.list(paste("flow/fcs/", metadata$file_name, sep =""))
