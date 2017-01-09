@@ -20,24 +20,24 @@ atac_rasqual_50kb = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
 
 #Calculate chromatin concordances
 atac_rasqual_concordance = 
-  calculatePairwiseConcordance(atac_rasqual_50kb, ~p_nominal < 1e-5, vcf_file$genotypes, tidy = TRUE) %>%
+  calculatePairwiseConcordance(atac_rasqual_50kb, ~p_nominal < 1e-6, vcf_file$genotypes, tidy = TRUE) %>%
   dplyr::filter(first != second) %>% dplyr::mutate(method = "RASQUAL (50kb)", class = "caQTL")
 atac_fastqtl_50kb_concordance = 
-  calculatePairwiseConcordance(atac_fastqtl_50kb, ~p_fdr < 0.01, vcf_file$genotypes, tidy = TRUE) %>%
+  calculatePairwiseConcordance(atac_fastqtl_50kb, ~p_nominal < 1e-6, vcf_file$genotypes, tidy = TRUE) %>%
   dplyr::filter(first != second) %>% dplyr::mutate(method = "FastQTL (50kb)", class = "caQTL")
 atac_fastqtl_100kb_concordance = 
-  calculatePairwiseConcordance(atac_fastqtl_100kb, ~p_fdr < 0.01, vcf_file$genotypes, tidy = TRUE) %>%
+  calculatePairwiseConcordance(atac_fastqtl_100kb, ~p_nominal < 1e-6, vcf_file$genotypes, tidy = TRUE) %>%
   dplyr::filter(first != second) %>% dplyr::mutate(method = "FastQTL (100kb)", class = "caQTL")
 
 #Calculate RNA concordances
 rna_rasqual_concordance = 
-  calculatePairwiseConcordance(rna_rasqual_500kb, ~p_fdr < 0.01, vcf_file$genotypes, tidy = TRUE) %>%
+  calculatePairwiseConcordance(rna_rasqual_500kb, ~p_nominal < 1e-6, vcf_file$genotypes, tidy = TRUE) %>%
   dplyr::filter(first != second) %>% dplyr::mutate(method = "RASQUAL (500kb)", class = "eQTL")
 rna_fastqtl_100kb_concordance = 
-  calculatePairwiseConcordance(rna_fastqtl_100kb, ~p_fdr < 0.01, vcf_file$genotypes, tidy = TRUE) %>%
+  calculatePairwiseConcordance(rna_fastqtl_100kb, ~p_nominal < 1e-6, vcf_file$genotypes, tidy = TRUE) %>%
   dplyr::filter(first != second) %>% dplyr::mutate(method = "FastQTL (100kb)", class = "eQTL")
 rna_fastqtl_500kb_concordance = 
-  calculatePairwiseConcordance(rna_fastqtl_500kb, ~p_fdr < 0.01, vcf_file$genotypes, tidy = TRUE) %>%
+  calculatePairwiseConcordance(rna_fastqtl_500kb, ~p_nominal < 1e-6, vcf_file$genotypes, tidy = TRUE) %>%
   dplyr::filter(first != second) %>% dplyr::mutate(method = "FastQTL (500kb)", class = "eQTL")
 
 #Merge all comparisons into a single df
