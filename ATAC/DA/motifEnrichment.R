@@ -3,8 +3,8 @@ library("dplyr")
 library("readr")
 library("devtools")
 library("ggplot2")
-load_all("../seqUtils/")
 library("seqLogo")
+load_all("../seqUtils/")
 
 #Import ATAC data and clusters
 atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
@@ -48,8 +48,8 @@ motif_enrichment_df = ldply(filtered_enrichments, .id = "cluster_name") %>% tbl_
 
 #Make a heatmap of motif enrichments
 #interesting_tfs = c("FOS","BATF3","POU2F1","NFKB1","IRF1","STAT1", "MAFB", "MEF2A")
-interesting_tfs = c("FOS","NFKB1","IRF1","STAT1", "MAFB", "MEF2A", "SPI1")
-tf_name_casual = data_frame(new_name = c("AP-1","NF-kB","IRF","STAT1", "MAFB","MEF2", "PU.1"), tf_name = interesting_tfs) %>%
+interesting_tfs = c("FOS","NFKB1","IRF1","STAT1","SPI1")
+tf_name_casual = data_frame(new_name = c("AP-1","NF-kB","IRF","STAT1", "PU.1"), tf_name = interesting_tfs) %>%
   dplyr::mutate(new_name = factor(new_name, levels = rev(new_name)))
 
 #Filter enrichments by TF
@@ -61,15 +61,15 @@ motif_enrichment_plot = ggplot(selected_enrichments, aes(y = new_name, x = OR_lo
   facet_grid(cluster_name~.) + 
   geom_point() + 
   geom_errorbarh(aes(height = 0)) +
-  xlab("Log2 fold enrichment") +
-  ylab("TF motif name") + 
+  xlab(expression(paste(Log[2], " fold enrichment", sep = ""))) + 
+  ylab("TF motif") + 
   theme_light() +
   scale_x_continuous(expand = c(0, 0), limits = c(-4,4)) +
   theme(legend.key = element_blank()) + 
-  theme(panel.margin = unit(0.2, "lines")) + 
+  theme(panel.spacing = unit(0.2, "lines")) + 
   geom_vline(aes(xintercept = 0), size = 0.3)
 
-ggsave("figures/main_figures/ATAC_motif_enrichment_in_clusters.pdf", plot = motif_enrichment_plot, width = 4, height = 6)
+ggsave("figures/main_figures/ATAC_motif_enrichment_in_clusters.pdf", plot = motif_enrichment_plot, width = 2.3, height = 4)
 
 
 

@@ -48,7 +48,8 @@ saveRDS(gprofiler_results, "results/SL1344/DE/Mfuzz_clustering_go_enrichments.rd
 
 #Read GO enrichments form disk
 go_enrichments = readRDS("results/SL1344/DE/Mfuzz_clustering_go_enrichments.rds")
-go_df = purrr::map_df(go_enrichments, identity ,.id = "cluster_id")
+go_df = purrr::map_df(go_enrichments, identity ,.id = "cluster_id") %>%
+  dplyr::mutate(cluster_id = ifelse(cluster_id == "7,8,9", "7-9", cluster_id))
 
 selected_terms = c("Antigen processing and presentation","cell death",
                    "MAPK signaling pathway","NF-kappa B signaling pathway","Cell cycle",
@@ -75,9 +76,9 @@ plot = ggplot(plot_dataset, aes(x = log10p, y = new_term_name)) +
   geom_point() + 
   scale_x_continuous(limits = c(0,38)) + 
   theme_light() + 
-  xlab("-log10 p-value") + 
+  xlab(expression(paste(-Log[10], " p-value", sep = ""))) +
   theme(axis.title.y = element_blank())
-ggsave("figures/main_figures/DE_clusters_GO_enrichment.pdf", plot = plot, width = 3, height = 5.5)
+ggsave("figures/main_figures/DE_clusters_GO_enrichment.pdf", plot = plot, width = 2.5, height = 4)
 
 
 
