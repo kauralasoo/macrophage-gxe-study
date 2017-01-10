@@ -56,7 +56,7 @@ atac_track_data = wiggleplotrGenotypeColourGroup(atac_meta_df, "rs7594476", vcf_
   dplyr::mutate(track_id = "peaks")
 
 ATAC_coverage = plotCoverage(exons = peak_annot$peak_list, cdss = peak_annot$peak_list, track_data = atac_track_data, rescale_introns = FALSE, 
-  transcript_annotations = peak_annot$peak_annot, fill_palette = getGenotypePalette(), 
+  transcript_annotations = peak_annot$peak_annot, fill_palette = c("#525252","#525252","#525252"), 
   connect_exons = FALSE, label_type = "peak", plot_fraction = 0.1, heights = c(0.7,0.3), 
   region_coords = region_coords, return_subplots_list = TRUE, coverage_type = "both")
 
@@ -112,7 +112,7 @@ ggsave("figures/main_figures/SPOPL_expression_boxplot.pdf", plot = SPOPL_plot, w
 
 
 #Make a coverage plot of the whole SPOPL-NXPH2 locus
-region_coords = c(138496000, 138786348)
+region_coords = c(138620000, 138786348)
 both_tx = dplyr::filter(tx_metadata, gene_name %in% c("NXPH2","SPOPL"), 
                                     transcript_biotype == "protein_coding", transcript_status == "KNOWN")
 
@@ -131,9 +131,15 @@ ATAC_coverage = plotCoverage(exons = peak_annot$peak_list, cdss = peak_annot$pea
                              connect_exons = FALSE, label_type = "peak", plot_fraction = 0.1, heights = c(0.7,0.3), 
                              region_coords = region_coords, return_subplots_list = TRUE, coverage_type = "both")
 
-joint_plot = cowplot::plot_grid(ATAC_coverage$coverage_plot, tx_plot, 
-                                align = "v", ncol = 1, rel_heights = c(4,2))
-ggsave("figures/main_figures/NXPH2_full_region.png", joint_plot, width = 8, height = 3)
+#Make a manhattan plot for the whole region
+peak_pvals = dplyr::filter(peak_pvalues, condition_name == "naive") %>% 
+  dplyr::mutate(condition_name)
+peak_manhattan = makeManhattanPlot(peak_pvals, region_coords, color_R2 = TRUE)
+
+#Make a joint plot
+joint_plot = cowplot::plot_grid(peak_manhattan, ATAC_coverage$coverage_plot, tx_plot, 
+                                align = "v", ncol = 1, rel_heights = c(2.2,3,2))
+ggsave("figures/main_figures/NXPH2_full_region.png", joint_plot, width = 6, height = 3)
 
 
 
@@ -159,7 +165,7 @@ spopl_region_pu1 = plotCoverage(exons = peak_annot$peak_list, cdss = peak_annot$
                                 region_coords = region_coords, return_subplots_list = TRUE)
 
 #Make manhattan plot
-pvals = makeManhattanPlot(dplyr::filter(peak_pvalues, track_id == "IFNg"), region_coords, color_R2 = TRUE)
+pvals = makeManhattanPlot(dplyr::filter(peak_pvalues, track_id == "naive"), region_coords, color_R2 = TRUE)
 
 joint_plot = cowplot::plot_grid(pvals, ATAC_coverage$coverage_plot, spopl_region_pu1$coverage_plot, ATAC_coverage$tx_structure, 
                                 align = "v", ncol = 1, rel_heights = c(1.5,1.5,.7,1))
