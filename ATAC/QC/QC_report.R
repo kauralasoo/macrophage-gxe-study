@@ -1,5 +1,6 @@
 library("dplyr")
 library("ggplot2")
+library("rtracklayer")
 
 #Merge QC data into one table
 mt_content = read.table("macrophage-chromatin/data/SL1344/QC_measures/ATAC_mitochondrial_fraction.txt", header = TRUE, stringsAsFactors = FALSE)
@@ -45,7 +46,16 @@ peak_count_plot = ggplot(qc_report, aes(x = peak_count)) + geom_histogram(binwid
 ggsave("results/ATAC/QC/peak_count_plot.pdf", mt_fraction_plot, width = 5, height = 5)
 
 #### Analyse peak lengths ####
-atac_peaks = import.gff3("annotations/ATAC_consensus_peaks.gff3")
+atac_peaks = import.gff3("annotations/chromatin/ATAC_consensus_peaks.gff3")
+
+#Make histogram of peak lengths
+peak_length_df = data_frame(length = width(atac_peaks))
+plot = ggplot(peak_length_df, aes(x = length)) + 
+  geom_histogram() + 
+  scale_x_continuous(limits = c(0,1500)) + 
+  theme_light() +
+  xlab("Peak length (bp)")
+ggsave("figures/supplementary/ATAC_peak_length_histogram.png", plot = plot, width = 4, height = 3.5)
 
 #Total peak length
 sum(width(atac_peaks))

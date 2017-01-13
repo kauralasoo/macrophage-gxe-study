@@ -1,8 +1,8 @@
 library("devtools")
 library("cqn")
 library("dplyr")
-load_all("../seqUtils/")
 library("readr")
+load_all("../seqUtils/")
 load_all("~/software/rasqual/rasqualTools/")
 
 #Import atac data list
