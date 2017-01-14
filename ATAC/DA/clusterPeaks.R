@@ -96,7 +96,8 @@ cluster_names = data_frame(new_cluster_id = c(1:7), name = c("Salmonella","Salmo
 final_clusters = dplyr::select(cluster_plot_data, gene_id, MEM.SHIP, new_cluster_id) %>% unique() %>%
   dplyr::left_join(cluster_names, by = "new_cluster_id") %>% dplyr::ungroup()
 saveRDS(final_clusters, "results/ATAC/DA/peak_clusters.rds")
-final_clusters = readRDS("results/ATAC/DA/peak_clusters.rds")
+final_clusters = readRDS("results/ATAC/DA/peak_clusters.rds") %>%
+  dplyr::mutate(name = new_cluster_id)
 
 #Export all clusters as a single bed file
 cluster_ranges = final_clusters %>%

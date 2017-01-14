@@ -1,6 +1,6 @@
 library("ggplot2")
-#Run GAT
-#gat-run.py --segments=ATAC/DA/ATAC_clustered_peaks.bed --annotations=Ivashkiv/DA/H3K27Ac_clustered_peaks.bed --workspace=../../../annotations/blacklists/GRCh38_filtered_gapped_genome.bed --num-samples=1000 --log=gat.log --with-segment-tracks > gat.out
+library("devtools")
+load_all("../seqUtils/")
 
 plotEnrichment <- function(df, xlabel = "", ylabel = ""){
   peak_enrichments = ggplot2::ggplot(df, aes(x = annotation, y = track, fill = l2fold, label = round(l2fold,1))) + 
@@ -29,8 +29,7 @@ ggsave("figures/supplementary/concordance_MDM_vs_IPSDM.pdf", peak_enrichments, w
 ciita_enrich = read.table("results/public_chromatin/annotation_overlaps/CIITA-RFX5_overlap.gat.txt", header = TRUE, stringsAsFactors = FALSE) %>%
   dplyr::select(track, annotation, l2fold) %>%
   dplyr::filter(annotation %in% c("CIITA_IFNg", "RFX5_IFNg"))
-ciita_enrich$track = factor(ciita_enrich$track, 
-      levels = (c("Salmonella","Both" ,"IFNg", "Decreased"))) 
+
 #Make a plot
 ciita_plot = ggplot(ciita_enrich, aes(x = l2fold, y = annotation)) + 
   geom_point() + 
