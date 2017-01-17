@@ -131,7 +131,7 @@ plot = ggplot(relative_enrichment_renamed, aes(y = motif_name, x = OR_log2, xmin
   theme_light() +
   scale_x_continuous(expand = c(0, 0), limits = c(-4,4)) +
   theme(legend.key = element_blank()) + 
-  theme(panel.margin = unit(0.2, "lines"))  + 
+  theme(panel.spacing = unit(0.2, "lines"))  + 
   geom_vline(aes(xintercept = 0), size = 0.3)
 ggsave("figures/supplementary/caQTL_all_clusters_disrupted_motifs.pdf", plot = plot, height = 5.5, width = 3)
 
@@ -153,6 +153,79 @@ compact_enrichment_plot = ggplot(filtered_df, aes(y = motif_name, x = OR_log2, x
   theme(panel.spacing = unit(0.2, "lines"))  + 
   geom_vline(aes(xintercept = 0), size = 0.3)
 ggsave("figures/main_figures/caQTL_clusters_disrupted_motifs.pdf", plot = compact_enrichment_plot, height = 3.5, width = 3)
+
+
+#Look at the distribution of PWM difference scores as opposed to disruption events using the Mann-Whitney test.
+motif_occurences = dplyr::filter(motif_disruptions, max_rel_score > 0.75) %>%
+  dplyr::left_join(motif_names, by = "motif_id") %>%
+  dplyr::mutate(abs_diff = abs(ref_abs_score - alt_abs_score))
+
+#Extract peaks for the two major groups
+salmonella_peaks = dplyr::filter(appear_cluster_members, new_cluster_id %in% c(2,3))$clusters %>% purrr::map_df(identity) %>% unique()
+ifng_peaks = dplyr::filter(appear_cluster_members, new_cluster_id %in% c(5,6))$clusters %>% purrr::map_df(identity) %>% unique()
+
+
+#IRF1
+pos = dplyr::filter(motif_occurences, tf_name == "IRF1") %>% dplyr::semi_join(ifng_peaks) %>% dplyr::mutate(rel_abs_diff = abs(rel_diff)) %>%
+  dplyr::group_by(gene_id) %>% 
+  dplyr::arrange(gene_id, -abs_diff) %>% 
+  dplyr::filter(row_number() == 1) %>% ungroup() %>%
+  dplyr::mutate(cluster = "IFNg-specifc")
+neg = dplyr::filter(motif_occurences, tf_name == "IRF1") %>% dplyr::anti_join(ifng_peaks) %>% 
+  dplyr::mutate(rel_abs_diff = abs(rel_diff))  %>%
+  dplyr::group_by(gene_id) %>% 
+  dplyr::arrange(gene_id, -abs_diff) %>% 
+  dplyr::filter(row_number() == 1) %>% ungroup() %>%
+  dplyr::mutate(cluster = "Other")
+wilcox.test(pos$abs_diff, neg$abs_diff)
+ggplot(dplyr::bind_rows(pos, neg), aes(x = abs_diff)) + geom_histogram(binwidth = 1) + facet_wrap(~cluster, scales = "free_y")
+
+pos = dplyr::filter(motif_occurences, tf_name == "SPI1") %>% dplyr::semi_join(ifng_peaks) %>% dplyr::mutate(rel_abs_diff = abs(rel_diff)) %>%
+  dplyr::group_by(gene_id) %>% 
+  dplyr::arrange(gene_id, -abs_diff) %>% 
+  dplyr::filter(row_number() == 1) %>% ungroup() %>%
+  dplyr::mutate(cluster = "IFNg-specifc")
+neg = dplyr::filter(motif_occurences, tf_name == "SPI1") %>% dplyr::anti_join(ifng_peaks) %>% 
+  dplyr::mutate(rel_abs_diff = abs(rel_diff))  %>%
+  dplyr::group_by(gene_id) %>% 
+  dplyr::arrange(gene_id, -abs_diff) %>% 
+  dplyr::filter(row_number() == 1) %>% ungroup() %>%
+  dplyr::mutate(cluster = "Other")
+wilcox.test(pos$abs_diff, neg$abs_diff)
+ggplot(dplyr::bind_rows(pos, neg), aes(x = abs_diff)) + geom_histogram(binwidth = 1) + facet_wrap(~cluster, scales = "free_y")
+
+
+#RELA
+pos = dplyr::filter(motif_occurences, tf_name == "RELA") %>% dplyr::semi_join(salmonella_peaks) %>% dplyr::mutate(rel_abs_diff = abs(rel_diff)) %>%
+  dplyr::group_by(gene_id) %>% 
+  dplyr::arrange(gene_id, -abs_diff) %>% 
+  dplyr::filter(row_number() == 1) %>% ungroup() %>%
+  dplyr::mutate(cluster = "Salmonella-specifc")
+neg = dplyr::filter(motif_occurences, tf_name == "RELA") %>% dplyr::anti_join(salmonella_peaks) %>% 
+  dplyr::mutate(rel_abs_diff = abs(rel_diff))  %>%
+  dplyr::group_by(gene_id) %>% 
+  dplyr::arrange(gene_id, -abs_diff) %>% 
+  dplyr::filter(row_number() == 1) %>% ungroup() %>%
+  dplyr::mutate(cluster = "Other")
+wilcox.test(pos$abs_diff, neg$abs_diff)
+ggplot(dplyr::bind_rows(pos, neg), aes(x = abs_diff)) + geom_histogram(binwidth = 1) + facet_wrap(~cluster, scales = "free_y")
+
+#FOS
+pos = dplyr::filter(motif_occurences, tf_name == "FOS") %>% dplyr::semi_join(salmonella_peaks) %>% dplyr::mutate(rel_abs_diff = abs(rel_diff)) %>%
+  dplyr::group_by(gene_id) %>% 
+  dplyr::arrange(gene_id, -abs_diff) %>% 
+  dplyr::filter(row_number() == 1) %>% ungroup() %>%
+  dplyr::mutate(cluster = "Salmonella-specifc")
+neg = dplyr::filter(motif_occurences, tf_name == "FOS") %>% dplyr::anti_join(salmonella_peaks) %>% 
+  dplyr::mutate(rel_abs_diff = abs(rel_diff))  %>%
+  dplyr::group_by(gene_id) %>% 
+  dplyr::arrange(gene_id, -abs_diff) %>% 
+  dplyr::filter(row_number() == 1) %>% ungroup() %>%
+  dplyr::mutate(cluster = "Other")
+wilcox.test(pos$abs_diff, neg$abs_diff)
+ggplot(dplyr::bind_rows(pos, neg), aes(x = abs_diff)) + geom_histogram(binwidth = 1) + facet_wrap(~cluster, scales = "free_y")
+
+
 
 
 
