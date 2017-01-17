@@ -122,17 +122,11 @@ background_enrichment_plot = ggplot(selected_motifs, aes(y = tf_name, x = OR_log
 ggsave("figures/supplementary/ATAC_motif_enrichment_in_all_peaks.pdf", plot = background_enrichment_plot, width = 4, height = 6)
 
 
-#Save selected motifs to disk
+#Save sequence logos of selected motifs to disk
 motif_list = as.list(cisbp_pfm_list)[selected_motifs$motif_id]
 names(motif_list) = paste(selected_motifs$tf_name, selected_motifs$motif_id, sep = "-")
 pwm_list = purrr::map(motif_list, ~Matrix(.)) %>% purrr::map(~seqLogo::makePWM(./colSums(.)))
 saveMotifListLogos(pwm_list, "results/ATAC/motif_analysis/selected_motifs/", width = 8, height = 4)
-
-#Calculate similarity matrix of PWMs
-motif_pwm_list = cisbp_pwm_list[enriched_motifs$motif_id]
-names(motif_pwm_list) = enriched_motifs$tf_name
-sim_matrix = PWMSimilarityMatrix(motif_pwm_list, method = "Pearson")
-heatmap.2(sim_matrix)
 
 
 
