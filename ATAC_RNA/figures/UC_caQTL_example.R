@@ -44,7 +44,8 @@ region_coords = c(44175000, 44250000)
 
 #Construct metadata df for wiggleplotr
 atac_track_data = wiggleplotrGenotypeColourGroup(atac_meta_df, "rs7282490", vcf_file$genotypes, 1) %>%
-  dplyr::filter(track_id %in% c("naive"))
+  dplyr::filter(track_id %in% c("naive")) %>%
+  dplyr::mutate(track_id = "N")
 
 peak_annot = wiggleplotrExtractPeaks(region_coords, chrom = 21, atac_list$gene_metadata)
 
@@ -53,8 +54,6 @@ UC_coverage = plotCoverage(
   transcript_annotations = peak_annot$peak_annot, fill_palette = getGenotypePalette(), 
   connect_exons = FALSE, label_type = "peak", plot_fraction = 0.2, heights = c(0.7,0.3), 
   region_coords = region_coords, return_subplots_list = TRUE, coverage_type = "both")
-ggsave("figures/main_figures/UC_caQTL_overlap.png", plot = UC_coverage, width = 4, height = 4)
-
 
 #Import caQTL and GWAS summary stats
 #Import QTL and GWAS summary stats and convert them to the same GRCh38 coordinate space
@@ -64,7 +63,9 @@ qtl_summary = importSummariesForPlotting(qtl_df, gwas_stats_labeled, qtl_paths =
   arrange(condition_name, p_nominal) %>% 
   addR2FromLead(vcf_file$genotypes) %>%
   dplyr::filter(condition_name %in% c("UC","naive")) %>%
-  dplyr::rename(track_id = condition_name)
+  dplyr::mutate(track_id = as.character(condition_name)) %>%
+  dplyr::mutate(track_id = ifelse(track_id == "naive", "N", track_id)) %>%
+  dplyr::mutate(track_id = factor(track_id, levels = c("UC","N")))
 caqtl_manhattan_plot = makeManhattanPlot(qtl_summary, region_coords, color_R2 = TRUE, data_track = TRUE)
 
 
@@ -76,7 +77,7 @@ eqtl_summary = importSummariesForPlotting(qtl_df, gwas_stats_labeled, qtl_paths 
   addR2FromLead(vcf_file$genotypes) %>%
   dplyr::filter(condition_name %in% c("naive")) %>%
   dplyr::rename(track_id = condition_name) %>%
-  dplyr::mutate(track_id = "ICOSLG eQTL")
+  dplyr::mutate(track_id = "N")
 
 eqtl_manhattan_plot = makeManhattanPlot(eqtl_summary, region_coords, color_R2 = TRUE, data_track = TRUE)
 
@@ -120,17 +121,45 @@ motif_hits = dplyr::filter(motif_disruptions, snp_id %in% causal_variants) %>%
   dplyr::filter(max_rel_score > 0.8) %>% dplyr::arrange(-abs(rel_diff))
 
 
-
-
 #Make a QTL plot for ICOSLG
 #Make a boxplot of the eQTL data
-ICOSLG_data = constructQtlPlotDataFrame("ENSG00000160223", "rs4819387", 
+ICOSLG_plot = constructQtlPlotDataFrame("ENSG00000160223", "rs7282490", 
                                        combined_expression_data$cqn, 
                                        vcf_file$genotypes, 
                                        combined_expression_data$sample_metadata, 
                                        combined_expression_data$gene_metadata) %>%
-  dplyr::left_join(constructGenotypeText("rs4819387", GRCh38_variants), by = "genotype_value")
-plotQtlCol(ICOSLG_data, scales = "free_y")
+  dplyr::left_join(constructGenotypeText("rs7282490", GRCh38_variants), by = "genotype_value") %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::mutate(condition_name = figure_name) %>% plotQtlCol()
+
+
+AIRE_plot = constructQtlPlotDataFrame("ENSG00000160224", "rs7282490", 
+                                        combined_expression_data$cqn, 
+                                        vcf_file$genotypes, 
+                                        combined_expression_data$sample_metadata, 
+                                        combined_expression_data$gene_metadata) %>%
+  dplyr::left_join(constructGenotypeText("rs7282490", GRCh38_variants), by = "genotype_value") %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::mutate(condition_name = figure_name) %>% plotQtlCol()
+
+orf_plot = constructQtlPlotDataFrame("ENSG00000160221", "rs7282490", 
+                                      combined_expression_data$cqn, 
+                                      vcf_file$genotypes, 
+                                      combined_expression_data$sample_metadata, 
+                                      combined_expression_data$gene_metadata) %>%
+  dplyr::left_join(constructGenotypeText("rs7282490", GRCh38_variants), by = "genotype_value") %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::mutate(condition_name = figure_name) %>% plotQtlCol()
+
+pwp2_plot = constructQtlPlotDataFrame("ENSG00000241945", "rs7282490", 
+                                     combined_expression_data$cqn, 
+                                     vcf_file$genotypes, 
+                                     combined_expression_data$sample_metadata, 
+                                     combined_expression_data$gene_metadata) %>%
+  dplyr::left_join(constructGenotypeText("rs7282490", GRCh38_variants), by = "genotype_value") %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::mutate(condition_name = figure_name) %>% plotQtlCol()
+
 
 #Calculate R2 between the GWAS lead variant and both eQTL lead variant
 calculatePairR2("rs4819387", "rs7282490", vcf_file$genotypes)
