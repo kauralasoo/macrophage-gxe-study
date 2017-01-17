@@ -155,6 +155,10 @@ compact_enrichment_plot = ggplot(filtered_df, aes(y = motif_name, x = OR_log2, x
 ggsave("figures/main_figures/caQTL_clusters_disrupted_motifs.pdf", plot = compact_enrichment_plot, height = 3.5, width = 3)
 
 
+
+
+##### Wilcoxon enrichment test #####
+
 #Look at the distribution of PWM difference scores as opposed to disruption events using the Mann-Whitney test.
 motif_occurences = dplyr::filter(motif_disruptions, max_rel_score > 0.75) %>%
   dplyr::left_join(motif_names, by = "motif_id") %>%
@@ -225,54 +229,5 @@ neg = dplyr::filter(motif_occurences, tf_name == "FOS") %>% dplyr::anti_join(sal
 wilcox.test(pos$abs_diff, neg$abs_diff)
 ggplot(dplyr::bind_rows(pos, neg), aes(x = abs_diff)) + geom_histogram(binwidth = 1) + facet_wrap(~cluster, scales = "free_y")
 
-
-
-
-
-#Count motif disruptions for disappearing caQTL clusters
-disappear_cluster_members = dplyr::group_by(variable_qtls$disappear, cluster_id ) %>% 
-  purrr::by_slice(~dplyr::select(.,gene_id) %>% 
-                    unique() %>%
-                    dplyr::semi_join(unique_peaks_no_indels, by = "gene_id"), .to = "clusters")
-disappear_cluster_members = dplyr::mutate(disappear_cluster_members, cluster_size = map(disappear_cluster_members$clusters, nrow) %>% unlist())
-
-
-disappear_disruptions = disappear_cluster_members %>% 
-  purrr::by_row(~dplyr::semi_join(disruption_events, .$clusters[[1]]) %>%
-                  dplyr::group_by(gene_id, tf_name) %>% 
-                  dplyr::arrange(-abs(rel_diff)) %>% dplyr::filter(row_number() == 1) %>%
-                  dplyr::group_by(tf_name) %>% 
-                  dplyr::summarise(cluster_disruption = length(gene_id)) %>% 
-                  dplyr::arrange(-cluster_disruption), .collate = "rows") %>%
-  dplyr::select(-clusters, -.row)
-
-relative_enrichment = dplyr::left_join(baseline_enrichment, disappear_disruptions, by = "tf_name") %>% 
-  dplyr::arrange(cluster_id) %>% 
-  dplyr::mutate(fold_enrichment = (cluster_disruption/cluster_size)/(baseline_disruption/baseline_peak_count)) %>% 
-  arrange(cluster_id, -fold_enrichment)
-
-disappear_enrihced_motifs = dplyr::mutate(relative_enrichment, p_nominal = phyper(cluster_disruption -1, baseline_disruption, baseline_peak_count - baseline_disruption, cluster_size, lower.tail = FALSE)) %>% 
-  dplyr::mutate(p_fdr = p.adjust(p_nominal, "fdr")) %>% dplyr::filter(p_fdr < 0.1)
-#RESULT: no enrichment
-
-
-#Analyse all disappearing QTLs together
-disappear_qtls = dplyr::filter(variable_qtls$disappear, cluster_id == 2) %>% dplyr::select(gene_id) %>% unique() %>% dplyr::semi_join(unique_peaks_no_indels, by = "gene_id")
-disappear_disruptions = dplyr::semi_join(disruption_events, disappear_qtls) %>%
-  dplyr::group_by(gene_id, tf_name) %>% 
-  dplyr::arrange(-abs(rel_diff)) %>% dplyr::filter(row_number() == 1) %>%
-  dplyr::group_by(tf_name) %>% 
-  dplyr::summarise(cluster_disruption = length(gene_id)) %>% 
-  dplyr::arrange(-cluster_disruption) %>% 
-  dplyr::mutate(cluster_size = nrow(disappear_qtls))
-dis_relative_enrichment = dplyr::left_join(baseline_enrichment, disappear_disruptions, by = "tf_name") %>% 
-  dplyr::mutate(fold_enrichment = (cluster_disruption/cluster_size)/(baseline_disruption/baseline_peak_count)) %>% 
-  dplyr::mutate(fold_enrichment = ifelse(fold_enrichment == 0, 0.1, fold_enrichment)) %>%
-  dplyr::mutate(l2_fold = log(fold_enrichment, 2)) %>%
-  arrange(-fold_enrichment) %>%
-  dplyr::mutate(p_nominal = phyper(cluster_disruption -1, baseline_disruption, baseline_peak_count - baseline_disruption, cluster_size, lower.tail = FALSE)) %>% 
-  dplyr::mutate(p_fdr = p.adjust(p_nominal, "fdr"))
-
-#RESULT: no enrichment
 
 
