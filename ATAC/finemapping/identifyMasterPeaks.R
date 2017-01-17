@@ -106,15 +106,15 @@ summary_stats = data_frame("total" = total_peak_count, "overlap_any_peak" = over
                            "shared_masters" = shared_master_peaks, "unique_masters" = unique_master_peaks, "other_is_qtl" = other_is_qtl) %>%
   dplyr::mutate(overlap_other_peak = overlap_any_peak-overlap_same_peak, overlap_no_peak = total - overlap_any_peak) %>%
   dplyr::mutate(other_not_qtl = overlap_other_peak - other_is_qtl)
-#write.table(summary_stats, "results/ATAC/QTLs/properties/credible_set_peak_overlaps.txt", sep = "\t", row.names = FALSE, quote = FALSE)
-#summary_stats = read.table("results/ATAC/QTLs/properties/credible_set_peak_overlaps.txt", header = TRUE, stringsAsFactors = FALSE)
+saveRDS(summary_stats, "results/ATAC/QTLs/qtl_peak_type_summary_stats.rds")
+summary_stats = readRDS("results/ATAC/QTLs/qtl_peak_type_summary_stats.rds")
 
 ##### Count the number of master caQTLs #####
 summary_df = dplyr::select(summary_stats, unique_masters, shared_masters, other_is_qtl, other_not_qtl, overlap_no_peak) %>% 
   tidyr::gather("type", "count") %>%
   dplyr::mutate(fraction = count/sum(count)) %>% 
   dplyr::mutate(caqtl_type = factor(c("Same peak", "Multiple peaks", "Other QTL", "Other not QTL", "No peak"),
-                                    levels = rev(c("Same peak", "Multiple peaks", "Other QTL", "Other not QTL", "No peak"))))
+                                    levels = rev(c("Same peak","Other QTL", "Multiple peaks", "Other not QTL", "No peak"))))
 
 #Make a plot of fractions
 cs_plot = ggplot(summary_df, aes(x = caqtl_type, y = fraction, label = count)) + 
@@ -124,10 +124,10 @@ cs_plot = ggplot(summary_df, aes(x = caqtl_type, y = fraction, label = count)) +
   xlab("Credible set contains") +
   ylab("Fraction of caQTLs") + 
   coord_flip() +
-  geom_text(nudge_y = 0.08) +
+  geom_text(nudge_y = 0.1) +
   theme(axis.text.y = element_blank(), axis.title.y = element_blank())
 
-ggsave("figures/main_figures/caQTL_credible_set_contents.pdf", cs_plot, width = 2, height = 3.5)
+ggsave("figures/main_figures/caQTL_credible_set_contents.pdf", cs_plot, width = 1.7, height = 3)
 
 
 ##### Plot the number of SNPs per unique QTL peak ####
