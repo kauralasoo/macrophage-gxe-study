@@ -80,7 +80,7 @@ qtl_summary = importSummariesForPlotting(qtl_df, gwas_stats_labeled, qtl_paths =
   dplyr::mutate(track_id = factor(track_id, levels = c("RA","N","I+S")))
 
 #Make a manhattan plot
-qtl_manhattan = makeManhattanPlot(qtl_summary, region_coords, color_R2 = TRUE)
+qtl_manhattan = wiggpleplotr::makeManhattanPlot(qtl_summary, region_coords, color_R2 = TRUE)
 
 #Make a joint plot
 joint_plot = cowplot::plot_grid(qtl_manhattan, tx_plot, 
