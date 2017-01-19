@@ -1,4 +1,6 @@
+library("devtools")
 library("dplyr")
+load_all("macrophage-gxe-study/housekeeping/")
 
 #Import complete line metadata
 line_data = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds") %>%
@@ -64,4 +66,34 @@ atac_qc_metadata = readRDS("macrophage-gxe-study/data/chromatin/ATAC/compiled_at
   dplyr::select(-donor) %>%
   dplyr::left_join(atac_biosamples, by = "sample_id")
 write.table(atac_qc_metadata, "figures/tables/ATAC_QC_metadata.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+
+#Export RNA-seq metadata before filtering
+#Import metadata
+rna_metadata = readRDS("macrophage-gxe-study/data/covariates/compiled_salmonella_metadata.rds")
+
+#Import everyhing sent to biosamples
+rna_biosamples = readr::read_tsv("macrophage-gxe-study/data/sample_lists/biosamples/salmonella_sample_name_mapping.dates.with_accessions.txt") %>%
+  dplyr::transmute(sample_id, biosamples_accession = accession)
+
+#Construct a design matrix
+#Filter out some samples and discard replicates from the design_matrix
+data = read.table("results/SL1344/SL1344_basic_counts.txt", stringsAsFactors = FALSE, header = TRUE)
+counts = dplyr::select(data, -gene_id, -length)
+design_matrix = constructDesignMatrix_SL1344(sample_ids = colnames(counts)) %>% #Construct a design matrix from the sample names
+  tbl_df() %>% #Remove both fpdj samples (same as nibo)
+  dplyr::filter(!(donor == "mijn")) %>% #Remove mijn (wrong line from CGAP)
+  dplyr::mutate(replicate = ifelse(donor == "babk",2,replicate)) %>% #Change babk replicate to two
+  dplyr::arrange(donor)
+
+#Add metadata to the design matrix
+sample_meta = dplyr::left_join(design_matrix, rna_metadata, by = c("donor","replicate")) %>%
+  dplyr::left_join(rna_biosamples, by = "sample_id") %>%
+  dplyr::select(sample_id, line_id, replicate, condition_name,
+                macrophage_harvest, salmonella_date, ng_ul_mean,
+                rna_extraction, rna_submit, library_pool, 
+                chemistry, rna_auto, biosamples_accession)
+write.table(sample_meta, "figures/tables/RNA_QC_metadata.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+
 
