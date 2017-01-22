@@ -55,7 +55,9 @@ enrichment_plot = ggplot(ranked_enrichments, aes(x = FE, y = trait, color = figu
   facet_wrap(~phenotype) +
   xlab("Fold enrichment") +
   ylab("Trait") +
-  scale_color_manual(values = conditionPalette(), name="Condition")
+  scale_color_manual(values = conditionPalette(), name="Condition") + 
+  theme(strip.text.x = element_text(colour = "grey10"), strip.background = element_rect(fill = "grey85"))
+  
 ggsave("figures/main_figures/grafield_enrichment.pdf", plot = enrichment_plot, width = 4.5, height = 3.5)
 
 #Export raw enricment p-values and FEs

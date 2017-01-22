@@ -168,9 +168,10 @@ sl1344_effect_size_heatmap = ggplot(sl1344_effects_sorted, aes(x = figure_name, 
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
   scale_fill_gradient2(space = "Lab", low = "#4575B4", 
-                       mid = "#FFFFBF", high = "#E24C36", name = "Relative effect", midpoint = 0) +
-  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.x = element_blank())
-ggsave("figures/main_figures/eQTLs_vs_caQTL_SL1344_heatmap.pdf", sl1344_effect_size_heatmap, width = 3.5, height = 3.5)
+                       mid = "#FFFFBF", high = "#E24C36", name = "Relative effect size", midpoint = 0) +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.x = element_blank()) + 
+  theme(legend.title = element_text(angle = 90))
+ggsave("figures/main_figures/eQTLs_vs_caQTL_SL1344_heatmap.pdf", sl1344_effect_size_heatmap, width = 3.1, height = 3.5)
 
 #IFNg_SL1344 - find corresponding ATAC peaks
 ifng_sl1344_effects = prepareBetasDf(ifng_sl1344_appear_qtls, rna_betas, atac_snp_tables, gene_name_map, 

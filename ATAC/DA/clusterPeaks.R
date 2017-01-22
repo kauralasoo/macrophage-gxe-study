@@ -73,7 +73,7 @@ cluster_plot_data = dplyr::left_join(cluster_exp, cluster_order, by = "cluster_i
   dplyr::group_by(new_cluster_id)
 
 #Make a heatmap
-ylabel = paste(nrow(cluster_df), "peaks")
+ylabel = paste(nrow(cluster_df), "accessible regions")
 chromatin_clusters_heatmap = ggplot(cluster_plot_data %>% dplyr::sample_frac(0.4), 
                                     aes(x = figure_name, y = gene_id, fill = expression)) + 
   facet_grid(new_cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
@@ -82,12 +82,10 @@ chromatin_clusters_heatmap = ggplot(cluster_plot_data %>% dplyr::sample_frac(0.4
   scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Accessibility", midpoint = 0) +
   theme(axis.text.y=element_blank(),axis.ticks.y=element_blank()) + 
   theme(axis.title.x = element_blank(),legend.title = element_text(angle = 90)) + 
+  theme(legend.position = "left") +
   ylab(ylabel) +
   theme(panel.spacing = unit(0.2, "lines"))
 ggsave("figures/main_figures/ATAC_DA_clusters.png",chromatin_clusters_heatmap, width = 2.7, height = 4)
-
-ggplot(cluster_plot_data, aes(x = condition_name, y = expression)) + 
-  facet_grid(new_cluster_id ~ .,  scales = "free_y", space = "free_y") + stat_summary(fun.y = mean, geom="point")
 
 #Add names to each cluster
 cluster_names = data_frame(new_cluster_id = c(1:7), name = c("Salmonella","Salmonella","Both", "IFNg", "IFNg", "Decreased", "Decreased"))

@@ -88,6 +88,7 @@ diff_exp_heatmap = ggplot(cluster_plot_data %>% dplyr::sample_frac(0.4), aes(x =
                        high = "#E24C36", name = "Expression", midpoint = 0) +
   theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), legend.title = element_text(angle = 90)) + 
   theme(axis.title.x = element_blank()) + 
+  theme(legend.position = "left") +
   ylab("8758 genes") + 
   theme(panel.spacing = unit(0.2, "lines"))
 

@@ -67,19 +67,21 @@ peak_pvalues = purrr::map_df(qtlResults()$atac_rasqual, ~tabixFetchGenesQuick(c(
                                  gene_metadata = atac_list$gene_metadata, cis_window = 1e5)[[1]],
                              .id = "condition_name") %>%
   dplyr::filter(condition_name %in% c("naive","IFNg")) %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::mutate(track_id = figure_name) %>%
   dplyr::arrange(p_nominal) %>%
-  addR2FromLead(vcf_file$genotypes) %>%
-  dplyr::mutate(track_id = factor(condition_name, levels = c("naive","IFNg")))
+  addR2FromLead(vcf_file$genotypes) 
 
 #Import gene p-values from the region
 gene_pvalues = purrr::map_df(qtlResults()$rna_rasqual, ~tabixFetchGenesQuick(c("ENSG00000144227"),
                                           tabix_file = ., 
                                           gene_metadata = combined_expression_data$gene_metadata, cis_window = 5e5)[[1]],
                                    .id = "condition_name") %>%
-  dplyr::filter(condition_name %in% c("naive","IFNg")) %>%
+  dplyr::filter(condition_name %in% c("naive","IFNg"))  %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::mutate(track_id = figure_name) %>%
   dplyr::arrange(p_nominal) %>%
-  addR2FromLead(vcf_file$genotypes) %>%
-  dplyr::mutate(track_id = factor(condition_name, levels = c("naive","IFNg")))
+  addR2FromLead(vcf_file$genotypes)
 
 #Make Manhattan plots
 peak_manhattan = makeManhattanPlot(peak_pvalues, region_coords, color_R2 = TRUE)
@@ -97,9 +99,11 @@ ggsave("figures/main_figures/NXPH2_manhattan_plots.png", plot = joint_plot, widt
 NXPH2_data = constructQtlPlotDataFrame("ENSG00000144227", "rs7594476", combined_expression_data$cqn, vcf_file$genotypes, 
                                       combined_expression_data$sample_metadata, combined_expression_data$gene_metadata) %>%
   dplyr::filter(condition_name %in% c("naive","IFNg")) %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::mutate(condition_name = figure_name) %>%
   dplyr::left_join(constructGenotypeText("rs7594476", variant_information), by = "genotype_value")
 NXPH2_plot = plotQtlCol(NXPH2_data)
-ggsave("figures/main_figures/NXPH2_expression_boxplot.pdf", plot = NXPH2_plot, width = 2.5, height = 3.5)
+ggsave("figures/main_figures/NXPH2_expression_boxplot.pdf", plot = NXPH2_plot, width = 2, height = 2.7)
 
 #SPOPL gene
 SPOPL_data = constructQtlPlotDataFrame("ENSG00000144228", "rs7594476", combined_expression_data$cqn, vcf_file$genotypes, 
@@ -124,7 +128,9 @@ tx_plot = plotTranscripts(exons[both_tx$transcript_id], cdss[both_tx$transcript_
 peak_annot = wiggleplotrExtractPeaks(region_coords, chrom = 2, atac_list$gene_metadata)
 
 atac_track_data = wiggleplotrGenotypeColourGroup(atac_meta_df, "rs7594476", vcf_file$genotypes, 1) %>%
-  dplyr::filter(track_id %in% c("naive", "IFNg"))
+  dplyr::left_join(figureNames()) %>%
+  dplyr::filter(condition_name %in% c("naive", "IFNg")) %>%
+  dplyr::mutate(track_id = figure_name)
 
 ATAC_coverage = plotCoverage(exons = peak_annot$peak_list, cdss = peak_annot$peak_list, track_data = atac_track_data, rescale_introns = FALSE, 
                              transcript_annotations = peak_annot$peak_annot, fill_palette = getGenotypePalette(), 
@@ -132,8 +138,7 @@ ATAC_coverage = plotCoverage(exons = peak_annot$peak_list, cdss = peak_annot$pea
                              region_coords = region_coords, return_subplots_list = TRUE, coverage_type = "both")
 
 #Make a manhattan plot for the whole region
-peak_pvals = dplyr::filter(peak_pvalues, condition_name == "naive") %>% 
-  dplyr::mutate(condition_name)
+peak_pvals = dplyr::filter(peak_pvalues, condition_name == "naive") 
 peak_manhattan = makeManhattanPlot(peak_pvals, region_coords, color_R2 = TRUE)
 
 #Make a joint plot
@@ -149,8 +154,10 @@ peak_annot = wiggleplotrExtractPeaks(region_coords, chrom = 2, atac_list$gene_me
 peak_annot$peak_annot$gene_name = ""
 
 #Make ATAC coverage plot
-atac_track_data = wiggleplotrGenotypeColourGroup(atac_meta_df, "rs7594476", vcf_file$genotypes, 1) %>%
-  dplyr::filter(track_id %in% c("naive", "IFNg"))
+atac_track_data = wiggleplotrGenotypeColourGroup(atac_meta_df, "rs7594476", vcf_file$genotypes, 1)  %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::filter(condition_name %in% c("naive", "IFNg")) %>%
+  dplyr::mutate(track_id = figure_name)
 ATAC_coverage = plotCoverage(exons = peak_annot$peak_list, cdss = peak_annot$peak_list, track_data = atac_track_data, rescale_introns = FALSE, 
                              transcript_annotations = peak_annot$peak_annot, fill_palette = getGenotypePalette(), 
                              connect_exons = FALSE, label_type = "peak", plot_fraction = 0.2, heights = c(0.7,0.3), 
@@ -165,7 +172,7 @@ spopl_region_pu1 = plotCoverage(exons = peak_annot$peak_list, cdss = peak_annot$
                                 region_coords = region_coords, return_subplots_list = TRUE)
 
 #Make manhattan plot
-pvals = makeManhattanPlot(dplyr::filter(peak_pvalues, track_id == "naive"), region_coords, color_R2 = TRUE)
+pvals = makeManhattanPlot(dplyr::filter(peak_pvalues, condition_name == "naive"), region_coords, color_R2 = TRUE)
 
 joint_plot = cowplot::plot_grid(pvals, ATAC_coverage$coverage_plot, spopl_region_pu1$coverage_plot, ATAC_coverage$tx_structure, 
                                 align = "v", ncol = 1, rel_heights = c(1.5,1.5,.7,1))

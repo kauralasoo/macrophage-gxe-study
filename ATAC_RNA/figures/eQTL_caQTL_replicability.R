@@ -58,11 +58,12 @@ concordance_plot = ggplot(concordance_filtered, aes(x = method, y = concordance,
   geom_boxplot() + 
   geom_point(position = position_jitter(width = 0.2)) + 
   facet_wrap(~phenotype) +
-  ylab("Lead variant concordance") +
+  ylab("Lead variant sharing") +
   scale_color_manual(values = c("#ca0020","#404040")) +
   scale_y_continuous(limits = c(0,1)) + 
   theme_light() +
-  theme(legend.position = "top", axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank())
+  theme(legend.position = "top", axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+  theme(strip.text.x = element_text(colour = "grey10"), strip.background = element_rect(fill = "grey85"))
 ggsave("figures/main_figures/concordance_between_conditions_atac_rna.pdf", plot = concordance_plot, width = 4, height = 3.5)
 
 #Make a concordance plot in 100kb cis window
@@ -73,10 +74,11 @@ concordance_plot_100kb = ggplot(concordance_filtered_100kb, aes(x = window, y = 
   geom_boxplot() + 
   geom_point(position = position_jitter(width = 0.2)) + 
   facet_wrap(~phenotype) +
-  ylab("Lead variant concordance") +
+  ylab("Lead variant sharing") +
   xlab("Cis-window size") +
   scale_y_continuous(limits = c(0,1)) + 
-  theme_light()
+  theme_light() + 
+  theme(strip.text.x = element_text(colour = "grey10"), strip.background = element_rect(fill = "grey85"))
 ggsave("figures/supplementary/concordance_between_conditions_atac_rna_100kb_window.pdf", plot = concordance_plot_100kb, width = 3, height = 3.5)
 
 

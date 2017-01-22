@@ -29,7 +29,7 @@ qtl_counts = rbind(fastqtl_qtl_count, rasqual_qtl_count) %>% t() %>% as.data.fra
 qtl_counts = dplyr::mutate(qtl_counts, condition = rownames(qtl_counts)) %>% 
   dplyr::select(condition, everything()) %>% 
   dplyr::mutate(extra_qtls = (rasqual_qtl_count - fastqtl_qtl_count)/fastqtl_qtl_count)
-write.table(qtl_counts, "results/ATAC/QTLs/properties/fastQTL_vs_rasqual_QTL_counts.txt", quote = FALSE, row.names = FALSE, sep ="\t")
+write.table(qtl_counts, "figures/tables/ATAC_fastQTL_vs_rasqual_QTL_counts.txt", quote = FALSE, row.names = FALSE, sep ="\t")
 
 #Join rasqual and fastqtl data frames for scatter plots
 joint_pvalues = purrr::map2(rasqual_pvalues, fastqtl_pvalues_filtered, function(rasqual, fastqtl){

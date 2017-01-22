@@ -52,7 +52,9 @@ TRAF1_data = constructQtlPlotDataFrame("ENSG00000056558", "rs10985070",
   dplyr::left_join(figureNames(), by = "condition_name") %>%
   dplyr::mutate(condition_name = figure_name)
 TRAF1_col_plot = plotQtlCol(TRAF1_data, scales = "free_y") + 
-  ggplot2::scale_color_manual(values = conditionPalette()[c(1,4)], guide=FALSE)
+  ggplot2::scale_color_manual(values = conditionPalette()[c(1,4)], guide=FALSE) + 
+  theme(strip.text.y = element_text(colour = "grey10"), strip.background = element_rect(fill = "grey85"))
+  
 ggsave("figures/main_figures/TRAF1_boxplot_column.pdf", TRAF1_col_plot, width = 2, height = 3.5)
 
 

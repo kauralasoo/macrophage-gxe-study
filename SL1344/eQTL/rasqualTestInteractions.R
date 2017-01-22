@@ -93,8 +93,8 @@ effect_size_heatmap = ggplot(appear_betas, aes(x = figure_name, y = gene_name, f
   scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Relative effect", midpoint = 0) +
   theme_light() +
   theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), axis.title.x = element_blank()) +
-  theme(panel.spacing = unit(0.1, "lines"))
-ggsave("figures/main_figures/eQTLs_appear_kmeans_heatmap.pdf",effect_size_heatmap, width = 3.5, height = 4)
+  theme(panel.spacing = unit(0.1, "lines")) +
+  theme(strip.text.y = element_text(colour = "grey10"), strip.background = element_rect(fill = "grey85"))
 ggsave("figures/main_figures/eQTLs_appear_kmeans_heatmap.png",effect_size_heatmap, width = 3.5, height = 4)
 
 

@@ -112,9 +112,10 @@ combined_plot = ggplot(combined_df, aes(x = state, y = log(tpm + 1,2), color = p
   theme_light() +
   scale_color_manual(values = c("#5e3c99","#e66101")) +
   facet_wrap(~phenotype, scale = "free_y") +
-  ylab(expression(paste("Mean signal [",Log[2], "(TPM+1)]", sep = ""))) +
+  ylab(expression(atop("Mean signal at condition-specific", paste("QTL genes/peaks [",Log[2], "(TPM+1)]", sep = "")))) +
   xlab("Condition") +
-  theme(legend.position = "none")
+  theme(legend.position = "none") +
+  theme(strip.text.x = element_text(colour = "grey10"), strip.background = element_rect(fill = "grey85"))
 ggsave("figures/main_figures/mean_signal_by_phenotype.pdf", plot = combined_plot, width = 3.5, height = 3)
 
 

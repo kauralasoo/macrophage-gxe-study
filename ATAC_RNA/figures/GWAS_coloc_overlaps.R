@@ -138,19 +138,23 @@ caqtl_totals = dplyr::bind_rows(caqtl_total_counts, data_frame(figure_name = c("
   dplyr::mutate(figure_name = factor(figure_name, levels = c("N","I","S","I+S")))
 
 #Merge both counts
-coloc_detection_counts = dplyr::bind_rows(eqtl_total_counts, caqtl_totals)
+coloc_detection_counts = dplyr::bind_rows(eqtl_total_counts, caqtl_totals) %>%
+  dplyr::mutate(figure_name = as.character(figure_name)) %>%
+  dplyr::mutate(figure_name = ifelse(figure_name == "I", "N\nI", figure_name)) %>%
+  dplyr::mutate(figure_name = ifelse(figure_name == "S", "N\nI\nS", figure_name)) %>%
+  dplyr::mutate(figure_name = ifelse(figure_name == "I+S", "N\nI\nS\nI+S", figure_name))
 
 #Make a barplot with overlap counts
 coloc_counts_plot = ggplot(coloc_detection_counts, aes(x = figure_name, y = total_overlap, group = phenotype, color = phenotype)) + 
   geom_point() +
   geom_line() +
-  xlab("Condition") + 
+  xlab("Conditions included") + 
   ylab("Cumulative number of overlaps") +
   scale_y_continuous(limits = c(0,25)) +
   theme_light() + 
   scale_color_manual(values = c("#e66101","#5e3c99"), name = "") +
   theme(legend.position = "top")
-ggsave("figures/main_figures/coloc_QTL_counts.pdf", plot = coloc_counts_plot, width = 3, height = 3.5)
+ggsave("figures/main_figures/coloc_QTL_counts.pdf", plot = coloc_counts_plot, width = 2.6, height = 3)
 
 
 #Count overlaps by trait
@@ -176,7 +180,7 @@ coloc_traits_plot = ggplot(merged_counts, aes(x = summarised_trait, y = overlap_
   ylab("Number of colocalised loci")  + 
   scale_fill_manual(values = c("#e66101","#5e3c99"), name = "", guide = guide_legend(reverse = TRUE)) +
   theme(legend.position = "top") 
-ggsave("figures/main_figures/coloc_trait_counts.pdf", plot = coloc_traits_plot, width = 3, height = 3.5)
+ggsave("figures/main_figures/coloc_trait_counts.pdf", plot = coloc_traits_plot, width = 2.6, height = 3)
 
 
 

@@ -62,11 +62,12 @@ motif_enrichment_plot = ggplot(selected_enrichments, aes(y = new_name, x = OR_lo
   geom_point() + 
   geom_errorbarh(aes(height = 0)) +
   xlab(expression(paste(Log[2], " fold enrichment", sep = ""))) + 
-  ylab("TF motif") + 
+  ylab("") + 
   theme_light() +
   scale_x_continuous(expand = c(0, 0), limits = c(-4,4)) +
   theme(legend.key = element_blank()) + 
   theme(panel.spacing = unit(0.2, "lines")) + 
+  theme(strip.text.y = element_text(colour = "grey10"), strip.background = element_rect(fill = "grey85")) +
   geom_vline(aes(xintercept = 0), size = 0.3)
 
 ggsave("figures/main_figures/ATAC_motif_enrichment_in_clusters.pdf", plot = motif_enrichment_plot, width = 2.3, height = 4)

@@ -1,5 +1,3 @@
-library("Biostrings")
-library("TFBSTools")
 library("dplyr")
 library("devtools")
 library("purrr")
@@ -151,7 +149,8 @@ compact_enrichment_plot = ggplot(filtered_df, aes(y = motif_name, x = OR_log2, x
   scale_x_continuous(expand = c(0, 0), limits = c(-4,4)) +
   theme(legend.key = element_blank()) + 
   theme(panel.spacing = unit(0.2, "lines"))  + 
-  geom_vline(aes(xintercept = 0), size = 0.3)
+  geom_vline(aes(xintercept = 0), size = 0.3) + 
+  theme(strip.text.x = element_text(colour = "grey10"), strip.background = element_rect(fill = "grey85"))
 ggsave("figures/main_figures/caQTL_clusters_disrupted_motifs.pdf", plot = compact_enrichment_plot, height = 3.5, width = 3)
 
 

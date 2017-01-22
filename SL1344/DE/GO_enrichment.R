@@ -77,6 +77,7 @@ plot = ggplot(plot_dataset, aes(x = log10p, y = new_term_name)) +
   scale_x_continuous(limits = c(0,38)) + 
   theme_light() + 
   xlab(expression(paste(-Log[10], " p-value", sep = ""))) +
+  theme(strip.text.y = element_text(colour = "grey10"), strip.background = element_rect(fill = "grey85")) +
   theme(axis.title.y = element_blank())
 ggsave("figures/main_figures/DE_clusters_GO_enrichment.pdf", plot = plot, width = 2.5, height = 4)
 

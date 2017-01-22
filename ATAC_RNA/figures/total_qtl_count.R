@@ -7,7 +7,7 @@ load_all("../seqUtils/")
 load_all("macrophage-gxe-study/housekeeping/")
 
 #Import QTL counts from each method
-caqtl_counts = read.table("results/ATAC/QTLs/properties/fastQTL_vs_rasqual_QTL_counts.txt", header = TRUE, stringsAsFactors = FALSE) %>%
+caqtl_counts = read.table("figures/tables/ATAC_fastQTL_vs_rasqual_QTL_counts.txt", header = TRUE, stringsAsFactors = FALSE) %>%
   dplyr::select(-extra_qtls) %>%
   tidyr::gather(method, qtl_count, fastqtl_qtl_count, rasqual_qtl_count) %>% 
   dplyr::mutate(method = ifelse(method == "fastqtl_qtl_count", "FastQTL", "RASQUAL")) %>%
@@ -32,6 +32,7 @@ qtl_plot = ggplot(qtl_counts, aes(x = figure_name, y = qtl_count, fill = method)
   ylab("Number of QTLs") + 
   xlab("Condition") +
   theme(legend.position = "top") +
-  scale_fill_manual(values = c("#ca0020","#404040"))
+  scale_fill_manual(values = c("#ca0020","#404040")) +
+  theme(strip.text.x = element_text(colour = "grey10"), strip.background = element_rect(fill = "grey85"))
 ggsave("figures/main_figures/qtl_count_total.pdf", plot = qtl_plot, width = 4, height = 3.5)
 
