@@ -58,4 +58,9 @@ enrichment_plot = ggplot(ranked_enrichments, aes(x = FE, y = trait, color = figu
   scale_color_manual(values = conditionPalette(), name="Condition")
 ggsave("figures/main_figures/grafield_enrichment.pdf", plot = enrichment_plot, width = 4.5, height = 3.5)
 
+#Export raw enricment p-values and FEs
+garfield_table = dplyr::select(joint_enrichments, trait, FE, EmpPval, NAnnotThesh, NAnnot, NThresh, N, condition_name, phenotype)
+write.table(garfield_table, "figures/tables/GARFIELD_enrichments.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+
 
