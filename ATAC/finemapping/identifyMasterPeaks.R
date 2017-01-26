@@ -143,8 +143,8 @@ snp_count_df = dplyr::select(result_list$unique_masters$lead_snps, gene_id, over
 snp_count_plot = ggplot(snp_count_df, aes(x = overlap_snp_count, y = peak_count)) + 
   geom_bar(stat = "identity") + 
   theme_light() +
-  ylab("Number of caQTL peaks") +
-  xlab("Number of variants in peak") +
+  ylab("Number of master regions") +
+  xlab("Number of variants in region") +
   scale_y_continuous(breaks=pretty_breaks(n=6))
 ggsave("figures/main_figures/caQTL_number_of_variants_per_unqiue_master.pdf", plot = snp_count_plot, width = 3, height = 3)
 
@@ -157,15 +157,15 @@ dependent_peak_count = master_dependent_pairs %>%
   dplyr::summarise(dependent_peak_count = length(dependent_id)) %>% 
   arrange(-dependent_peak_count)
 dependent_plot = ggplot(dependent_peak_count, aes(x = dependent_peak_count)) + geom_bar() + theme_light() +
-  xlab("Number of dependent peaks") +
-  ylab("Master peak count")
+  xlab("Number of dependent regions") +
+  ylab("Master region count")
 ggsave("figures/main_figures/caQTL_number_of_dependent_peaks_per_unqiue_master.pdf", plot = dependent_plot, width = 3, height = 3)
 
 #Plot distances between master and dependent peaks
 dependent_distances = calculatePeakDistance(master_dependent_pairs, atac_list$gene_metadata)
 dependent_distance_plot = ggplot(dependent_distances, aes(x = distance/1000)) + geom_histogram(binwidth = 2) + theme_light() +
-  xlab("Distance from master peak (kb)") +
-  ylab("Dependent peak count")
+  xlab("Distance from master region (kb)") +
+  ylab("Dependent region count")
 ggsave("figures/main_figures/caQTL_master_dependent_peak_distance.pdf", plot = dependent_distance_plot, width = 3, height = 3)
 
 
