@@ -5,9 +5,10 @@ library("tidyr")
 library("ggplot2")
 library("gplots")
 library("cqn")
-library("gProfileR")
-load_all("../seqUtils/")
 library("pheatmap")
+load_all("../seqUtils/")
+load_all("../macrophage-gxe-study/macrophage-gxe-study/housekeeping/")
+
 
 #Load expression data from disk
 eqtl_data_list = readRDS("results/SL1344/combined_expression_data_covariates.rds")
@@ -29,16 +30,17 @@ pca_list = performPCA(eqtl_data_list$cqn, eqtl_data_list$sample_metadata)
 var_exp = pca_list$var_exp * 100 
 xlabel = paste0("PC1 (", round(var_exp[1]), "%)")
 ylabel = paste0("PC2 (", round(var_exp[2]), "%)")
-pca_list$pca_matrix = dplyr::mutate(pca_list$pca_matrix, 
-    condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344", "IFNg_SL1344")))
-pca_plot = ggplot(pca_list$pca_matrix, aes(x = PC1, y = PC2, color = condition_name)) + 
+pca_data = dplyr::mutate(pca_list$pca_matrix, 
+    condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344", "IFNg_SL1344"))) %>%
+  dplyr::left_join(figureNames(), by = "condition_name")
+pca_plot = ggplot(pca_data, aes(x = PC1, y = PC2, color = figure_name)) + 
   geom_point() +
   xlab(xlabel) + 
   ylab(ylabel) +
-  scale_color_manual(values = conditionPalette(), name = "condition") + 
+  scale_color_manual(values = conditionPalette(), name = "Condition") + 
   theme_light() + 
   theme(legend.key = element_blank())
-ggsave("results/SL1344/DE/PCA_of_gene_expression.pdf", plot = pca_plot, width = 5.5, height = 4)
+ggsave("figures/supplementary/PCA_of_gene_expression.pdf", plot = pca_plot, width = 4.5, height = 3.5)
 
 #Look at the effect of GC bias
 pca_list = performPCA(log(eqtl_data_list$tpm + 0.01,2), eqtl_data_list$sample_metadata)
