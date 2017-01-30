@@ -104,3 +104,9 @@ cluster_ranges = final_clusters %>%
 
 #Save clusters into a BED file for downstream analyis with GAT
 rtracklayer::export.bed(dataFrameToGRanges(cluster_ranges), "results/ATAC/DA/ATAC_clustered_peaks.bed")
+
+#Save cluster memberships to a text file
+cluster_members = dplyr::transmute(final_clusters, gene_id, MEM.SHIP, cluster_id = new_cluster_id)
+write.table(cluster_members, "results/ATAC/DA/ATAC_cluster_memberships.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+

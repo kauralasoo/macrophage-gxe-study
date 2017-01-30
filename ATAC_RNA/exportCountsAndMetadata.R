@@ -35,6 +35,8 @@ write.table(compiled_data, "figures/tables/line_differentiation_metadata.txt",
 #Export raw RNA-seq data counts
 write.table(expression_list$counts, "figures/tables/RNA_count_matrix.txt", sep = "\t", 
             quote = FALSE, row.names = TRUE, col.names = TRUE)
+write.table(round(expression_list$cqn,4), "figures/tables/RNA_cqn_matrix.txt", sep = "\t", 
+            quote = FALSE, row.names = TRUE, col.names = TRUE)
 write.table(expression_list$sample_metadata, "figures/tables/RNA_sample_metadata.txt", sep = "\t", 
             quote = FALSE, row.names = FALSE, col.names = TRUE)
 write.table(expression_list$gene_metadata, "figures/tables/RNA_gene_metadata.txt", sep = "\t", 
@@ -42,6 +44,8 @@ write.table(expression_list$gene_metadata, "figures/tables/RNA_gene_metadata.txt
 
 #Export raw ATAC-seq data counts
 write.table(atac_list$counts, "figures/tables/ATAC_count_matrix.txt", sep = "\t", 
+            quote = FALSE, row.names = TRUE, col.names = TRUE)
+write.table(round(atac_list$cqn,4), "figures/tables/ATAC_cqn_matrix.txt", sep = "\t", 
             quote = FALSE, row.names = TRUE, col.names = TRUE)
 write.table(atac_list$sample_metadata, "figures/tables/ATAC_sample_metadata.txt", sep = "\t", 
             quote = FALSE, row.names = FALSE, col.names = TRUE)
