@@ -129,5 +129,12 @@ names(motif_list) = paste(selected_motifs$tf_name, selected_motifs$motif_id, sep
 pwm_list = purrr::map(motif_list, ~Matrix(.)) %>% purrr::map(~seqLogo::makePWM(./colSums(.)))
 saveMotifListLogos(pwm_list, "results/ATAC/motif_analysis/selected_motifs/", width = 8, height = 4)
 
+#Export all motif counts with TF names
+unique_motif_matches = dplyr::rename(fimo_hits_clean, peak_id = gene_id) %>%
+  dplyr::semi_join(unique_motifs, by = "motif_id") %>% 
+  dplyr::left_join(unique_motifs, by = "motif_id") %>%
+  dplyr::rename(tf_gene_id = gene_id)
+write.table(unique_motif_matches, "results/ATAC/motif_analysis/unique_motif_matches.txt", sep = "\t", row.names = FALSE, quote = FALSE)
+
 
 
