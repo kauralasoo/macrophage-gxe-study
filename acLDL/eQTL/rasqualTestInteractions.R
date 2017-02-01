@@ -43,23 +43,71 @@ formula_interaction = as.formula(paste("expression ~ genotype + condition_name +
 interaction_results = testMultipleInteractions(filtered_pairs, acldl_list$cqn, acldl_list$sample_metadata, 
                                                filtered_vcf, formula_qtl, formula_interaction, id_field_separator = "-")
 interaction_df = postProcessInteractionPvalues(interaction_results, id_field_separator = "-")
+saveRDS(interaction_df, "results/acLDL/eQTLs/lm_interaction_results.rds")
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 write.table(interaction_hits, "results/acLDL/eQTLs/significant_interactions.txt", quote = FALSE, row.names = FALSE)
 
-#Test for interactions with filtered samples
-interaction_results = testMultipleInteractions(filtered_pairs, acldl_list_filtered$cqn, acldl_list_filtered$sample_metadata, filtered_vcf, formula_qtl, formula_interaction)
-interaction_df = postProcessInteractionPvalues(interaction_results)
-interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
-
-#Estimate parameters for top hits
-interaction_params = testMultipleInteractions(dplyr::select(interaction_hits, gene_id, snp_id), acldl_list,filtered_vcf,
-                         formula_qtl,formula_interaction, return = "full")
-coef_matrix = lapply(interaction_params, function(x) x$interaction_model$coefficients) %>% ldply(.id = "gene_snp_pair")
-write.table(coef_matrix, "results/acLDL/eQTLs/interaction_coefficients.txt", quote = FALSE, row.names = FALSE)
+#Make a Q-Q plot
+qq_df = dplyr::mutate(interaction_df, p_eigen = p_nominal) %>% addExpectedPvalue()
+qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_nominal,10))) + 
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "black") + 
+  theme_light() + 
+  xlab("-log10 exptected p-value") + 
+  ylab("-log10 observed p-value")
+ggsave("acLDL_figures/supplementary/Q-Q_interaction_test.pdf", plot = qq_plot, width = 5, height = 5)
 
 #Plot interactions
 makeMultiplePlots(interaction_hits, acldl_list$cqn, filtered_vcf$genotypes, acldl_list$sample_metadata, acldl_list$gene_metadata) %>%
   savePlots("results/acLDL/eQTLs/interaction_plots/", 7,7)
+
+
+##### Ctrl vs AcLDL (paired design with lme4) #####
+covariate_names = c("sex_binary","PEER_factor_1", "PEER_factor_2", "PEER_factor_3","PEER_factor_4", "PEER_factor_5","PEER_factor_6")
+formula_qtl = as.formula(paste("expression ~ genotype + condition_name + (1|donor) ", 
+                               paste(covariate_names, collapse = " + "), sep = "+ "))
+formula_interaction = as.formula(paste("expression ~ genotype + condition_name + condition_name:genotype + (1|donor) ", 
+                                       paste(covariate_names, collapse = " + "), sep = "+ "))
+
+#Test for interactions
+interaction_results = testMultipleInteractions(filtered_pairs, acldl_list$cqn, acldl_list$sample_metadata, 
+                                               filtered_vcf, formula_qtl, formula_interaction, id_field_separator = "-", lme4 = TRUE)
+interaction_df = postProcessInteractionPvalues(interaction_results, id_field_separator = "-")
+saveRDS(interaction_df, "results/acLDL/eQTLs/lme4_interaction_results.rds")
+interaction_df = readRDS("results/acLDL/eQTLs/lme4_interaction_results.rds")
+
+interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
+
+#Make a Q-Q plot
+qq_df = dplyr::mutate(interaction_df, p_eigen = p_nominal) %>% addExpectedPvalue()
+qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_nominal,10))) + 
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "black") + 
+  theme_light() + 
+  xlab("-log10 exptected p-value") + 
+  ylab("-log10 observed p-value")
+ggsave("acLDL_figures/supplementary/Q-Q_paired_interaction_test.pdf", plot = qq_plot, width = 5, height = 5)
+
+#Plot interactions
+makeMultiplePlots(interaction_hits, acldl_list$cqn, filtered_vcf$genotypes, acldl_list$sample_metadata, acldl_list$gene_metadata) %>%
+  savePlots("results/acLDL/eQTLs/interaction_plots_lme4/", 7,7)
+
+#Make fold-change plots between conditions
+ctrl_samples = dplyr::filter(acldl_list$sample_metadata, condition_name == "Ctrl") %>% 
+  dplyr::arrange(donor) %>% 
+  dplyr::select(sample_id) %>% 
+  unlist()
+acldl_samples = dplyr::filter(acldl_list$sample_metadata, condition_name == "AcLDL") %>% 
+  dplyr::arrange(donor) %>% 
+  dplyr::select(sample_id) %>% 
+  unlist()
+fc_matrix = acldl_list$cqn[,acldl_samples] - acldl_list$cqn[,ctrl_samples]
+sample_metadata = dplyr::filter(acldl_list$sample_metadata, condition_name == "AcLDL") %>%
+  dplyr::mutate(condition_name = "AcLDL/Ctrl")
+
+makeMultiplePlots(interaction_hits, fc_matrix, filtered_vcf$genotypes, sample_metadata, acldl_list$gene_metadata) %>%
+  savePlots("results/acLDL/eQTLs/interaction_fold_change/", 7,7)
+
 
 
 #Make an example plot of the ASE data
