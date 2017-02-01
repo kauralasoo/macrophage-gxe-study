@@ -1,29 +1,25 @@
 library("devtools")
-library("plyr")
 library("dplyr")
+library("ggplot2")
 load_all("../seqUtils/")
 load_all("macrophage-gxe-study/housekeeping/")
-library("ggplot2")
 
 #Import data
 acldl_list = readRDS("results/acLDL/acLDL_combined_expression_data_covariates.rds")
 acldl_list = extractConditionFromExpressionList(c("Ctrl","AcLDL"), acldl_list)
 
 #Remove some donors
-acldl_list_filtered = acldl_list
-acldl_list_filtered$sample_metadata = acldl_list$sample_metadata %>% 
-  dplyr::filter(!(donor %in% c("voas","coio","giuo", "oefg","oarz", "hiaf","kuxp","piun", "xugn","cicb","fikt", "nusw")))
-acldl_list_filtered$cqn = acldl_list_filtered$cqn[,acldl_list_filtered$sample_metadata$sample_id]
+#acldl_list_filtered = acldl_list
+#acldl_list_filtered$sample_metadata = acldl_list$sample_metadata %>% 
+#  dplyr::filter(!(donor %in% c("voas","coio","giuo", "oefg","oarz", "hiaf","kuxp","piun", "xugn","cicb","fikt", "nusw")))
+#acldl_list_filtered$cqn = acldl_list_filtered$cqn[,acldl_list_filtered$sample_metadata$sample_id]
 
 #Load p-values from disk
-rasqual_min_pvalues = readRDS("results/acLDL/eQTLs/acLDL_rasqual_min_pvalues.rds")
-min_pvalue_df = extractQTLsFromList(rasqual_min_pvalues, fdr_cutoff = 0.1)
-joint_pairs = dplyr::select(min_pvalue_df, gene_id, snp_id) %>% unique() 
-
-#Load p-values from the filtered analysis
-rasqual_min_pvalues = readRDS("results/acLDL/eQTLs/acLDL_rasqual_min_pvalues_filtered.rds")
-min_pvalue_df = extractQTLsFromList(rasqual_min_pvalues, fdr_cutoff = 0.1)
-joint_pairs = dplyr::select(min_pvalue_df, gene_id, snp_id) %>% unique() 
+rasqual_min_pvalues = readRDS("results/acLDL/eQTLs/rasqual_min_pvalues.rds")
+min_pvalue_hits = lapply(rasqual_min_pvalues, function(x){dplyr::filter(x, p_eigen < fdr_thresh)})
+min_pvalues_df = purrr::map_df(min_pvalue_hits, identity, .id = "condition_name") %>%
+  dplyr::arrange(gene_id, p_nominal)
+joint_pairs = dplyr::select(min_pvalues_df, gene_id, snp_id) %>% unique()
 
 #Import the VCF file
 vcf_file = readRDS("genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.rds")
@@ -44,8 +40,9 @@ formula_interaction = as.formula(paste("expression ~ genotype + condition_name +
                                        paste(covariate_names, collapse = " + "), sep = "+ "))
 
 #Test for interactions
-interaction_results = testMultipleInteractions(filtered_pairs, acldl_list$cqn, acldl_list$sample_metadata, filtered_vcf, formula_qtl, formula_interaction)
-interaction_df = postProcessInteractionPvalues(interaction_results)
+interaction_results = testMultipleInteractions(filtered_pairs, acldl_list$cqn, acldl_list$sample_metadata, 
+                                               filtered_vcf, formula_qtl, formula_interaction, id_field_separator = "-")
+interaction_df = postProcessInteractionPvalues(interaction_results, id_field_separator = "-")
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 write.table(interaction_hits, "results/acLDL/eQTLs/significant_interactions.txt", quote = FALSE, row.names = FALSE)
 

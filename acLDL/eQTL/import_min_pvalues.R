@@ -1,8 +1,25 @@
-library("plyr")
 library("dplyr")
 library("devtools")
-load_all("../seqUtils/")
 library("Rsamtools")
+library("purrr")
+load_all("../seqUtils/")
+
+##### Import RASQUAL results #####
+#Nominal RASQUAL p-values
+ctrl_eigenMT = eigenMTImportResults("/Volumes/JetDrive/databases/acLDL/rasqual/Ctrl_500kb.eigenMT.txt")
+acLDL_eigenMT = eigenMTImportResults("/Volumes/JetDrive/databases/acLDL/rasqual/AcLDL_500kb.eigenMT.txt")
+min_pvalue_list = list(Ctrl = ctrl_eigenMT, AcLDL = acLDL_eigenMT)
+
+#Permutation Rasqual p-values
+ctrl_eigenMT = eigenMTImportResults("/Volumes/JetDrive/databases/acLDL/rasqual/random_permutation/Ctrl_500kb.eigenMT.txt")
+acLDL_eigenMT = eigenMTImportResults("/Volumes/JetDrive/databases/acLDL/rasqual/random_permutation/AcLDL_500kb.eigenMT.txt")
+min_pvalue_list_random = list(Ctrl = ctrl_eigenMT, AcLDL = acLDL_eigenMT)
+
+#Calculate empirical FDR threshold
+rasqual_fdr_thres_list = purrr::map2(min_pvalue_list, min_pvalue_list_random, 
+                                     ~dplyr::mutate(.x, fdr_thresh = getFDR(p_eigen, .y$p_eigen, alpha = 0.1)))
+saveRDS(rasqual_fdr_thres_list, "results/acLDL/eQTLs/rasqual_min_pvalues.rds")
+
 
 #Import data
 acldl_list = readRDS("results/acLDL/acLDL_combined_expression_data_covariates.rds")
