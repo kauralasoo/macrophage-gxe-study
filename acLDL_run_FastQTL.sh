@@ -91,6 +91,15 @@ rm results/acLDL/leafcutter/fastqtl_output/*_pvalues.txt*
 
 
 
+#Run FastQTL on the fold-change phenotype
+bgzip results/acLDL/fastqtl/input_FC/FC.fold_change.txt && tabix -p bed results/acLDL/fastqtl/input_FC/FC.fold_change.txt.gz
+
+#Run FastQTL
+cat results/acLDL/fastqtl/input/chunk_table.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname run_fastQTL --ncores 1 --command "python ~/software/utils/fastqtl/runFastQTL.py --vcf genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.vcf.gz --bed results/acLDL/fastqtl/input_FC/FC.fold_change.txt.gz --cov results/acLDL/fastqtl/input_FC/FC.covariates_PC3.txt --W 500000 --permute '100 10000' --out results/acLDL/fastqtl/output_FC/FC_perm --execute True"
+zcat results/acLDL/fastqtl/output_FC/FC_perm.chunk_*.txt.gz | bgzip > results/acLDL/fastqtl/output_FC/FC_permuted.txt.gz
+
+
+
 
 
 

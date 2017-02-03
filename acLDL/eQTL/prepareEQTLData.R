@@ -69,7 +69,8 @@ exportDataForFastQTL(rna_conditions_renamed, fastqtl_input_folder)
 eqtl_dataset = readRDS("results/acLDL/acLDL_eqtl_data_list.rds")
 
 #Extract data from list
-donor_genotype_map = dplyr::filter(eqtl_dataset$sample_metadata, condition == "Ctrl") %>% dplyr::select(donor, genotype_id)
+donor_genotype_map = dplyr::filter(eqtl_dataset$sample_metadata, condition == "Ctrl") %>% 
+  dplyr::select(donor, genotype_id)
 genepos = dplyr::select(eqtl_dataset$genepos, chr, left, right, geneid)
 colnames(genepos)[1] = "#chr"
 
@@ -107,5 +108,47 @@ eigenMTExportGenotypesByChr(chromosome_list, "genotypes/acLDL/imputed_20151005/c
                             "genotypes/acLDL/imputed_20151005/chromosomes_INFO_07/", "chr_")
 #Export gene metadata
 eigenMTExportGeneMetadata(rna_conditions_renamed$Ctrl$gene_metadata, rasqual_input_folder)
+
+
+
+
+
+#Perform QTL mapping for fold-change
+
+#Import data
+acldl_list = readRDS("results/acLDL/acLDL_combined_expression_data_covariates.rds")
+
+#Calculate a fold-change matrix
+ctrl_samples = dplyr::filter(acldl_list$sample_metadata, condition_name == "Ctrl") %>% 
+  dplyr::arrange(donor) %>% 
+  dplyr::select(sample_id, genotype_id)
+acldl_samples = dplyr::filter(acldl_list$sample_metadata, condition_name == "AcLDL") %>% 
+  dplyr::arrange(donor) %>% 
+  dplyr::select(sample_id, genotype_id)
+fc_matrix = acldl_list$cqn[,acldl_samples$sample_id] - acldl_list$cqn[,ctrl_samples$sample_id]
+colnames(fc_matrix) = acldl_samples$genotype_id
+
+#Extract sample metadata
+sample_metadata = dplyr::filter(acldl_list$sample_metadata, condition_name == "AcLDL") %>%
+  dplyr::mutate(condition_name = "FC")
+
+#Export FC matrix
+fastqtl_genepos = constructFastQTLGenePos(acldl_list$gene_metadata)
+fc_mat = prepareFastqtlMatrix(fc_matrix, fastqtl_genepos)
+
+#Calculate PCs for covariates
+covariates = performPCA(fc_matrix, sample_metadata, n_pcs = 6, feature_id = "genotype_id")$pca_matrix %>%
+                               dplyr::select(genotype_id, sex_binary, PC1, PC2, PC3) %>%
+                               fastqtlMetadataToCovariates()
+
+#Save dataset to disk
+saveFastqtlMatrices(list(FC = fc_mat), "results/acLDL/fastqtl/input_FC/", file_suffix = "fold_change")
+saveFastqtlMatrices(list(FC = covariates), "results/acLDL/fastqtl/input_FC/", file_suffix = "covariates_PC3")
+
+
+
+
+
+
 
 

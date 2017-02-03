@@ -22,10 +22,11 @@ saveRDS(rasqual_fdr_thres_list, "results/acLDL/eQTLs/rasqual_min_pvalues.rds")
 
 
 #Import fastQTL p-values from disk
-q = importFastQTLTable("results/acLDL/fastqtl/output/Ctrl_permuted.txt.gz")
+ctrl_perm_pvalue = importFastQTLTable("results/acLDL/fastqtl/output/Ctrl_permuted.txt.gz")
 acldl_perm_pvalue = importFastQTLTable("results/acLDL/fastqtl/output/AcLDL_permuted.txt.gz")
 perm_pvalue_list = list(Ctrl = ctrl_perm_pvalue, AcLDL = acldl_perm_pvalue)
 saveRDS(perm_pvalue_list, "results/acLDL/eQTLs/fastqtl_min_pvalues.rds")
+
 
 #Compare the correlation betweeb rasqual and fastQTL p-values
 fastqtl_vs_rasqual = ggplot(ctrl_matched, aes(x = -log(p_linear, 10), y = -log(p_rasqual,10))) + geom_point()

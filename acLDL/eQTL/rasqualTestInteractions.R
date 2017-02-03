@@ -1,5 +1,6 @@
 library("devtools")
 library("dplyr")
+library("lme4")
 library("ggplot2")
 load_all("../seqUtils/")
 load_all("macrophage-gxe-study/housekeeping/")
@@ -7,12 +8,6 @@ load_all("macrophage-gxe-study/housekeeping/")
 #Import data
 acldl_list = readRDS("results/acLDL/acLDL_combined_expression_data_covariates.rds")
 acldl_list = extractConditionFromExpressionList(c("Ctrl","AcLDL"), acldl_list)
-
-#Remove some donors
-#acldl_list_filtered = acldl_list
-#acldl_list_filtered$sample_metadata = acldl_list$sample_metadata %>% 
-#  dplyr::filter(!(donor %in% c("voas","coio","giuo", "oefg","oarz", "hiaf","kuxp","piun", "xugn","cicb","fikt", "nusw")))
-#acldl_list_filtered$cqn = acldl_list_filtered$cqn[,acldl_list_filtered$sample_metadata$sample_id]
 
 #Load p-values from disk
 rasqual_min_pvalues = readRDS("results/acLDL/eQTLs/rasqual_min_pvalues.rds")
@@ -44,6 +39,7 @@ interaction_results = testMultipleInteractions(filtered_pairs, acldl_list$cqn, a
                                                filtered_vcf, formula_qtl, formula_interaction, id_field_separator = "-")
 interaction_df = postProcessInteractionPvalues(interaction_results, id_field_separator = "-")
 saveRDS(interaction_df, "results/acLDL/eQTLs/lm_interaction_results.rds")
+interaction_df = readRDS("results/acLDL/eQTLs/lm_interaction_results.rds")
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 write.table(interaction_hits, "results/acLDL/eQTLs/significant_interactions.txt", quote = FALSE, row.names = FALSE)
 
@@ -107,6 +103,13 @@ sample_metadata = dplyr::filter(acldl_list$sample_metadata, condition_name == "A
 
 makeMultiplePlots(interaction_hits, fc_matrix, filtered_vcf$genotypes, sample_metadata, acldl_list$gene_metadata) %>%
   savePlots("results/acLDL/eQTLs/interaction_fold_change/", 7,7)
+
+#Import fastQTL fold-change p-values from disk
+FC_pvalues = importFastQTLTable("results/acLDL/fastqtl/output_FC/FC_permuted.txt.gz") %>%
+  dplyr::filter(qvalue < 0.1)
+
+makeMultiplePlots(FC_pvalues, acldl_list$cqn, vcf_file$genotypes, acldl_list$sample_metadata, acldl_list$gene_metadata) %>%
+  savePlots("results/acLDL/eQTLs/FC_qtl_plots/", 7,7)
 
 
 
