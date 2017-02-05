@@ -8,6 +8,7 @@ load_all("macrophage-gxe-study/housekeeping/")
 #Import data
 acldl_list = readRDS("results/acLDL/acLDL_combined_expression_data_covariates.rds")
 acldl_list = extractConditionFromExpressionList(c("Ctrl","AcLDL"), acldl_list)
+gene_name_map = dplyr::select(acldl_list$gene_metadata, gene_id, gene_name)
 
 #Load p-values from disk
 rasqual_min_pvalues = readRDS("results/acLDL/eQTLs/rasqual_min_pvalues.rds")
@@ -41,7 +42,6 @@ interaction_df = postProcessInteractionPvalues(interaction_results, id_field_sep
 saveRDS(interaction_df, "results/acLDL/eQTLs/lm_interaction_results.rds")
 interaction_df = readRDS("results/acLDL/eQTLs/lm_interaction_results.rds")
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
-write.table(interaction_hits, "results/acLDL/eQTLs/significant_interactions.txt", quote = FALSE, row.names = FALSE)
 
 #Make a Q-Q plot
 qq_df = dplyr::mutate(interaction_df, p_eigen = p_nominal) %>% addExpectedPvalue()
@@ -98,18 +98,55 @@ acldl_samples = dplyr::filter(acldl_list$sample_metadata, condition_name == "AcL
   dplyr::select(sample_id) %>% 
   unlist()
 fc_matrix = acldl_list$cqn[,acldl_samples] - acldl_list$cqn[,ctrl_samples]
-sample_metadata = dplyr::filter(acldl_list$sample_metadata, condition_name == "AcLDL") %>%
-  dplyr::mutate(condition_name = "AcLDL/Ctrl")
+sample_metadata = dplyr::filter(acldl_list$sample_metadata, condition_name == "AcLDL")
 
 makeMultiplePlots(interaction_hits, fc_matrix, filtered_vcf$genotypes, sample_metadata, acldl_list$gene_metadata) %>%
   savePlots("results/acLDL/eQTLs/interaction_fold_change/", 7,7)
 
 #Import fastQTL fold-change p-values from disk
 FC_pvalues = importFastQTLTable("results/acLDL/fastqtl/output_FC/FC_permuted.txt.gz") %>%
-  dplyr::filter(qvalue < 0.1)
+  dplyr::left_join(gene_name_map, by = "gene_id") %>%
+  dplyr::arrange(p_beta) %>% 
+  dplyr::mutate(p_eigen = p_beta) %>%
+  addExpectedPvalue()
+FC_pvalue_hits = dplyr::filter(FC_pvalues, qvalue < 0.1)
+
+#Fold-change Q-Q plot
+qq_plot = ggplot(FC_pvalues, aes(x = -log(p_expected,10), y = -log(p_beta,10))) + 
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "black") + 
+  theme_light() + 
+  xlab("-log10 exptected p-value") + 
+  ylab("-log10 observed p-value")
+ggsave("acLDL_figures/supplementary/Q-Q_fold-change_test.pdf", plot = qq_plot, width = 5, height = 5)
 
 makeMultiplePlots(FC_pvalues, acldl_list$cqn, vcf_file$genotypes, acldl_list$sample_metadata, acldl_list$gene_metadata) %>%
   savePlots("results/acLDL/eQTLs/FC_qtl_plots/", 7,7)
+
+
+#Use linear model to test FC for significant SNPs only
+covariate_names = c("sex_binary")
+formula_qtl = as.formula(paste("expression ~ 1 ", 
+                               paste(covariate_names, collapse = " + "), sep = "+ "))
+formula_interaction = as.formula(paste("expression ~ genotype ", 
+                                       paste(covariate_names, collapse = " + "), sep = "+ "))
+
+#Test for interactions
+interaction_results = testMultipleInteractions(filtered_pairs, fc_matrix, sample_metadata, 
+                                               filtered_vcf, formula_qtl, formula_interaction, id_field_separator = "-")
+interaction_df = postProcessInteractionPvalues(interaction_results, id_field_separator = "-")
+interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
+
+#Make a Q-Q plot
+qq_df = dplyr::mutate(interaction_df, p_eigen = p_nominal) %>% addExpectedPvalue()
+qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_nominal,10))) + 
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "black") + 
+  theme_light() + 
+  xlab("-log10 exptected p-value") + 
+  ylab("-log10 observed p-value")
+ggsave("acLDL_figures/supplementary/Q-Q_interaction_test.pdf", plot = qq_plot, width = 5, height = 5)
+
 
 
 
