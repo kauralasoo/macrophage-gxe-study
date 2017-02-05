@@ -50,3 +50,39 @@ write.table(atac_shared_lanelets, "results/sample_lists/submission/atac_shared_l
             sep = "\t", quote = FALSE, row.names = FALSE)
 
 
+#Export all missing lanelets for open access and managed access samples
+rna_lanelets = readr::read_tsv("macrophage-gxe-study/data/sample_lists/SL1344/SL1344_names_all.txt", col_names = c("sample_id", "lanelet_ids"))
+rna_lanelet_pairs = purrr::by_row(rna_lanelets, 
+    ~data_frame(sample_id = .$sample_id, 
+   lanelet_id = unlist(strsplit(.$lanelet_ids, ";"))))$.out %>% 
+  purrr::map_df(identity)
+
+atac_lanelets = readr::read_tsv("macrophage-gxe-study/data/chromatin/ATAC/ATAC_Salmonella_names.txt", col_names = c("sample_id", "lanelet_ids"))
+atac_lanelet_pairs = purrr::by_row(atac_lanelets, 
+      ~data_frame(sample_id = .$sample_id, 
+      lanelet_id = unlist(strsplit(.$lanelet_ids, ";"))))$.out %>% 
+  purrr::map_df(identity)
+
+
+#Import open access samples
+rna_open = readr::read_tsv("results/sample_lists/submission/salmonella_rna.open_access.txt") %>%
+  dplyr::select(-lanelet_id) %>%
+  dplyr::left_join(rna_lanelet_pairs, by = "sample_id")
+atac_open = readr::read_tsv("results/sample_lists/submission/salmonella_atac.open_access.txt") %>%
+  dplyr::select(-lanelet_id) %>%
+  dplyr::left_join(atac_lanelet_pairs, by = "sample_id")
+
+#Import unknown lanelets
+unknown_lanelets = readr::read_tsv("results/sample_lists/4584_files.txt", col_names = "cram_file") %>%
+  tidyr::separate(cram_file, c("lanelet_id", "suffix"), sep = "\\.")
+
+#Export sample names and accessions for missing lanelets
+rna_matched = dplyr::semi_join(rna_open, unknown_lanelets, by = "lanelet_id") %>% dplyr::arrange(sample_id)
+atac_matched = dplyr::semi_join(atac_open, unknown_lanelets, by = "lanelet_id") %>% dplyr::arrange(sample_id)
+
+write.table(rna_matched, "results/sample_lists/submission/salmonella_rna.open_access.missing_lanelets.txt",
+            sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(atac_matched, "results/sample_lists/submission/salmonella_atav.open_access.missing_lanelets.txt",
+            sep = "\t", quote = FALSE, row.names = FALSE)
+
+
