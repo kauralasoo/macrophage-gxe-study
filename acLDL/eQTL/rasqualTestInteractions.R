@@ -71,7 +71,6 @@ interaction_results = testMultipleInteractions(filtered_pairs, acldl_list$cqn, a
 interaction_df = postProcessInteractionPvalues(interaction_results, id_field_separator = "-")
 saveRDS(interaction_df, "results/acLDL/eQTLs/lme4_interaction_results.rds")
 interaction_df = readRDS("results/acLDL/eQTLs/lme4_interaction_results.rds")
-
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 
 #Make a Q-Q plot
@@ -135,6 +134,8 @@ formula_interaction = as.formula(paste("expression ~ genotype ",
 interaction_results = testMultipleInteractions(filtered_pairs, fc_matrix, sample_metadata, 
                                                filtered_vcf, formula_qtl, formula_interaction, id_field_separator = "-")
 interaction_df = postProcessInteractionPvalues(interaction_results, id_field_separator = "-")
+saveRDS(interaction_df, "results/acLDL/eQTLs/FC_interaction_results.rds")
+interaction_df = readRDS("results/acLDL/eQTLs/FC_interaction_results.rds")
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 
 #Make a Q-Q plot
@@ -145,7 +146,7 @@ qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_nominal,10))) +
   theme_light() + 
   xlab("-log10 exptected p-value") + 
   ylab("-log10 observed p-value")
-ggsave("acLDL_figures/supplementary/Q-Q_interaction_test.pdf", plot = qq_plot, width = 5, height = 5)
+ggsave("acLDL_figures/supplementary/Q-Q_selected_FC_test.pdf", plot = qq_plot, width = 5, height = 5)
 
 
 
