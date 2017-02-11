@@ -1,2 +1,5 @@
-ensembl_gff3: /nfs/users/nfs_k/ka8/scratch/annotations/GRCh38/genes/Ensembl_87/Homo_sapiens.GRCh38.87.gff3
+ensembl_gtf: /nfs/users/nfs_k/ka8/scratch/annotations/GRCh38/genes/Ensembl_87/Homo_sapiens.GRCh38.87.gtf
 salmon_ensembl_index: /nfs/users/nfs_k/ka8/scratch/annotations/GRCh38/genes/Ensembl_87/salmon_index_87
+star_index: /nfs/users/nfs_k/ka8/scratch/annotations/GRCh38/STAR_index_87
+vcf_file: /nfs/users/nfs_k/ka8/scratch/projects/macrophage-gxe-study/genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.vcf.gz
+chromosome_lengths: /lustre/scratch117/cellgen/team170/ka8/annotations/GRCh38/bt2-index/chromosome_lengths.txt
