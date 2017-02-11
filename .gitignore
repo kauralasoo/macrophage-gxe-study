@@ -2,3 +2,6 @@
 covariates/cache/*
 covariates/makeQCreport.html
 covariates/makeQCreport_files/*
+processed
+FarmOut
+.snakemake
