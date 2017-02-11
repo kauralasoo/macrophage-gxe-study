@@ -72,6 +72,11 @@ atac_open = readr::read_tsv("results/sample_lists/submission/salmonella_atac.ope
   dplyr::select(-lanelet_id) %>%
   dplyr::left_join(atac_lanelet_pairs, by = "sample_id")
 
+write.table(rna_open, "results/sample_lists/submission/salmonella_rna.open_access.all_lanelets.txt",
+            sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(atac_open, "results/sample_lists/submission/salmonella_atav.open_access.all_lanelets.txt",
+            sep = "\t", quote = FALSE, row.names = FALSE)
+
 #Import unknown lanelets
 unknown_lanelets = readr::read_tsv("results/sample_lists/4584_files.txt", col_names = "cram_file") %>%
   tidyr::separate(cram_file, c("lanelet_id", "suffix"), sep = "\\.")
@@ -83,6 +88,21 @@ atac_matched = dplyr::semi_join(atac_open, unknown_lanelets, by = "lanelet_id") 
 write.table(rna_matched, "results/sample_lists/submission/salmonella_rna.open_access.missing_lanelets.txt",
             sep = "\t", quote = FALSE, row.names = FALSE)
 write.table(atac_matched, "results/sample_lists/submission/salmonella_atav.open_access.missing_lanelets.txt",
+            sep = "\t", quote = FALSE, row.names = FALSE)
+
+
+#Import managed access samples
+rna_managed = readr::read_tsv("results/sample_lists/submission/salmonella_rna.managed_access.txt") %>%
+  dplyr::select(-lanelet_id) %>%
+  dplyr::left_join(rna_lanelet_pairs, by = "sample_id")
+atac_managed = readr::read_tsv("results/sample_lists/submission/salmonella_atac.managed_access.txt") %>%
+  dplyr::select(-lanelet_id) %>%
+  dplyr::left_join(atac_lanelet_pairs, by = "sample_id")
+
+
+write.table(rna_managed, "results/sample_lists/submission/salmonella_rna.managed_access.all_lanelets.txt",
+            sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(atac_managed, "results/sample_lists/submission/salmonella_atac.managed_access.all_lanelets.txt",
             sep = "\t", quote = FALSE, row.names = FALSE)
 
 
