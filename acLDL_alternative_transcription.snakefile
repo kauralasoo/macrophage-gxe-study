@@ -26,7 +26,7 @@ rule star_align:
 		bam = "processed/acLDL/STAR/{sample}/{sample}.Aligned.sortedByCoord.out.bam"
 	params:
 		prefix = "processed/acLDL/STAR/{sample}/{sample}.",
-		rg = "ID:{sample}\tSM:{sample}",
+		rg = "ID:1\tSM:{sample}"
 	resources:
 		mem = 42000
 	threads: 8
@@ -61,7 +61,7 @@ rule check_genotype_concordance:
 		mem = 1500
 	threads: 1
 	shell:
-		"verifyBamID.1.1.2 --vcf {config[vcf_file]} --bam {input} --out {params.out_prefix} --best"
+		"verifyBamID.1.1.2 --vcf {config[vcf_file]} --bam {input} --out {params.out_prefix} --best --ignoreRG"
 
 #Convert bedgraph to bigwig
 rule bedgraph_to_bigwig:
