@@ -163,3 +163,17 @@ cat results/acLDL/rasqual/output/Ctrl_500kb/Ctrl_500kb.chr_*.eigenMT.txt | grep 
 cat results/acLDL/rasqual/output/AcLDL_500kb/AcLDL_500kb.chr_*.eigenMT.txt | grep -v snps > results/acLDL/rasqual/output/AcLDL_500kb/AcLDL_500kb.eigenMT.txt
 
 
+
+
+#Construct Salmon index
+#Combined index of cDNA and ncRNA
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>10000] rusage[mem=10000]" -q normal -M 10000 -o construct_index.%J.jobout "salmon --no-version-check index -t Homo_sapiens.GRCh38.cdna_ncrna.v87.fa.gz -i salmon_index_87"
+
+#Construct STAR index
+#Construct STAR index (Ensembl 79) from the fasta and GTF file
+bsub -G team170 -n4 -R "span[hosts=1] select[mem>40000] rusage[mem=40000]" -q hugemem -M 40000 -o star_index.%J.jobout "STAR --runThreadN 4 --runMode genomeGenerate --genomeDir STAR_index_87/ --genomeFastaFiles dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sjdbGTFfile genes/Ensembl_87/Homo_sapiens.GRCh38.87.gtf --sjdbOverhang 74"
+
+#Run Snakemake
+snakemake --cluster ../../Blood_ATAC/scripts/snakemake_submit.py -np -s acLDL_alternative_transcription.snakefile processed/acLDL/salmon/ensembl_87/AUIM_24h_Ctrl --jobs 100
+
+
