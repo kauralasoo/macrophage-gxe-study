@@ -26,10 +26,10 @@ for (tx_id in tx_ids){
   print(tx_id)
   tags_df[tx_id, tag_list[[tx_id]] ] = 1
 }
-saveRDS(tbl_df(tags_df), "../../annotations/GRCh38/genes/Ensembl_85/Homo_sapiens.GRCh38.85.tags_dataframe.rds")
+saveRDS(tbl_df(tags_df), "../../annotations/GRCh38/genes/Ensembl_87/Homo_sapiens.GRCh38.87.tags_dataframe.rds")
 
 #Add transcript tags into the data.frame
-tags_df = readRDS("../../annotations/GRCh38/genes/Ensembl_85/Homo_sapiens.GRCh38.85.tags_dataframe.rds")
+tags_df = readRDS("../../annotations/GRCh38/genes/Ensembl_87/Homo_sapiens.GRCh38.87.tags_dataframe.rds")
 tags_df = dplyr::select(tags_df, ensembl_transcript_id, mRNA_start_NF:cds_end_NF)
 
 #Convert TSL to integer
