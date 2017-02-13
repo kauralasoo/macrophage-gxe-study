@@ -14,8 +14,8 @@ close(f)
 ####### END #######
 
 #Import transcript annotations
-gene_metadata = readRDS("../../annotations/GRCh38/genes/Ensembl_85/Homo_sapiens.GRCh38.85.compiled_tx_metadata.filtered.rds")  
-txdb = AnnotationDbi::loadDb("../../annotations/GRCh38/genes/Ensembl_85/TranscriptDb_GRCh38_85.db")
+gene_metadata = readRDS("../../annotations/GRCh38/genes/Ensembl_87/Homo_sapiens.GRCh38.87.compiled_tx_metadata.filtered.rds")  
+txdb = AnnotationDbi::loadDb("../../annotations/GRCh38/genes/Ensembl_87/TranscriptDb_GRCh38_87.db")
 exons = GenomicFeatures::exonsBy(txdb, by = "tx", use.names = TRUE)
 cdss = GenomicFeatures::cdsBy(txdb, by = "tx", use.names = TRUE)
 
