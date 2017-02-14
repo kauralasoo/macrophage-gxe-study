@@ -1,5 +1,4 @@
 configfile: "acLDL/acLDL_config.yaml"
-ANNOTATIONS = ["reviseAnnotations_contained","reviseAnnotations_downstream","reviseAnnotations_upstream"]
 
 #Quantify gene expression using full Ensembl annotations
 rule ensembl_quant_salmon:
@@ -109,13 +108,32 @@ rule construct_salmon_index:
 	shell:
 		"salmon -no-version-check index -t {input} -i {output}"
 
+#Quantify gene expression using full Ensembl annotations
+rule reviseAnnotation_quant_salmon:
+	input:
+		fq1 = "processed/acLDL/fastq/{sample}.1.fastq.gz",
+		fq2 = "processed/acLDL/fastq/{sample}.2.fastq.gz",
+		salmon_index = "processed/acLDL/annotations/salmon_index/{annotation}"
+	output:
+		"processed/acLDL/reviseAnnotations/{annotation}/{sample}/quant.sf"
+	params:
+		out_prefix = "processed/acLDL/reviseAnnotations/{annotation}/{sample}"
+	resources:
+		mem = 10000
+	threads: 8	
+	shell:
+		"salmon --no-version-check quant --useVBOpt --seqBias --gcBias --libType ISR "
+		"--index {input.salmon_index} -1 {input.fq1} -2 {input.fq2} -p {threads} "
+		"-o {params.out_prefix}"
+
 
 #Make sure that all final output files get created
 rule make_all:
 	input:
 		expand("processed/acLDL/verifyBamID/{sample}.verifyBamID.bestSM", sample=config["samples"]),
 		expand("processed/acLDL/salmon/ensembl_87/{sample}/quant.sf", sample=config["samples"]),
-		expand("processed/acLDL/bigwig/{sample}.str1.bw", sample=config["samples"])
+		expand("processed/acLDL/bigwig/{sample}.str1.bw", sample=config["samples"]),
+		expand("processed/acLDL/reviseAnnotations/{annotation}/{sample}/quant.sf", annotation=config["annotations"], sample=config["samples"])
 	output:
 		"processed/acLDL/out.txt"
 	resources:
@@ -123,6 +141,7 @@ rule make_all:
 	threads: 1
 	shell:
 		"echo 'Done' > {output}"
+
 
 
 
