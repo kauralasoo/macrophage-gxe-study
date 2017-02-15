@@ -174,6 +174,8 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>10000] rusage[mem=10000]" -q no
 bsub -G team170 -n4 -R "span[hosts=1] select[mem>40000] rusage[mem=40000]" -q hugemem -M 40000 -o star_index.%J.jobout "STAR --runThreadN 4 --runMode genomeGenerate --genomeDir STAR_index_87/ --genomeFastaFiles dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sjdbGTFfile genes/Ensembl_87/Homo_sapiens.GRCh38.87.gtf --sjdbOverhang 74"
 
 #Run Snakemake
-snakemake --cluster ../../Blood_ATAC/scripts/snakemake_submit.py -np -s acLDL_alternative_transcription.snakefile processed/acLDL/salmon/ensembl_87/AUIM_24h_Ctrl --jobs 100
+snakemake --cluster ../../Blood_ATAC/scripts/snakemake_submit.py -np -s acLDL_alternative_transcription.snakefile processed/acLDL/out.txt --jobs 100
+
+snakemake --cluster ../../Blood_ATAC/scripts/snakemake_submit.py -np -s acLDL_fastqtl.snakefile --jobs 500
 
 
