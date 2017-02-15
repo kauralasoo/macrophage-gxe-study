@@ -3,7 +3,7 @@ configfile: "acLDL/acLDL_config.yaml"
 
 rule map_qtls:
 	input:
-		expand("processed/acLDL/fastqtl_output/ensembl_87/{condition}.permuted.txt.gz", condition = config["conditions"])
+		expand("processed/acLDL/fastqtl_output/{annot_type}/{condition}.permuted.txt.gz", annot_type = config["annot_type"], condition = config["conditions"])
 	output:
 		"processed/acLDL/fastqtl_output/out.txt"
 	resources:
@@ -15,10 +15,10 @@ rule map_qtls:
 #Compres and index input bed file
 rule compress_bed:
 	input:
-		bed = "processed/acLDL/fastqtl_splicing/ensembl_87/{condition}.norm_prop.txt"
+		bed = "processed/acLDL/fastqtl_splicing/{annot_type}/{condition}.norm_prop.txt"
 	output:
-		bed = "processed/acLDL/fastqtl_splicing/ensembl_87/{condition}.norm_prop.txt.gz",
-		bed_index = "processed/acLDL/fastqtl_splicing/ensembl_87/{condition}.norm_prop.txt.gz.tbi"
+		bed = "processed/acLDL/fastqtl_splicing/{annot_type}/{condition}.norm_prop.txt.gz",
+		bed_index = "processed/acLDL/fastqtl_splicing/{annot_type}/{condition}.norm_prop.txt.gz.tbi"
 	threads: 1
 	resources:
 		mem = 100
@@ -28,12 +28,12 @@ rule compress_bed:
 #Run QTLtools in permutation mode
 rule permutation_run:
 	input:
-		bed = "processed/acLDL/fastqtl_splicing/ensembl_87/{condition}.norm_prop.txt.gz",
-		bed_index = "processed/acLDL/fastqtl_splicing/ensembl_87/AcLDL.norm_prop.txt.gz.tbi",
-		covariates = "processed/acLDL/fastqtl_splicing/ensembl_87/{condition}.covariates_prop.txt",
+		bed = "processed/acLDL/fastqtl_splicing/{annot_type}/{condition}.norm_prop.txt.gz",
+		bed_index = "processed/acLDL/fastqtl_splicing/{annot_type}/AcLDL.norm_prop.txt.gz.tbi",
+		covariates = "processed/acLDL/fastqtl_splicing/{annot_type}/{condition}.covariates_prop.txt",
 		vcf = config["qtl_vcf"]
 	output:
-		temp("processed/acLDL/fastqtl_output/ensembl_87/batches/{condition}.permutation.batch.{batch}.{n_batches}.txt")
+		temp("processed/acLDL/fastqtl_output/{annot_type}/batches/{condition}.permutation.batch.{batch}.{n_batches}.txt")
 	params:
 		chunk = "{batch} {n_batches}"
 	threads: 1
@@ -46,11 +46,11 @@ rule permutation_run:
 #Merge all batches from QTLtools
 rule merge_qtl_batches:
 	input:
-		expand("processed/acLDL/fastqtl_output/ensembl_87/batches/{{condition}}.permutation.batch.{batch}.{n_batches}.txt", 
+		expand("processed/acLDL/fastqtl_output/{{annot_type}}/batches/{{condition}}.permutation.batch.{batch}.{n_batches}.txt", 
 			batch=[i for i in range(1, config["n_batches"] + 1)],
 			n_batches = config["n_batches"])
 	output:
-		"processed/acLDL/fastqtl_output/ensembl_87/{condition}.permuted.txt.gz"
+		"processed/acLDL/fastqtl_output/{annot_type}/{condition}.permuted.txt.gz"
 	resources:
 		mem = 100
 	threads: 1

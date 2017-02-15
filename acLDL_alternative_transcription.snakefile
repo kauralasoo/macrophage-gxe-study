@@ -126,6 +126,46 @@ rule reviseAnnotation_quant_salmon:
 		"--index {input.salmon_index} -1 {input.fq1} -2 {input.fq2} -p {threads} "
 		"-o {params.out_prefix}"
 
+#Convert BAMs to bed for leafcutter
+rule leafcutter_bam_to_bed:
+	input:
+		"processed/acLDL/STAR/{sample}/{sample}.Aligned.sortedByCoord.out.bam"
+	output:
+		temp("processed/acLDL/leafcutter/bed/{sample}.bed")
+	threads: 1
+	resources:
+		mem = 1000
+	shell:
+		"samtools view {input} | python {config[leafcutter_root]}/scripts/filter_cs.py | {config[leafcutter_root]}/scripts/sam2bed.pl --use-RNA-strand - {output}"
+
+#Convert bed file to junctions
+rule leadcutter_bed_to_junc:
+	input:
+		"processed/acLDL/leafcutter/bed/{sample}.bed"
+	output:
+		"processed/acLDL/leafcutter/junc/{sample}.junc"
+	threads: 1
+	resources:
+		mem = 1000
+	shell:
+		"{config[leafcutter_root]}/scripts/bed2junc.pl {input} {output}"
+
+#Cluster junctions with LeafCutter
+rule leafcutter_cluster_junctions:
+	input:
+		expand("processed/acLDL/leafcutter/junc/{sample}.junc", sample = config["samples"])
+	output:
+		"processed/acLDL/leafcutter/leafcutter_perind.counts.gz"
+	params:
+		junc_files = "processed/acLDL/leafcutter/junction_files.txt",
+		out_prefix = "processed/acLDL/leafcutter/"
+	threads: 1
+	resources:
+		mem = 1000
+	shell:
+		"ls --color=never processed/acLDL/leafcutter/junc/*.junc | cat > {output} && "
+		"python {config[leafcutter_root]}/clustering/leafcutter_cluster.py -j {params.junc_files} -r {params.out_prefix} -m 50 -l 500000"
+
 
 #Make sure that all final output files get created
 rule make_all:
