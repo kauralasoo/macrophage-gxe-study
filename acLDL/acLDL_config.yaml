@@ -11,9 +11,9 @@ annotations: ["reviseAnnotations_contained","reviseAnnotations_downstream","revi
 leafcutter_root: "/nfs/users/nfs_k/ka8/software/leafcutter"
 
 #QTL mapping 
-conditions: ["Ctrl", "AcLDL"]
+conditions: ["Ctrl", "AcLDL", "Diff"]
 n_batches: 250
 qtl_vcf: "/nfs/users/nfs_k/ka8/scratch/projects/macrophage-gxe-study/genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.vcf.gz"
 cis_window: 100000
-annot_type: ["ensembl_87", "reviseAnnotations"]
+annot_type: ["ensembl_87", "reviseAnnotations", "leafcutter"]
 

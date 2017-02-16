@@ -132,7 +132,7 @@ rule leafcutter_bam_to_bed:
 		"processed/acLDL/STAR/{sample}/{sample}.Aligned.sortedByCoord.out.bam"
 	output:
 		temp("processed/acLDL/leafcutter/bed/{sample}.bed")
-	threads: 1
+	threads: 3
 	resources:
 		mem = 1000
 	shell:
@@ -163,7 +163,7 @@ rule leafcutter_cluster_junctions:
 	resources:
 		mem = 1000
 	shell:
-		"ls --color=never processed/acLDL/leafcutter/junc/*.junc | cat > {output} && "
+		"ls --color=never processed/acLDL/leafcutter/junc/*.junc | cat > {params.junc_files} && "
 		"python {config[leafcutter_root]}/clustering/leafcutter_cluster.py -j {params.junc_files} -r {params.out_prefix} -m 50 -l 500000"
 
 
@@ -181,6 +181,7 @@ rule make_all:
 	threads: 1
 	shell:
 		"echo 'Done' > {output}"
+
 
 
 
