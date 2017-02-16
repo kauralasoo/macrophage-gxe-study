@@ -179,3 +179,5 @@ snakemake --cluster ../../Blood_ATAC/scripts/snakemake_submit.py -np -s acLDL_al
 snakemake --cluster ../../Blood_ATAC/scripts/snakemake_submit.py -np -s acLDL_fastqtl.snakefile --jobs 500
 
 
+snakemake --cluster ../../Blood_ATAC/scripts/snakemake_submit.py -np -s acLDL_alternative_transcription.snakefile processed/acLDL/leafcutter/junc/AUIM_24h_Ctrl.junc --jobs 100
+
