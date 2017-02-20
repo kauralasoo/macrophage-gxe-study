@@ -7,6 +7,7 @@ chromosome_lengths: /lustre/scratch117/cellgen/team170/ka8/annotations/GRCh38/bt
 samples: [KOLF_2_FF_R848_6,KOLF_2_FF_IFNG_6,KOLF_2_FF_CILPS_6,KOLF_2_FF_sLPS_24,KOLF_2_FF_P3C_6,KOLF_2_FF_CILPS_24,KOLF_2_FF_Ctrl_24,KOLF_2_FF_R848_24,KOLF_2_FF_sLPS_6,KOLF_2_FF_Salb_24,KOLF_2_FF_Ctrl_6,KOLF_2_FF_IL4_24,KOLF_2_FF_IFNB_24,KOLF_2_FF_IL10_24,KOLF_2_FF_TPP_24,KOLF_2_FF_P3C_24,KOLF_2_FF_CI_6,KOLF_2_FF_CI_24,KOLF_2_FF_TPP_6,KOLF_2_FF_IFNB_6,KOLF_2_FF_IL4_6,KOLF_2_FF_IL10_6,KOLF_2_FF_Salb_6,KOLF_2_FF_IFNG_24]
 annotations: ["reviseAnnotations_contained","reviseAnnotations_downstream","reviseAnnotations_upstream"]
 study: macroMap
+libType: IU
 
 #Quantification
 leafcutter_root: "/nfs/users/nfs_k/ka8/software/leafcutter"

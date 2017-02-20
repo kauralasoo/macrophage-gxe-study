@@ -13,7 +13,7 @@ rule ensembl_quant_salmon:
 		mem = 10000
 	threads: 8	
 	shell:
-		"salmon --no-version-check quant --useVBOpt --seqBias --gcBias --libType ISR "
+		"salmon --no-version-check quant --useVBOpt --seqBias --gcBias --libType {config[libType]} "
 		"--index {config[salmon_ensembl_index]} -1 {input.fq1} -2 {input.fq2} -p {threads} "
 		"--geneMap {config[ensembl_gtf]} -o {params.out_prefix}"
 
@@ -122,7 +122,7 @@ rule reviseAnnotation_quant_salmon:
 		mem = 10000
 	threads: 8	
 	shell:
-		"salmon --no-version-check quant --useVBOpt --seqBias --gcBias --libType ISR "
+		"salmon --no-version-check quant --useVBOpt --seqBias --gcBias --libType {config[libType]} "
 		"--index {input.salmon_index} -1 {input.fq1} -2 {input.fq2} -p {threads} "
 		"-o {params.out_prefix}"
 
