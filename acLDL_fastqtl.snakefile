@@ -4,7 +4,7 @@ configfile: "acLDL/acLDL_config.yaml"
 rule map_qtls:
 	input:
 		expand("processed/acLDL/fastqtl_output/{annot_type}/{condition}.permuted.txt.gz", annot_type = config["annot_type"], condition = config["conditions"]),
-		expand("processed/acLDL/fastqtl_output/{annot_type}/{condition}.nominal.txt.gz", annot_type = config["annot_type"], condition = config["conditions"])
+		expand("processed/acLDL/fastqtl_output/{annot_type}/sorted/{condition}.nominal.sorted.txt.gz", annot_type = config["annot_type"], condition = config["conditions"])
 	output:
 		"processed/acLDL/fastqtl_output/out.txt"
 	resources:
@@ -90,3 +90,14 @@ rule merge_nominal_batches:
 	shell:
 		"cat {input} | bgzip > {output}"
 
+#Add SNP coordinates to QTLTools output file
+rule sort_qtltools_output:
+	input:
+		"processed/acLDL/fastqtl_output/{annot_type}/{condition}.nominal.txt.gz"
+	output:
+		"processed/acLDL/fastqtl_output/{annot_type}/sorted/{condition}.nominal.sorted.txt.gz"
+	resources:
+		mem = 1000
+	threads: 2
+	shell:
+		"zcat {input} | awk -v OFS='\\t' '{{$1=$1; print $0}}' | sort -k9,9 -k10,10n -k11,11n | bgzip > {output}"
