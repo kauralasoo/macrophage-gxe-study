@@ -131,4 +131,8 @@ interaction_results = testMultipleInteractions(filtered_pairs, leafcutter_abunda
                                                vcf_file, formula_qtl, formula_interaction, id_field_separator = "-", lme4 = TRUE)
 leafcutter_df = postProcessInteractionPvalues(interaction_results, id_field_separator = "-")
 
+#Combine all interaction tests together
+interaction_list = list(Ensembl = ensembl_df, revisedAnnotations = revised_df, leafcutter = leafcutter_df)
+saveRDS(interaction_list, "results/acLDL/trQTLs/trQTL_interaction_results.rds")
+
 
