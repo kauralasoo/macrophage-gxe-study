@@ -63,6 +63,11 @@ diff_pvals = importQTLtoolsTable("processed/acLDL/fastqtl_output/ensembl_87/Diff
   dplyr::filter(p_fdr < 0.1) %>%
   dplyr::transmute(gene_id = group_id, transcript_id = phenotype_id, snp_id, strand)
 
+ctrl_pvals = importQTLtoolsTable("processed/acLDL/fastqtl_output/ensembl_87/Ctrl.permuted.txt.gz") %>%
+  dplyr::filter(p_fdr < 0.1) %>%
+  dplyr::transmute(gene_id = group_id, transcript_id = phenotype_id, snp_id, strand)
+
+
 
 #Make coverage plots for all genes
 plots_df = purrr::by_row(diff_pvals, 
@@ -102,7 +107,7 @@ ensembl_interactions = dplyr::rename(interaction_list$Ensembl, transcript_id = g
   dplyr::filter(p_fdr < 0.01)
 
 #Make coverage plots for all genes
-plots_df = purrr::by_row(ensembl_interactions[1:20,], 
+plots_df = purrr::by_row(ensembl_interactions, 
                          ~makeQTLCoveragePlot(., str1_df, str2_df, vcf_file$genotypes, gene_metadata, exons, cdss, 
                                               heights = c(2,1), coverage_type = "line", rescale_introns = TRUE),
                          .to = "plots")
