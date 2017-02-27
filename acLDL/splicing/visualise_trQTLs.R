@@ -1,5 +1,6 @@
 library("wiggleplotr")
 library("GenomicFeatures")
+library("SummarizedExperiment")
 
 #Functions
 makeQTLCoveragePlot <- function(qtl_df, str1_df, str2_df, genotypes, gene_metadata, exons, cdss, ...){
@@ -31,7 +32,7 @@ acldl_list = readRDS("results/acLDL/acLDL_combined_expression_data_covariates.rd
 
 #Import the VCF file
 vcf_file = readRDS("genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.rds")
-variant_information = importVariantInformation("../macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz")
+variant_information = importVariantInformation("genotypes/acLDL/imputed_20151005/imputed.70_samples.variant_information.txt.gz")
 
 #Import tranqscript expression data
 se_ensembl = readRDS("results/acLDL/acLDL_salmon_ensembl.rds")
@@ -117,4 +118,16 @@ names(plot_list) = plots_df$transcript_id
 savePlotList(plot_list, "results/acLDL/trQTLs/ensembl_plots/")
 
 
+#APOBR example
+data = constructQtlPlotDataFrame("ENST00000564831", "rs149271", assays(se_ensembl)$tpm_ratios, vcf_file$genotypes, 
+                                 tbl_df2(colData(se_ensembl)), 
+                                 tbl_df2(rowData(se_ensembl)) %>% dplyr::mutate(gene_id = transcript_id)) %>%
+  dplyr::left_join(constructGenotypeText("rs149271", variant_information), by = "genotype_value")
+plotQtlRow(data)
 
+gene_info = dplyr::filter(ctrl_pvals, transcript_id == "ENST00000564831")
+#Make coverage plots for all genes
+plots_df = purrr::by_row(gene_info, 
+                         ~makeQTLCoveragePlot(., str1_df, str2_df, vcf_file$genotypes, gene_metadata, exons, cdss, 
+                                              heights = c(2,1), coverage_type = "line", rescale_introns = FALSE),
+                         .to = "plots")
