@@ -181,3 +181,8 @@ snakemake --cluster ../../Blood_ATAC/scripts/snakemake_submit.py -np -s acLDL_fa
 
 snakemake --cluster ../../Blood_ATAC/scripts/snakemake_submit.py -np -s acLDL_alternative_transcription.snakefile processed/acLDL/leafcutter/junc/AUIM_24h_Ctrl.junc --jobs 100
 
+
+
+#Run coloc
+snakemake --cluster ../../Blood_ATAC/scripts/snakemake_submit.py -np -s acLDL_run_coloc.snakefile --jobs 500
+

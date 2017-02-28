@@ -20,3 +20,10 @@ cis_window: 100000
 nominal_cis_window: 500000
 annot_type: ["ensembl_87", "reviseAnnotations", "leafcutter"]
 
+#Colocalisation
+coloc_phenotypes: ["ensembl_87", "reviseAnnotations", "leafcutter"]
+gwas_dir: "/nfs/users/nfs_k/ka8/scratch/datasets/Inflammatory_GWAS/"
+coloc_window: 2e5
+gwas_traits: ["IBD"]
+
+
