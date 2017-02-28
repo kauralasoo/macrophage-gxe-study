@@ -24,6 +24,6 @@ annot_type: ["ensembl_87", "reviseAnnotations", "leafcutter"]
 coloc_phenotypes: ["ensembl_87", "reviseAnnotations", "leafcutter"]
 gwas_dir: "/nfs/users/nfs_k/ka8/scratch/datasets/Inflammatory_GWAS/"
 coloc_window: 2e5
-gwas_traits: ["IBD"]
+gwas_traits: ["LDL"]
 
 
