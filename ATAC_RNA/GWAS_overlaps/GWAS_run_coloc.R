@@ -5,7 +5,7 @@ library("coloc")
 library("readr")
 library("devtools")
 library("optparse")
-load_all("../seqUtils/")
+load_all("../../seqUtils/")
 
 #Parse command-line options
 option_list <- list(

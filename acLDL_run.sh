@@ -185,4 +185,5 @@ snakemake --cluster ../../Blood_ATAC/scripts/snakemake_submit.py -np -s acLDL_al
 
 #Run coloc
 snakemake --cluster ../../Blood_ATAC/scripts/snakemake_submit.py -np -s acLDL_run_coloc.snakefile --jobs 500
+snakemake --cluster ../../Blood_ATAC/scripts/snakemake_submit.py -np -s ATAC_RNA_run_coloc.snakefile --jobs 500
 
