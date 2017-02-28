@@ -33,11 +33,11 @@ gwas_dir = opt$d
 outdir = opt$o
 
 #Import variant information
-GRCh38_variants = importVariantInformation("genotypes/acLDL/imputed_20151005/imputed.70_samples.variant_information.txt.gz")
-GRCh37_variants = importVariantInformation("genotypes/acLDL/imputed_20151005/GRCh37/imputed.70_samples.variant_information.GRCh37.txt.gz")
+GRCh38_variants = importVariantInformation("../genotypes/acLDL/imputed_20151005/imputed.70_samples.variant_information.txt.gz")
+GRCh37_variants = importVariantInformation("../genotypes/acLDL/imputed_20151005/GRCh37/imputed.70_samples.variant_information.GRCh37.txt.gz")
 
 #Import list of GWAS studies
-gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt", col_names = c("trait","file_name"))
+gwas_stats_labeled = readr::read_tsv("data/gwas_catalog/GWAS_summary_stat_list.labeled.txt", col_names = c("trait","file_name"))
 
 #Specify list of phenotypes
 phenotype_list = list(
