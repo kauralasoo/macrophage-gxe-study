@@ -29,6 +29,22 @@ gwas_id = readLines(f)
 close(f)
 ####### END #######
 
+
+#Specify list of phenotypes
+phenotype_list = list(
+  SL1344 = list(
+    min_pvalues = readRDS("results/SL1344/eQTLs/fastqtl_min_pvalues.rds") %>%
+      purrr::map(~dplyr::transmute(., phenotype_id = gene_id, snp_id, p_fdr)),
+    qtl_summary_list = list(naive = "results/SL1344/fastqtl/output_start_end/naive_500kb_pvalues.sorted.txt.gz",
+                            IFNg = "results/SL1344/fastqtl/output_start_end/IFNg_500kb_pvalues.sorted.txt.gz",
+                            SL1344 = "results/SL1344/fastqtl/output_start_end/SL1344_500kb_pvalues.sorted.txt.gz",
+                            IFNg_SL1344 = "results/SL1344/fastqtl/output_start_end/IFNg_SL1344_500kb_pvalues.sorted.txt.gz"),
+    sample_sizes = list(naive = 84, IFNg = 84, SL1344 = 84, IFNg_SL1344 = 84)
+  ),
+  ATAC = 
+)
+
+
 #Import list of GWAS studies
 gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt", col_names = c("trait","file_name"))
 

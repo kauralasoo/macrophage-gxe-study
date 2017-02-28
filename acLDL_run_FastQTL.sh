@@ -31,8 +31,14 @@ rm results/acLDL/fastqtl/output/Ctrl_full.chunk_*.txt.gz
 rm results/acLDL/fastqtl/output/AcLDL_full.chunk_*.txt.gz 
 
 #Add SNP coordinates
-echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.vcf.gz --fastqtl results/acLDL/fastqtl/output/Ctrl_pvalues.txt.gz | bgzip > results/acLDL/fastqtl/output/Ctrl_pvalues.coords.txt.gz"
-echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname run_fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_08.vcf.gz --fastqtl results/acLDL/fastqtl/output/AcLDL_pvalues.txt.gz | bgzip > results/acLDL/fastqtl/output/AcLDL_pvalues.coords.txt.gz"
+echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_07.vcf.gz --fastqtl results/acLDL/fastqtl/output/Ctrl_pvalues.txt.gz | bgzip > results/acLDL/fastqtl/output/Ctrl_pvalues.coords.txt.gz"
+echo hello | python ~/software/utils/submitJobs.py --MEM 5000 --jobname run_fastQTL_add_coords --command "python ~/software/utils/fastqtl/fastqtlAddSnpCoordinates.py --vcf results/acLDL/fastqtl/input/fastqtl_genotypes.INFO_07.vcf.gz --fastqtl results/acLDL/fastqtl/output/AcLDL_pvalues.txt.gz | bgzip > results/acLDL/fastqtl/output/AcLDL_pvalues.coords.txt.gz"
+
+#Sort files by SNP coordinates
+#awk command is necessary to change field separator from space to tab
+zcat results/acLDL/fastqtl/output/Ctrl_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/acLDL/fastqtl/output/Ctrl_pvalues.sorted.txt.gz &
+zcat results/acLDL/fastqtl/output/AcLDL_pvalues.coords.txt.gz | awk -v OFS='\t' '{$1=$1; print $0}' | sort -k2,2 -k3,3n | bgzip > results/acLDL/fastqtl/output/AcLDL_pvalues.sorted.txt.gz &
+
 
 ###### Map splicing QTLs using LeafCutter ######
 
