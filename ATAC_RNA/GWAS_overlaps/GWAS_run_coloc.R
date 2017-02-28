@@ -23,7 +23,7 @@ option_list <- list(
 opt <- parse_args(OptionParser(option_list=option_list))
 
 #Debugging
-#opt = list(g = "IBD", w = "2e5", p = "SL1344", d = "databases/GWAS/summary", o = "results/acLDL/coloc/coloc_lists/")
+#opt = list(g = "IBD", w = "2e5", p = "ATAC", d = "../databases/GWAS/summary", o = "results/acLDL/coloc/coloc_lists/")
 
 #Extract parameters for CMD options
 gwas_id = opt$g
@@ -45,7 +45,8 @@ phenotype_list = list(
     QTLTools = FALSE
   ),
   ATAC = list(
-    min_pvalues = readRDS("../results/ATAC/QTLs/fastqtl_min_pvalues.rds"),
+    min_pvalues = readRDS("../results/ATAC/QTLs/fastqtl_min_pvalues.rds") %>%
+      purrr::map(~dplyr::transmute(., phenotype_id = gene_id, snp_id, p_fdr)),
     qtl_summary_list = list(naive = "../results/ATAC/fastqtl/output/naive_500kb_pvalues.sorted.txt.gz",
                           IFNg = "../results/ATAC/fastqtl/output/IFNg_500kb_pvalues.sorted.txt.gz",
                           SL1344 = "../results/ATAC/fastqtl/output/SL1344_500kb_pvalues.sorted.txt.gz",
