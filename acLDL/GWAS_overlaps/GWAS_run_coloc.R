@@ -5,7 +5,7 @@ library("coloc")
 library("readr")
 library("devtools")
 library("optparse")
-load_all("../seqUtils/")
+load_all("../../seqUtils/")
 
 #Parse command-line options
 option_list <- list(
@@ -83,7 +83,7 @@ qtl_pairs = purrr::map_df(qtl_df_list, identity) %>% unique()
 
 #Test for coloc
 coloc_res_list = purrr::map2(phenotype_values$qtl_summary_list, phenotype_values$sample_sizes, 
-                             ~colocMolecularQTLsByRow(qtl_pairs[1:5,], qtl_summary_path = .x, 
+                             ~colocMolecularQTLsByRow(qtl_pairs, qtl_summary_path = .x, 
                                                       gwas_summary_path = paste0(gwas_prefix, ".sorted.txt.gz"), 
                                                       GRCh37_variants = GRCh37_variants,
                                                       GRCh38_variants = GRCh38_variants, 
