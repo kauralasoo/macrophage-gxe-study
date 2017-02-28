@@ -91,7 +91,7 @@ coloc_res_list = purrr::map2(phenotype_values$qtl_summary_list, phenotype_values
 
 #Export results
 coloc_hits = purrr::map_df(coloc_res_list, identity, .id = "condition_name") %>% dplyr::arrange(gwas_lead)
-coloc_output = file.path(outdir, paste(gwas_id, phenotype, as.character(cis_window), "txt", sep = "."))
+coloc_output = file.path(outdir, paste(gwas_id, phenotype, opt$w, "txt", sep = "."))
 write.table(coloc_hits, coloc_output, sep = "\t", quote = FALSE, row.names = FALSE)
 
 #Debugging example
