@@ -6,75 +6,18 @@ load_all("../seqUtils/")
 load_all("~/software/rasqual/rasqualTools/")
 load_all("macrophage-gxe-study/housekeeping/")
 
-#Functions
-identifyColocHits <- function(coloc_df, PP_power_thresh = 0.8, PP_coloc_thresh = 0.9, nsnps_thresh = 10){
-  coloc_hits = dplyr::filter(coloc_df, PP_power > PP_power_thresh) %>% 
-    dplyr::group_by(trait, gwas_lead, gene_id) %>% 
-    dplyr::arrange(trait, gene_id, gwas_lead, -PP.H4.abf) %>% 
-    dplyr::filter(row_number() == 1) %>% 
-    dplyr::filter(PP_coloc > PP_coloc_thresh) %>%
-    dplyr::filter(nsnps > nsnps_thresh) %>%
-    dplyr::ungroup()
-  return(coloc_hits)
-}
-
-countConditionSpecificOverlaps <- function(coloc_filtered, PP_power_thresh = 0.8, PP_coloc_thresh = 0.9){
-  #Count the number of overlaps added by each additional condition
-  coloc_counts = dplyr::mutate(coloc_filtered, is_hit = ifelse(PP_power > PP_power_thresh & PP_coloc > PP_coloc_thresh, 1, 0)) %>% 
-    dplyr::select(summarised_trait, gene_id, snp_id, condition_name, is_hit) %>% 
-    tidyr::spread(condition_name, is_hit) %>%
-    dplyr::mutate(naive_IFNg = pmax(naive, IFNg)) %>%
-    dplyr::mutate(naive_IFNg_SL1344 = pmax(naive_IFNg, SL1344)) %>%
-    dplyr::mutate(all = pmax(naive_IFNg_SL1344, IFNg_SL1344)) %>%
-    dplyr::mutate(IFNg_added = naive_IFNg - naive) %>%
-    dplyr::mutate(SL1344_added = naive_IFNg_SL1344 - naive_IFNg) %>%
-    dplyr::mutate(IFNg_SL1344_added = all - naive_IFNg_SL1344) %>%
-    dplyr::select(summarised_trait, gene_id, snp_id, naive, IFNg_added, SL1344_added, IFNg_SL1344_added) %>%
-    dplyr::rename(IFNg = IFNg_added, SL1344 = SL1344_added, IFNg_SL1344 = IFNg_SL1344_added) %>%
-    tidyr::gather("condition_name", "is_hit", naive:IFNg_SL1344) %>% 
-    dplyr::filter(is_hit == 1) %>%
-    dplyr::left_join(figureNames(), by = "condition_name")
-}
-
-importAndFilterColocHits <- function(gwas_stats, coloc_suffix = ".eQTL.1e+05.coloc.txt", coloc_prefix = "results/SL1344/coloc/coloc_lists/",
-                                     PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 50, gwas_pval_thresh = 1e-6){
-  #Import coloc hits
-  
-  #Name all files
-  file_names = as.list(paste0(coloc_prefix, gwas_stats_labeled$trait, coloc_suffix))
-  names(file_names) = gwas_stats_labeled$trait
-  
-  #Import enrichments
-  coloc_df = purrr::map_df(file_names, ~readr::read_delim(., delim = "\t"), .id = "trait") %>%
-    dplyr::mutate(PP_power = (PP.H4.abf + PP.H3.abf), PP_coloc = PP.H4.abf/PP_power) %>%
-    dplyr::mutate(summarised_trait = ifelse(trait %in% c("IBD","UC","CD"), "IBD", trait))
-  
-  #Identify one overlap GWAS lead varaint
-  coloc_hits = identifyColocHits(coloc_df, PP_power_thresh, PP_coloc_thresh, nsnps_thresh) %>%
-    dplyr::filter(gwas_pval < 1e-6) %>%
-    dplyr::filter(!(gene_id %in% mhc_genes$gene_id))
-  
-  #Merge IBD overlaps together, keep only stronges association per gene
-  coloc_hits_merged = dplyr::group_by(coloc_hits, summarised_trait, gene_id) %>% 
-    dplyr::arrange(summarised_trait, gene_id, -PP.H4.abf) %>% 
-    dplyr::filter(row_number() == 1) %>%
-    dplyr::ungroup()
-  
-  #Retreive posterior probabilitites in all conditions
-  coloc_filtered = dplyr::semi_join(coloc_df, coloc_hits_merged, by = c("trait", "gene_id", "snp_id"))
-  return(list(coloc_filtered = coloc_filtered, coloc_df = coloc_df))
-}
-
 #Import expression data
 combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
-gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name)
+gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name) %>% dplyr::rename(phenotype_id = gene_id)
 
 #Import atac data
 atac_data = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
 
 #Identify genes in the MHC region that should be excluded
-mhc_genes = dplyr::filter(combined_expression_data$gene_metadata, chr == "6", start > 28510120, end < 33480577)
-mhc_peaks = dplyr::filter(atac_data$gene_metadata, chr == "6", start > 28510120, end < 33480577)
+mhc_genes = dplyr::filter(combined_expression_data$gene_metadata, chr == "6", start > 28510120, end < 33480577) %>%
+  dplyr::rename(phenotype_id = gene_id)
+mhc_peaks = dplyr::filter(atac_data$gene_metadata, chr == "6", start > 28510120, end < 33480577) %>%
+  dplyr::rename(phenotype_id = gene_id)
 
 #Import GWAS traits
 gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt",
@@ -86,35 +29,51 @@ unconvincing_coloc = read.table("macrophage-gxe-study/data/gwas_catalog/unconvin
 
 ##### eQTL overlaps ####
 #Import coloc output
-eqtl_200kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".eQTL.2e+05.coloc.txt", 
+eqtl_200kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".SL1344.2e5.txt", 
+                                           coloc_prefix = "processed/ATAC_RNA/coloc/",
                                            PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 50, 
-                                           gwas_pval_thresh = 1e-6)$coloc_filtered %>%
-  dplyr::left_join(gene_name_map, by = "gene_id") %>%
+                                           gwas_pval_thresh = 1e-6, mhc_phenotypes = mhc_genes)$coloc_filtered %>%
+  dplyr::left_join(gene_name_map, by = "phenotype_id") %>%
   dplyr::anti_join(unconvincing_coloc, by = c("gene_name", "trait")) %>%
   dplyr::select(-.row)
 saveRDS(eqtl_200kb_hits, "results/SL1344/coloc/eQTL_coloc_200kb_hits.rds")
 write.table(eqtl_200kb_hits, "figures/tables/eQTL_coloc_200kb_hits.txt", sep = "\t", 
             row.names = FALSE, col.names = TRUE, quote = FALSE)
 
-##### caQTL overlaps ####
-#Import coloc output
-caqtl_200kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".caQTL.2e+05.coloc.txt", 
-                                           PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 50, 
-                                           gwas_pval_thresh = 1e-6)$coloc_filtered %>%
-  dplyr::mutate(gene_name = gene_id) %>%
-  dplyr::anti_join(unconvincing_coloc, by = c("gene_name", "trait"))  %>%
-  dplyr::select(-.row)
-saveRDS(caqtl_200kb_hits, "results/SL1344/coloc/caQTL_coloc_200kb_hits.rds")
 
-#Condense multi-peak caQTLs to a single hit
-condensed_caqtl_hits = dplyr::group_by(caqtl_200kb_hits, summarised_trait, gene_id) %>% dplyr::arrange(summarised_trait, -PP.H4.abf) %>% 
+#Keep one gene per summarised trait
+condensed_eQTL_hits = dplyr::group_by(eqtl_200kb_hits, summarised_trait, phenotype_id) %>% 
+  dplyr::arrange(summarised_trait, -PP.H4.abf) %>% 
   dplyr::filter(row_number() == 1) %>% 
   dplyr::ungroup() %>%
   dplyr::arrange(summarised_trait, gwas_lead, -PP.H4.abf) %>% 
   dplyr::group_by(summarised_trait, gwas_lead) %>% 
   dplyr::filter(row_number() == 1) %>% 
   dplyr::ungroup()
-caqtl_200kb_filtered_hits = dplyr::semi_join(caqtl_200kb_hits, condensed_caqtl_hits, by = c("gene_id", "trait"))
+eqtl_200kb_filtered_hits = dplyr::semi_join(eqtl_200kb_hits, condensed_eQTL_hits, by = c("phenotype_id", "trait")) %>%
+  dplyr::filter(gene_name != "FADS2")
+
+
+##### caQTL overlaps ####
+#Import coloc output
+caqtl_200kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".ATAC.2e5.txt", 
+                                           coloc_prefix = "processed/ATAC_RNA/coloc/",
+                                           PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 50, 
+                                           gwas_pval_thresh = 1e-6, mhc_phenotypes = mhc_peaks)$coloc_filtered %>%
+  dplyr::mutate(gene_name = phenotype_id) %>%
+  dplyr::anti_join(unconvincing_coloc, by = c("gene_name", "trait"))  %>%
+  dplyr::select(-.row)
+
+#Condense multi-peak caQTLs to a single hit
+condensed_caqtl_hits = dplyr::group_by(caqtl_200kb_hits, summarised_trait, phenotype_id) %>% 
+  dplyr::arrange(summarised_trait, -PP.H4.abf) %>% 
+  dplyr::filter(row_number() == 1) %>% 
+  dplyr::ungroup() %>%
+  dplyr::arrange(summarised_trait, gwas_lead, -PP.H4.abf) %>% 
+  dplyr::group_by(summarised_trait, gwas_lead) %>% 
+  dplyr::filter(row_number() == 1) %>% 
+  dplyr::ungroup()
+caqtl_200kb_filtered_hits = dplyr::semi_join(caqtl_200kb_hits, condensed_caqtl_hits, by = c("phenotype_id", "trait"))
 saveRDS(caqtl_200kb_filtered_hits, "results/SL1344/coloc/caQTL_coloc_200kb_hits.rds")
 write.table(caqtl_200kb_filtered_hits, "figures/tables/caQTL_coloc_200kb_hits.txt", sep = "\t", 
             row.names = FALSE, col.names = TRUE, quote = FALSE)
@@ -122,7 +81,7 @@ write.table(caqtl_200kb_filtered_hits, "figures/tables/caQTL_coloc_200kb_hits.tx
 #### Count the number of coloc hits by condition and by trait ####
 
 #Partition into conditions
-eqtl_coloc_counts = countConditionSpecificOverlaps(eqtl_200kb_hits, PP_power_thresh = 0.8, PP_coloc_thresh = .9)
+eqtl_coloc_counts = countConditionSpecificOverlaps(eqtl_200kb_filtered_hits, PP_power_thresh = 0.8, PP_coloc_thresh = .9)
 eqtl_total_counts = group_by(eqtl_coloc_counts, figure_name) %>% 
   dplyr::summarise(overlap_count = sum(is_hit)) %>% 
   dplyr::mutate(total_overlap = cumsum(overlap_count)) %>%
@@ -132,7 +91,7 @@ eqtl_total_counts = group_by(eqtl_coloc_counts, figure_name) %>%
 caqtl_coloc_counts = countConditionSpecificOverlaps(caqtl_200kb_filtered_hits, PP_power_thresh = 0.8, PP_coloc_thresh = .9)
 caqtl_total_counts = dplyr::group_by(caqtl_coloc_counts, figure_name) %>% 
   dplyr::summarise(overlap_count = sum(is_hit)) 
-caqtl_totals = dplyr::bind_rows(caqtl_total_counts, data_frame(figure_name = c("S","I+S"), overlap_count = c(0,0))) %>%
+caqtl_totals = dplyr::bind_rows(caqtl_total_counts, data_frame(figure_name = c("I+S"), overlap_count = c(0))) %>%
   dplyr::mutate(total_overlap = cumsum(overlap_count)) %>%
   dplyr::mutate(phenotype = "ATAC-seq") %>%
   dplyr::mutate(figure_name = factor(figure_name, levels = c("N","I","S","I+S")))
@@ -150,7 +109,7 @@ coloc_counts_plot = ggplot(coloc_detection_counts, aes(x = figure_name, y = tota
   geom_line() +
   xlab("Conditions included") + 
   ylab("Cumulative number of overlaps") +
-  scale_y_continuous(limits = c(0,25)) +
+  scale_y_continuous(limits = c(0,42)) +
   theme_light() + 
   scale_color_manual(values = c("#e66101","#5e3c99"), name = "") +
   theme(legend.position = "top")
@@ -188,7 +147,7 @@ ggsave("figures/main_figures/coloc_trait_counts.pdf", plot = coloc_traits_plot, 
 shared_qtls = dplyr::semi_join(eqtl_200kb_hits, condensed_caqtl_hits, by = "gwas_lead")
 
 #Count chared eQTL and caQTL overlaps
-shared_counts = dplyr::select(shared_qtls, summarised_trait, gene_id) %>% 
+shared_counts = dplyr::select(shared_qtls, summarised_trait, phenotype_id) %>% 
   unique() %>% 
   dplyr::group_by(summarised_trait) %>% 
   dplyr::summarise(overlap_count = length(summarised_trait)) %>% 
