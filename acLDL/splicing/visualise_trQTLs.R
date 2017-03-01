@@ -68,6 +68,9 @@ ctrl_pvals = importQTLtoolsTable("processed/acLDL/fastqtl_output/ensembl_87/Ctrl
   dplyr::filter(p_fdr < 0.1) %>%
   dplyr::transmute(gene_id = group_id, transcript_id = phenotype_id, snp_id, strand)
 
+revised_ctrl_pvals = importQTLtoolsTable("processed/acLDL/fastqtl_output/reviseAnnotations/Ctrl.permuted.txt.gz") %>%
+  dplyr::filter(p_fdr < 0.1) %>%
+  dplyr::transmute(gene_id = group_id, transcript_id = phenotype_id, snp_id, strand, p_nominal)
 
 
 #Make coverage plots for all genes
@@ -131,3 +134,26 @@ plots_df = purrr::by_row(gene_info,
                          ~makeQTLCoveragePlot(., str1_df, str2_df, vcf_file$genotypes, gene_metadata, exons, cdss, 
                                               heights = c(2,1), coverage_type = "line", rescale_introns = FALSE),
                          .to = "plots")
+
+
+#PARP12
+data = constructQtlPlotDataFrame("ENST00000491598", "rs7805521", assays(se_ensembl)$tpm_ratios, vcf_file$genotypes, 
+                                 tbl_df2(colData(se_ensembl)), 
+                                 tbl_df2(rowData(se_ensembl)) %>% dplyr::mutate(gene_id = transcript_id)) %>%
+  dplyr::left_join(constructGenotypeText("rs149271", variant_information), by = "genotype_value")
+plotQtlRow(data)
+
+data = constructQtlPlotDataFrame("ENSG00000059378.clique_1.contained.ENST00000263549", "rs117102789", assays(se_reviseAnnotations)$tpm_ratios, vcf_file$genotypes, 
+                                 tbl_df2(colData(se_reviseAnnotations)), 
+                                 tbl_df2(rowData(se_reviseAnnotations)) %>% dplyr::mutate(gene_id = transcript_id)) %>%
+  dplyr::left_join(constructGenotypeText("rs149271", variant_information), by = "genotype_value")
+plotQtlRow(data)
+
+gene_info = dplyr::filter(ctrl_pvals, gene_id == "ENSG00000105383")
+#Make coverage plots for all genes
+plots_df = purrr::by_row(gene_info, 
+                         ~makeQTLCoveragePlot(., str1_df, str2_df, vcf_file$genotypes, gene_metadata, exons, cdss, 
+                                              heights = c(2,1), coverage_type = "line", rescale_introns = TRUE),
+                         .to = "plots")
+plots_df$plots
+
