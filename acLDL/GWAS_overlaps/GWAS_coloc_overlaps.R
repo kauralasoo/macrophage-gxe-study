@@ -2,6 +2,7 @@ library("dplyr")
 library("tidyr")
 library("purrr")
 library("devtools")
+library("ggplot2")
 library("SummarizedExperiment")
 load_all("../seqUtils/")
 load_all("~/software/rasqual/rasqualTools/")
@@ -27,7 +28,6 @@ leafcutter_name_map = dplyr::select(tbl_df2(rowData(se_leafcutter)), transcript_
   dplyr::left_join(dplyr::transmute(tbl_df2(rowData(se_ensembl)), ensembl_gene_id = gene_id, gene_name), by = "ensembl_gene_id") %>%
   dplyr::rename(phenotype_id = transcript_id) %>%
   unique()
-
 
 #Import GWAS traits
 gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt",
@@ -62,5 +62,81 @@ leafcutter_200kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffi
   #dplyr::anti_join(unconvincing_coloc, by = c("gene_name", "trait")) %>%
   dplyr::select(-.row)
 
+
+###### Make plots for all of the genes ######
+#Import variant information
+GRCh38_variants = importVariantInformation("genotypes/acLDL/imputed_20151005/imputed.70_samples.variant_information.txt.gz")
+GRCh37_variants = importVariantInformation("genotypes/acLDL/imputed_20151005/GRCh37/imputed.70_samples.variant_information.GRCh37.txt.gz")
+
+#Filter coloc hits
+ensembl_hits = dplyr::select(ensembl_200kb_hits, phenotype_id, snp_id, trait, gwas_lead, gene_name) %>% 
+  unique() %>%
+  dplyr::mutate(plot_title = paste(trait, gene_name, gwas_lead, sep = "_"))
+
+#Define location of summary files
+ensembl_summaries = list(Ctrl = "processed/acLDL/fastqtl_output/ensembl_87/sorted/Ctrl.nominal.sorted.txt.gz",
+     AcLDL = "processed/acLDL/fastqtl_output/ensembl_87/sorted/AcLDL.nominal.sorted.txt.gz")
+
+#Fetch data for all eqtl hits
+plot_data = purrr::by_row(ensembl_hits, 
+                          ~importSummariesForPlotting(., gwas_stats_labeled, 
+                                                      gwas_dir = "~/datasets/Inflammatory_GWAS/",
+                                                      qtl_paths = ensembl_summaries, 
+                                                      GRCh37_variants = GRCh37_variants, 
+                                                      GRCh38_variants = GRCh38_variants, 
+                                                      cis_dist = 2e5, QTLTools = TRUE), .to = "data")
+
+#Make plots
+plots = purrr::by_row(plot_data, ~plotColoc(.$data[[1]], .$plot_title), .to = "plot")
+plot_list = setNames(plots$plot, plots$plot_title)
+savePlotList(plot_list, "processed/acLDL/coloc_plots/ensembl_87/")
+
+
+#Filter reviseAnnotations coloc hits
+revised_hits = dplyr::select(revised_200kb_hits, phenotype_id, snp_id, trait, gwas_lead, gene_name) %>% 
+  unique() %>%
+  dplyr::mutate(plot_title = paste(trait, gene_name, gwas_lead, sep = "_"))
+
+#Define location of summary files
+revised_summaries = list(Ctrl = "processed/acLDL/fastqtl_output/reviseAnnotations/sorted/Ctrl.nominal.sorted.txt.gz",
+                         AcLDL = "processed/acLDL/fastqtl_output/reviseAnnotations/sorted/AcLDL.nominal.sorted.txt.gz")
+
+#Fetch data for all eqtl hits
+plot_data = purrr::by_row(revised_hits, 
+                          ~importSummariesForPlotting(., gwas_stats_labeled, 
+                                                      gwas_dir = "~/datasets/Inflammatory_GWAS/",
+                                                      qtl_paths = revised_summaries, 
+                                                      GRCh37_variants = GRCh37_variants, 
+                                                      GRCh38_variants = GRCh38_variants, 
+                                                      cis_dist = 2e5, QTLTools = TRUE), .to = "data")
+
+#Make plots
+plots = purrr::by_row(plot_data, ~plotColoc(.$data[[1]], .$plot_title), .to = "plot")
+plot_list = setNames(plots$plot, plots$plot_title)
+savePlotList(plot_list, "processed/acLDL/coloc_plots/reviseAnnotations/")
+
+#Filter leafcutter hits
+leafcutter_hits = dplyr::transmute(leafcutter_200kb_hits, phenotype_id, snp_id, trait, gwas_lead, gene_name = ensembl_gene_id) %>% 
+  unique() %>%
+  dplyr::mutate(plot_title = paste(trait, gene_name, gwas_lead, sep = "_"))
+
+#Define location of summary files
+leadcutter_summaries = list(Ctrl = "processed/acLDL/fastqtl_output/leafcutter/sorted/Ctrl.nominal.sorted.txt.gz",
+                         AcLDL = "processed/acLDL/fastqtl_output/leafcutter/sorted/AcLDL.nominal.sorted.txt.gz")
+
+#Fetch data for all eqtl hits
+plot_data = purrr::by_row(leafcutter_hits, 
+                          ~importSummariesForPlotting(., gwas_stats_labeled, 
+                                                      gwas_dir = "~/datasets/Inflammatory_GWAS/",
+                                                      qtl_paths = leadcutter_summaries, 
+                                                      GRCh37_variants = GRCh37_variants, 
+                                                      GRCh38_variants = GRCh38_variants, 
+                                                      cis_dist = 2e5, QTLTools = TRUE), .to = "data")
+
+#Make plots
+plots = purrr::by_row(plot_data, ~plotColoc(.$data[[1]], .$plot_title), .to = "plot")
+plots = dplyr::mutate(plots, plot_title = paste(trait, phenotype_id, gwas_lead, sep = "_"))
+plot_list = setNames(plots$plot, plots$plot_title)
+savePlotList(plot_list, "processed/acLDL/coloc_plots/leafcutter/")
 
 

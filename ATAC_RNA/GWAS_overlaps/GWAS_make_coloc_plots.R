@@ -8,16 +8,6 @@ load_all("../seqUtils/")
 load_all("~/software/rasqual/rasqualTools/")
 load_all("macrophage-gxe-study/housekeeping/")
 
-#Functions
-plotColoc <- function(df, plot_title){
-  plot = ggplot(df, aes(x = pos, y = log10p)) + 
-    geom_point() + 
-    facet_grid(condition_name~.) +
-    labs(title = plot_title) + 
-    theme_light()
-  return(plot)
-}
-
 #Import expression data
 combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
 gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name)
@@ -27,7 +17,8 @@ GRCh38_variants = importVariantInformation("genotypes/SL1344/imputed_20151005/im
 GRCh37_variants = importVariantInformation("genotypes/SL1344/imputed_20151005/GRCh37/imputed.86_samples.variant_information.GRCh37.vcf.gz")
 
 #Import list of GWAS studies
-gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt", col_names = c("trait","file_name"))
+gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt", 
+                                     col_names = c("trait","file_name"))
 
 #### Import list of colocalised eQTLs in 200kb window ####
 eqtl_coloc_hits_200kb = readRDS("results/SL1344/coloc/eQTL_coloc_200kb_hits.rds") %>%
