@@ -61,6 +61,24 @@ ggsave("figures/supplementary/caQTL_interaction_Q-Q_plot_tpm.pdf", plot = qq_plo
 #Quantify genomic inflation
 lambda = median(qchisq(1-interaction_df$p_nominal,1))/qchisq(0.5,1)
 
+
+#Use mixed model
+covariate_names = c("sex_binary", "cqn_PC1", "cqn_PC2", "cqn_PC3")
+formula_qtl = as.formula(paste("expression ~ genotype + condition_name + (1|donor) ", 
+                               paste(covariate_names, collapse = " + "), sep = "+ "))
+formula_interaction = as.formula(paste("expression ~ genotype + condition_name + condition_name:genotype + (1|donor) ", 
+                                       paste(covariate_names, collapse = " + "), sep = "+ "))
+
+#Run model
+interaction_results = testMultipleInteractions(filtered_pairs, trait_matrix = atac_list$cqn, 
+                                               sample_metadata = atac_list$sample_metadata, filtered_vcf, 
+                                               formula_qtl, formula_interaction, id_field_separator = "-", lme4 = TRUE)
+interaction_df = postProcessInteractionPvalues(interaction_results, id_field_separator = "-")
+saveRDS(interaction_df, "results/ATAC/QTLs/rasqual_interaction_results_lme4.rds")
+interaction_df = readRDS("results/ATAC/QTLs/rasqual_interaction_results_lme4.rds")
+interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
+
+
 #### Cluster effect sizes ####
 #Extract effect sizes for all gene-snp pairs from RASQUAL data
 beta_list = extractAndProcessBetas(dplyr::select(interaction_hits, gene_id, snp_id), rasqual_selected_results, "naive")
