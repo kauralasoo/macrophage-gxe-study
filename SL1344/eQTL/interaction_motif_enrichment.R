@@ -1,11 +1,11 @@
-library("devtools")
 library("plyr")
 library("dplyr")
-load_all("../seqUtils/")
-load_all("macrophage-gxe-study/housekeeping/")
 library("ggplot2")
-load_all("~/software/rasqual/rasqualTools/")
+library("devtools")
 library("GenomicRanges")
+load_all("../seqUtils/")
+load_all("~/software/rasqual/rasqualTools/")
+load_all("macrophage-gxe-study/housekeeping/")
 
 #Functions
 testEnrichment <- function(fg_peaks, bg_peaks, fimo_hits, peak_metadata, unique_motifs, tf_name_casual){
@@ -87,18 +87,24 @@ interesting_tfs = c("RELA","IRF1","FOS","SPI1")
 tf_name_casual = data_frame(new_name = c("NF-kB","IRF","AP-1","PU.1"), tf_name = interesting_tfs) %>%
   dplyr::mutate(new_name = factor(new_name, levels = rev(new_name)))
 
+#Identify naive caQTLs
+naive_caQTLs = dplyr::filter(atac_min_pvalues$naive, p_eigen < fdr_thresh)
+
 ifng_genes = unique(dplyr::filter(var_qtls$appear, new_cluster_id %in% c(5,6))$gene_id)
 #Extract peaks that are present already in the naive state
 ifng_peaks_present = dplyr::filter(pairs$IFNg, phenotype == "ATAC", condition_name == "naive", beta > 0.59)  %>% 
   dplyr::filter(gene_id %in% ifng_genes) %>%
   dplyr::select(peak_id) %>%
-  dplyr::rename(gene_id = peak_id)
+  dplyr::rename(gene_id = peak_id) %>%
+  dplyr::semi_join(naive_caQTLs, by = "gene_id")
 sl1344_peaks_present = dplyr::filter(pairs$SL1344, phenotype == "ATAC", condition_name == "naive", beta > 0.59)   %>% 
   dplyr::select(peak_id) %>%
-  dplyr::rename(gene_id = peak_id)
+  dplyr::rename(gene_id = peak_id)  %>%
+  dplyr::semi_join(naive_caQTLs, by = "gene_id")
 ifng_sl1344_peaks_present = dplyr::filter(pairs$IFNg_SL1344, phenotype == "ATAC", condition_name == "naive", beta > 0.59)   %>% 
   dplyr::select(peak_id) %>%
-  dplyr::rename(gene_id = peak_id)
+  dplyr::rename(gene_id = peak_id)  %>%
+  dplyr::semi_join(naive_caQTLs, by = "gene_id")
 
 #Calculate all of the enrichments
 sl1344_enrichments = testEnrichment(sl1344_peaks_present, bg_peaks, fimo_hits_clean, atac_list$gene_metadata, unique_motifs, tf_name_casual) %>%
@@ -119,7 +125,7 @@ enrichment_plot = ggplot(all_enrichment, aes(y = new_name, x = OR_log2, xmin = c
   xlab(expression(paste(Log[2], " fold enrichment", sep = ""))) +
   ylab("TF motif name") + 
   theme_light() +
-  scale_x_continuous(expand = c(0, 0), limits = c(-3,3)) +
+  scale_x_continuous(expand = c(0, 0), limits = c(-4,4)) +
   theme(legend.key = element_blank()) + 
   geom_vline(aes(xintercept = 0), size = 0.3)
 ggsave("figures/main_figures/caQTL_primed_motfis.pdf", plot = enrichment_plot, width = 5, height = 2.5)
