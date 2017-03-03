@@ -99,7 +99,7 @@ appear_clusters = clusterBetasKmeans(appear_betas, 6) %>% dplyr::select(gene_id,
   dplyr::left_join(beta_list$beta_df, by = c("gene_id", "snp_id"))
 
 #Reorder clusters
-cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(4,3,6,5,1,2))
+cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(1,6,5,4,3,2))
 
 #Make heatmap of effect sizes
 appear_betas = appear_clusters %>% 

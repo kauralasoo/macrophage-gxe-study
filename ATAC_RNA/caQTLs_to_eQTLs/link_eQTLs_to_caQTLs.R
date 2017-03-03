@@ -50,7 +50,7 @@ shared_qtls = dplyr::select(rna_atac_overlaps, gene_id, peak_id) %>% unique()
 rasqual_selected_pvalues = readRDS("results/SL1344/eQTLs/rasqual_selected_pvalues.rds")
 
 #Import interaction eQTLs
-interaction_df = readRDS("results/SL1344/eQTLs/SL1344_interaction_pvalues.rds")
+interaction_df = readRDS("results/SL1344/eQTLs/SL1344_interaction_pvalues_lme4.rds")
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 qtl_clusters = readRDS("results/SL1344/eQTLs/appeat_disappear_eQTLs.rds")
 
@@ -75,7 +75,7 @@ selected_snps = dplyr::filter(vcf_file$snpspos, snpid %in% rna_appear_qtls$snp_i
 atac_tabix_list = qtlResults()$atac_rasqual
 atac_snp_tables = lapply(atac_tabix_list, function(tabix, snps) rasqualTools::tabixFetchSNPs(snps, tabix), selected_snps)
 
-#Identify QTLs that appeat after specific stimuli
+#Identify QTLs that appear after specific stimuli
 ifng_appear_qtls = dplyr::filter(rna_appear_qtls, abs(IFNg) >= 0.32, abs(IFNg_diff) >= 0.32) %>%
   dplyr::group_by(gene_id) %>% dplyr::arrange(-max_abs_beta) %>%
   dplyr::filter(row_number() == 1) %>% 
@@ -86,7 +86,10 @@ sl1344_appear_qtls = dplyr::filter(rna_appear_qtls, abs(SL1344) >= 0.32, abs(SL1
   dplyr::ungroup()
 ifng_sl1344_appear_qtls = dplyr::filter(qtl_clusters$appear, new_cluster_id == 1) %>% 
   dplyr::select(gene_id, snp_id) %>% ungroup() %>% unique() %>% 
-  dplyr::left_join(rna_appear_qtls, by = c("gene_id","snp_id"))
+  dplyr::left_join(rna_appear_qtls, by = c("gene_id","snp_id")) %>%
+  dplyr::group_by(gene_id) %>% dplyr::arrange(-max_abs_beta) %>%
+  dplyr::filter(row_number() == 1) %>%
+  dplyr::ungroup()
 
 #IFNg - find corresponding ATAC peaks
 ifng_effects = prepareBetasDf(ifng_appear_qtls, rna_betas, atac_snp_tables, gene_name_map, 
@@ -180,12 +183,30 @@ ifng_sl1344_effects = prepareBetasDf(ifng_sl1344_appear_qtls, rna_betas, atac_sn
   dplyr::mutate(beta_std = (beta - mean(beta))/sd(beta), beta_scaled = beta/max(beta)) %>%
   dplyr::ungroup() %>%
   dplyr::mutate(beta_binary = ifelse(beta >= 0.59, 1, 0))  %>%
-  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344","IFNg_SL1344")))
-  
-effect_size_heatmap = ggplot(ifng_sl1344_effects, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + facet_wrap(~phenotype) + geom_tile() + 
+  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344","IFNg_SL1344"))) %>%
+  dplyr::filter(gene_name != "ACOT9")
+
+#Cluster INFg_SL1344 QTLs by their effect sizes
+atac_effect_matrix = dplyr::filter(ifng_sl1344_effects, phenotype == "ATAC") %>% 
+  dplyr::select(gene_name, condition_name, beta_scaled) %>% 
+  tidyr::spread(condition_name, beta_scaled) %>%
+  as.data.frame()
+rownames(atac_effect_matrix) = atac_effect_matrix$gene_name
+value_matrix = atac_effect_matrix[,-1] %>% as.matrix()
+name_order = rownames(value_matrix[heatmap$tree_row$order,])
+
+#Cluster ATAC peaks using hieraclical clustering
+my_breaks = seq(-1,1,0.02)[2:101]
+heatmap = pheatmap(value_matrix, cluster_cols = FALSE, breaks = my_breaks, clustering_distance_rows = "euclidean", clustering_method = "complete")
+name_order = rownames(value_matrix[heatmap$tree_row$order,])
+
+#Rename rows
+ifng_sl1344_renamed = dplyr::mutate(ifng_sl1344_effects, gene_name = factor(gene_name, levels = name_order))
+
+effect_size_heatmap = ggplot(ifng_sl1344_renamed, aes(x = condition_name, y = gene_name, fill = beta_scaled)) + facet_wrap(~phenotype) + geom_tile() + 
   scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Beta", midpoint = 0) 
 ggsave("figures/main_figures/eQTLs_vs_caQTL_IFNg_SL1344_heatmap.pdf", effect_size_heatmap, width = 8, height = 7)
 
 #Make a list of condition-specific caQTL-eQTL pairs
-pairs = list(IFNg = ifng_effects, SL1344 = sl1344_effects, IFNg_SL1344 = ifng_sl1344_effects)
+pairs = list(IFNg = ifng_effects, SL1344 = sl1344_effects, IFNg_SL1344 = ifng_sl1344_renamed)
 saveRDS(pairs, "results/ATAC_RNA_overlaps/condition_specific_pairs.rds")
