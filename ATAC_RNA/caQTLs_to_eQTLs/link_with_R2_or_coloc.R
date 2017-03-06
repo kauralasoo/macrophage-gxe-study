@@ -24,7 +24,6 @@ rasqual_qtl_df = purrr::map_df(rasqual_min_pvalues,
                                ~dplyr::filter(., p_eigen < fdr_thresh), .id = "condition_name") %>% 
   dplyr::arrange(p_nominal)
 joint_pairs = dplyr::select(rasqual_qtl_df, gene_id, snp_id) %>% unique() 
-filtered_pairs = filterHitsR2(joint_pairs, vcf_file$genotypes, .8)
 
 #Import ATAC QTL variants
 atac_min_pvalues = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
@@ -32,13 +31,19 @@ atac_qtl_df = purrr::map_df(atac_min_pvalues,
                             ~dplyr::filter(., p_eigen < fdr_thresh), .id = "condition_name") %>% 
   dplyr::arrange(p_nominal)
 atac_joint_pairs = dplyr::select(atac_qtl_df, gene_id, snp_id) %>% unique() 
-atac_filtered_pairs = filterHitsR2(atac_joint_pairs, vcf_file$genotypes, .8)
-
 
 #Find overlaps using the GWAS overlap code
-atac_trait_pairs = addVariantCoords(atac_filtered_pairs, vcf_file$snpspos) %>%
+rna_trait_pairs = addVariantCoords(joint_pairs, vcf_file$snpspos)
+atac_trait_pairs = addVariantCoords(atac_joint_pairs, vcf_file$snpspos) %>%
   dplyr::rename(peak_id = gene_id)
-rna_atac_overlaps = findGWASOverlaps(filtered_pairs, atac_trait_pairs, vcf_file, max_distance = 5e5, min_r2 = 0.8)
+
+#Find overlaps chr by chr
+chr_list = idVectorToList(unique(rna_trait_pairs$chr))
+overlap_list = purrr::map(chr_list, ~findGWASOverlaps(dplyr::filter(rna_trait_pairs, chr == .) %>% 
+                                                        dplyr::select(gene_id, snp_id), 
+                                                     dplyr::filter(atac_trait_pairs, chr == .), 
+                                                     vcf_file, max_distance = 5e5, min_r2 = 0.8))
+rna_atac_overlaps = purrr::map_df(overlap_list, identity)
 saveRDS(rna_atac_overlaps, "results/ATAC_RNA_overlaps/QTL_overlap_list_R2.rds")
 
 #Identify shared QTLs
@@ -208,8 +213,7 @@ scaled_diff = dplyr::filter(ifng_effects, phenotype == "RNA") %>%
 ifng_effects_sorted = dplyr::mutate(ifng_effects, gene_name = factor(as.character(peak_id), 
                                                                      levels = as.character(scaled_diff$peak_id))) %>%
   dplyr::mutate(phenotype = ifelse(phenotype == "ATAC", "ATAC-seq", "RNA-seq")) %>%
-  dplyr::left_join(figureNames(), by = "condition_name") %>%
-  dplyr::mutate(beta = ifelse(beta > 2, 2, beta))
+  dplyr::left_join(figureNames(), by = "condition_name")
 
 
 n_pairs = nrow(dplyr::select(ifng_effects_sorted, gene_name, snp_id) %>% unique())
