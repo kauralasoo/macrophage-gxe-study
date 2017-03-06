@@ -2,7 +2,7 @@ configfile: "ATAC_RNA/ATAC_RNA_config.yaml"
 
 rule run_all:
 	input:
-		expand("processed/ATAC_RNA/coloc/{gwas}.{phenotype}.{coloc_window}.txt", gwas = config["gwas_traits"], phenotype = config["coloc_phenotypes"], coloc_window = config["coloc_window"])
+		expand("processed/ATAC_RNA/coloc/{gwas}.{phenotype}.{coloc_window}.txt", gwas = config["gwas_traits"], phenotype = config["coloc_phenotypes"], coloc_window = config["coloc_window"]),
 		expand("processed/ATAC_RNA/eQTL_caQTL_coloc/eQTL_caQTL_coloc.{condition}.{chromosome}.txt", condition = config["conditions"], chromosome = config["chromosomes"])
 	output:
 		"processed/ATAC_RNA/coloc_out.txt"
