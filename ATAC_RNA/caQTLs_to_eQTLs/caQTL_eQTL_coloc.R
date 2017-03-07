@@ -16,6 +16,7 @@ option_list <- list(
               help="Path to the output directory.", metavar = "type")
 )
 opt <- parse_args(OptionParser(option_list=option_list))
+#opt = list(c = "10", s = "IFNg_SL1344", outdir = "../processed/ATAC_RNA/eQTL_caQTL_coloc/")
 
 #Extract options
 selected_chr = opt$c
@@ -54,12 +55,15 @@ phenotype_list = list(
 #Extract parameters
 rna_summaries = phenotype_list$SL1344$qtl_summary_list[[selected_condition]]
 atac_summaries = phenotype_list$ATAC$qtl_summary_list[[selected_condition]]
+#rna_summaries = qtlResults()$rna_fastqtl[[selected_condition]]
+#atac_summaries = qtlResults()$atac_fastqtl[[selected_condition]]
 n_eqtl = phenotype_list$SL1344$sample_sizes[[selected_condition]]
 n_caqtl = phenotype_list$ATAC$sample_sizes[[selected_condition]]
 
 #Run coloc over all possible pairs
 res = rna_atac_overlaps %>% 
   dplyr::filter(chr == selected_chr) %>%
+  #dplyr::filter(gene_id %in% c("ENSG00000120594","ENSG00000165997")) %>%
   dplyr::mutate(gene_id1 = gene_id, snp_id1 = snp_id) %>%
   group_by(gene_id1, snp_id1) %>%
   purrr::by_slice(function(slice){

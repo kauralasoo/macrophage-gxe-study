@@ -49,6 +49,10 @@ saveRDS(rna_atac_overlaps, "results/ATAC_RNA_overlaps/QTL_overlap_list_R2.rds")
 #Identify shared QTLs
 rna_atac_overlaps = readRDS("results/ATAC_RNA_overlaps/QTL_overlap_list_R2.rds")
 
+#Filter results with coloc
+coloc_overlaps = readRDS("results/ATAC_RNA_overlaps/QTL_overlap_list_coloc.rds")
+rna_atac_overlaps = dplyr::semi_join(rna_atac_overlaps, coloc_overlaps, by = c("gene_id", "peak_id"))
+
 #Find minimal p-values for each peaks across conditions
 atac_unique_pvalues = purrr::map_df(atac_min_pvalues, identity, .id = "condition_name") %>%
   dplyr::filter(gene_id %in% unique(rna_atac_overlaps$peak_id)) %>%
