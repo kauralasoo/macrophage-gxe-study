@@ -174,6 +174,13 @@ beta_processed = purrr::map2(betas_list, gene_cluster_conditions, ~dplyr::filter
                                dplyr::left_join(gene_name_map, by = "gene_id") %>%
                                sortByBeta("ATAC"))
 
+#Missing peaks in SL1344 data
+missing_peaks = dplyr::select(beta_processed$SL1344, peak_id) %>% 
+  group_by(peak_id) %>% 
+  dplyr::summarise(count = length(peak_id)) %>%
+  dplyr::arrange(count) %>% dplyr::filter(count < 4)
+beta_processed$SL1344 = dplyr::anti_join(beta_processed$SL1344, missing_peaks, by = "peak_id")
+
 #Make a heatmaps
 plotQTLBetas(beta_processed$IFNg)
 plotQTLBetas(beta_processed$SL1344)
@@ -186,6 +193,15 @@ ggplot(beta_processed$SL1344, aes(x = figure_name, y = beta_quantile, group = ge
   geom_point() + geom_line() + facet_wrap(~phenotype)
 ggplot(beta_processed$IFNg_SL1344, aes(x = figure_name, y = beta_quantile, group = gene_id)) + 
   geom_point() + geom_line() + facet_wrap(~phenotype)
+
+#Count caQTLs present in the naive condition
+present_fraction = purrr::map_df(beta_processed, ~dplyr::filter(., phenotype == "ATAC", condition_name == "naive") %>% 
+                                  dplyr::mutate(beta_binary = ifelse(abs(beta) > 0.59, "present", "absent")) %>% 
+                                  dplyr::group_by(beta_binary) %>% 
+                                  dplyr::summarise(count = length(beta_binary)) %>%
+                                  tidyr::spread(beta_binary, count), .id = "condition_name") %>%
+  dplyr::mutate(fraction = present/(absent+present)) %>%
+  dplyr::mutate(type = "forward")
 
 
 
@@ -252,3 +268,33 @@ ggplot(peak_beta_processed$SL1344, aes(x = figure_name, y = beta_quantile, group
   geom_point() + geom_line() + facet_wrap(~phenotype)
 ggplot(peak_beta_processed$IFNg_SL1344, aes(x = figure_name, y = beta_quantile, group = peak_id)) + 
   geom_point() + geom_line() + facet_wrap(~phenotype)
+
+#Count caQTLs present in the naive condition
+peak_present_fraction = purrr::map_df(peak_beta_processed[1:2], ~dplyr::filter(., phenotype == "RNA", condition_name == "naive") %>% 
+                                  dplyr::mutate(beta_binary = ifelse(abs(beta) > 0.59, "present", "absent")) %>% 
+                                  dplyr::group_by(beta_binary) %>% 
+                                  dplyr::summarise(count = length(beta_binary)) %>%
+                                  tidyr::spread(beta_binary, count), .id = "condition_name") %>%
+  dplyr::mutate(fraction = present/(absent+present)) %>%
+  dplyr::mutate(type = "reverse")
+
+#Save proportions to disk
+combined_results = dplyr::bind_rows(present_fraction, peak_present_fraction)
+combined_all = combined_results
+
+write.table(combined_all, "results/ATAC_RNA_overlaps/foreshadow_quant.txt", sep = "\t", quote = FALSE)
+write.table(combined_results, "results/ATAC_RNA_overlaps/foreshadow_quant.coloc.txt", sep = "\t", quote = FALSE)
+
+fisher.test(matrix(c(14, 2, 2, 8), ncol = 2))
+
+#Make a plot of proportions
+plot_data = dplyr::left_join(combined_all, figureNames()) %>% 
+  dplyr::mutate(comparison = ifelse(type == "forward", "caQTL -> eQTL", "eQTL -> caQTL"))
+
+
+foreshadow_plot = ggplot(plot_data, aes(x = figure_name, y = fraction, fill = comparison)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  xlab("Condition") +
+  ylab("Fraction of foreshadowing QTLs") + 
+  theme_light()
+ggsave("figures/supplementary/foreshadowing_proportions.pdf", plot = foreshadow_plot, width = 5, height = 4)
