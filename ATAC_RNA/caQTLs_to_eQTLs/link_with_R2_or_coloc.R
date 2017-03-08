@@ -7,6 +7,63 @@ load_all("../seqUtils/")
 load_all("macrophage-gxe-study/housekeeping/")
 load_all("~/software/rasqual/rasqualTools/")
 
+#Helper functions
+fetchRasqualSNPs <- function(snp_ids, snpspos, summary_list){
+  #Construct GRanges object of SNP positions
+  selected_snps = dplyr::filter(snpspos, snpid %in% snp_ids) %>%
+    dplyr::transmute(snp_id = snpid, seqnames = chr, start = pos, end = pos, strand = "*") %>%
+    dataFrameToGRanges()
+
+  selected_pvalues = lapply(summary_list, function(tabix, snps) rasqualTools::tabixFetchSNPs(snps, tabix), selected_snps)
+  return(selected_pvalues)
+}
+
+#Exptract cluster-specific gene-peak pairs from all pairs
+extractGenePeakPairs <- function(all_pairs, cluter_genes){
+  selected_pairs = dplyr::semi_join(all_pairs, cluter_genes, by = c("gene_id", "snp_id")) %>%
+    dplyr::group_by(gene_id) %>%
+    dplyr::arrange(gene_id, -R2, p_nominal) %>%
+    dplyr::filter(row_number() == 1) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(gene_id, snp_id, peak_id) %>% 
+    unique()
+  return(selected_pairs)
+}
+
+quantileNormaliseBeta <- function(beta){
+  m = mean(beta)
+  new_beta = quantileNormaliseVector(beta - m) + m
+}
+
+sortByBeta <- function(beta_df, phenotype_name){
+  sorted_names = dplyr::filter(beta_df, phenotype == phenotype_name) %>% 
+    dplyr::group_by(gene_id) %>%
+    dplyr::mutate(beta_mean = mean(beta)) %>%
+    dplyr::ungroup() %>%
+    dplyr::filter(condition_name == "naive") %>%
+    dplyr::arrange(beta_mean)
+  sorted_df = dplyr::mutate(beta_df, gene_name = factor(as.character(gene_name), 
+                                                        levels = as.character(sorted_names$gene_name)))
+  return(sorted_df)
+}
+
+plotQTLBetas <- function(beta_df){
+  n_pairs = nrow(dplyr::select(beta_df, gene_name, snp_id) %>% unique())
+  ylabel = paste(n_pairs, "eQTL-caQTL pairs")
+  effect_size_heatmap = ggplot(beta_df, aes(x = figure_name, y = gene_name, fill = beta_quantile)) + 
+    facet_wrap(~phenotype) + 
+    geom_tile() + 
+    ylab(ylabel) + 
+    xlab("Condition") + 
+    scale_x_discrete(expand = c(0, 0)) +
+    scale_y_discrete(expand = c(0, 0)) +
+    scale_fill_gradient2(space = "Lab", low = "#4575B4", 
+                         mid = "#FFFFBF", high = "#E24C36", name = "Normalised effect", midpoint = 0) +
+    theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.x = element_blank())
+  return(effect_size_heatmap)
+}
+
+
 #### Import data ####
 #Load the raw eQTL dataset
 combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
@@ -46,6 +103,10 @@ overlap_list = purrr::map(chr_list, ~findGWASOverlaps(dplyr::filter(rna_trait_pa
 rna_atac_overlaps = purrr::map_df(overlap_list, identity)
 saveRDS(rna_atac_overlaps, "results/ATAC_RNA_overlaps/QTL_overlap_list_R2.rds")
 
+
+
+
+
 #Identify shared QTLs
 rna_atac_overlaps = readRDS("results/ATAC_RNA_overlaps/QTL_overlap_list_R2.rds")
 
@@ -73,73 +134,44 @@ unique_pairs_r2 = dplyr::left_join(rna_atac_overlaps, atac_unique_pvalues, by = 
 #Fetch summary stats for all QTL pairs
 #Import selected p-values from disk
 rna_selected_pvalues = readRDS("results/SL1344/eQTLs/rasqual_selected_pvalues.rds")
-
-#Construct GRanges object of SNP positions
-selected_snps = dplyr::filter(vcf_file$snpspos, snpid %in% unique_pairs_r2$snp_id) %>%
-  dplyr::transmute(snp_id = snpid, seqnames = chr, start = pos, end = pos, strand = "*") %>%
-  dataFrameToGRanges()
-
-#Fetch corresponding SNPs from ATAC data
-atac_tabix_list = qtlResults()$atac_rasqual
-atac_selected_pvalues = lapply(atac_tabix_list, function(tabix, snps) rasqualTools::tabixFetchSNPs(snps, tabix), selected_snps)
-
+atac_selected_pvalues = fetchRasqualSNPs(unique_pairs_r2$snp_id, vcf_file$snpspos, qtlResults()$atac_rasqual)
 
 #Import eQTL clusters
 variable_qtls = readRDS("results/SL1344/eQTLs/appeat_disappear_eQTLs.rds")
 gene_clusters = dplyr::select(variable_qtls$appear, gene_id, snp_id, new_cluster_id) %>% ungroup() %>% unique()
 
-#Extract IFNg pairs
-ifng_genes = dplyr::filter(gene_clusters, new_cluster_id %in% c(5,6))
-ifng_pairs = dplyr::semi_join(unique_pairs_r2, ifng_genes, by = c("gene_id", "snp_id")) %>%
-  dplyr::group_by(gene_id) %>%
-  dplyr::arrange(gene_id, -R2, p_nominal) %>%
-  dplyr::filter(row_number() == 1) %>%
-  dplyr::ungroup()
-ifng_pairs_selected = dplyr::select(ifng_pairs, gene_id, snp_id, peak_id) %>% unique()
+#Extract individual gene clusters
+gene_cluster_list = list(IFNg = dplyr::filter(gene_clusters, new_cluster_id %in% c(5,6)),
+                         SL1344 = dplyr::filter(gene_clusters, new_cluster_id %in% c(2,3,4)),
+                         IFNg_SL1344 = dplyr::filter(gene_clusters, new_cluster_id %in% c(1)))
+gene_cluster_conditions = list(IFNg = c("naive","IFNg"), SL1344 = c("naive","SL1344"),
+                               IFNg_SL1344 = c("naive","IFNg", "SL1344", "IFNg_SL1344"))
 
-#Extract joint betas
-joint_betas = extractBetasForQTLPairs(ifng_pairs_selected, rna_selected_pvalues, atac_selected_pvalues) %>%
-  betaCorrectSignPairs()
+#Extract cluster pairs
+pairs_list = purrr::map(gene_cluster_list, ~extractGenePeakPairs(unique_pairs_r2, .))
 
-#Make a plot for IFNg pairs
-ifng_effects = joint_betas %>%
-  dplyr::filter(condition_name %in% c("naive","IFNg")) %>%
-  dplyr::group_by(snp_id, peak_id, gene_id) %>% 
-  dplyr::mutate(beta_std = (beta - mean(beta))/sd(beta), beta_scaled = beta/max(beta)) %>%
-  dplyr::ungroup() %>%
-  dplyr::mutate(beta_binary = ifelse(beta >= 0.59, 1, 0)) %>%
-  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg"))) %>%
-  dplyr::left_join(gene_name_map, by = "gene_id")
+#Extract betas for all pairs
+betas_list = purrr::map(pairs_list, ~extractBetasForQTLPairs(., rna_selected_pvalues, atac_selected_pvalues) %>%
+                          betaCorrectSignPairs())
 
-#Caclulate scaled diff
-scaled_diff = dplyr::filter(ifng_effects, phenotype == "ATAC") %>% 
-  dplyr::group_by(gene_id) %>% 
-  dplyr::arrange(condition_name) %>% 
-  dplyr::mutate(scaled_diff = beta_scaled[2] - beta_scaled[1]) %>% 
-  dplyr::mutate(mean_beta = mean(beta)) %>% 
-  dplyr::filter(condition_name == "naive") %>% 
-  dplyr::ungroup() %>% 
-  dplyr::arrange(beta_scaled)
-ifng_effects_sorted = dplyr::mutate(ifng_effects, gene_name = factor(as.character(gene_name), 
-                                                                     levels = as.character(scaled_diff$gene_name))) %>%
-  dplyr::mutate(phenotype = ifelse(phenotype == "ATAC", "ATAC-seq", "RNA-seq")) %>%
-  dplyr::left_join(figureNames(), by = "condition_name")
+#Filter and process the betas for plotting
+beta_processed = purrr::map2(betas_list, gene_cluster_conditions, ~dplyr::filter(.x, condition_name %in% .y) %>%
+                               dplyr::left_join(figureNames(), by = "condition_name") %>%
+                               dplyr::mutate(beta_quantile = quantileNormaliseBeta(beta)) %>%
+                               dplyr::left_join(gene_name_map, by = "gene_id") %>%
+                               sortByBeta("ATAC"))
 
-#Make a heatmap
-n_pairs = nrow(dplyr::select(ifng_effects_sorted, gene_name, snp_id) %>% unique())
-ylabel = paste(n_pairs, "eQTL-caQTL pairs")
-ifng_effect_size_heatmap = ggplot(ifng_effects_sorted, aes(x = figure_name, y = gene_name, fill = beta)) + 
-  facet_wrap(~phenotype) + 
-  geom_tile() + 
-  ylab(ylabel) + 
-  xlab("Condition") + 
-  scale_x_discrete(expand = c(0, 0)) +
-  scale_y_discrete(expand = c(0, 0)) +
-  scale_fill_gradient2(space = "Lab", low = "#4575B4", 
-                       mid = "#FFFFBF", high = "#E24C36", name = "Relative effect", midpoint = 0) +
-  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.x = element_blank())
+#Make a heatmaps
+plotQTLBetas(beta_processed$IFNg)
+plotQTLBetas(beta_processed$SL1344)
+plotQTLBetas(beta_processed$IFNg_SL1344)
 
-ggplot(ifng_effects_sorted, aes(x = figure_name, y = beta, group = gene_id)) + 
+#Make a line plot
+ggplot(beta_processed$IFNg, aes(x = figure_name, y = beta, group = gene_id)) + 
+  geom_point() + geom_line() + facet_wrap(~phenotype)
+ggplot(beta_processed$SL1344, aes(x = figure_name, y = beta, group = gene_id)) + 
+  geom_point() + geom_line() + facet_wrap(~phenotype)
+ggplot(beta_processed$IFNg_SL1344, aes(x = figure_name, y = beta, group = gene_id)) + 
   geom_point() + geom_line() + facet_wrap(~phenotype)
 
 
