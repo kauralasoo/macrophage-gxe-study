@@ -3,6 +3,7 @@ library("plyr")
 library("dplyr")
 library("purrr")
 library("ggplot2")
+library("pheatmap")
 load_all("../seqUtils/")
 load_all("macrophage-gxe-study/housekeeping/")
 load_all("~/software/rasqual/rasqualTools/")
@@ -72,7 +73,8 @@ plotQTLBetas <- function(beta_df){
     scale_y_discrete(expand = c(0, 0)) +
     scale_fill_gradient2(space = "Lab", low = "#4575B4", 
                          mid = "#FFFFBF", high = "#E24C36", name = "Normalised effect", midpoint = 0) +
-    theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.x = element_blank())
+    theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.x = element_blank()) +
+    theme(legend.title = element_text(angle = 90))
   return(effect_size_heatmap)
 }
 
@@ -172,7 +174,8 @@ beta_processed = purrr::map2(betas_list, gene_cluster_conditions, ~dplyr::filter
                                dplyr::left_join(figureNames(), by = "condition_name") %>%
                                dplyr::mutate(beta_quantile = quantileNormaliseBeta(beta)) %>%
                                dplyr::left_join(gene_name_map, by = "gene_id") %>%
-                               sortByBeta("ATAC"))
+                               sortByBeta("ATAC") %>%
+                               dplyr::mutate(phenotype = ifelse(phenotype == "ATAC", "ATAC-seq", "RNA-seq")))
 
 #Missing peaks in SL1344 data
 missing_peaks = dplyr::select(beta_processed$SL1344, peak_id) %>% 
@@ -182,9 +185,9 @@ missing_peaks = dplyr::select(beta_processed$SL1344, peak_id) %>%
 beta_processed$SL1344 = dplyr::anti_join(beta_processed$SL1344, missing_peaks, by = "peak_id")
 
 #Make a heatmaps
-plotQTLBetas(beta_processed$IFNg)
-plotQTLBetas(beta_processed$SL1344)
-plotQTLBetas(beta_processed$IFNg_SL1344)
+ggsave("figures/main_figures/eQTLs_vs_caQTL_IFNg_heatmap.pdf", plot = plotQTLBetas(beta_processed$IFNg), width = 3, height = 3.5)
+ggsave("figures/main_figures/eQTLs_vs_caQTL_SL1344_heatmap.pdf", plotQTLBetas(beta_processed$SL1344), width = 3, height = 3.5)
+ggsave("figures/main_figures/eQTLs_vs_caQTL_IFNg_SL1344_heatmap.pdf", plotQTLBetas(beta_processed$IFNg_SL1344), width = 4, height = 3.5)
 
 #Make a line plot
 ggplot(beta_processed$IFNg, aes(x = figure_name, y = beta_quantile, group = gene_id)) + 
@@ -289,12 +292,12 @@ fisher.test(matrix(c(14, 2, 2, 8), ncol = 2))
 
 #Make a plot of proportions
 plot_data = dplyr::left_join(combined_all, figureNames()) %>% 
-  dplyr::mutate(comparison = ifelse(type == "forward", "caQTL -> eQTL", "eQTL -> caQTL"))
+  dplyr::mutate(comparison = ifelse(type == "forward", "caQTL before eQTL", "eQTL before caQTL"))
 
 
 foreshadow_plot = ggplot(plot_data, aes(x = figure_name, y = fraction, fill = comparison)) + 
   geom_bar(stat = "identity", position = "dodge") + 
   xlab("Condition") +
-  ylab("Fraction of foreshadowing QTLs") + 
+  ylab("Fraction of condition-specific QTL pairs") + 
   theme_light()
 ggsave("figures/supplementary/foreshadowing_proportions.pdf", plot = foreshadow_plot, width = 5, height = 4)
