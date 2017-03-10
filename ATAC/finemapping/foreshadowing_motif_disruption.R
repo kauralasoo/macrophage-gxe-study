@@ -50,5 +50,25 @@ names(sequences) = peak_ids
 persistent_disruptions = quantifyMultipleVariants(persistent_snps, cisbp_pwm_enriched, atac_list$gene_metadata, sequences, snp_info)
 appear_disruptions = quantifyMultipleVariants(appear_snps, cisbp_pwm_enriched, atac_list$gene_metadata, sequences, snp_info)
 
+#Filter motif hits
+persitent_hits = dplyr::left_join(persistent_disruptions, motif_names, by = "motif_id") %>% dplyr::filter(max_rel_score > 0.85, abs(rel_diff) > 0.03) %>% 
+  dplyr::filter(snp_count <= 10) %>%
+  dplyr::mutate(tf_group = ifelse(tf_name %in% c("FOS", "SPI1", "CEBPA", "CEBPB"), "Pioneer", ifelse(tf_name %in% c("IRF1","NFKB1","RELA"),"Stimulation", "Other")))
 
+appear_hits = dplyr::left_join(appear_disruptions, motif_names, by = "motif_id") %>% dplyr::filter(max_rel_score > 0.85, abs(rel_diff) > 0.03) %>% 
+  dplyr::filter(snp_count <= 10) %>%
+  dplyr::mutate(tf_group = ifelse(tf_name %in% c("FOS", "SPI1", "CEBPA", "CEBPB"), "Pioneer", ifelse(tf_name %in% c("IRF1","NFKB1","RELA"),"Stimulation", "Other")))
+
+
+#Count disruptions and 
+persistent_f = dplyr::group_by(persitent_hits, tf_group, gene_id) %>% dplyr::arrange(gene_id, tf_group, -rel_diff) %>% dplyr::filter(row_number() == 1) %>% ungroup()
+appear_f = dplyr::group_by(appear_hits, tf_group, gene_id) %>% dplyr::arrange(gene_id, tf_group, -rel_diff) %>% dplyr::filter(row_number() == 1) %>% ungroup()
+
+table(persistent_f$tf_group)
+length(unique(persistent_peaks$peak_id))
+
+table(appear_f$tf_group)
+length(unique(appear_peaks$peak_id))
+
+fisher.test(matrix(c(33, 117-33, 13, 103-13), ncol = 2))
 
