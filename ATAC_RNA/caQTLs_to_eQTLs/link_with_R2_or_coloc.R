@@ -206,6 +206,8 @@ present_fraction = purrr::map_df(beta_processed, ~dplyr::filter(., phenotype == 
   dplyr::mutate(fraction = present/(absent+present)) %>%
   dplyr::mutate(type = "forward")
 
+saveRDS(beta_processed, "results/ATAC_RNA_overlaps/caQTL_eQTL_pairs_betas.rds")
+
 
 
 
