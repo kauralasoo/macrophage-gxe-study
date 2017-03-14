@@ -102,8 +102,18 @@ NXPH2_data = constructQtlPlotDataFrame("ENSG00000144227", "rs7594476", combined_
   dplyr::left_join(figureNames()) %>%
   dplyr::mutate(condition_name = figure_name) %>%
   dplyr::left_join(constructGenotypeText("rs7594476", variant_information), by = "genotype_value")
-NXPH2_plot = plotQtlCol(NXPH2_data)
-ggsave("figures/main_figures/NXPH2_expression_boxplot.pdf", plot = NXPH2_plot, width = 2, height = 2.7)
+NXPH2_plot = plotQTLCompact(NXPH2_data)
+ggsave("figures/main_figures/NXPH2_expression_boxplot.pdf", plot = NXPH2_plot, width = 2, height = 2.5)
+
+peak_data = constructQtlPlotDataFrame("ATAC_peak_145162", "rs7594476", atac_list$cqn, vcf_file$genotypes, 
+                                      atac_list$sample_metadata, atac_list$gene_metadata) %>%
+  dplyr::filter(condition_name %in% c("naive","IFNg")) %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::mutate(condition_name = figure_name) %>%
+  dplyr::left_join(constructGenotypeText("rs7594476", variant_information), by = "genotype_value")
+peak_plot = plotQTLCompact(peak_data) + ylab("Chromatin accessibility")
+ggsave("figures/main_figures/NXPH2_atac_boxplot.pdf", plot = peak_plot, width = 2, height = 2.5)
+
 
 #SPOPL gene
 SPOPL_data = constructQtlPlotDataFrame("ENSG00000144228", "rs7594476", combined_expression_data$cqn, vcf_file$genotypes, 

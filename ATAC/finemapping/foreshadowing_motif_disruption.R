@@ -6,8 +6,7 @@ credible_sets_df = importCredibleSets("results/ATAC/QTLs/rasqual_credible_sets.r
 
 #Import caQTL and eQTL pairs
 caQTL_eQTL_pairs = readRDS("results/ATAC_RNA_overlaps/caQTL_eQTL_pairs_betas.rds")
-filtered_pairs = purrr::map_df(caQTL_eQTL_pairs, identity, .id = "condition") %>% 
-  dplyr::filter(condition_name == "naive", phenotype == "ATAC-seq")
+filtered_pairs = dplyr::filter(caQTL_eQTL_pairs, condition_name == "naive", phenotype == "ATAC-seq")
 
 #Identify two groups of peaks
 appear_peaks = dplyr::filter(filtered_pairs, abs(beta) < 0.59) %>% dplyr::select(peak_id) %>% unique()
@@ -70,5 +69,5 @@ length(unique(persistent_peaks$peak_id))
 table(appear_f$tf_group)
 length(unique(appear_peaks$peak_id))
 
-fisher.test(matrix(c(33, 117-33, 13, 103-13), ncol = 2))
+fisher.test(matrix(c(26, 89-26, 10, 71-10), ncol = 2))
 

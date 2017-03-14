@@ -213,12 +213,19 @@ all_betas = purrr::map_df(beta_processed, ~dplyr::arrange(., gene_name) %>%
   dplyr::mutate(qtl_id = factor(qtl_id, levels = unique(qtl_id))) %>%
   dplyr::mutate(max_effect = ifelse(max_effect == "IFNg", "I", ifelse(max_effect == "SL1344", "S", "I+S"))) %>%
   dplyr::mutate(max_effect = factor(max_effect, levels = c("I","S","I+S")))
-all_betas_plot = plotQTLBetasAll(all_betas)
-ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap.pdf", all_betas_plot, width = 3, height = 7)
+
+all_betas_plot1 = plotQTLBetasAll(dplyr::filter(all_betas, max_effect %in% c("I","S")))
+all_betas_plot2 = plotQTLBetasAll(dplyr::filter(all_betas, max_effect %in% c("I+S")))
+
+ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_1.pdf", all_betas_plot1, width = 3, height = 3)
+ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_2.pdf", all_betas_plot2, width = 3, height = 4)
 
 if(coloc_run == TRUE){
   ggsave("figures/supplementary/eQTLs_vs_caQTL_heatmap.coloc.pdf", all_betas_plot, width = 3, height = 5)
 }
+
+
+ggsave("figures/test.pdf", plot = all_betas_plot + theme(axis.text.y = element_text()), width = 5, height = 12)
 
 
 #Count caQTLs present in the naive condition
@@ -324,11 +331,11 @@ if(coloc_run == TRUE){
 fisher.test(matrix(c(14, 2, 2, 8), ncol = 2))
 
 #Make a plot of proportions
-plot_data = dplyr::mutate(combined_all, comparison = ifelse(type == "forward", "caQTL before eQTL", "eQTL before caQTL"))
+plot_data = dplyr::mutate(combined_all, comparison = ifelse(type == "forward", "caQTL -> eQTL", "eQTL -> caQTL"))
 
 foreshadow_plot = ggplot(plot_data, aes(x = max_effect, y = fraction, fill = comparison)) + 
   geom_bar(stat = "identity", position = "dodge") + 
   xlab("Condition") +
-  ylab("Fraction of condition-specific QTL pairs") + 
+  ylab("Fraction of QTL pairs") + 
   theme_light()
-ggsave("figures/supplementary/foreshadowing_proportions.pdf", plot = foreshadow_plot, width = 5, height = 4)
+ggsave("figures/supplementary/foreshadowing_proportions.pdf", plot = foreshadow_plot, width = 3.5, height = 2.5)

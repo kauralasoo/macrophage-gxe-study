@@ -6,6 +6,12 @@ load_all("../seqUtils/")
 load_all("macrophage-gxe-study/housekeeping/")
 load_all("~/software/rasqual/rasqualTools/")
 
+#Functions
+quantileNormaliseBeta <- function(beta){
+  m = mean(beta)
+  new_beta = quantileNormaliseVector(beta - m) + m
+}
+
 #### Import data ####
 #Load the raw eQTL dataset
 combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
@@ -93,13 +99,14 @@ beta_list$beta_summaries = dplyr::mutate(beta_list$beta_summaries, max_naive_rat
 
 #Find QTLs that appear
 set.seed(42)
-appear_qtls = dplyr::filter(beta_list$beta_summaries, abs(naive) <= 0.59, max_abs_beta - abs(naive) >= 0.32)
+#appear_qtls = dplyr::filter(beta_list$beta_summaries, abs(naive) <= 0.59, max_abs_beta - abs(naive) >= 0.32)
+appear_qtls = dplyr::filter(beta_list$beta_summaries, abs(naive) <= 0.64, max_abs_diff >= 0.59, max_abs_beta >= 0.59)
 appear_betas = dplyr::semi_join(beta_list$beta_summaries[,1:6], appear_qtls, by = c("gene_id", "snp_id"))
 appear_clusters = clusterBetasKmeans(appear_betas, 6) %>% dplyr::select(gene_id, snp_id, cluster_id) %>%
   dplyr::left_join(beta_list$beta_df, by = c("gene_id", "snp_id"))
 
 #Reorder clusters
-cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(1,6,5,4,3,2))
+cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(4,2,2,1,3,6))
 
 #Make heatmap of effect sizes
 appear_betas = appear_clusters %>% 
@@ -107,7 +114,12 @@ appear_betas = appear_clusters %>%
   dplyr::mutate(beta_scaled = beta/max(beta)) %>%
   dplyr::left_join(gene_name_map, by = "gene_id") %>%
   dplyr::left_join(cluster_reorder, by = "cluster_id") %>% #Reorder clusters
-  dplyr::left_join(figureNames(), by = "condition_name") #Add figure names
+  dplyr::left_join(figureNames(), by = "condition_name") %>% #Add figure names %>%
+  dplyr::group_by(gene_id, snp_id) %>% 
+  dplyr::arrange(gene_id, snp_id, -abs(beta)) %>% 
+  dplyr::mutate(max_condition = condition_name[1]) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(beta_quantile = quantileNormaliseBeta(beta))
 
 #Count the number of qtls
 appear_count = dplyr::select(appear_betas, gene_id, snp_id) %>% unique() %>% nrow()
@@ -119,10 +131,11 @@ effect_size_heatmap = ggplot(appear_betas, aes(x = figure_name, y = gene_name, f
   ylab(ylabel) + 
   scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Relative effect", midpoint = 0) +
   theme_light() +
+  theme(legend.title = element_text(angle = 90)) + 
   theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), axis.title.x = element_blank()) +
   theme(panel.spacing = unit(0.1, "lines")) +
   theme(strip.text.y = element_text(colour = "grey10"), strip.background = element_rect(fill = "grey85"))
-ggsave("figures/main_figures/eQTLs_appear_kmeans_heatmap.png",effect_size_heatmap, width = 3.5, height = 4)
+ggsave("figures/main_figures/eQTLs_appear_kmeans_heatmap.png",effect_size_heatmap, width = 3, height = 4)
 
 
 #Calculate mean effect size in each cluster and condition
