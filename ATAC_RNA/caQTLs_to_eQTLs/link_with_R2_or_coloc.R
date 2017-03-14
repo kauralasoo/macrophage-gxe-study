@@ -190,12 +190,15 @@ ggsave("figures/main_figures/eQTLs_vs_caQTL_SL1344_heatmap.pdf", plotQTLBetas(be
 ggsave("figures/main_figures/eQTLs_vs_caQTL_IFNg_SL1344_heatmap.pdf", plotQTLBetas(beta_processed$IFNg_SL1344), width = 4, height = 3.5)
 
 #Make a line plot
-ggplot(beta_processed$IFNg, aes(x = figure_name, y = beta_quantile, group = gene_id)) + 
+ip = ggplot(beta_processed$IFNg, aes(x = figure_name, y = beta_quantile, group = gene_id)) + 
   geom_point() + geom_line() + facet_wrap(~phenotype)
-ggplot(beta_processed$SL1344, aes(x = figure_name, y = beta_quantile, group = gene_id)) + 
+ggsave("figures/foreshadowing/IFNg_lines.pdf", plot = ip, width = 6, height = 6)
+sp = ggplot(beta_processed$SL1344, aes(x = figure_name, y = beta_quantile, group = gene_id)) + 
   geom_point() + geom_line() + facet_wrap(~phenotype)
-ggplot(beta_processed$IFNg_SL1344, aes(x = figure_name, y = beta_quantile, group = gene_id)) + 
+ggsave("figures/foreshadowing/SL1344_lines.pdf", plot = sp, width = 6, height = 6)
+isp = ggplot(beta_processed$IFNg_SL1344, aes(x = figure_name, y = beta_quantile, group = gene_id)) + 
   geom_point() + geom_line() + facet_wrap(~phenotype)
+ggsave("figures/foreshadowing/IFNg_SL1344_lines.pdf", plot = isp, width = 6, height = 6)
 
 #Count caQTLs present in the naive condition
 present_fraction = purrr::map_df(beta_processed, ~dplyr::filter(., phenotype == "ATAC", condition_name == "naive") %>% 
@@ -262,17 +265,21 @@ peak_beta_processed = purrr::map2(peak_betas_list, peak_cluster_conditions, ~dpl
                                sortByBeta("RNA"))
 
 #Make a heatmaps
-plotQTLBetas(peak_beta_processed$IFNg)
-plotQTLBetas(peak_beta_processed$SL1344)
-plotQTLBetas(peak_beta_processed$IFNg_SL1344)
+plotQTLBetas(peak_beta_processed$IFNg) %>% ggsave("figures/foreshadowing/IFNg_heat_reverse.pdf", plot = ., width = 3, height = 5)
+plotQTLBetas(peak_beta_processed$SL1344)  %>% ggsave("figures/foreshadowing/SL1344_heat_reverse.pdf", plot = ., width = 3, height = 5)
+plotQTLBetas(peak_beta_processed$IFNg_SL1344)  %>% ggsave("figures/foreshadowing/IFNg_SL1344_heat_reverse.pdf", plot = ., width = 3, height = 5)
 
 
-ggplot(peak_beta_processed$IFNg, aes(x = figure_name, y = beta_quantile, group = peak_id)) + 
-  geom_point() + geom_line() + facet_wrap(~phenotype)
-ggplot(peak_beta_processed$SL1344, aes(x = figure_name, y = beta_quantile, group = peak_id)) + 
-  geom_point() + geom_line() + facet_wrap(~phenotype)
-ggplot(peak_beta_processed$IFNg_SL1344, aes(x = figure_name, y = beta_quantile, group = peak_id)) + 
-  geom_point() + geom_line() + facet_wrap(~phenotype)
+(ggplot(peak_beta_processed$IFNg, aes(x = figure_name, y = beta_quantile, group = peak_id)) + 
+  geom_point() + geom_line() + facet_wrap(~phenotype)) %>% 
+  ggsave("figures/foreshadowing/IFNg_lines_reverse.pdf", plot = ., width = 6, height = 6)
+(ggplot(peak_beta_processed$SL1344, aes(x = figure_name, y = beta_quantile, group = peak_id)) + 
+  geom_point() + geom_line() + facet_wrap(~phenotype)) %>%
+  ggsave("figures/foreshadowing/SL1344_lines_reverse.pdf", plot = ., width = 6, height = 6)
+(ggplot(peak_beta_processed$IFNg_SL1344, aes(x = figure_name, y = beta_quantile, group = peak_id)) + 
+  geom_point() + geom_line() + facet_wrap(~phenotype)) %>%
+  ggsave("figures/foreshadowing/IFNg_SL1344_lines_reverse.pdf", plot = ., width = 6, height = 6)
+
 
 #Count caQTLs present in the naive condition
 peak_present_fraction = purrr::map_df(peak_beta_processed[1:2], ~dplyr::filter(., phenotype == "RNA", condition_name == "naive") %>% 

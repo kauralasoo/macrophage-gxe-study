@@ -179,6 +179,13 @@ joint_plot = cowplot::plot_grid(pvals, ATAC_coverage$coverage_plot, spopl_region
 ggsave("figures/main_figures/NXPH2_finemapping.pdf", plot = joint_plot, width = 4, height = 3.5)
 
 
+#Make a gigantic boxplot of all the peaks
+region_coords = c(138620000, 138786348)
+peak_metadata = dplyr::filter(atac_list$gene_metadata, chr == 2, start > region_coords[1], end < region_coords[2])
 
-
-
+peak_id_list = idVectorToList(peak_metadata$gene_id)
+peak_data = purrr::map_df(peak_id_list, ~constructQtlPlotDataFrame(., "rs7594476", atac_list$cqn, vcf_file$genotypes, 
+                                                                   atac_list$sample_metadata, atac_list$gene_metadata) %>%
+                            dplyr::filter(condition_name %in% c("naive","IFNg")))
+aplot = ggplot(peak_data, aes(x = genotype_value, y = norm_exp)) + geom_boxplot() + geom_jitter(width =.1) + facet_grid(condition_name~gene_name)
+ggsave("figures/supplementary/NXPH2_caQTL_boxplot.pdf", plot = aplot, width = 30, height = 5)
