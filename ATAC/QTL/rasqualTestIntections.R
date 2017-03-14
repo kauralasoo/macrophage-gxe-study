@@ -104,7 +104,10 @@ appear_betas = appear_clusters %>% dplyr::group_by(gene_id, snp_id) %>%
   dplyr::semi_join(cluster_sizes, by = "cluster_id") %>% 
   ungroup() %>%
   dplyr::left_join(cluster_reorder, by = "cluster_id") %>%
-  dplyr::left_join(figureNames(), by = "condition_name") #Add figure names
+  dplyr::left_join(figureNames(), by = "condition_name") %>% #Add figure names
+  dplyr::group_by(gene_id, snp_id) %>% 
+  dplyr::arrange(gene_id, snp_id, -abs(beta)) %>% 
+  dplyr::mutate(max_condition = condition_name[1])
 
 
 #Make a plot of effect sizes

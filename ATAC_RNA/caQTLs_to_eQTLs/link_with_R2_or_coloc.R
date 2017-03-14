@@ -49,15 +49,19 @@ quantileNormaliseBeta <- function(beta){
   new_beta = quantileNormaliseVector(beta - m) + m
 }
 
-sortByBeta <- function(beta_df, phenotype_name){
+sortByBeta <- function(beta_df, phenotype_name, beta_thresh = 0.59){
   sorted_names = dplyr::filter(beta_df, phenotype == phenotype_name) %>% 
     dplyr::group_by(gene_id) %>%
     dplyr::mutate(beta_mean = mean(beta)) %>%
+    dplyr::mutate(beta_diff = beta[2] - beta[1]) %>%
     dplyr::ungroup() %>%
     dplyr::filter(condition_name == "naive") %>%
-    dplyr::arrange(beta_quantile)
+    dplyr::arrange(beta_quantile) %>%
+    dplyr::mutate(type = ifelse(beta > beta_thresh, "Indirect", "Direct"))
+  effect_type_df = dplyr::select(sorted_names, peak_id, type, beta_diff) %>% unique()
   sorted_df = dplyr::mutate(beta_df, gene_name = factor(as.character(gene_name), 
-                                                        levels = as.character(sorted_names$gene_name)))
+                                                        levels = as.character(sorted_names$gene_name))) %>%
+    dplyr::left_join(effect_type_df, by = "peak_id")
   return(sorted_df)
 }
 
@@ -75,6 +79,24 @@ plotQTLBetas <- function(beta_df){
                          mid = "#FFFFBF", high = "#E24C36", name = "Normalised effect", midpoint = 0) +
     theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.x = element_blank()) +
     theme(legend.title = element_text(angle = 90))
+  return(effect_size_heatmap)
+}
+
+plotQTLBetasAll <- function(beta_df){
+  n_pairs = nrow(dplyr::select(beta_df, gene_name, snp_id) %>% unique())
+  ylabel = paste(n_pairs, "eQTL-caQTL pairs")
+  effect_size_heatmap = ggplot(beta_df, aes(x = stimulation_state, y = qtl_id, fill = beta_quantile)) + 
+    facet_grid(max_effect~phenotype, scales = "free_y", space = "free_y") + 
+    geom_tile() + 
+    ylab(ylabel) + 
+    xlab("Condition") + 
+    scale_x_discrete(expand = c(0, 0)) +
+    scale_y_discrete(expand = c(0, 0)) +
+    scale_fill_gradient2(space = "Lab", low = "#4575B4", 
+                         mid = "#FFFFBF", high = "#E24C36", name = "Normalised effect", midpoint = 0) +
+    theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.x = element_blank()) +
+    theme(legend.title = element_text(angle = 90)) + 
+    theme(axis.text.x = element_text(angle = 15))
   return(effect_size_heatmap)
 }
 
@@ -153,14 +175,14 @@ atac_selected_pvalues = fetchRasqualSNPs(unique_pairs_r2$snp_id, vcf_file$snpspo
 
 #Import eQTL clusters
 variable_qtls = readRDS("results/SL1344/eQTLs/appeat_disappear_eQTLs.rds")
-gene_clusters = dplyr::select(variable_qtls$appear, gene_id, snp_id, new_cluster_id) %>% ungroup() %>% unique()
+gene_clusters = dplyr::select(variable_qtls$appear, gene_id, snp_id, max_condition) %>% ungroup() %>% unique()
 
 #Extract individual gene clusters
-gene_cluster_list = list(IFNg = dplyr::filter(gene_clusters, new_cluster_id %in% c(5,6)),
-                         SL1344 = dplyr::filter(gene_clusters, new_cluster_id %in% c(3,4)),
-                         IFNg_SL1344 = dplyr::filter(gene_clusters, new_cluster_id %in% c(1)))
+gene_cluster_list = list(IFNg = dplyr::filter(gene_clusters, max_condition == "IFNg"),
+                         SL1344 = dplyr::filter(gene_clusters, max_condition == "SL1344"),
+                         IFNg_SL1344 = dplyr::filter(gene_clusters, max_condition == "IFNg_SL1344"))
 gene_cluster_conditions = list(IFNg = c("naive","IFNg"), SL1344 = c("naive","SL1344"),
-                               IFNg_SL1344 = c("naive","IFNg", "SL1344", "IFNg_SL1344"))
+                               IFNg_SL1344 = c("naive","IFNg_SL1344"))
 
 #Extract cluster pairs
 pairs_list = purrr::map(gene_cluster_list, ~extractGenePeakPairs(unique_pairs_r2, .))
@@ -184,32 +206,32 @@ missing_peaks = dplyr::select(beta_processed$SL1344, peak_id) %>%
   dplyr::arrange(count) %>% dplyr::filter(count < 4)
 beta_processed$SL1344 = dplyr::anti_join(beta_processed$SL1344, missing_peaks, by = "peak_id")
 
-#Make a heatmaps
-ggsave("figures/main_figures/eQTLs_vs_caQTL_IFNg_heatmap.pdf", plot = plotQTLBetas(beta_processed$IFNg), width = 3, height = 3.5)
-ggsave("figures/main_figures/eQTLs_vs_caQTL_SL1344_heatmap.pdf", plotQTLBetas(beta_processed$SL1344), width = 3, height = 3.5)
-ggsave("figures/main_figures/eQTLs_vs_caQTL_IFNg_SL1344_heatmap.pdf", plotQTLBetas(beta_processed$IFNg_SL1344), width = 4, height = 3.5)
+#Merge all betas together
+all_betas = purrr::map_df(beta_processed, ~dplyr::arrange(., gene_name) %>%
+                    dplyr::mutate(.,stimulation_state = ifelse(condition_name == "naive", "Naive","Stimulated")), .id = "max_effect") %>%
+  dplyr::mutate(qtl_id = paste(gene_name, snp_id)) %>% 
+  dplyr::mutate(qtl_id = factor(qtl_id, levels = unique(qtl_id))) %>%
+  dplyr::mutate(max_effect = ifelse(max_effect == "IFNg", "I", ifelse(max_effect == "SL1344", "S", "I+S"))) %>%
+  dplyr::mutate(max_effect = factor(max_effect, levels = c("I","S","I+S")))
+all_betas_plot = plotQTLBetasAll(all_betas)
+ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap.pdf", all_betas_plot, width = 3, height = 7)
 
-#Make a line plot
-ip = ggplot(beta_processed$IFNg, aes(x = figure_name, y = beta_quantile, group = gene_id)) + 
-  geom_point() + geom_line() + facet_wrap(~phenotype)
-ggsave("figures/foreshadowing/IFNg_lines.pdf", plot = ip, width = 6, height = 6)
-sp = ggplot(beta_processed$SL1344, aes(x = figure_name, y = beta_quantile, group = gene_id)) + 
-  geom_point() + geom_line() + facet_wrap(~phenotype)
-ggsave("figures/foreshadowing/SL1344_lines.pdf", plot = sp, width = 6, height = 6)
-isp = ggplot(beta_processed$IFNg_SL1344, aes(x = figure_name, y = beta_quantile, group = gene_id)) + 
-  geom_point() + geom_line() + facet_wrap(~phenotype)
-ggsave("figures/foreshadowing/IFNg_SL1344_lines.pdf", plot = isp, width = 6, height = 6)
+if(coloc_run == TRUE){
+  ggsave("figures/supplementary/eQTLs_vs_caQTL_heatmap.coloc.pdf", all_betas_plot, width = 3, height = 5)
+}
+
 
 #Count caQTLs present in the naive condition
-present_fraction = purrr::map_df(beta_processed, ~dplyr::filter(., phenotype == "ATAC", condition_name == "naive") %>% 
-                                  dplyr::mutate(beta_binary = ifelse(abs(beta) > 0.59, "present", "absent")) %>% 
-                                  dplyr::group_by(beta_binary) %>% 
-                                  dplyr::summarise(count = length(beta_binary)) %>%
-                                  tidyr::spread(beta_binary, count), .id = "condition_name") %>%
+present_fraction = dplyr::filter(all_betas, phenotype == "ATAC-seq", condition_name == "naive") %>% 
+  dplyr::mutate(beta_binary = ifelse(abs(beta) > 0.59, "present", "absent")) %>% 
+  dplyr::group_by(max_effect, beta_binary) %>% 
+  dplyr::summarise(count = length(beta_binary)) %>%
+  dplyr::ungroup() %>%
+  tidyr::spread(beta_binary, count) %>%
   dplyr::mutate(fraction = present/(absent+present)) %>%
   dplyr::mutate(type = "forward")
 
-saveRDS(beta_processed, "results/ATAC_RNA_overlaps/caQTL_eQTL_pairs_betas.rds")
+saveRDS(all_betas, "results/ATAC_RNA_overlaps/caQTL_eQTL_pairs_betas.rds")
 
 
 
@@ -236,15 +258,14 @@ atac_unique_pairs_r2 = dplyr::left_join(rna_atac_overlaps, rna_unique_pvalues, b
 
 #Import condition-specific QTLs
 atac_variable_qtls = readRDS("results/ATAC/QTLs/rasqual_appear_disappear_qtls.rds")
-peak_clusters = dplyr::select(atac_variable_qtls$appear, gene_id, snp_id, new_cluster_id) %>% ungroup() %>% unique()
+peak_clusters = dplyr::select(atac_variable_qtls$appear, gene_id, snp_id, max_condition) %>% ungroup() %>% unique()
 
 #Extract individual gene clusters
-peak_cluster_list = list(IFNg = dplyr::filter(peak_clusters, new_cluster_id %in% c(5,6)),
-                         SL1344 = dplyr::filter(peak_clusters, new_cluster_id %in% c(3,4)),
-                         IFNg_SL1344 = dplyr::filter(peak_clusters, new_cluster_id %in% c(1)))
+peak_cluster_list = list(IFNg = dplyr::filter(peak_clusters, max_condition == "IFNg"),
+                         SL1344 = dplyr::filter(peak_clusters, max_condition == "SL1344"),
+                         IFNg_SL1344 = dplyr::filter(peak_clusters, max_condition == "IFNg_SL1344"))
 peak_cluster_conditions = list(IFNg = c("naive","IFNg"), SL1344 = c("naive","SL1344"),
-                               IFNg_SL1344 = c("naive","IFNg", "SL1344", "IFNg_SL1344"))
-
+                               IFNg_SL1344 = c("naive","IFNg_SL1344"))
 
 #Import RNA selected p-values for ATAC QTLs
 atac_atac_selected_pvalues = readRDS("results/ATAC/QTLs/rasqual_selected_pvalues.rds")
@@ -262,49 +283,50 @@ peak_beta_processed = purrr::map2(peak_betas_list, peak_cluster_conditions, ~dpl
                                dplyr::left_join(figureNames(), by = "condition_name") %>%
                                dplyr::mutate(beta_quantile = quantileNormaliseBeta(beta)) %>%
                                dplyr::mutate(gene_name = peak_id) %>%
-                               sortByBeta("RNA"))
+                               sortByBeta("RNA") %>% 
+                               dplyr::mutate(phenotype = ifelse(phenotype == "ATAC", "ATAC-seq", "RNA-seq")))
 
-#Make a heatmaps
-plotQTLBetas(peak_beta_processed$IFNg) %>% ggsave("figures/foreshadowing/IFNg_heat_reverse.pdf", plot = ., width = 3, height = 5)
-plotQTLBetas(peak_beta_processed$SL1344)  %>% ggsave("figures/foreshadowing/SL1344_heat_reverse.pdf", plot = ., width = 3, height = 5)
-plotQTLBetas(peak_beta_processed$IFNg_SL1344)  %>% ggsave("figures/foreshadowing/IFNg_SL1344_heat_reverse.pdf", plot = ., width = 3, height = 5)
+#Merge all betas together
+peak_all_betas = purrr::map_df(peak_beta_processed, ~dplyr::arrange(., gene_name) %>%
+                            dplyr::mutate(.,stimulation_state = ifelse(condition_name == "naive", "Naive","Stimulated")), .id = "max_effect") %>%
+  dplyr::mutate(qtl_id = paste(gene_name, snp_id)) %>% 
+  dplyr::mutate(qtl_id = factor(qtl_id, levels = unique(qtl_id))) %>%
+  dplyr::mutate(max_effect = ifelse(max_effect == "IFNg", "I", ifelse(max_effect == "SL1344", "S", "I+S"))) %>%
+  dplyr::mutate(max_effect = factor(max_effect, levels = c("I","S","I+S")))
+peak_all_betas_plot = plotQTLBetasAll(peak_all_betas)
+ggsave("figures/supplementary/eQTLs_vs_caQTL_heatmap_reverse.pdf", peak_all_betas_plot, width = 3, height = 7)
 
-
-(ggplot(peak_beta_processed$IFNg, aes(x = figure_name, y = beta_quantile, group = peak_id)) + 
-  geom_point() + geom_line() + facet_wrap(~phenotype)) %>% 
-  ggsave("figures/foreshadowing/IFNg_lines_reverse.pdf", plot = ., width = 6, height = 6)
-(ggplot(peak_beta_processed$SL1344, aes(x = figure_name, y = beta_quantile, group = peak_id)) + 
-  geom_point() + geom_line() + facet_wrap(~phenotype)) %>%
-  ggsave("figures/foreshadowing/SL1344_lines_reverse.pdf", plot = ., width = 6, height = 6)
-(ggplot(peak_beta_processed$IFNg_SL1344, aes(x = figure_name, y = beta_quantile, group = peak_id)) + 
-  geom_point() + geom_line() + facet_wrap(~phenotype)) %>%
-  ggsave("figures/foreshadowing/IFNg_SL1344_lines_reverse.pdf", plot = ., width = 6, height = 6)
-
+if(coloc_run == TRUE){
+  ggsave("figures/supplementary/eQTLs_vs_caQTL_heatmap_reverse.coloc.pdf", peak_all_betas_plot, width = 3, height = 7)
+}
 
 #Count caQTLs present in the naive condition
-peak_present_fraction = purrr::map_df(peak_beta_processed[1:2], ~dplyr::filter(., phenotype == "RNA", condition_name == "naive") %>% 
-                                  dplyr::mutate(beta_binary = ifelse(abs(beta) > 0.59, "present", "absent")) %>% 
-                                  dplyr::group_by(beta_binary) %>% 
-                                  dplyr::summarise(count = length(beta_binary)) %>%
-                                  tidyr::spread(beta_binary, count), .id = "condition_name") %>%
+peak_present_fraction = dplyr::filter(peak_all_betas, phenotype == "RNA-seq", condition_name == "naive") %>% 
+  dplyr::mutate(beta_binary = ifelse(abs(beta) > 0.59, "present", "absent")) %>% 
+  dplyr::group_by(max_effect, beta_binary) %>% 
+  dplyr::summarise(count = length(beta_binary)) %>%
+  dplyr::ungroup() %>%
+  tidyr::spread(beta_binary, count) %>%
   dplyr::mutate(fraction = present/(absent+present)) %>%
   dplyr::mutate(type = "reverse")
+
 
 #Save proportions to disk
 combined_results = dplyr::bind_rows(present_fraction, peak_present_fraction)
 combined_all = combined_results
 
 write.table(combined_all, "results/ATAC_RNA_overlaps/foreshadow_quant.txt", sep = "\t", quote = FALSE)
-write.table(combined_results, "results/ATAC_RNA_overlaps/foreshadow_quant.coloc.txt", sep = "\t", quote = FALSE)
+
+if(coloc_run == TRUE){
+  write.table(combined_results, "results/ATAC_RNA_overlaps/foreshadow_quant.coloc.txt", sep = "\t", quote = FALSE)
+}
 
 fisher.test(matrix(c(14, 2, 2, 8), ncol = 2))
 
 #Make a plot of proportions
-plot_data = dplyr::left_join(combined_all, figureNames()) %>% 
-  dplyr::mutate(comparison = ifelse(type == "forward", "caQTL before eQTL", "eQTL before caQTL"))
+plot_data = dplyr::mutate(combined_all, comparison = ifelse(type == "forward", "caQTL before eQTL", "eQTL before caQTL"))
 
-
-foreshadow_plot = ggplot(plot_data, aes(x = figure_name, y = fraction, fill = comparison)) + 
+foreshadow_plot = ggplot(plot_data, aes(x = max_effect, y = fraction, fill = comparison)) + 
   geom_bar(stat = "identity", position = "dodge") + 
   xlab("Condition") +
   ylab("Fraction of condition-specific QTL pairs") + 
