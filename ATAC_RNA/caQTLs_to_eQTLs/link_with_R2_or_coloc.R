@@ -23,7 +23,7 @@ fetchRasqualSNPs <- function(snp_ids, snpspos, summary_list){
 extractGenePeakPairs <- function(all_pairs, cluter_genes){
   selected_pairs = dplyr::semi_join(all_pairs, cluter_genes, by = c("gene_id", "snp_id")) %>%
     dplyr::group_by(gene_id) %>%
-    dplyr::arrange(gene_id, -R2, p_nominal) %>%
+    dplyr::arrange(gene_id, p_nominal) %>%
     dplyr::filter(row_number() == 1) %>%
     dplyr::ungroup() %>%
     dplyr::select(gene_id, snp_id, peak_id) %>% 
@@ -36,7 +36,7 @@ extractPeakGenePairs <- function(all_pairs, cluter_genes){
   selected_pairs = dplyr::rename(cluter_genes, peak_id = gene_id) %>%
     dplyr::semi_join(all_pairs, ., by = c("peak_id", "snp_id")) %>%
     dplyr::group_by(peak_id) %>%
-    dplyr::arrange(peak_id, -R2, p_nominal) %>%
+    dplyr::arrange(peak_id, p_nominal) %>%
     dplyr::filter(row_number() == 1) %>%
     dplyr::ungroup() %>%
     dplyr::select(gene_id, snp_id, peak_id) %>% 
@@ -148,8 +148,8 @@ saveRDS(rna_atac_overlaps, "results/ATAC_RNA_overlaps/QTL_overlap_list_R2.rds")
 rna_atac_overlaps = readRDS("results/ATAC_RNA_overlaps/QTL_overlap_list_R2.rds")
 
 #Filter results with coloc
-coloc_overlaps = readRDS("results/ATAC_RNA_overlaps/QTL_overlap_list_coloc.rds")
-rna_atac_overlaps = dplyr::semi_join(rna_atac_overlaps, coloc_overlaps, by = c("gene_id", "peak_id"))
+#coloc_overlaps = readRDS("results/ATAC_RNA_overlaps/QTL_overlap_list_coloc.rds")
+#rna_atac_overlaps = dplyr::semi_join(rna_atac_overlaps, coloc_overlaps, by = c("gene_id", "peak_id"))
 
 #Find minimal p-values for each peaks across conditions
 atac_unique_pvalues = purrr::map_df(atac_min_pvalues, identity, .id = "condition_name") %>%
@@ -163,7 +163,7 @@ atac_unique_pvalues = purrr::map_df(atac_min_pvalues, identity, .id = "condition
 #Find unique pairs between genes and peaks
 unique_pairs_r2 = dplyr::left_join(rna_atac_overlaps, atac_unique_pvalues, by = "peak_id") %>% 
   dplyr::group_by(gene_id, snp_id) %>% 
-  dplyr::arrange(gene_id, snp_id, -R2, p_nominal) %>% 
+  dplyr::arrange(gene_id, snp_id, p_nominal) %>% 
   dplyr::filter(row_number() == 1) %>% 
   dplyr::filter(chr != "X") %>%
   dplyr::ungroup()
@@ -217,6 +217,10 @@ all_betas = purrr::map_df(beta_processed, ~dplyr::arrange(., gene_name) %>%
 all_betas_plot1 = plotQTLBetasAll(dplyr::filter(all_betas, max_effect %in% c("I","S")))
 all_betas_plot2 = plotQTLBetasAll(dplyr::filter(all_betas, max_effect %in% c("I+S")))
 
+#Plot with gene names
+all_betas_plot1 + theme(axis.text.y = element_text())
+all_betas_plot2 + theme(axis.text.y = element_text())
+
 ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_1.pdf", all_betas_plot1, width = 3, height = 3)
 ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_2.pdf", all_betas_plot2, width = 3, height = 4)
 
@@ -257,7 +261,7 @@ rna_unique_pvalues = purrr::map_df(rasqual_min_pvalues, identity, .id = "conditi
 #Find unique pairs between genes and peaks (focussing on peaks)
 atac_unique_pairs_r2 = dplyr::left_join(rna_atac_overlaps, rna_unique_pvalues, by = "gene_id") %>% 
   dplyr::group_by(peak_id, snp_id) %>% 
-  dplyr::arrange(peak_id, snp_id, -R2, p_nominal) %>% 
+  dplyr::arrange(peak_id, snp_id, p_nominal) %>% 
   dplyr::filter(row_number() == 1) %>% 
   dplyr::filter(chr != "X") %>%
   dplyr::ungroup() %>%
@@ -331,11 +335,12 @@ if(coloc_run == TRUE){
 fisher.test(matrix(c(14, 2, 2, 8), ncol = 2))
 
 #Make a plot of proportions
-plot_data = dplyr::mutate(combined_all, comparison = ifelse(type == "forward", "caQTL -> eQTL", "eQTL -> caQTL"))
+plot_data = dplyr::mutate(combined_all, type = ifelse(type == "forward", "caQTL -> eQTL", "eQTL -> caQTL"))
 
-foreshadow_plot = ggplot(plot_data, aes(x = max_effect, y = fraction, fill = comparison)) + 
+foreshadow_plot = ggplot(plot_data, aes(x = max_effect, y = fraction, fill = type)) + 
   geom_bar(stat = "identity", position = "dodge") + 
   xlab("Condition") +
-  ylab("Fraction of QTL pairs") + 
-  theme_light()
-ggsave("figures/supplementary/foreshadowing_proportions.pdf", plot = foreshadow_plot, width = 3.5, height = 2.5)
+  ylab("Fraction of caQTL-eQTL pairs") + 
+  theme_light() +
+  theme(legend.position = "top")
+ggsave("figures/main_figures/foreshadowing_proportions.pdf", plot = foreshadow_plot, width = 3.5, height = 4)
