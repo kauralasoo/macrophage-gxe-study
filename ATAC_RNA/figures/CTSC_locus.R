@@ -45,7 +45,7 @@ gene_data = constructQtlPlotDataFrame("ENSG00000109861", "rs2386849", combined_e
   dplyr::mutate(condition_name = figure_name) %>%
   dplyr::left_join(constructGenotypeText("rs2386849", variant_information), by = "genotype_value")
 gene_plot = plotQTLCompact(gene_data) + ggplot2::scale_color_manual(values = conditionPalette()[c(1,4)], guide=FALSE)
-ggsave("figures/main_figures/GP1BA_expression_boxplot.pdf", plot = gene_plot, width = 2, height = 2.5)
+ggsave("figures/main_figures/CTSC_expression_boxplot.pdf", plot = gene_plot, width = 2, height = 2.5)
 
 peak_data = constructQtlPlotDataFrame("ATAC_peak_52208", "rs2386849", atac_list$cqn, vcf_file$genotypes, 
                                       atac_list$sample_metadata, atac_list$gene_metadata) %>%
@@ -55,13 +55,13 @@ peak_data = constructQtlPlotDataFrame("ATAC_peak_52208", "rs2386849", atac_list$
   dplyr::left_join(constructGenotypeText("rs2386849", variant_information), by = "genotype_value")
 peak_plot = plotQTLCompact(peak_data) + ggplot2::scale_color_manual(values = conditionPalette()[c(1,4)], guide=FALSE) + 
   ylab("Chromatin accessibility")
-ggsave("figures/main_figures/GP1BA_atac_boxplot.pdf", plot = peak_plot, width = 2, height = 2.5)
+ggsave("figures/main_figures/CTSC_atac_boxplot.pdf", plot = peak_plot, width = 2, height = 2.5)
 
 #Filter transcripts
 #Filter transcripts for NXPH2
 tx_ids = dplyr::filter(tx_metadata, gene_name == "CTSC", 
                        transcript_biotype == "protein_coding", transcript_status == "KNOWN")
-region_coords = c(88293000,88360000)
+region_coords = c(88293000,88370000)
 
 tx_plot = plotTranscripts(exons["ENST00000227266"], cdss["ENST00000227266"], tx_metadata, rescale_introns = FALSE, 
                           region_coords = region_coords)
@@ -74,7 +74,7 @@ peak_plot = plotTranscripts(peak_annot$peak_list, peak_annot$peak_list, peak_ann
 
 #Make a coverage plot of the region
 #Construct metadata df for wiggleplotr
-atac_track_data = wiggleplotrGenotypeColourGroup(atac_meta_df, "rs2386849", vcf_file$genotypes, 1) %>%
+atac_track_data = wiggleplotrGenotypeColourGroup(atac_meta_df, "rs2386849", vcf_file$genotypes, -1) %>%
   dplyr::filter(track_id %in% c("naive","IFNg_SL1344"))%>% 
   dplyr::left_join(figureNames()) %>%
   dplyr::mutate(track_id = figure_name)
@@ -110,5 +110,9 @@ gene_pvalues = purrr::map_df(qtlResults()$rna_rasqual, ~tabixFetchGenesQuick(c("
 #Make Manhattan plots
 peak_manhattan = makeManhattanPlot(peak_pvalues, region_coords, color_R2 = TRUE)
 gene_manhattan = makeManhattanPlot(gene_pvalues, region_coords, color_R2 = TRUE)
+
+joint_plot = cowplot::plot_grid(peak_manhattan, gene_manhattan, ATAC_coverage$coverage_plot, tx_plot, 
+                                align = "v", ncol = 1, rel_heights = c(3,3,2,2.5))
+ggsave("figures/main_figures/CTSC_manhattan_plots.png", plot = joint_plot, width = 4, height = 4.5)
 
 

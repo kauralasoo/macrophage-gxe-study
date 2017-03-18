@@ -105,28 +105,53 @@ NXPH2_data = constructQtlPlotDataFrame("ENSG00000144227", "rs7594476", combined_
 NXPH2_plot = plotQTLCompact(NXPH2_data)
 ggsave("figures/main_figures/NXPH2_expression_boxplot.pdf", plot = NXPH2_plot, width = 2, height = 2.5)
 
+#SPOPL gene
+SPOPL_data = constructQtlPlotDataFrame("ENSG00000144228", "rs7594476", combined_expression_data$cqn, vcf_file$genotypes, 
+                                       combined_expression_data$sample_metadata, combined_expression_data$gene_metadata) %>%
+  dplyr::filter(condition_name %in% c("naive","IFNg"))  %>%
+  dplyr::left_join(figureNames()) %>%   
+  dplyr::mutate(condition_name = figure_name) %>%
+  dplyr::left_join(constructGenotypeText("rs7594476", variant_information), by = "genotype_value")
+SPOPL_plot = plotQTLCompact(SPOPL_data)
+ggsave("figures/main_figures/SPOPL_expression_boxplot.pdf", plot = SPOPL_plot, width = 2, height = 2.5)
+
+
+#Make peak expression plots
 peak_data = constructQtlPlotDataFrame("ATAC_peak_145162", "rs7594476", atac_list$cqn, vcf_file$genotypes, 
                                       atac_list$sample_metadata, atac_list$gene_metadata) %>%
   dplyr::filter(condition_name %in% c("naive","IFNg")) %>%
   dplyr::left_join(figureNames()) %>%
   dplyr::mutate(condition_name = figure_name) %>%
   dplyr::left_join(constructGenotypeText("rs7594476", variant_information), by = "genotype_value")
-peak_plot = plotQTLCompact(peak_data) + ylab("Chromatin accessibility")
-ggsave("figures/main_figures/NXPH2_atac_boxplot.pdf", plot = peak_plot, width = 2, height = 2.5)
+peak_plot = plotQTLCompact(peak_data) + 
+  ylab("Chromatin accessibility")
+ggsave("figures/main_figures/NXPH2_E1_expression_boxplot.pdf", plot = peak_plot, width = 2, height = 2.5)
 
 
-#SPOPL gene
-SPOPL_data = constructQtlPlotDataFrame("ENSG00000144228", "rs7594476", combined_expression_data$cqn, vcf_file$genotypes, 
-                                       combined_expression_data$sample_metadata, combined_expression_data$gene_metadata) %>%
+peak_data = constructQtlPlotDataFrame("ATAC_peak_145165", "rs7594476", atac_list$cqn, vcf_file$genotypes, 
+                                      atac_list$sample_metadata, atac_list$gene_metadata) %>%
   dplyr::filter(condition_name %in% c("naive","IFNg")) %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::mutate(condition_name = figure_name) %>%
   dplyr::left_join(constructGenotypeText("rs7594476", variant_information), by = "genotype_value")
-SPOPL_plot = plotQtlCol(SPOPL_data)
-ggsave("figures/main_figures/SPOPL_expression_boxplot.pdf", plot = SPOPL_plot, width = 2.5, height = 3.5)
+peak_plot = plotQTLCompact(peak_data) + 
+  ylab("Chromatin accessibility")
+ggsave("figures/main_figures/NXPH2_E2_expression_boxplot.pdf", plot = peak_plot, width = 2, height = 2.5)
 
+
+peak_data = constructQtlPlotDataFrame("ATAC_peak_145161", "rs7594476", atac_list$cqn, vcf_file$genotypes, 
+                                      atac_list$sample_metadata, atac_list$gene_metadata) %>%
+  dplyr::filter(condition_name %in% c("naive","IFNg")) %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::mutate(condition_name = figure_name) %>%
+  dplyr::left_join(constructGenotypeText("rs7594476", variant_information), by = "genotype_value")
+peak_plot = plotQTLCompact(peak_data) + 
+  ylab("Chromatin accessibility")
+ggsave("figures/main_figures/NXPH2_E3_expression_boxplot.pdf", plot = peak_plot, width = 2, height = 2.5)
 
 
 #Make a coverage plot of the whole SPOPL-NXPH2 locus
-region_coords = c(138620000, 138786348)
+region_coords = c(138499780, 138785000)
 both_tx = dplyr::filter(tx_metadata, gene_name %in% c("NXPH2","SPOPL"), 
                                     transcript_biotype == "protein_coding", transcript_status == "KNOWN")
 
@@ -148,13 +173,13 @@ ATAC_coverage = plotCoverage(exons = peak_annot$peak_list, cdss = peak_annot$pea
                              region_coords = region_coords, return_subplots_list = TRUE, coverage_type = "both")
 
 #Make a manhattan plot for the whole region
-peak_pvals = dplyr::filter(peak_pvalues, condition_name == "naive") 
+peak_pvals = dplyr::filter(gene_pvalues, condition_name == "IFNg") 
 peak_manhattan = makeManhattanPlot(peak_pvals, region_coords, color_R2 = TRUE)
 
 #Make a joint plot
 joint_plot = cowplot::plot_grid(peak_manhattan, ATAC_coverage$coverage_plot, tx_plot, 
-                                align = "v", ncol = 1, rel_heights = c(2.2,3,2))
-ggsave("figures/main_figures/NXPH2_full_region.png", joint_plot, width = 6, height = 3)
+                                align = "v", ncol = 1, rel_heights = c(2.2,3,3))
+ggsave("figures/main_figures/NXPH2_full_region.png", joint_plot, width = 11, height = 3.5)
 
 
 
@@ -191,11 +216,17 @@ ggsave("figures/main_figures/NXPH2_finemapping.pdf", plot = joint_plot, width = 
 
 #Make a gigantic boxplot of all the peaks
 region_coords = c(138620000, 138786348)
-peak_metadata = dplyr::filter(atac_list$gene_metadata, chr == 2, start > region_coords[1], end < region_coords[2])
+peak_metadata = dplyr::filter(atac_list$gene_metadata, chr == 2, start > region_coords[1], end < region_coords[2]) %>%
+  dplyr::filter(gene_id %in% c("ATAC_peak_145162", "ATAC_peak_145165"))
 
 peak_id_list = idVectorToList(peak_metadata$gene_id)
 peak_data = purrr::map_df(peak_id_list, ~constructQtlPlotDataFrame(., "rs7594476", atac_list$cqn, vcf_file$genotypes, 
                                                                    atac_list$sample_metadata, atac_list$gene_metadata) %>%
                             dplyr::filter(condition_name %in% c("naive","IFNg")))
-aplot = ggplot(peak_data, aes(x = genotype_value, y = norm_exp)) + geom_boxplot() + geom_jitter(width =.1) + facet_grid(condition_name~gene_name)
+aplot = ggplot(peak_data, aes(x = genotype_value, y = norm_exp)) + 
+  geom_boxplot() + 
+  geom_jitter(width =.1) + 
+  facet_grid(condition_name~gene_name, scale = "free_y")
 ggsave("figures/supplementary/NXPH2_caQTL_boxplot.pdf", plot = aplot, width = 30, height = 5)
+
+
