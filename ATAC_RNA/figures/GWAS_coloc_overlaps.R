@@ -22,7 +22,8 @@ mhc_peaks = dplyr::filter(atac_data$gene_metadata, chr == "6", start > 28510120,
 #Import GWAS traits
 gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt",
                                      col_names = c("trait","file_name")) %>%
-  dplyr::filter(!(trait %in% c("UC_2014","UC_2012", "CEL_2010","PS", "CD_2012", "RA_2012", "T2D_1", "MS", "T1D", "T1D_2", "PBC")))
+  dplyr::filter(!(trait %in% c("UC_2014","UC_2012", "CEL_2010","PS", "CD_2012", "RA_2012", "T2D_1", "MS", "T1D", "T1D_2", "PBC"))) %>%
+  dplyr::filter(trait %in% c("AD","CEL","CD","IBD","UC","NAR","RA","SCZ","SLE","T2D"))
 
 #Import unconvincing coloc overlaps that should be filtered out:
 unconvincing_coloc = read.table("macrophage-gxe-study/data/gwas_catalog/unconvincing_coloc.txt", stringsAsFactors = FALSE, header = TRUE)
@@ -109,7 +110,7 @@ coloc_counts_plot = ggplot(coloc_detection_counts, aes(x = figure_name, y = tota
   geom_line() +
   xlab("Conditions included") + 
   ylab("Cumulative number of overlaps") +
-  scale_y_continuous(limits = c(0,42)) +
+  scale_y_continuous(limits = c(0,25)) +
   theme_light() + 
   scale_color_manual(values = c("#e66101","#5e3c99"), name = "") +
   theme(legend.position = "top")
