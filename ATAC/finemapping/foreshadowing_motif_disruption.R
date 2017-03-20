@@ -12,7 +12,7 @@ filtered_pairs = dplyr::filter(caQTL_eQTL_pairs, condition_name == "naive", phen
 appear_peaks = dplyr::filter(filtered_pairs, abs(beta) < 0.59) %>% dplyr::select(peak_id) %>% unique()
 persistent_peaks = dplyr::filter(filtered_pairs, abs(beta) > 0.59) %>% dplyr::select(peak_id) %>% unique()
 
-#persistent_peaks = data_frame(peak_id = "ATAC_peak_52208")
+persistent_peaks = data_frame(peak_id = "ATAC_peak_260184")
 
 #Identify credible sets of causal variants for both groups
 appear_snps = purrr::map_df(credible_sets_df, ~dplyr::filter(., gene_id %in% appear_peaks$peak_id) %>% 
