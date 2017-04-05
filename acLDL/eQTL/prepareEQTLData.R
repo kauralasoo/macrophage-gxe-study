@@ -174,7 +174,8 @@ fastqtl_genepos = tbl_df2(rowData(event_dataset)) %>%
 
 #Extract ratio matrices
 cqn_list = purrr::map(event_conditions_renamed, ~assays(.)$cqn)
-saveFastqtlMatrices(cqn_list, "results/acLDL/fastqtl_splicing/featureCounts/", file_suffix = "norm_prop")
+cqn_list_qtltools = purrr::map(cqn_list, prepareQTLtoolsMatrix, fastqtl_genepos)
+saveFastqtlMatrices(cqn_list_qtltools, "results/acLDL/fastqtl_splicing/featureCounts/", file_suffix = "norm_prop")
 
 
 #Calculate covariates
