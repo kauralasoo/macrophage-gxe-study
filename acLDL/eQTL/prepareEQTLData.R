@@ -147,6 +147,43 @@ saveFastqtlMatrices(list(FC = covariates), "results/acLDL/fastqtl/input_FC/", fi
 
 
 
+### Export data for QTLTools
+
+#Import event dataset
+se_counts = readRDS("results/acLDL/acLDL_combined_expression_data_covariates.se.rds")
+event_metadata = rowData(se_counts)
+unique_genes = unique(event_metadata$gene_id)
+
+#Remove events on X and Y chromosomes
+event_dataset = se_counts[event_metadata[!event_metadata$chr %in% c("X","Y","MT"),]$gene_id,]
+
+#Extract lists for each condition
+condition_list = idVectorToList(c("Ctrl","AcLDL"))
+event_conditions = purrr::map(condition_list, ~extractConditionFromSummarizedExperiment(.,event_dataset))
+
+#Rename columns
+event_conditions_renamed = purrr::map(event_conditions, function(x){
+  colnames(x) = x$genotype_id
+  return(x)
+})
+
+#Construct gene positions for QTL mapping
+fastqtl_genepos = tbl_df2(rowData(event_dataset)) %>% 
+  dplyr::mutate(transcript_id = gene_id) %>%
+  constructQTLtoolsGenePos()
+
+#Extract ratio matrices
+cqn_list = purrr::map(event_conditions_renamed, ~assays(.)$cqn)
+saveFastqtlMatrices(cqn_list, "results/acLDL/fastqtl_splicing/featureCounts/", file_suffix = "norm_prop")
+
+
+#Calculate covariates
+sample_meta = tbl_df2(colData(event_conditions_renamed$Ctrl))
+covariates_list = purrr::map(event_conditions_renamed, ~colData(.) %>% 
+                               tbl_df2() %>% 
+                               dplyr::select(.,genotype_id, sex_binary, PEER_factor_1, PEER_factor_2, PEER_factor_3, PEER_factor_4, PEER_factor_5, PEER_factor_5) %>%
+                               fastqtlMetadataToCovariates())
+saveFastqtlMatrices(covariates_list, "results/acLDL/fastqtl_splicing/featureCounts/", file_suffix = "covariates_prop")
 
 
 

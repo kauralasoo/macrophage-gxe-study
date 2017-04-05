@@ -1,6 +1,7 @@
 library("devtools")
 library("plyr")
 library("dplyr")
+library("SummarizedExperiment")
 load_all("../seqUtils/")
 
 #Load the raw eQTL dataset
@@ -50,3 +51,20 @@ covariates = dplyr::left_join(rna_expressed$sample_metadata, peer_factors, by = 
   dplyr::mutate(sex_binary = ifelse(sex == "male", 0, 1))
 rna_expressed$sample_metadata = covariates
 saveRDS(rna_expressed, "results/acLDL/acLDL_combined_expression_data_covariates.rds")
+
+#Export the data in summarised-experiment format as well
+#Construct a SummarizedExperiment object
+coldata = rna_expressed$sample_metadata %>% as.data.frame()
+rownames(coldata) = rna_expressed$sample_metadata$sample_id
+
+rowdata = rna_expressed$gene_metadata %>% as.data.frame()
+rownames(rowdata) = rna_expressed$gene_metadata$gene_id
+
+se = SummarizedExperiment::SummarizedExperiment(
+  assays = list(counts = rna_expressed$counts, tpms = rna_expressed$tpm, 
+                cqn = rna_expressed$cqn), 
+  colData = coldata, 
+  rowData = rowdata)
+saveRDS(se, "results/acLDL/acLDL_combined_expression_data_covariates.se.rds")
+
+
