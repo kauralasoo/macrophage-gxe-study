@@ -12,6 +12,7 @@ load_all("macrophage-gxe-study/housekeeping/")
 se_ensembl = readRDS("results/acLDL/acLDL_salmon_ensembl.rds")
 se_reviseAnnotations = readRDS("results/acLDL/acLDL_salmon_reviseAnnotations.rds")
 se_leafcutter = readRDS("results/acLDL/acLDL_leafcutter_counts.rds")
+se_featureCounts = readRDS("results/acLDL/acLDL_combined_expression_data_covariates.se.rds")
 
 #Identify genes in the MHC region that should be excluded
 mhc_ensembl = dplyr::filter(tbl_df2(rowData(se_ensembl)), chr == "6", transcript_start > 28510120, transcript_start < 33480577) %>%
@@ -20,6 +21,9 @@ mhc_revised = dplyr::filter(tbl_df2(rowData(se_reviseAnnotations)), chr == "6", 
   dplyr::rename(phenotype_id = transcript_id)
 mhc_leafcutter = dplyr::filter(tbl_df2(rowData(se_leafcutter)), chr == "6", start > 28510120, end < 33480577) %>%
   dplyr::rename(phenotype_id = transcript_id)
+mhc_featureCounts = dplyr::filter(tbl_df2(rowData(se_featureCounts)), chr == "6", start > 28510120, end < 33480577) %>%
+  dplyr::rename(phenotype_id = gene_id)
+
 
 #Gene names
 ensembl_name_map = dplyr::select(tbl_df2(rowData(se_ensembl)), transcript_id, gene_name) %>% dplyr::rename(phenotype_id = transcript_id)
@@ -28,6 +32,7 @@ leafcutter_name_map = dplyr::select(tbl_df2(rowData(se_leafcutter)), transcript_
   dplyr::left_join(dplyr::transmute(tbl_df2(rowData(se_ensembl)), ensembl_gene_id = gene_id, gene_name), by = "ensembl_gene_id") %>%
   dplyr::rename(phenotype_id = transcript_id) %>%
   unique()
+featureCounts_name_map = dplyr::select(tbl_df2(rowData(se_featureCounts)), gene_id, gene_name) %>% dplyr::rename(phenotype_id = gene_id)
 
 #Import GWAS traits
 gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt",
@@ -62,6 +67,15 @@ leafcutter_200kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffi
   #dplyr::anti_join(unconvincing_coloc, by = c("gene_name", "trait")) %>%
   dplyr::select(-.row)
 
+#featureCounts
+featureCounts_200kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".featureCounts.2e5.txt", 
+                                                 coloc_prefix = "processed/acLDL/coloc/",
+                                                 PP_power_thresh = 0.8, PP_coloc_thresh = .9, nsnps_thresh = 50, 
+                                                 gwas_pval_thresh = 1e-6, mhc_phenotypes = mhc_featureCounts)$coloc_filtered %>%
+  dplyr::left_join(featureCounts_name_map, by = "phenotype_id") %>%
+  #dplyr::anti_join(unconvincing_coloc, by = c("gene_name", "trait")) %>%
+  dplyr::select(-.row)
+
 
 ###### Make plots for all of the genes ######
 #Import variant information
@@ -84,7 +98,7 @@ plot_data = purrr::by_row(ensembl_hits,
                                                       qtl_paths = ensembl_summaries, 
                                                       GRCh37_variants = GRCh37_variants, 
                                                       GRCh38_variants = GRCh38_variants, 
-                                                      cis_dist = 2e5, QTLTools = TRUE), .to = "data")
+                                                      cis_dist = 2e5, type = "QTLTools"), .to = "data")
 
 #Make plots
 plots = purrr::by_row(plot_data, ~plotColoc(.$data[[1]], .$plot_title), .to = "plot")
@@ -108,7 +122,7 @@ plot_data = purrr::by_row(revised_hits,
                                                       qtl_paths = revised_summaries, 
                                                       GRCh37_variants = GRCh37_variants, 
                                                       GRCh38_variants = GRCh38_variants, 
-                                                      cis_dist = 2e5, QTLTools = TRUE), .to = "data")
+                                                      cis_dist = 2e5, type = "QTLTools"), .to = "data")
 
 #Make plots
 plots = purrr::by_row(plot_data, ~plotColoc(.$data[[1]], .$plot_title), .to = "plot")
@@ -131,12 +145,38 @@ plot_data = purrr::by_row(leafcutter_hits,
                                                       qtl_paths = leadcutter_summaries, 
                                                       GRCh37_variants = GRCh37_variants, 
                                                       GRCh38_variants = GRCh38_variants, 
-                                                      cis_dist = 2e5, QTLTools = TRUE), .to = "data")
+                                                      cis_dist = 2e5, type = "QTLTools"), .to = "data")
 
 #Make plots
 plots = purrr::by_row(plot_data, ~plotColoc(.$data[[1]], .$plot_title), .to = "plot")
 plots = dplyr::mutate(plots, plot_title = paste(trait, phenotype_id, gwas_lead, sep = "_"))
 plot_list = setNames(plots$plot, plots$plot_title)
 savePlotList(plot_list, "processed/acLDL/coloc_plots/leafcutter/")
+
+
+#Filter coloc hits
+featureCounts_hits = dplyr::select(featureCounts_200kb_hits, phenotype_id, snp_id, trait, gwas_lead, gene_name) %>% 
+  unique() %>%
+  dplyr::mutate(plot_title = paste(trait, gene_name, gwas_lead, sep = "_"))
+
+#Define location of summary files
+featureCounts_summaries = list(Ctrl = "processed/acLDL/fastqtl_output/featureCounts//sorted/Ctrl.nominal.sorted.txt.gz",
+                         AcLDL = "processed/acLDL/fastqtl_output/featureCounts/sorted/AcLDL.nominal.sorted.txt.gz")
+
+#Fetch data for all eqtl hits
+plot_data = purrr::by_row(featureCounts_hits, 
+                          ~importSummariesForPlotting(., gwas_stats_labeled, 
+                                                      gwas_dir = "~/datasets/Inflammatory_GWAS/",
+                                                      qtl_paths = featureCounts_summaries, 
+                                                      GRCh37_variants = GRCh37_variants, 
+                                                      GRCh38_variants = GRCh38_variants, 
+                                                      cis_dist = 2e5, type = "QTLTools"), .to = "data")
+
+#Make plots
+plots = purrr::by_row(plot_data, ~plotColoc(.$data[[1]], .$plot_title), .to = "plot")
+plot_list = setNames(plots$plot, plots$plot_title)
+savePlotList(plot_list, "processed/acLDL/coloc_plots/featureCounts/")
+
+
 
 
