@@ -64,3 +64,9 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>10000] rusage[mem=10000]" -q no
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>10000] rusage[mem=10000]" -q normal -M 10000 -o unify_gwas.%J.jobout "echo TG.unified | python ~/software/utils/GWAS/extractTopVariants.py --indir datasets/Inflammatory_GWAS/ --outdir datasets/Inflammatory_GWAS/"
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>10000] rusage[mem=10000]" -q normal -M 10000 -o unify_gwas.%J.jobout "echo UricAcid.unified | python ~/software/utils/GWAS/extractTopVariants.py --indir datasets/Inflammatory_GWAS/ --outdir datasets/Inflammatory_GWAS/"
 bsub -G team170 -n1 -R "span[hosts=1] select[mem>10000] rusage[mem=10000]" -q normal -M 10000 -o unify_gwas.%J.jobout "echo WBC.unified | python ~/software/utils/GWAS/extractTopVariants.py --indir datasets/Inflammatory_GWAS/ --outdir datasets/Inflammatory_GWAS/"
+
+
+#Sort and idex UKBB results
+echo ukbb.1000g.exome.hard.meta.filter.unified | python ~/software/utils/GWAS/tabixGWASSummaryStats.py --indir datasets/UKBB/
+bsub -G team170 -n1 -R "span[hosts=1] select[mem>10000] rusage[mem=10000]" -q normal -M 10000 -o unify_gwas.%J.jobout "echo ukbb.1000g.exome.hard.meta.filter.unified | python ~/software/utils/GWAS/extractTopVariants.py --indir datasets/Inflammatory_GWAS/ --outdir datasets/Inflammatory_GWAS/"
+

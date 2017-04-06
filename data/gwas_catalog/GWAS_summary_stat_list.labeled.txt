@@ -41,3 +41,4 @@ TG	TG.unified
 UA	UricAcid.unified
 WBC	WBC.unified
 LDL	LDL.unified
+CAD_2017	ukbb.1000g.exome.hard.meta.filter.unified
