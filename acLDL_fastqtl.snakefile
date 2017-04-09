@@ -31,7 +31,7 @@ rule compress_bed:
 rule permutation_run:
 	input:
 		bed = "processed/acLDL/fastqtl_splicing/{annot_type}/{condition}.norm_prop.txt.gz",
-		bed_index = "processed/acLDL/fastqtl_splicing/{annot_type}/AcLDL.norm_prop.txt.gz.tbi",
+		bed_index = "processed/acLDL/fastqtl_splicing/{annot_type}/{condition}.norm_prop.txt.gz.tbi",
 		covariates = "processed/acLDL/fastqtl_splicing/{annot_type}/{condition}.covariates_prop.txt",
 		vcf = config["qtl_vcf"]
 	output:
