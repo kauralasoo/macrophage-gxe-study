@@ -76,6 +76,19 @@ featureCounts_200kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_su
   #dplyr::anti_join(unconvincing_coloc, by = c("gene_name", "trait")) %>%
   dplyr::select(-.row)
 
+#Put all GWAS overlaps into a single list
+gwas_olaps = list(ensembl_87 = ensembl_200kb_hits, revisedAnnotation = revised_200kb_hits, 
+                  leafcutter = leafcutter_200kb_hits, featureCounts = featureCounts_200kb_hits)
+saveRDS(gwas_olaps, "acLDL_figures/tables/GWAS_coloc_hits.rds")
+
+#Save a text table as well
+gwas_olaps_tbl = purrr::map_df(gwas_olaps, identity ,.id = "annotation")
+write.table(gwas_olaps_tbl, "acLDL_figures/tables/GWAS_coloc_hits.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+
+
+
+
 
 ###### Make plots for all of the genes ######
 #Import variant information
