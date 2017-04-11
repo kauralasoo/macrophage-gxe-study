@@ -1,3 +1,12 @@
+library("dplyr")
+library("tidyr")
+library("purrr")
+library("devtools")
+library("ggplot2")
+library("SummarizedExperiment")
+load_all("../seqUtils/")
+load_all("~/software/rasqual/rasqualTools/")
+load_all("macrophage-gxe-study/housekeeping/")
 
 #Import the VCF file
 vcf_file = readRDS("genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.rds")
@@ -34,7 +43,7 @@ trQTL_iteraction_olaps = purrr::map2(trQTL_hits, gwas_olaps[1:3], ~dplyr::left_j
   dplyr::mutate(R2 = calculatePairR2(qtl_snp_id, snp_id, vcf_file$genotypes)) %>%
   dplyr::ungroup() %>%
   dplyr::filter(R2 > 0.8)
-write.table(trQTL_iteraction_olaps, "acLDL_figures/tables/GWAS_coloc_eQTL_interactions.txt", 
+write.table(trQTL_iteraction_olaps, "acLDL_figures/tables/GWAS_coloc_trQTL_interactions.txt", 
             sep = "\t", quote = FALSE, row.names = FALSE)
 
 
