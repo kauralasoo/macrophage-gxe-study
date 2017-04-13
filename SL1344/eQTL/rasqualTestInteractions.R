@@ -137,6 +137,19 @@ effect_size_heatmap = ggplot(appear_betas, aes(x = figure_name, y = gene_name, f
   theme(strip.text.y = element_text(colour = "grey10"), strip.background = element_rect(fill = "grey85"))
 ggsave("figures/main_figures/eQTLs_appear_kmeans_heatmap.png",effect_size_heatmap, width = 3, height = 4)
 
+#Make a quantile normalised plot
+effect_size_heatmap = ggplot(appear_betas, aes(x = figure_name, y = gene_name, fill = beta_quantile)) + 
+  facet_grid(new_cluster_id ~ .,  scales = "free_y", space = "free_y") + geom_tile() + 
+  scale_x_discrete(expand = c(0, 0)) +
+  scale_y_discrete(expand = c(0, 0)) +
+  ylab(ylabel) + 
+  scale_fill_gradient2(space = "Lab", low = "#4575B4", mid = "#FFFFBF", high = "#E24C36", name = "Relative effect", midpoint = 0) +
+  theme_light() +
+  theme(legend.title = element_text(angle = 90)) + 
+  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(), axis.title.x = element_blank()) +
+  theme(panel.spacing = unit(0.1, "lines")) +
+  theme(strip.text.y = element_text(colour = "grey10"), strip.background = element_rect(fill = "grey85"))
+ggsave("figures/main_figures/eQTLs_appear_kmeans_heatmap_quantile.png",effect_size_heatmap, width = 3, height = 4)
 
 #Calculate mean effect size in each cluster and condition
 appear_cluster_means = calculateClusterMeans(appear_clusters)

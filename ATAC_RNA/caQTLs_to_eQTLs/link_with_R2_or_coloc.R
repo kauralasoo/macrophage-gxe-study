@@ -82,11 +82,11 @@ plotQTLBetas <- function(beta_df){
   return(effect_size_heatmap)
 }
 
-plotQTLBetasAll <- function(beta_df){
+plotQTLBetasAll2 <- function(beta_df){
   n_pairs = nrow(dplyr::select(beta_df, gene_name, snp_id) %>% unique())
   ylabel = paste(n_pairs, "eQTL-caQTL pairs")
-  effect_size_heatmap = ggplot(beta_df, aes(x = stimulation_state, y = qtl_id, fill = beta_quantile)) + 
-    facet_grid(max_effect~phenotype, scales = "free_y", space = "free_y") + 
+  effect_size_heatmap = ggplot(beta_df, aes(x = phenotype, y = qtl_id, fill = beta_quantile)) + 
+    facet_wrap(~figure_name) + 
     geom_tile() + 
     ylab(ylabel) + 
     xlab("Condition") + 
@@ -99,6 +99,7 @@ plotQTLBetasAll <- function(beta_df){
     theme(axis.text.x = element_text(angle = 15))
   return(effect_size_heatmap)
 }
+
 
 
 #### Import data ####
@@ -214,15 +215,17 @@ all_betas = purrr::map_df(beta_processed, ~dplyr::arrange(., gene_name) %>%
   dplyr::mutate(max_effect = ifelse(max_effect == "IFNg", "I", ifelse(max_effect == "SL1344", "S", "I+S"))) %>%
   dplyr::mutate(max_effect = factor(max_effect, levels = c("I","S","I+S")))
 
-all_betas_plot1 = plotQTLBetasAll(dplyr::filter(all_betas, max_effect %in% c("I","S")))
-all_betas_plot2 = plotQTLBetasAll(dplyr::filter(all_betas, max_effect %in% c("I+S")))
+all_betas_plot1 = plotQTLBetasAll2(dplyr::filter(all_betas, max_effect %in% c("I")))
+all_betas_plot2 = plotQTLBetasAll2(dplyr::filter(all_betas, max_effect %in% c("S")))
+all_betas_plot3 = plotQTLBetasAll2(dplyr::filter(all_betas, max_effect %in% c("I+S")))
 
 #Plot with gene names
 all_betas_plot1 + theme(axis.text.y = element_text())
 all_betas_plot2 + theme(axis.text.y = element_text())
 
-ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_1.pdf", all_betas_plot1, width = 3, height = 3)
-ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_2.pdf", all_betas_plot2, width = 3, height = 4)
+ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_1.pdf", all_betas_plot1, width = 3, height = 2)
+ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_2.pdf", all_betas_plot2, width = 3, height = 2)
+ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_3.pdf", all_betas_plot3, width = 3, height = 4)
 
 if(coloc_run == TRUE){
   ggsave("figures/supplementary/eQTLs_vs_caQTL_heatmap.coloc.pdf", all_betas_plot, width = 3, height = 5)
