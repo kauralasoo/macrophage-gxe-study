@@ -64,7 +64,6 @@ filtered_overlaps = dplyr::left_join(snp_pvalues, fastqtl_n_snps, by = "gene_id"
 write.table(filtered_overlaps, "results/ATAC_RNA_overlaps/caQTL_eQTL_rescued_pairs.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 
 
-
 #Import old and new variant coordinates
 GRCh38_variants = importVariantInformation("genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz")
 GRCh37_variants = importVariantInformation("genotypes/SL1344/imputed_20151005/GRCh37/imputed.86_samples.variant_information.GRCh37.vcf.gz")

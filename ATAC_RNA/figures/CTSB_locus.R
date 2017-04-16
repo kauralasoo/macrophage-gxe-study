@@ -122,13 +122,13 @@ ggsave("figures/main_figures/CTSB_chromatin_boxplot.pdf", plot = peak_plot, widt
 eqtl_df = data_frame(phenotype_id = "ENSG00000164733", snp_id = "rs11997338")
 eqtl_coloc = colocMolecularQTLs(eqtl_df,qtl_summary_path = qtlResults()$rna_fastqtl$IFNg_SL1344, 
               gwas_summary_path = "../../datasets/Inflammatory_GWAS/Systemic_lupus_erythematosus_Bentham_2015_NatGen_GWAS.sorted.txt.gz",
-              GRCh37_variants, GRCh38_variants, QTLTools = FALSE)
+              GRCh37_variants, GRCh38_variants, QTLTools = FALSE, cis_dist = 2e5)
 
 
 eqtl_df = data_frame(phenotype_id = "ENSG00000164733", snp_id = "rs7835672")
 eqtl_coloc = colocMolecularQTLs(eqtl_df,qtl_summary_path = qtlResults()$rna_fastqtl$IFNg_SL1344, 
                                 gwas_summary_path = "../../datasets/Inflammatory_GWAS/Systemic_lupus_erythematosus_Bentham_2015_NatGen_GWAS.sorted.txt.gz",
-                                GRCh37_variants, GRCh38_variants, QTLTools = FALSE)
+                                GRCh37_variants, GRCh38_variants, QTLTools = FALSE, cis_dist = 2e5)
 
 
 #Filter transcripts

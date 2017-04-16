@@ -37,9 +37,38 @@ eqtl_200kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".
   dplyr::left_join(gene_name_map, by = "phenotype_id") %>%
   dplyr::anti_join(unconvincing_coloc, by = c("gene_name", "trait")) %>%
   dplyr::select(-.row)
+
+#Perform additional coloc 
+#Run additional coloc for rescued caQTL-eQTL pairs
+rescued_pairs = read.table("results/ATAC_RNA_overlaps/caQTL_eQTL_rescued_pairs.txt",
+                           header = TRUE, stringsAsFactors = FALSE) %>%
+  dplyr::transmute(phenotype_id = gene_id, snp_id, trait)
+gwas_stats_prefix = dplyr::mutate(gwas_stats_labeled, 
+                                  gwas_prefix = file.path("../../datasets/Inflammatory_GWAS/", file_name))
+
+#Perform coloc
+colocs = purrr::map_df(qtlResults()$rna_fastqtl, function(qtl_path){
+  res = purrr::by_row(rescued_pairs, ~colocMolecularQTLs(., qtl_summary_path = qtl_path, 
+                                                         gwas_summary_path = paste0(dplyr::filter(gwas_stats_prefix, trait == .$trait)$gwas_prefix, ".sorted.txt.gz"), 
+                                                         GRCh37_variants = GRCh37_variants, 
+                                                         GRCh38_variants = GRCh38_variants, N_qtl = 84, cis_dist = 1e5, QTLTools = FALSE)$summary,.collate = "rows")
+  return(res)
+}, .id = "condition_name")
+rescued_colocs = dplyr::mutate(colocs, PP_power = (PP.H4.abf + PP.H3.abf), PP_coloc = PP.H4.abf/PP_power) %>%
+  dplyr::mutate(summarised_trait = ifelse(trait %in% c("IBD","UC","CD"), "IBD", trait)) 
+rescued_hits = identifyColocHits(rescued_colocs) %>% 
+  dplyr::anti_join(eqtl_200kb_hits, by = "phenotype_id")
+rescued_filtered = dplyr::semi_join(rescued_colocs, rescued_hits, by = c("trait", "phenotype_id", "snp_id")) %>%
+  dplyr::left_join(gene_name_map, by = "phenotype_id") %>%
+  dplyr::select(-.row)
+write.table(rescued_filtered, "figures/tables/eQTL_coloc_100kb_rescued.txt", sep ="\t",
+            row.names = FALSE, col.names = TRUE, quote = FALSE)
+
 saveRDS(eqtl_200kb_hits, "results/SL1344/coloc/eQTL_coloc_200kb_hits.rds")
 write.table(eqtl_200kb_hits, "figures/tables/eQTL_coloc_200kb_hits.txt", sep = "\t", 
             row.names = FALSE, col.names = TRUE, quote = FALSE)
+
+
 
 
 #Keep one gene per summarised trait
@@ -51,7 +80,7 @@ condensed_eQTL_hits = dplyr::group_by(eqtl_200kb_hits, summarised_trait, phenoty
   dplyr::group_by(summarised_trait, gwas_lead) %>% 
   dplyr::filter(row_number() == 1) %>% 
   dplyr::ungroup()
-eqtl_200kb_filtered_hits = dplyr::semi_join(eqtl_200kb_hits, condensed_eQTL_hits, by = c("phenotype_id", "trait")) %>%
+eqtl_200kb_filtered_hits = dplyr::semi_join(eqtl_200kb_hits_all, condensed_eQTL_hits, by = c("phenotype_id", "trait")) %>%
   dplyr::filter(gene_name != "FADS2")
 
 
@@ -134,18 +163,19 @@ merged_counts = dplyr::bind_rows(eqtl_by_trait, caqtl_by_trait) %>%
 #Make a plot of coloc counts per trait
 coloc_traits_plot = ggplot(merged_counts, aes(x = summarised_trait, y = overlap_count, fill = phenotype)) + 
   geom_bar(stat = "identity", position = "dodge") +
+  scale_y_continuous(breaks = scales::pretty_breaks(n=5)) +
   coord_flip() +
   theme_light() +
   xlab("Trait") +
   ylab("Number of colocalised loci")  + 
   scale_fill_manual(values = c("#e66101","#5e3c99"), name = "", guide = guide_legend(reverse = TRUE)) +
-  theme(legend.position = "top") 
+  theme(legend.position = "top")
 ggsave("figures/main_figures/coloc_trait_counts.pdf", plot = coloc_traits_plot, width = 2.6, height = 3)
 
 
 
 #Identify and count shared QTLs
-shared_qtls = dplyr::semi_join(eqtl_200kb_hits, condensed_caqtl_hits, by = "gwas_lead")
+shared_qtls = dplyr::semi_join(eqtl_200kb_hits_all, condensed_caqtl_hits, by = "gwas_lead")
 
 #Count chared eQTL and caQTL overlaps
 shared_counts = dplyr::select(shared_qtls, summarised_trait, phenotype_id) %>% 

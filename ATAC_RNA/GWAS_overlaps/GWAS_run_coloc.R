@@ -112,5 +112,5 @@ write.table(coloc_hits, coloc_output, sep = "\t", quote = FALSE, row.names = FAL
 #data_res = purrr::by_row(qtl_df_list$naive[1:10,], ~colocMolecularQTLs(.,qtl_summary_path = qtlResults()$rna_fastqtl$naive, 
 #                gwas_summary_path = paste0(gwas_prefix, ".sorted.txt.gz")
 #                ,GRCh37_variants, GRCh38_variants, qtl_type = "fastqtl")$data)
-  
+
 
