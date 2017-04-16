@@ -26,6 +26,7 @@ unique_peaks_no_indels = dplyr::anti_join(unique_overlapping_snps, indel_peaks, 
 
 #Import variable chromatin QTLs
 variable_qtls = readRDS("results/ATAC/QTLs/rasqual_appear_disappear_qtls.rds")
+variable_qtls$appear = dplyr::ungroup(variable_qtls$appear)
 variable_peaks = rbind(dplyr::select(variable_qtls$appear, gene_id) %>% unique(), dplyr::select(variable_qtls$disappear, gene_id) %>% unique()) %>%
   dplyr::semi_join(unique_peaks_no_indels, by = "gene_id")
 
@@ -130,8 +131,9 @@ plot = ggplot(relative_enrichment_renamed, aes(y = motif_name, x = OR_log2, xmin
   scale_x_continuous(expand = c(0, 0), limits = c(-4,4)) +
   theme(legend.key = element_blank()) + 
   theme(panel.spacing = unit(0.2, "lines"))  + 
-  geom_vline(aes(xintercept = 0), size = 0.3)
-ggsave("figures/supplementary/caQTL_all_clusters_disrupted_motifs.pdf", plot = plot, height = 5.5, width = 3)
+  geom_vline(aes(xintercept = 0), size = 0.3) +
+  theme(strip.text.y = element_text(colour = "grey10"), strip.background = element_rect(fill = "grey85"))
+ggsave("figures/supplementary/caQTL_all_clusters_disrupted_motifs.pdf", plot = plot, height = 4, width = 2.6)
 
 
 #Make a lineplot for Salmonella and IFNg specific clusters
