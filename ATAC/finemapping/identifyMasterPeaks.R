@@ -100,6 +100,9 @@ unique_master_peaks = nrow(result_list$unique_masters$lead_snps)
 shared_master_peaks = nrow(result_list$ambiguous_masters$cluster_memberships)
 other_is_qtl = length(unique(result_list$dependents$unique_masters$dependent_id)) + 
   length(unique(result_list$dependents$cluster_master$dependent_id))
+master_count = length(unique(result_list$dependents$unique_masters$master_id)) + 
+  length(unique(result_list$dependents$cluster_master$master_id))
+  
 
 #Compile stats
 summary_stats = data_frame("total" = total_peak_count, "overlap_any_peak" = overlap_peak_count, "overlap_same_peak" = overlap_same_peak, 
