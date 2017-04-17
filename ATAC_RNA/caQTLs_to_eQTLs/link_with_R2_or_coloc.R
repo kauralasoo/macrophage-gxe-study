@@ -225,7 +225,7 @@ all_betas_plot2 + theme(axis.text.y = element_text())
 
 ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_1.pdf", all_betas_plot1, width = 3, height = 2)
 ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_2.pdf", all_betas_plot2, width = 3, height = 2)
-ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_3.pdf", all_betas_plot3, width = 3, height = 4)
+ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_3.pdf", all_betas_plot3, width = 3, height = 4.5)
 
 if(coloc_run == TRUE){
   ggsave("figures/supplementary/eQTLs_vs_caQTL_heatmap.coloc.pdf", all_betas_plot, width = 3, height = 5)
@@ -327,9 +327,9 @@ peak_present_fraction = dplyr::filter(peak_all_betas, phenotype == "RNA-seq", co
 
 #Save proportions to disk
 combined_results = dplyr::bind_rows(present_fraction, peak_present_fraction)
-combined_all = combined_results
-
-write.table(combined_all, "results/ATAC_RNA_overlaps/foreshadow_quant.txt", sep = "\t", quote = FALSE)
+write.table(combined_results, "results/ATAC_RNA_overlaps/foreshadow_quant.txt", sep = "\t", quote = FALSE)
+combined_results = read.table("results/ATAC_RNA_overlaps/foreshadow_quant.txt", stringsAsFactors = FALSE) %>%
+  dplyr::mutate(max_effect = factor(max_effect, levels = c("I","S","I+S")))
 
 if(coloc_run == TRUE){
   write.table(combined_results, "results/ATAC_RNA_overlaps/foreshadow_quant.coloc.txt", sep = "\t", quote = FALSE)
@@ -338,12 +338,12 @@ if(coloc_run == TRUE){
 fisher.test(matrix(c(14, 2, 2, 8), ncol = 2))
 
 #Make a plot of proportions
-plot_data = dplyr::mutate(combined_all, type = ifelse(type == "forward", "caQTL -> eQTL", "eQTL -> caQTL"))
+plot_data = dplyr::mutate(combined_results, type = ifelse(type == "forward", "caQTL before eQTL", "eQTL before caQTL"))
 
 foreshadow_plot = ggplot(plot_data, aes(x = max_effect, y = fraction, fill = type)) + 
   geom_bar(stat = "identity", position = "dodge") + 
   xlab("Condition") +
   ylab("Fraction of caQTL-eQTL pairs") + 
   theme_light() +
-  theme(legend.position = "top")
-ggsave("figures/main_figures/foreshadowing_proportions.pdf", plot = foreshadow_plot, width = 3.5, height = 4)
+  theme(legend.position = "right")
+ggsave("figures/main_figures/foreshadowing_proportions.pdf", plot = foreshadow_plot, width = 3.7, height = 3)
