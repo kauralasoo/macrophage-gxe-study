@@ -56,6 +56,7 @@ saveRDS(interaction_df, "results/SL1344/eQTLs/SL1344_interaction_pvalues.rds")
 interaction_df = readRDS("results/SL1344/eQTLs/SL1344_interaction_pvalues.rds")
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 
+
 #Make a Q-Q plot for the interaction p-values
 qq_df = dplyr::mutate(interaction_df, p_eigen = p_nominal) %>% addExpectedPvalue()
 qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_nominal,10))) + 
@@ -212,4 +213,35 @@ disappear_means_plot = ggplot(disappear_cluster_means, aes(x = condition_name, y
 variable_qtls = list(appear = appear_betas, disappear = disappear_betas)
 saveRDS(variable_qtls, "results/SL1344/eQTLs/appeat_disappear_eQTLs.rds")
 
+
+
+
+
+
+
+#Compare Wald test to LRT
+naive_ifng_data = extractConditionFromExpressionList(c("naive","IFNg"), combined_expression_data)
+naive_sl1344_data = extractConditionFromExpressionList(c("naive","SL1344"), combined_expression_data)
+naive_ifng_sl1344_data = extractConditionFromExpressionList(c("naive","IFNg_SL1344"), combined_expression_data)
+
+#Perform interaction test using Wald test
+interaction_results = testMultipleInteractions(tbl_df(filtered_pairs), naive_ifng_data$cqn, 
+                                               naive_ifng_data$sample_metadata, 
+                                               filtered_vcf, formula_qtl, formula_interaction, id_field_separator = "-", return_value = "model")
+wald_res = purrr::map_df(interaction_results, ~data_frame(p_wald = (summary(.$interaction_model) %>% coef())[11,4]), .id = "id") %>%
+  tidyr::separate(id, into = c("gene_id", "snp_id"), sep = "-") 
+
+interaction_results = testMultipleInteractions(tbl_df(filtered_pairs), naive_ifng_data$cqn, 
+                                               naive_ifng_data$sample_metadata, 
+                                               filtered_vcf, formula_qtl, formula_interaction, id_field_separator = "-")
+anova_res = postProcessInteractionPvalues(interaction_results, id_field_separator = "-") %>%
+  dplyr::transmute(gene_id, snp_id, p_lrt = p_nominal)
+
+
+anova_lm_plot = ggplot(df, aes(x = -log(p_lrt,10), y = -log(df$p_wald,10))) + 
+  geom_point() +
+  xlab("Anova p-value") +
+  ylab("summary(lm) p-value") + 
+  theme_light()
+ggsave("figures/supplementary/anova_vs_lm_pvalues.png", plot = anova_lm_plot, width = 4, height = 4)
 
