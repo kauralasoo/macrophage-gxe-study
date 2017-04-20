@@ -2,10 +2,10 @@ library("purrr")
 library("ggplot2")
 library("devtools")
 library("dplyr")
+library("wiggleplotr")
 load_all("../seqUtils/")
 load_all("~/software/rasqual/rasqualTools/")
 load_all("macrophage-gxe-study/housekeeping/")
-load_all("../wiggleplotr/")
 
 #Import ATAC data
 atac_data = readRDS("results/ATAC/ATAC_combined_accessibility_data_covariates.rds")
@@ -48,12 +48,51 @@ interaction_list = list(IFNg = ifng_interactions, SL1344 = sl1344_interactions, 
 saveRDS(interaction_list, "results/ATAC/QTLs/peak_peak_interactions.txt")
 interaction_list = readRDS("results/ATAC/QTLs/peak_peak_interactions.txt")
 
+#Permute genotypes
+new_labels = sample(colnames(vcf_file$genotypes))
+vcf_file_perm = vcf_file
+colnames(vcf_file_perm$genotypes) = new_labels
+
+#Test interactions with permuted genotypes
+ifng_interactions = purrr::by_row(dependent_peaks$unique_masters, testThreewayInteraction, naive_ifng_atac$cqn, 
+                                  naive_ifng_atac$sample_metadata, vcf_file_perm, model0, model1, .collate = "rows", .to = "p_nominal")
+sl1344_interactions = purrr::by_row(dependent_peaks$unique_masters, testThreewayInteraction, naive_sl1344_atac$cqn, 
+                                    naive_sl1344_atac$sample_metadata, vcf_file_perm, model0, model1, .collate = "rows", .to = "p_nominal")
+ifng_sl1344_interactions = purrr::by_row(dependent_peaks$unique_masters, testThreewayInteraction, naive_ifng_sl1344_atac$cqn, 
+                                         naive_ifng_sl1344_atac$sample_metadata, vcf_file_perm, model0, model1, .collate = "rows", .to = "p_nominal")
+interaction_list = list(IFNg = ifng_interactions, SL1344 = sl1344_interactions, IFNg_SL1344 = ifng_sl1344_interactions)
+saveRDS(interaction_list, "results/ATAC/QTLs/peak_peak_interactions.permuted.txt")
+interaction_list_perm = readRDS("results/ATAC/QTLs/peak_peak_interactions.permuted.txt")
+
+#Compare p-value distributions for nominal and permutation runs
+interaction_df = purrr::map_df(interaction_list, identity, .id = "other_condition") %>%
+  dplyr::mutate(test = "nominal")
+interaction_df_perm = purrr::map_df(interaction_list_perm, identity, .id = "other_condition")  %>%
+  dplyr::mutate(test = "permuted")
+df_all = dplyr::bind_rows(interaction_df, interaction_df_perm)
+
+p_histogram = ggplot(df_all, aes(x = p_nominal)) + geom_histogram(bins = 20) + 
+  facet_wrap(~test) + 
+  theme_light() +
+  xlab("p-value")
+ggsave("figures/supplementary/dependent_peak_interaction_histogram.pdf", plot = p_histogram, width = 5, height = 3)
+ggsave("figures/supplementary/dependent_peak_interaction_histogram.png", plot = p_histogram, width = 5, height = 3)
+
 
 #Convert list into a df and extract interaction hits
 interaction_df = purrr::map_df(interaction_list, identity, .id = "other_condition")
 interaction_hits = dplyr::mutate(interaction_df, p_fdr = p.adjust(p_nominal, method = "fdr")) %>% 
   dplyr::arrange(p_nominal) %>% dplyr::filter(p_fdr < 0.1) %>%
   dplyr::mutate(baseline_condition = "naive") 
+
+#Make a Q-Q plot for the interaction test
+qq_df = dplyr::mutate(interaction_df, p_eigen = p_nominal) %>% addExpectedPvalue()
+qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_nominal,10))) + 
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "black") + 
+  theme_light() + 
+  xlab("-log10 exptected p-value") + 
+  ylab("-log10 observed p-value")
 
 #Extract RASQUAL effect sizes for all peak-peak pairs
 unique_snps = interaction_hits$snp_id
