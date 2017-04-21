@@ -91,7 +91,17 @@ qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_nominal,10))) +
   xlab("-log10 exptected p-value") + 
   ylab("-log10 observed p-value")
 
-
+#Comapre lm and lme4 p-values
+lme4_pval = readRDS("results/SL1344/eQTLs/SL1344_interaction_pvalues_lme4.rds") %>%
+  dplyr::transmute(gene_id, snp_id, p_lme4 = p_nominal)
+lm_pval = readRDS("results/SL1344/eQTLs/SL1344_interaction_pvalues.rds") %>%
+  dplyr::transmute(gene_id, snp_id, p_lm = p_nominal)
+joint_p = dplyr::left_join(lme4_pval, lm_pval, by = c("gene_id", "snp_id"))
+lme4_plot = ggplot(joint_p, aes(x = -log(p_lm, 10), y = -log(p_lme4, 10))) + geom_point() +
+  theme_light() +
+  xlab("linear model p-value") +
+  ylab("linear mixed model p-value")
+ggsave("figures/supplementary/eQTL_lm_vs_lme4_pvalues.png",lme4_plot, width = 5, height = 5)
 
 
 #Extract effect sizes for all gene-snp pairs from RASQUAL data
@@ -137,6 +147,23 @@ effect_size_heatmap = ggplot(appear_betas, aes(x = figure_name, y = gene_name, f
   theme(panel.spacing = unit(0.1, "lines")) +
   theme(strip.text.y = element_text(colour = "grey10"), strip.background = element_rect(fill = "grey85"))
 ggsave("figures/main_figures/eQTLs_appear_kmeans_heatmap.png",effect_size_heatmap, width = 3, height = 4)
+
+
+#Count conditions with maximal effect sizes
+max_condition_table = dplyr::select(appear_betas, gene_id, snp_id, max_condition) %>% 
+  unique() %>%
+  dplyr::group_by(max_condition) %>%
+  dplyr::summarise(max_count = length(max_condition)) %>%
+  dplyr::rename(condition_name = max_condition) %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::filter(figure_name != "N")
+
+max_effect_plot = ggplot(max_condition_table, aes(x = figure_name, y = max_count)) + 
+  geom_bar(stat = "identity") + 
+  xlab("Condition") + 
+  theme_light() +
+  ylab("Response eQTL count")
+ggsave("figures/supplementary/eQTL_max_condition_count.pdf", plot = max_effect_plot, width = 3, height = 3)
 
 #Make a quantile normalised plot
 effect_size_heatmap = ggplot(appear_betas, aes(x = figure_name, y = gene_name, fill = beta_quantile)) + 
