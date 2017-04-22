@@ -67,6 +67,31 @@ qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_nominal,10))) +
   ylab("-log10 observed p-value")
 ggsave("figures/supplementary/eQTL_interaction_Q-Q_plot.pdf", plot = qq_plot, width = 4, height = 4)
 
+
+#Permute conditions within individual
+perm_conditions = dplyr::group_by(combined_expression_data$sample_metadata, donor) %>% 
+  dplyr::mutate(condition_new = sample(condition)) %>% 
+  dplyr::select(donor, condition, condition_new) %>% dplyr::ungroup() %>% 
+  dplyr::mutate(perm_sample_id = paste(donor, condition_new, sep = "_"))
+
+cqn_perm = combined_expression_data$cqn
+colnames(cqn_perm) = perm_conditions$perm_sample_id
+
+interaction_results = testMultipleInteractions(tbl_df(filtered_pairs), cqn_perm, 
+                                               combined_expression_data$sample_metadata, 
+                                               filtered_vcf, formula_qtl, formula_interaction, 
+                                               id_field_separator = "-", lme4 = TRUE)
+interaction_df = postProcessInteractionPvalues(interaction_results, id_field_separator = "-")
+
+qq_df = dplyr::mutate(interaction_df, p_eigen = p_nominal) %>% addExpectedPvalue()
+qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_nominal,10))) + 
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "black") + 
+  theme_light() + 
+  xlab("-log10 exptected p-value") + 
+  ylab("-log10 observed p-value")
+
+
 #Use a paired design to test for interaction
 covariate_names = c("PEER_factor_1", "PEER_factor_2", "PEER_factor_3","PEER_factor_4", "PEER_factor_5","PEER_factor_6", "sex_binary")
 formula_qtl = as.formula(paste("expression ~ genotype + condition_name + (1|donor) ", 

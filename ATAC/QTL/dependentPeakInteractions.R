@@ -37,6 +37,11 @@ model0 = as.formula("cqn ~genotype + peak_type + condition_name  + cqn_PC1 + cqn
 result_list = readRDS("results/ATAC/QTLs/qtl_peak_type_assignment.rds")
 dependent_peaks = result_list$dependents
 
+#Filter the VCF file for quicker testing
+genotypes = vcf_file$genotypes[unique(dependent_peaks$unique_masters$snp_id),]
+snps_pos = dplyr::filter(vcf_file$snpspos, snpid %in% rownames(genotypes))
+filtered_vcf = list(snpspos = snps_pos, genotypes = genotypes)
+
 #Test peak-peak-genotype interactions in naive_vs_IFNg setting
 ifng_interactions = purrr::by_row(dependent_peaks$unique_masters, testThreewayInteraction, naive_ifng_atac$cqn, 
                   naive_ifng_atac$sample_metadata, vcf_file, model0, model1, .collate = "rows", .to = "p_nominal")
@@ -63,6 +68,19 @@ ifng_sl1344_interactions = purrr::by_row(dependent_peaks$unique_masters, testThr
 interaction_list = list(IFNg = ifng_interactions, SL1344 = sl1344_interactions, IFNg_SL1344 = ifng_sl1344_interactions)
 saveRDS(interaction_list, "results/ATAC/QTLs/peak_peak_interactions.permuted.txt")
 interaction_list_perm = readRDS("results/ATAC/QTLs/peak_peak_interactions.permuted.txt")
+
+#Alternative option - permute conditions withing individual (less bad, but still does not work):
+#Permute conditions
+perm_conditions = dplyr::group_by(naive_ifng_atac$sample_metadata, donor) %>% 
+  dplyr::mutate(condition_char_new = sample(condition_char)) %>% 
+  dplyr::select(donor, condition_char, condition_char_new) %>% dplyr::ungroup() %>% 
+  dplyr::mutate(perm_sample_id = paste(donor, condition_char_new, "ATAC", sep = "_"))
+colnames(naive_ifng_atac$cqn) = perm_conditions$perm_sample_id
+
+ifng_interactions = purrr::by_row(dependent_peaks$unique_masters, testThreewayInteraction, naive_ifng_atac$cqn, 
+                                  naive_ifng_atac$sample_metadata, filtered_vcf, model0, model1, .collate = "rows", .to = "p_nominal")
+
+
 
 #Compare p-value distributions for nominal and permutation runs
 interaction_df = purrr::map_df(interaction_list, identity, .id = "other_condition") %>%
