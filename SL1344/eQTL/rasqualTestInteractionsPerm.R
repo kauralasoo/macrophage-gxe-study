@@ -66,8 +66,9 @@ formula_interaction = as.formula(paste("expression ~ genotype + condition_name +
                                        paste(covariate_names, collapse = " + "), sep = "+ "))
 
 #Test for interactions
-interaction_results_lme4 = testMultipleInteractions(filtered_pairs, acldl_list$cqn, acldl_list$sample_metadata, 
-                                               filtered_vcf, formula_qtl, formula_interaction, id_field_separator = "-", lme4 = TRUE)
+interaction_results_lme4 = testMultipleInteractions(tbl_df(filtered_pairs), cqn_perm, 
+                                               combined_expression_data$sample_metadata, 
+                                               vcf_file, formula_qtl, formula_interaction, id_field_separator = "-", lme4 = TRUE)
 interaction_df_lme4 = postProcessInteractionPvalues(interaction_results_lme4, id_field_separator = "-")
 
 #Save permutatation results to disk
