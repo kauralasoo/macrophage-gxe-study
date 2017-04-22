@@ -181,3 +181,7 @@ cut -f1 macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.tx
 echo 'SCZ' | python ~/software/utils/submitJobs.py --MEM 10000 --jobname coloc_diseases --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/finemapping/GWAS_run_coloc.R --type caQTL --window 2e5"
 
 
+#Perform permutations for the interaction test
+cut -f1 interaction_perm.txt | python ~/software/utils/submitJobs.py --MEM 6000 --jobname interaction_perm --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/eQTL/rasqualTestInteractionsPerm.R"
+
+

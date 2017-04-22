@@ -57,6 +57,9 @@ interaction_results_lm = testMultipleInteractions(tbl_df(filtered_pairs), cqn_pe
                                                vcf_file, formula_qtl, formula_interaction, id_field_separator = "-")
 interaction_df_lm = postProcessInteractionPvalues(interaction_results_lm, id_field_separator = "-")
 
+#Save to disk
+saveRDS(interaction_df_lm, paste0("results/SL1344/eQTLs/perm/interaction_results_lm_",perm_number,".rds"))
+
 #Test for interactions (lme4)
 ##### Ctrl vs AcLDL (paired design with lme4) #####
 covariate_names = c("sex_binary","PEER_factor_1", "PEER_factor_2", "PEER_factor_3","PEER_factor_4", "PEER_factor_5","PEER_factor_6")
@@ -72,7 +75,6 @@ interaction_results_lme4 = testMultipleInteractions(tbl_df(filtered_pairs), cqn_
 interaction_df_lme4 = postProcessInteractionPvalues(interaction_results_lme4, id_field_separator = "-")
 
 #Save permutatation results to disk
-saveRDS(interaction_df_lm, paste0("results/acLDL/eQTLs/perm/interaction_results_lm_",perm_number,".rds"))
-saveRDS(interaction_df_lme4, paste0("results/acLDL/eQTLs/perm/interaction_results_lme4_",perm_number,".rds"))
+saveRDS(interaction_df_lme4, paste0("results/SL1344/eQTLs/perm/interaction_results_lme4_",perm_number,".rds"))
 
 
