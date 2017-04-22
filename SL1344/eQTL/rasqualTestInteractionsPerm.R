@@ -1,17 +1,18 @@
 library("devtools")
 library("dplyr")
-library("optparse")
+library("lme4")
 load_all("../seqUtils/")
 
-#Parse command-line options
-option_list <- list(
-  make_option(c("-p", "--perm"), type="character", default=NULL,
-              help="Number of the permutation run.", metavar = "type")
-)
-opt <- parse_args(OptionParser(option_list=option_list))
+batch_id = NULL
 
-#Extract permutation number from the option
-perm_number = opt$p
+####### Get batch id from disk ######
+f <- file("stdin")
+open(f)
+perm_number = readLines(f)
+print(perm_number)
+close(f)
+####### END #######
+
 
 #### Import data ####
 #Load the raw eQTL dataset
