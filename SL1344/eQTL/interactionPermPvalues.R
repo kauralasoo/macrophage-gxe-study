@@ -49,6 +49,7 @@ empirical_pvalues_lm = dplyr::rename(perm_pvalues_lm, p_all = p_nominal) %>%
   dplyr::ungroup() %>%
   dplyr::mutate(p_perm = pmin(p_perm, 1)) %>%
   dplyr::mutate(p_fdr = p.adjust(p_perm, method = "fdr"))
+saveRDS(empirical_pvalues_lm, "results/SL1344/eQTLs/SL1344_interaction_pvalues_lm.empirical.rds")
 
 
 #Import permutation p-values from lme4
@@ -63,4 +64,7 @@ empirical_pvalues_lme4 = dplyr::rename(perm_pvalues_lme4, p_all = p_nominal) %>%
   dplyr::ungroup() %>%
   dplyr::mutate(p_perm = pmin(p_perm, 1)) %>%
   dplyr::mutate(p_fdr = p.adjust(p_perm, method = "fdr"))
+saveRDS(empirical_pvalues_lme4, "results/SL1344/eQTLs/SL1344_interaction_pvalues_lme4.empirical.rds")
+
+
 
