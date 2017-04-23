@@ -1,5 +1,4 @@
 library("devtools")
-library("plyr")
 library("dplyr")
 library("ggplot2")
 load_all("../seqUtils/")
@@ -56,6 +55,9 @@ saveRDS(interaction_df, "results/SL1344/eQTLs/SL1344_interaction_pvalues.rds")
 interaction_df = readRDS("results/SL1344/eQTLs/SL1344_interaction_pvalues.rds")
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 
+#Import permutation p-values for the linear model
+empirical_pvalues_lm = readRDS("results/SL1344/eQTLs/SL1344_interaction_pvalues_lm.empirical.rds")
+empirical_hits_lm = dplyr::filter(empirical_pvalues_lm, p_fdr < 0.1)
 
 #Make a Q-Q plot for the interaction p-values
 qq_df = dplyr::mutate(interaction_df, p_eigen = p_nominal) %>% addExpectedPvalue()
@@ -67,29 +69,6 @@ qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_nominal,10))) +
   ylab("-log10 observed p-value")
 ggsave("figures/supplementary/eQTL_interaction_Q-Q_plot.pdf", plot = qq_plot, width = 4, height = 4)
 
-
-#Permute conditions within individual
-perm_conditions = dplyr::group_by(combined_expression_data$sample_metadata, donor) %>% 
-  dplyr::mutate(condition_new = sample(condition)) %>% 
-  dplyr::select(donor, condition, condition_new) %>% dplyr::ungroup() %>% 
-  dplyr::mutate(perm_sample_id = paste(donor, condition_new, sep = "_"))
-
-cqn_perm = combined_expression_data$cqn
-colnames(cqn_perm) = perm_conditions$perm_sample_id
-
-interaction_results = testMultipleInteractions(tbl_df(filtered_pairs), cqn_perm, 
-                                               combined_expression_data$sample_metadata, 
-                                               filtered_vcf, formula_qtl, formula_interaction, 
-                                               id_field_separator = "-", lme4 = TRUE)
-interaction_df = postProcessInteractionPvalues(interaction_results, id_field_separator = "-")
-
-qq_df = dplyr::mutate(interaction_df, p_eigen = p_nominal) %>% addExpectedPvalue()
-qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_nominal,10))) + 
-  geom_point() +
-  geom_abline(slope = 1, intercept = 0, color = "black") + 
-  theme_light() + 
-  xlab("-log10 exptected p-value") + 
-  ylab("-log10 observed p-value")
 
 
 #Use a paired design to test for interaction
@@ -108,6 +87,12 @@ saveRDS(interaction_df, "results/SL1344/eQTLs/SL1344_interaction_pvalues_lme4.rd
 interaction_df = readRDS("results/SL1344/eQTLs/SL1344_interaction_pvalues_lme4.rds")
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 
+#Import permutation p-values for the linear model
+empirical_pvalues_lme4 = readRDS("results/SL1344/eQTLs/SL1344_interaction_pvalues_lme4.empirical.rds")
+empirical_hits_lme4 = dplyr::filter(empirical_pvalues_lme4, p_fdr < 0.1)
+
+
+#Make a QQ-plot
 qq_df = dplyr::mutate(interaction_df, p_eigen = p_nominal) %>% addExpectedPvalue()
 qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_nominal,10))) + 
   geom_point() +
@@ -141,8 +126,11 @@ appear_betas = dplyr::semi_join(beta_list$beta_summaries[,1:6], appear_qtls, by 
 appear_clusters = clusterBetasKmeans(appear_betas, 6) %>% dplyr::select(gene_id, snp_id, cluster_id) %>%
   dplyr::left_join(beta_list$beta_df, by = c("gene_id", "snp_id"))
 
+#Keep only those genes that survive permutation testing
+#appear_clusters = dplyr::semi_join(appear_clusters, empirical_hits_lme4, by = c("gene_id", "snp_id"))
+
 #Reorder clusters
-cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(4,2,2,1,3,6))
+cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(4,5,2,1,3,6))
 
 #Make heatmap of effect sizes
 appear_betas = appear_clusters %>% 
