@@ -17,6 +17,9 @@ combined_expression_data$sample_metadata$condition_name = factor(combined_expres
                                                                  levels = c("naive", "IFNg", "SL1344", "IFNg_SL1344"))
 gene_name_map = dplyr::select(combined_expression_data$gene_metadata, gene_id, gene_name)
 
+#Import genotypes
+vcf_file = readRDS("genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.rds")
+
 #Import ATAC data
 atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
 atac_list$sample_metadata$condition_name = factor(atac_list$sample_metadata$condition_name, 

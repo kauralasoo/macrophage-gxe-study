@@ -38,7 +38,7 @@ cdss = cdsBy(txdb, by = "tx", use.names = TRUE)
 
 
 ##GP1BA
-gene_data = constructQtlPlotDataFrame("ENSG00000185245", "rs9902753", combined_expression_data$cqn, vcf_file$genotypes, 
+gene_data = constructQtlPlotDataFrame("ENSG00000185245", "rs4486968", combined_expression_data$cqn, vcf_file$genotypes, 
                                        combined_expression_data$sample_metadata, combined_expression_data$gene_metadata) %>%
   dplyr::filter(condition_name %in% c("naive","IFNg_SL1344")) %>%
   dplyr::left_join(figureNames()) %>%
@@ -47,7 +47,7 @@ gene_data = constructQtlPlotDataFrame("ENSG00000185245", "rs9902753", combined_e
 gene_plot = plotQTLCompact(gene_data) + ggplot2::scale_color_manual(values = conditionPalette()[c(1,4)], guide=FALSE)
 ggsave("figures/main_figures/GP1BA_expression_boxplot.pdf", plot = gene_plot, width = 2, height = 2.5)
 
-peak_data = constructQtlPlotDataFrame("ATAC_peak_106417", "rs9902753", atac_list$cqn, vcf_file$genotypes, 
+peak_data = constructQtlPlotDataFrame("ATAC_peak_106417", "rs4486968", atac_list$cqn, vcf_file$genotypes, 
                                       atac_list$sample_metadata, atac_list$gene_metadata) %>%
   dplyr::filter(condition_name %in% c("naive","IFNg_SL1344")) %>%
   dplyr::left_join(figureNames()) %>%
@@ -59,7 +59,6 @@ ggsave("figures/main_figures/GP1BA_atac_boxplot.pdf", plot = peak_plot, width = 
 
 
 #Filter transcripts
-#Filter transcripts for NXPH2
 tx_ids = dplyr::filter(tx_metadata, gene_name == "GP1BA", 
                          transcript_biotype == "protein_coding", transcript_status == "KNOWN")
 region_coords = c(4900090,4965090)
@@ -68,10 +67,10 @@ region_coords = c(4900090,4965090)
 tx_meta = dplyr::filter(tx_metadata, transcript_id == "ENST00000329125") %>%
   dplyr::mutate(transcript_id = " ")
 e = exons[tx_ids$transcript_id[1]]
-names(e) = " "
+names(e) = "GP1BA"
 c = cdss[tx_ids$transcript_id[1]]
-names(c) = " "
-tx_plot = plotTranscripts(e, c, tx_meta, rescale_introns = FALSE, 
+names(c) = "GP1BA"
+tx_plot = plotTranscripts(e, c, rescale_introns = FALSE, 
                           region_coords = region_coords)
 
 
@@ -104,23 +103,43 @@ gene_manhattan = makeManhattanPlot(gene_pvalues, region_coords, color_R2 = TRUE)
 #Fetch all peaks in the region and make peak annot plot
 peak_annot = wiggleplotrExtractPeaks(region_coords, chrom = 17, atac_list$gene_metadata)
 peak_plot = plotTranscripts(peak_annot$peak_list, peak_annot$peak_list, peak_annot$peak_annot, rescale_introns = FALSE, 
-                            region_coords = region_coords, connect_exons = FALSE, label_type = "peak") + dataTrackTheme()
+                            region_coords = region_coords, connect_exons = FALSE, transcript_label = FALSE) + dataTrackTheme()
 
 #Make a coverage plot of the region
 #Construct metadata df for wiggleplotr
-atac_track_data = wiggleplotrGenotypeColourGroup(atac_meta_df, "rs9902753", vcf_file$genotypes, 1) %>%
+atac_track_data = wiggleplotrGenotypeColourGroup(atac_meta_df, "rs4486968", vcf_file$genotypes, 1) %>%
   dplyr::filter(track_id %in% c("naive","IFNg_SL1344"))%>% 
   dplyr::left_join(figureNames()) %>%
   dplyr::mutate(track_id = figure_name)
 
 ATAC_coverage = plotCoverage(exons = peak_annot$peak_list, cdss = peak_annot$peak_list, track_data = atac_track_data, rescale_introns = FALSE, 
                              transcript_annotations = peak_annot$peak_annot, fill_palette = getGenotypePalette(),
-                             connect_exons = FALSE, label_type = "peak", plot_fraction = 0.1, heights = c(0.7,0.3), 
+                             connect_exons = FALSE, transcript_label = FALSE, plot_fraction = 0.1, heights = c(0.7,0.3), 
                              region_coords = region_coords, return_subplots_list = TRUE, coverage_type = "both")
 
 joint_plot = cowplot::plot_grid(peak_manhattan, gene_manhattan, ATAC_coverage$coverage_plot, tx_plot, 
                                 align = "v", ncol = 1, rel_heights = c(3,3,2,2.5))
 ggsave("figures/main_figures/GP1BA_manhattan_plots.png", plot = joint_plot, width = 4, height = 4.5)
+
+
+#Make a focussed plot to illustrate motif disruption
+region_coords = c(4925000,4929000)
+
+ATAC_coverage = plotCoverage(exons = peak_annot$peak_list, cdss = peak_annot$peak_list, track_data = atac_track_data, rescale_introns = FALSE, 
+                             transcript_annotations = peak_annot$peak_annot, fill_palette = getGenotypePalette(),
+                             connect_exons = FALSE, transcript_label = FALSE, plot_fraction = 0.1, heights = c(0.7,0.3), 
+                             region_coords = region_coords, return_subplots_list = TRUE, coverage_type = "both")
+
+#Make Manhattan plots
+peak_manhattan = makeManhattanPlot(peak_pvalues, region_coords, color_R2 = TRUE)
+gene_manhattan = makeManhattanPlot(gene_pvalues, region_coords, color_R2 = TRUE)
+
+#Join all together
+joint_plot = cowplot::plot_grid(peak_manhattan, ATAC_coverage$coverage_plot, ATAC_coverage$tx_structure, 
+                                align = "v", ncol = 1, rel_heights = c(3,2,2.5))
+ggsave("figures/supplementary/GP1BA_finemapping_plot.pdf", plot = joint_plot, width = 4, height = 4)
+
+
 
 
 
