@@ -119,7 +119,9 @@ combined_plot = ggplot(combined_df, aes(x = state, y = log(tpm + 1,2), color = p
 ggsave("figures/main_figures/mean_signal_by_phenotype.pdf", plot = combined_plot, width = 3.5, height = 3)
 
 
-
+#Cacluate median TPMs for each phenotype and condition
+dplyr::group_by(combined_df, state, phenotype) %>% 
+  dplyr::summarise(median_tpm = median(tpm))
 
 
 

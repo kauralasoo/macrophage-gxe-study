@@ -182,6 +182,6 @@ echo 'SCZ' | python ~/software/utils/submitJobs.py --MEM 10000 --jobname coloc_d
 
 
 #Perform permutations for the interaction test
-cut -f1 interaction_perm.txt | python ~/software/utils/submitJobs.py --MEM 6000 --jobname interaction_perm --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/eQTL/rasqualTestInteractionsPerm.R"
+cut -f1 interaction_perm.txt | tail -n 900 | python ~/software/utils/submitJobs.py --MEM 6000 --jobname interaction_perm --ncores 1 --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/eQTL/rasqualTestInteractionsPerm.R"
 
 
