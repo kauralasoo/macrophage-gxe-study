@@ -121,16 +121,17 @@ beta_list$beta_summaries = dplyr::mutate(beta_list$beta_summaries, max_naive_rat
 #Find QTLs that appear
 set.seed(42)
 #appear_qtls = dplyr::filter(beta_list$beta_summaries, abs(naive) <= 0.59, max_abs_beta - abs(naive) >= 0.32)
-appear_qtls = dplyr::filter(beta_list$beta_summaries, abs(naive) <= 0.64, max_abs_diff >= 0.59, max_abs_beta >= 0.59)
+appear_qtls = dplyr::filter(beta_list$beta_summaries, (abs(naive) <= 0.59 & max_abs_diff >= 0.59 & max_abs_beta >= 0.59) | 
+                              gene_id == "ENSG00000144227")
 appear_betas = dplyr::semi_join(beta_list$beta_summaries[,1:6], appear_qtls, by = c("gene_id", "snp_id"))
 appear_clusters = clusterBetasKmeans(appear_betas, 6) %>% dplyr::select(gene_id, snp_id, cluster_id) %>%
   dplyr::left_join(beta_list$beta_df, by = c("gene_id", "snp_id"))
 
 #Keep only those genes that survive permutation testing
-#appear_clusters = dplyr::semi_join(appear_clusters, empirical_hits_lme4, by = c("gene_id", "snp_id"))
+appear_clusters = dplyr::semi_join(appear_clusters, empirical_hits_lme4, by = c("gene_id", "snp_id"))
 
 #Reorder clusters
-cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(4,5,2,1,3,6))
+cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(6,3,4,1,2,5))
 
 #Make heatmap of effect sizes
 appear_betas = appear_clusters %>% 
@@ -168,8 +169,7 @@ max_condition_table = dplyr::select(appear_betas, gene_id, snp_id, max_condition
   dplyr::group_by(max_condition) %>%
   dplyr::summarise(max_count = length(max_condition)) %>%
   dplyr::rename(condition_name = max_condition) %>%
-  dplyr::left_join(figureNames()) %>%
-  dplyr::filter(figure_name != "N")
+  dplyr::left_join(figureNames())
 
 max_effect_plot = ggplot(max_condition_table, aes(x = figure_name, y = max_count)) + 
   geom_bar(stat = "identity") + 
@@ -206,12 +206,11 @@ appear_means_plot = ggplot(appear_cluster_means, aes(x = condition_name, y = bet
 #Find QTLs that disappear
 #Look for QTLs that disappear after stimulation
 set.seed(41)
-disappear_qtls = dplyr::filter(beta_list$beta_summaries, abs(naive) > 0.59, abs(naive) - min_abs_beta > 0.32)
+disappear_qtls = dplyr::filter(beta_list$beta_summaries, (abs(naive) >= 0.59 & max_abs_diff >= 0.59 & min_abs_beta <= 0.59))
 disappear_betas = dplyr::semi_join(beta_list$beta_summaries[,1:6], disappear_qtls, by = c("gene_id", "snp_id"))
 disappear_clusters = clusterBetasKmeans(disappear_betas, 7) %>% dplyr::select(gene_id, snp_id, cluster_id) %>%
   dplyr::left_join(beta_list$beta_df, by = c("gene_id", "snp_id"))
-disappear_plot = ggplot(disappear_clusters, aes(x = condition_name, y = abs(beta), group = paste(gene_id, snp_id))) + 
-  geom_line() + facet_wrap(~cluster_id)
+disappear_clusters = dplyr::semi_join(disappear_clusters, empirical_hits_lme4, by = c("gene_id", "snp_id"))
 
 
 #Calculate mean effect size in each cluster and condition
@@ -225,7 +224,8 @@ disappear_betas = disappear_clusters %>%
   dplyr::mutate(beta_scaled = beta/max(beta)) %>%
   dplyr::left_join(gene_name_map, by = "gene_id") %>%
   dplyr::semi_join(disappear_cluster_sizes, by = "cluster_id") %>%
-  dplyr::left_join(figureNames(), by = "condition_name") #Add figure names
+  dplyr::left_join(figureNames(), by = "condition_name") %>% #Add figure names
+  dplyr::ungroup()
 
 disappear_count = disappear_cluster_sizes$count %>% sum()
 ylabel = paste(disappear_count, "eQTLs")
@@ -242,7 +242,7 @@ dis_effect_size_heatmap = ggplot(disappear_betas, aes(x = figure_name, y = gene_
 ggsave("figures/supplementary/eQTLs_disappear_kmeans_heatmap.png",dis_effect_size_heatmap, width = 3.5, height = 3)
 
 
-disappear_means_plot = ggplot(disappear_cluster_means, aes(x = condition_name, y = beta_mean, group = cluster_id)) + 
+disappear_means_plot = ggplot(disappear_cluster_means, aes(x = figure_name, y = beta_mean, group = cluster_id)) + 
   geom_point() + geom_line() + facet_wrap(~cluster_id) + 
   geom_errorbar(aes(ymin = beta_mean - beta_sd, ymax = beta_mean + beta_sd, width = .2)) + 
   geom_text(aes(label = paste("n = ", count, sep = ""), x = condition_name, y = 1.5), data = disappear_cluster_sizes) +
@@ -251,8 +251,7 @@ disappear_means_plot = ggplot(disappear_cluster_means, aes(x = condition_name, y
 
 #Export clustering results
 variable_qtls = list(appear = appear_betas, disappear = disappear_betas)
-saveRDS(variable_qtls, "results/SL1344/eQTLs/appeat_disappear_eQTLs.rds")
-
+saveRDS(variable_qtls, "results/SL1344/eQTLs/appear_disappear_eQTLs.rds")
 
 
 

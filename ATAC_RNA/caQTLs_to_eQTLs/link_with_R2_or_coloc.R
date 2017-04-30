@@ -175,7 +175,7 @@ rna_selected_pvalues = readRDS("results/SL1344/eQTLs/rasqual_selected_pvalues.rd
 atac_selected_pvalues = fetchRasqualSNPs(unique_pairs_r2$snp_id, vcf_file$snpspos, qtlResults()$atac_rasqual)
 
 #Import eQTL clusters
-variable_qtls = readRDS("results/SL1344/eQTLs/appeat_disappear_eQTLs.rds")
+variable_qtls = readRDS("results/SL1344/eQTLs/appear_disappear_eQTLs.rds")
 gene_clusters = dplyr::select(variable_qtls$appear, gene_id, snp_id, max_condition) %>% ungroup() %>% unique()
 
 #Extract individual gene clusters
@@ -199,13 +199,6 @@ beta_processed = purrr::map2(betas_list, gene_cluster_conditions, ~dplyr::filter
                                dplyr::left_join(gene_name_map, by = "gene_id") %>%
                                sortByBeta("ATAC") %>%
                                dplyr::mutate(phenotype = ifelse(phenotype == "ATAC", "ATAC-seq", "RNA-seq")))
-
-#Missing peaks in SL1344 data
-missing_peaks = dplyr::select(beta_processed$SL1344, peak_id) %>% 
-  group_by(peak_id) %>% 
-  dplyr::summarise(count = length(peak_id)) %>%
-  dplyr::arrange(count) %>% dplyr::filter(count < 4)
-beta_processed$SL1344 = dplyr::anti_join(beta_processed$SL1344, missing_peaks, by = "peak_id")
 
 #Merge all betas together
 all_betas = purrr::map_df(beta_processed, ~dplyr::arrange(., gene_name) %>%
