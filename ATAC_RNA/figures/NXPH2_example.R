@@ -40,14 +40,19 @@ nxph2_tx = dplyr::filter(tx_metadata, gene_name == "NXPH2",
                          transcript_biotype == "protein_coding", transcript_status == "KNOWN")
 region_coords = c(138662000,138790000)
 
+#Rename GRanges objects
+e = exons[nxph2_tx$transcript_id]
+names(e) = "NXPH2"
+c = cdss[nxph2_tx$transcript_id]
+names(c) = "NXPH2"
+
 #Make a plot of the transcript structure
-tx_plot = plotTranscripts(exons[nxph2_tx$transcript_id], cdss[nxph2_tx$transcript_id], tx_metadata, rescale_introns = FALSE, 
-                          region_coords = region_coords)
+tx_plot = plotTranscripts(e, c, rescale_introns = FALSE, region_coords = region_coords)
 
 #Fetch all peaks in the region and make peak annot plot
 peak_annot = wiggleplotrExtractPeaks(region_coords, chrom = 2, atac_list$gene_metadata)
 peak_plot = plotTranscripts(peak_annot$peak_list, peak_annot$peak_list, peak_annot$peak_annot, rescale_introns = FALSE, 
-                            region_coords = region_coords, connect_exons = FALSE, label_type = "peak") + dataTrackTheme()
+                            region_coords = region_coords, connect_exons = FALSE, transcript_label = FALSE) + dataTrackTheme()
 
 #Make a coverage plot of the region
 #Construct metadata df for wiggleplotr
@@ -56,8 +61,8 @@ atac_track_data = wiggleplotrGenotypeColourGroup(atac_meta_df, "rs7594476", vcf_
   dplyr::mutate(track_id = "peaks")
 
 ATAC_coverage = plotCoverage(exons = peak_annot$peak_list, cdss = peak_annot$peak_list, track_data = atac_track_data, rescale_introns = FALSE, 
-  transcript_annotations = peak_annot$peak_annot, fill_palette = c("#525252","#525252","#525252"), 
-  connect_exons = FALSE, label_type = "peak", plot_fraction = 0.1, heights = c(0.7,0.3), 
+  transcript_annotations = peak_annot$peak_annot, fill_palette = getGenotypePalette(), 
+  connect_exons = FALSE, transcript_label = FALSE, plot_fraction = 0.1, heights = c(0.7,0.3), 
   region_coords = region_coords, return_subplots_list = TRUE, coverage_type = "both")
 
 
