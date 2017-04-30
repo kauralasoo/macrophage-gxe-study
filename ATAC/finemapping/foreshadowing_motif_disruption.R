@@ -63,15 +63,17 @@ appear_hits = dplyr::left_join(appear_disruptions, motif_names, by = "motif_id")
 
 
 #Count disruptions and 
-persistent_f = dplyr::group_by(persistent_hits, tf_group, gene_id) %>% dplyr::arrange(gene_id, tf_group, -rel_diff) %>% dplyr::filter(row_number() == 1) %>% ungroup()
-appear_f = dplyr::group_by(appear_hits, tf_group, gene_id) %>% dplyr::arrange(gene_id, tf_group, -rel_diff) %>% dplyr::filter(row_number() == 1) %>% ungroup()
+persistent_f = dplyr::group_by(persistent_hits, tf_group, gene_id) %>% 
+  dplyr::arrange(gene_id, tf_group, -rel_diff) %>% dplyr::filter(row_number() == 1) %>% ungroup()
+appear_f = dplyr::group_by(appear_hits, tf_group, gene_id) %>% 
+  dplyr::arrange(gene_id, tf_group, -rel_diff) %>% dplyr::filter(row_number() == 1) %>% ungroup()
 
-table(persistent_f$tf_group)
+table(persistent_f$tf_name)
 length(unique(persistent_peaks$peak_id))
 
-table(appear_f$tf_group)
+table(appear_f$tf_name)
 length(unique(appear_peaks$peak_id))
 
-fisher.test(matrix(c(11, 92-11, 1, 66-1), ncol = 2))
+fisher.test(matrix(c(9, 78-9, 0, 59), ncol = 2))
 
 
