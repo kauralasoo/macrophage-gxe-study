@@ -1,5 +1,4 @@
 library("devtools")
-library("plyr")
 library("dplyr")
 library("ggplot2")
 library("purrr")
@@ -46,7 +45,6 @@ interaction_df = postProcessInteractionPvalues(interaction_results, id_field_sep
 saveRDS(interaction_df, "results/ATAC/QTLs/rasqual_interaction_results.rds")
 interaction_df = readRDS("results/ATAC/QTLs/rasqual_interaction_results.rds")
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
-
 
 #Make a Q-Q plot for the interaction p-values
 qq_df = dplyr::mutate(interaction_df, p_eigen = p_nominal) %>% addExpectedPvalue()
