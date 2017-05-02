@@ -1,9 +1,7 @@
 library("devtools")
-library("plyr")
 library("dplyr")
 library("purrr")
 library("ggplot2")
-library("pheatmap")
 load_all("../seqUtils/")
 load_all("macrophage-gxe-study/housekeeping/")
 load_all("~/software/rasqual/rasqualTools/")
@@ -212,9 +210,18 @@ all_betas_plot1 = plotQTLBetasAll2(dplyr::filter(all_betas, max_effect %in% c("I
 all_betas_plot2 = plotQTLBetasAll2(dplyr::filter(all_betas, max_effect %in% c("S")))
 all_betas_plot3 = plotQTLBetasAll2(dplyr::filter(all_betas, max_effect %in% c("I+S")))
 
+dplyr::filter(all_betas, max_effect %in% c("I+S")) %>% 
+  dplyr::filter(phenotype == "ATAC-seq", condition_name == "naive") %>% 
+  dplyr::arrange(-abs(beta)) %>% 
+  dplyr::filter(abs(beta) > 0.59) %>% 
+  dplyr::select(gene_name, beta) %>%
+  tail()
+
 #Plot with gene names
 all_betas_plot1 + theme(axis.text.y = element_text())
 all_betas_plot2 + theme(axis.text.y = element_text())
+all_betas_plot3 + theme(axis.text.y = element_text())
+
 
 ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_1.pdf", all_betas_plot1, width = 3, height = 2)
 ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_2.pdf", all_betas_plot2, width = 3, height = 2)
