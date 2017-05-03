@@ -44,11 +44,22 @@ interaction_results = testMultipleInteractions(filtered_pairs, trait_matrix = at
 interaction_df = postProcessInteractionPvalues(interaction_results, id_field_separator = "-")
 saveRDS(interaction_df, "results/ATAC/QTLs/rasqual_interaction_results.rds")
 interaction_df = readRDS("results/ATAC/QTLs/rasqual_interaction_results.rds")
-interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
+
+#Perform Bonferroni correction at the peak level
+interaction_df_bonferroni = dplyr::group_by(interaction_df, gene_id) %>% 
+  dplyr::arrange(gene_id, p_nominal) %>% 
+  dplyr::select(gene_id, snp_id, p_nominal) %>% 
+  dplyr::mutate(n_snps = length(gene_id)) %>% 
+  dplyr::mutate(p_bonf = p_nominal*n_snps) %>% 
+  dplyr::filter(row_number() == 1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(p_bonf = pmin(1, p_bonf)) %>% 
+  dplyr::mutate(p_fdr = p.adjust(p_bonf, method = "fdr"))
+interaction_hits = dplyr::filter(interaction_df_bonferroni, p_fdr < 0.1)
 
 #Make a Q-Q plot for the interaction p-values
-qq_df = dplyr::mutate(interaction_df, p_eigen = p_nominal) %>% addExpectedPvalue()
-qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_nominal,10))) + 
+qq_df = dplyr::mutate(interaction_df_bonferroni, p_eigen = p_bonf) %>% addExpectedPvalue()
+qq_plot = ggplot(qq_df, aes(x = -log(p_expected,10), y = -log(p_bonf,10))) + 
   geom_point() +
   geom_abline(slope = 1, intercept = 0, color = "black") + 
   theme_light() + 
