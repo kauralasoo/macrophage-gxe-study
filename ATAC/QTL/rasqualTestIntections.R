@@ -71,22 +71,6 @@ ggsave("figures/supplementary/caQTL_interaction_Q-Q_plot_tpm.pdf", plot = qq_plo
 lambda = median(qchisq(1-interaction_df$p_nominal,1))/qchisq(0.5,1)
 
 
-#Use mixed model
-covariate_names = c("sex_binary", "cqn_PC1", "cqn_PC2", "cqn_PC3")
-formula_qtl = as.formula(paste("expression ~ genotype + condition_name + (1|donor) ", 
-                               paste(covariate_names, collapse = " + "), sep = "+ "))
-formula_interaction = as.formula(paste("expression ~ genotype + condition_name + condition_name:genotype + (1|donor) ", 
-                                       paste(covariate_names, collapse = " + "), sep = "+ "))
-
-#Run model
-interaction_results = testMultipleInteractions(filtered_pairs, trait_matrix = atac_list$cqn, 
-                                               sample_metadata = atac_list$sample_metadata, filtered_vcf, 
-                                               formula_qtl, formula_interaction, id_field_separator = "-", lme4 = TRUE)
-interaction_df = postProcessInteractionPvalues(interaction_results, id_field_separator = "-")
-saveRDS(interaction_df, "results/ATAC/QTLs/rasqual_interaction_results_lme4.rds")
-interaction_df = readRDS("results/ATAC/QTLs/rasqual_interaction_results_lme4.rds")
-interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
-
 
 #### Cluster effect sizes ####
 #Extract effect sizes for all gene-snp pairs from RASQUAL data
@@ -105,6 +89,7 @@ cluster_sizes = calculateClusterSizes(appear_clusters)
 
 #Reorder clusters
 cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(5,1,2,3,6,4))
+cluster_reorder = data_frame(cluster_id = c(1,2,3,4,5,6), new_cluster_id = c(3,1,2,5,6,4))
 
 #Make heatmap of effect sizes
 appear_betas = appear_clusters %>% dplyr::group_by(gene_id, snp_id) %>% 
@@ -116,7 +101,8 @@ appear_betas = appear_clusters %>% dplyr::group_by(gene_id, snp_id) %>%
   dplyr::left_join(figureNames(), by = "condition_name") %>% #Add figure names
   dplyr::group_by(gene_id, snp_id) %>% 
   dplyr::arrange(gene_id, snp_id, -abs(beta)) %>% 
-  dplyr::mutate(max_condition = condition_name[1])
+  dplyr::mutate(max_condition = condition_name[1]) %>%
+  dplyr::ungroup()
 
 
 #Make a plot of effect sizes
@@ -132,6 +118,21 @@ effect_size_heatmap = ggplot(appear_betas, aes(x = figure_name, y = gene_name, f
   theme(panel.spacing = unit(0.1, "lines")) +
   theme(strip.text.y = element_text(colour = "grey10"), strip.background = element_rect(fill = "grey85"))
 ggsave("figures/main_figures/caQTLs_appear_kmeans_heatmap.png",effect_size_heatmap, width = 3, height = 4)
+
+#Count conditions with maximal effect sizes
+max_condition_table = dplyr::select(appear_betas, gene_id, snp_id, max_condition) %>% 
+  unique() %>%
+  dplyr::group_by(max_condition) %>%
+  dplyr::summarise(max_count = length(max_condition)) %>%
+  dplyr::rename(condition_name = max_condition) %>%
+  dplyr::left_join(figureNames())
+
+max_effect_plot = ggplot(max_condition_table, aes(x = figure_name, y = max_count)) + 
+  geom_bar(stat = "identity") + 
+  xlab("Condition") + 
+  theme_light() +
+  ylab("Response caQTL count")
+ggsave("figures/supplementary/caQTL_max_condition_count.pdf", plot = max_effect_plot, width = 3, height = 3)
 
 
 #Find QTLs that disappear
