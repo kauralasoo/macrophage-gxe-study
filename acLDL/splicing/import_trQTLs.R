@@ -1,5 +1,7 @@
-load_all("../seqUtils/")
+library("dplyr")
+library("devtools")
 library("ggplot2")
+load_all("../seqUtils/")
 
 #Import p-values
 ensembl_pvalues = list(
@@ -14,6 +16,10 @@ leafcutter_pvalues = list(
   Ctrl = importQTLtoolsTable("processed/acLDL/fastqtl_output/leafcutter/Ctrl.permuted.txt.gz"),
   AcLDL = importQTLtoolsTable("processed/acLDL/fastqtl_output/leafcutter/AcLDL.permuted.txt.gz"),
   Diff = importQTLtoolsTable("processed/acLDL/fastqtl_output/leafcutter/Diff.permuted.txt.gz"))
+
+#Put all results into a list
+trQTL_min_pvalue_list = list(ensembl_87 = ensembl_pvalues, revisedAnnotations = revised_pvalues, leafcutter = leafcutter_pvalues)
+saveRDS(trQTL_min_pvalue_list, "results/acLDL/trQTLs/trQTL_min_pvalues.rds")
 
 
 #Make qq-plots
