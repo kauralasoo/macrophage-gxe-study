@@ -10,4 +10,4 @@ gff_list = list(upstream = rtracklayer::import.gff3("processed/acLDL/annotations
 
 #Convert the GFF files into GRanges lists
 granges_lists = purrr::map(gff_list, ~reviseAnnotations::revisedGffToGrangesList(.))
-saveRDS(granges_list, "results/reviseAnnotations/reviseAnnotations.GRangesList.rds")
+saveRDS(granges_lists, "results/reviseAnnotations/reviseAnnotations.GRangesList.rds")

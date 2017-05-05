@@ -1,6 +1,9 @@
+library("devtools")
+library("rtracklayer")
 library("wiggleplotr")
 library("GenomicFeatures")
 library("SummarizedExperiment")
+load_all("../reviseAnnotations/")
 
 #Functions
 makeQTLCoveragePlot <- function(qtl_df, str1_df, str2_df, genotypes, gene_metadata, exons, cdss, ...){
@@ -34,24 +37,36 @@ acldl_list = readRDS("results/acLDL/acLDL_combined_expression_data_covariates.rd
 vcf_file = readRDS("genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.rds")
 variant_information = importVariantInformation("genotypes/acLDL/imputed_20151005/imputed.70_samples.variant_information.txt.gz")
 
-#Import tranqscript expression data
-se_ensembl = readRDS("results/acLDL/acLDL_salmon_ensembl.rds")
-gene_metadata = rowData(se_ensembl) %>% tbl_df2()
-sample_metadata = colData(se_ensembl) %>% tbl_df2()
+#Import QTL mapping results
+trqtl_min_pvalues = readRDS("results/acLDL/trQTLs/trQTL_min_pvalues.other_tx.rds")
 
-#Import transcript annotations
+#Import SummarizedExperiments for all phenotypes
+se_ensembl = readRDS("results/acLDL/acLDL_salmon_ensembl.rds")
+se_revised = readRDS("results/acLDL/acLDL_salmon_reviseAnnotations.rds")
+se_leafcutter = readRDS("results/acLDL/acLDL_leafcutter_counts.rds")
+se_list = list(ensembl_87 = se_ensembl, revisedAnnotation = se_revised, leafcutter = se_leafcutter)
+
+#Extract sample metadata
+sample_meta_list = purrr::map(se_list, ~colData(.) %>% tbl_df2())
+gene_meta_list = purrr::map(se_list, ~rowData(.) %>% tbl_df2())
+
+#Import Ensembl transcript annotations
 txdb = loadDb("../../annotations/GRCh38/genes/Ensembl_87/TranscriptDb_GRCh38_87.db")
 exons = exonsBy(txdb, by = "tx", use.names = TRUE)
 cdss = cdsBy(txdb, by = "tx", use.names = TRUE)
 
+#Import revisedAnnotations Granges
+revised_granges = readRDS("results/reviseAnnotations/reviseAnnotations.GRangesList.rds")
+granges = purrr::flatten(revised_granges)
+
 #Set up sample coverage df
 str1_df = wiggleplotrConstructMetadata(acldl_list$counts, 
-                                       sample_metadata, 
+                                       sample_meta_list$revisedAnnotation, 
                                        "/Volumes/JetDrive/bigwig/", 
                                        bigWig_suffix = ".str1.bw",
                                        condition_name_levels = c("Ctrl","AcLDL"))
 str2_df = wiggleplotrConstructMetadata(acldl_list$counts, 
-                                       sample_metadata, 
+                                       sample_meta_list$revisedAnnotation, 
                                        "/Volumes/JetDrive/bigwig/", 
                                        bigWig_suffix = ".str2.bw",
                                        condition_name_levels = c("Ctrl","AcLDL"))
@@ -59,18 +74,15 @@ str2_df = wiggleplotrConstructMetadata(acldl_list$counts,
 #Import interaction results
 interaction_list = readRDS("results/acLDL/trQTLs/trQTL_interaction_results.rds")
 
-#Import Diff p-values
-diff_pvals = importQTLtoolsTable("processed/acLDL/fastqtl_output/ensembl_87/Diff.permuted.txt.gz") %>%
-  dplyr::filter(p_fdr < 0.1) %>%
-  dplyr::transmute(gene_id = group_id, transcript_id = phenotype_id, snp_id, strand)
 
-ctrl_pvals = importQTLtoolsTable("processed/acLDL/fastqtl_output/ensembl_87/Ctrl.permuted.txt.gz") %>%
-  dplyr::filter(p_fdr < 0.1) %>%
-  dplyr::transmute(gene_id = group_id, transcript_id = phenotype_id, snp_id, strand)
+#CD33 example
+cd33_hit = dplyr::filter(trqtl_min_pvalues$revisedAnnotations$Ctrl, group_id == "ENSG00000105383.contained")
+tx_names = c(cd33_hit$phenotype_id, cd33_hit$other_phenotype_id)
+exons = granges[tx_names]
+track_data = wiggleplotrGenotypeColourGroup(str2_df, cd33_hit$snp_id, vcf_file$genotypes, 1)
+wiggleplotr::plotCoverage(exons, track_data = track_data, fill_palette = getGenotypePalette(), 
+                          plot_fraction = 0.2, coverage_type = "line", rescale_introns = TRUE)
 
-revised_ctrl_pvals = importQTLtoolsTable("processed/acLDL/fastqtl_output/reviseAnnotations/Ctrl.permuted.txt.gz") %>%
-  dplyr::filter(p_fdr < 0.1) %>%
-  dplyr::transmute(gene_id = group_id, transcript_id = phenotype_id, snp_id, strand, p_nominal)
 
 
 #Make coverage plots for all genes
