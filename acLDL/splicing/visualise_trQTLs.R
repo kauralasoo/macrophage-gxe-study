@@ -4,9 +4,14 @@ library("wiggleplotr")
 library("GenomicFeatures")
 library("SummarizedExperiment")
 load_all("../reviseAnnotations/")
+load_all("../seqUtils/")
 
 #Functions
-makeQTLCoveragePlot <- function(qtl_df, str1_df, str2_df, genotypes, gene_metadata, exons, cdss, ...){
+makeQTLCoveragePlot <- function(qtl_df, str1_df, str2_df, genotypes, exons, ...){
+  
+  assertthat::assert_that(assertthat::has_name(qtl_df, "snp_id"))
+  assertthat::assert_that(assertthat::has_name(qtl_df, "phenotype_id"))
+  assertthat::assert_that(assertthat::has_name(qtl_df, "other_phenotype_id"))
   
   #Construct track data
   if(qtl_df$strand == "-"){
@@ -20,13 +25,11 @@ makeQTLCoveragePlot <- function(qtl_df, str1_df, str2_df, genotypes, gene_metada
   track_data = wiggleplotrGenotypeColourGroup(bigwig_meta, qtl_df$snp_id, genotypes, 1)
   
   #Select transcripts
-  selected_transcripts = dplyr::filter(gene_metadata, gene_id == qtl_df$gene_id)$transcript_id
+  tx_names = c(qtl_df$phenotype_id, qtl_df$other_phenotype_id)
+  selected_exons = exons[tx_names]
   
   #Make a coverage plot
-  plot = plotCoverage(exons[selected_transcripts], 
-                      cdss[intersect(selected_transcripts, names(cdss))], 
-                      track_data, gene_metadata, 
-                      fill_palette = getGenotypePalette(), ...)
+  plot = wiggleplotr::plotCoverage(selected_exons, track_data = track_data, fill_palette = getGenotypePalette(), ...)
   return(plot)
 }
 
@@ -77,11 +80,63 @@ interaction_list = readRDS("results/acLDL/trQTLs/trQTL_interaction_results.rds")
 
 #CD33 example
 cd33_hit = dplyr::filter(trqtl_min_pvalues$revisedAnnotations$Ctrl, group_id == "ENSG00000105383.contained")
+cd33_plot = makeQTLCoveragePlot(cd33_hit, str1_df, str2_df, vcf_file$genotypes, granges,
+                                plot_fraction = 0.2, coverage_type = "line", rescale_introns = TRUE)
+
+#IRF5
+cd33_hit = dplyr::filter(trqtl_min_pvalues$revisedAnnotations$Ctrl, group_id == "ENSG00000128604.downstream")
+cd33_plot = makeQTLCoveragePlot(cd33_hit, str1_df, str2_df, vcf_file$genotypes, granges,
+                                plot_fraction = 0.2, coverage_type = "line", rescale_introns = TRUE)
+#BIN1
+cd33_hit = dplyr::filter(trqtl_min_pvalues$revisedAnnotations$Ctrl, group_id == "ENSG00000136717.contained")
+cd33_plot = makeQTLCoveragePlot(cd33_hit, str1_df, str2_df, vcf_file$genotypes, granges,
+                                plot_fraction = 0.2, coverage_type = "line", rescale_introns = TRUE)
+
+#Explore the LIPA QTL
+lipa_qtl = dplyr::filter(gene_meta_list$leafcutter, ensembl_gene_id == "ENSG00000107798")
+lipa_hit = dplyr::filter(trqtl_min_pvalues$leafcutter$Ctrl, group_id == "clu_20804")
+
+lipa_df = dplyr::transmute(lipa_qtl, transcript_id, seqnames = chr, transcript_start, 
+                           transcript_end, strand = ifelse(strand == 1, "-", "+")) %>% 
+  tidyr::gather("type", "pos", transcript_start:transcript_end)
+lipa_start = dplyr::filter(lipa_df, type == "transcript_start") %>% 
+  dplyr::mutate(start = pos - 75, end = pos) %>% 
+  dplyr::select(-pos)
+lipa_end = dplyr::filter(lipa_df, type == "transcript_end") %>% 
+  dplyr::mutate(start = pos, end = pos + 75) %>% 
+  dplyr::select(-pos)
+lipa_both = bind_rows(lipa_start, lipa_end) %>%
+  dplyr::group_by(transcript_id) %>%
+  purrr::by_slice(~dataFrameToGRanges(.))
+lipa_list = setNames(lipa_both$.out, lipa_both$transcript_id)
+
+#Extract LIPA gene
+lipa_all = c(as.list(exons["ENST00000336233"]), lipa_list) %>% removeMetadata()
+lipa_all = GenomeInfoDb::keepSeqlevels(lipa_all, c("10"))
+
+track_data = wiggleplotrGenotypeColourGroup(str1_df, lipa_hit$snp_id, vcf_file$genotypes, 1)
+wiggleplotr::plotCoverage(lipa_all, track_data = track_data, fill_palette = getGenotypePalette(), 
+                          plot_fraction = 0.2, coverage_type = "line", rescale_introns = TRUE)
+
+wiggleplotr::plotCoverage(exons["ENST00000336233"], cdss["ENST00000336233"], track_data = track_data, fill_palette = getGenotypePalette(), 
+                          plot_fraction = 0.2, coverage_type = "line", rescale_introns = TRUE)
+
+
+data = constructQtlPlotDataFrame("10:89247649:89251707:clu_20804", "rs1332328", assays(se_leafcutter)$tpm_ratios, vcf_file$genotypes, 
+                                 tbl_df2(colData(se_leafcutter)), 
+                                 tbl_df2(rowData(se_leafcutter)) %>% dplyr::mutate(gene_id = transcript_id, gene_name = transcript_id)) %>%
+  dplyr::left_join(constructGenotypeText("rs1332328", variant_information), by = "genotype_value")
+plotQtlRow(data)
+
+#IRF5
+ENSG00000128604
+cd33_hit = dplyr::filter(trqtl_min_pvalues$revisedAnnotations$Ctrl, group_id == "ENSG00000128604.downstream")
 tx_names = c(cd33_hit$phenotype_id, cd33_hit$other_phenotype_id)
 exons = granges[tx_names]
 track_data = wiggleplotrGenotypeColourGroup(str2_df, cd33_hit$snp_id, vcf_file$genotypes, 1)
 wiggleplotr::plotCoverage(exons, track_data = track_data, fill_palette = getGenotypePalette(), 
                           plot_fraction = 0.2, coverage_type = "line", rescale_introns = TRUE)
+
 
 
 
