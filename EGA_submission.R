@@ -1,4 +1,5 @@
 library("dplyr")
+library("readr")
 
 #Import complete line metadata
 line_data = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds") %>%
@@ -104,5 +105,39 @@ write.table(rna_managed, "results/sample_lists/submission/salmonella_rna.managed
             sep = "\t", quote = FALSE, row.names = FALSE)
 write.table(atac_managed, "results/sample_lists/submission/salmonella_atac.managed_access.all_lanelets.txt",
             sep = "\t", quote = FALSE, row.names = FALSE)
+
+
+
+
+
+
+
+#Deal with acLDL samples
+#Import complete line metadata
+line_data = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds") %>%
+  dplyr::filter(donor != "mijn") %>%
+  dplyr::select(-comment) %>%
+  dplyr::select(-ips_culture_days, -passage_diff_bins) %>%
+  dplyr::select(line_id, open_access) %>%
+  unique()
+
+acLDL_biosamples = readr::read_tsv("macrophage-gxe-study/data/sample_lists/biosamples/acLDL_sample_name_mapping.dates.with_accessions.txt", col_names = TRUE)
+design_matrix = constructDesignMatrix_acLDL(acLDL_biosamples$sample_id) %>% tbl_df()
+sample_metadata = readRDS("macrophage-gxe-study/data/covariates/compiled_acLDL_metadata.rds") %>%
+  dplyr::select(line_id, donor)
+
+is_open_access = dplyr::left_join(design_matrix, sample_metadata, by = "donor") %>% 
+  dplyr::left_join(line_data, by = "line_id") %>%
+  dplyr::select(sample_id, open_access)
+
+acLDL_access_type = dplyr::left_join(acLDL_biosamples, is_open_access, by = "sample_id")
+
+acLDL_open = dplyr::filter(acLDL_access_type, open_access == 1) %>% dplyr::select(-full_name)
+acLDL_closed = dplyr::filter(acLDL_access_type, open_access == 0) %>% dplyr::select(-full_name)
+write.table(acLDL_open, "results/sample_lists/submission/acLDL.open_access.txt", sep = ",", row.names = FALSE, quote = FALSE)
+write.table(acLDL_closed, "results/sample_lists/submission/acLDL.managed_access.txt", sep = ",", row.names = FALSE, quote = FALSE)
+
+
+
 
 
