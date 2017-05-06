@@ -1,0 +1,6 @@
+conditions: ["Ctrl", "AcLDL"]
+n_batches: 250
+qtl_vcf: "/nfs/users/nfs_k/ka8/scratch/projects/macrophage-gxe-study/genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.vcf.gz"
+cis_window: 500000
+nominal_cis_window: 500000
+annot_type: ["featureCounts"]

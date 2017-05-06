@@ -13,14 +13,12 @@ libType: ISR
 leafcutter_root: "/nfs/users/nfs_k/ka8/software/leafcutter"
 
 #QTL mapping 
-#conditions: ["Ctrl", "AcLDL", "Diff"]
-conditions: ["Ctrl", "AcLDL"]
+conditions: ["Ctrl", "AcLDL", "Diff"]
 n_batches: 250
 qtl_vcf: "/nfs/users/nfs_k/ka8/scratch/projects/macrophage-gxe-study/genotypes/acLDL/imputed_20151005/imputed.70_samples.sorted.filtered.named.INFO_07.vcf.gz"
-#cis_window: 100000
-cis_window: 500000
+cis_window: 100000
 nominal_cis_window: 500000
-annot_type: ["ensembl_87", "reviseAnnotations", "leafcutter", "featureCounts"]
+annot_type: ["ensembl_87", "reviseAnnotations", "leafcutter"]
 
 #Colocalisation
 coloc_phenotypes: ["ensembl_87", "reviseAnnotations", "leafcutter", "featureCounts"]
