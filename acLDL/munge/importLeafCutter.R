@@ -1,6 +1,8 @@
 library("dplyr")
-library("SummarizedExperiment")
 library("devtools")
+library("GenomicRanges")
+library("GenomicFeatures")
+library("SummarizedExperiment")
 load_all("../seqUtils/")
 
 #Import Ensembl quant results for reference
@@ -17,13 +19,11 @@ transcript_data = tbl_df(readRDS("../../annotations/GRCh38/genes/Ensembl_87/Homo
 intron_counts = read.table("processed/acLDL/leafcutter/leafcutter_perind_numers.counts.gz")[,sample_names]
 
 #Extract intron coords from counts
-intron_metadata = dplyr::data_frame(transcript_id = rownames(intron_counts)) %>%
-  tidyr::separate(transcript_id, c("chr","transcript_start","transcript_end","gene_id"), sep = ":", remove = FALSE) %>%
-  dplyr::mutate(transcript_start = as.integer(transcript_start), transcript_end = as.integer(transcript_end)) %>%
-  dplyr::group_by(gene_id) %>%
-  dplyr::mutate(start = min(transcript_start), end = min(transcript_end)) %>%
-  dplyr::mutate(strand = 1) %>%
-  dplyr::ungroup()
+intron_metadata = leafcutterConstructMeta(rownames(intron_counts))
+
+#Convert leafcutter clusters into a Granges list for visualisation
+granges = leafcutterMetaToGrangesList(intron_metadata)
+saveRDS(granges, "results/acLDL/acLDL_leafcutter.GRangesList.rds")
 
 #Find potential overlaps with Ensembl genes
 leafcutter_clusters = 
