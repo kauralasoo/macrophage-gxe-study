@@ -73,3 +73,12 @@ se = SummarizedExperiment::SummarizedExperiment(
   colData = colData(ensembl_quants), 
   rowData = intron_meta_final)
 saveRDS(se, "results/acLDL/acLDL_leafcutter_counts.rds")
+
+#Make a new Granges list based on overlapping gene strand
+
+#Make Granges list with the correct strand
+leafcutter_ranges = dplyr::transmute(tbl_df(intron_meta_final), transcript_id, chr, transcript_start, 
+                                     transcript_end, strand = ifelse(!is.na(ensembl_gene_strand), ensembl_gene_strand, strand)) %>% 
+  leafcutterMetaToGrangesList() %>%
+  GRangesList()
+saveRDS(leafcutter_ranges, "results/acLDL/acLDL_leafcutter.GRangesList.rds")

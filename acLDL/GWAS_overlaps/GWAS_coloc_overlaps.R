@@ -28,10 +28,7 @@ mhc_featureCounts = dplyr::filter(tbl_df2(rowData(se_featureCounts)), chr == "6"
 #Gene names
 ensembl_name_map = dplyr::select(tbl_df2(rowData(se_ensembl)), transcript_id, gene_name) %>% dplyr::rename(phenotype_id = transcript_id)
 revised_name_map = dplyr::select(tbl_df2(rowData(se_reviseAnnotations)), transcript_id, gene_name) %>% dplyr::rename(phenotype_id = transcript_id)
-leafcutter_name_map = dplyr::select(tbl_df2(rowData(se_leafcutter)), transcript_id, ensembl_gene_id) %>% 
-  dplyr::left_join(dplyr::transmute(tbl_df2(rowData(se_ensembl)), ensembl_gene_id = gene_id, gene_name), by = "ensembl_gene_id") %>%
-  dplyr::rename(phenotype_id = transcript_id) %>%
-  unique()
+leafcutter_name_map = dplyr::select(tbl_df2(rowData(se_leafcutter)), transcript_id, gene_name) %>% dplyr::rename(phenotype_id = transcript_id)
 featureCounts_name_map = dplyr::select(tbl_df2(rowData(se_featureCounts)), gene_id, gene_name) %>% dplyr::rename(phenotype_id = gene_id)
 
 #Import GWAS traits
@@ -143,7 +140,7 @@ plot_list = setNames(plots$plot, plots$plot_title)
 savePlotList(plot_list, "processed/acLDL/coloc_plots/reviseAnnotations/")
 
 #Filter leafcutter hits
-leafcutter_hits = dplyr::transmute(leafcutter_200kb_hits, phenotype_id, snp_id, trait, gwas_lead, gene_name = ensembl_gene_id) %>% 
+leafcutter_hits = dplyr::transmute(leafcutter_200kb_hits, phenotype_id, snp_id, trait, gwas_lead, gene_name) %>% 
   unique() %>%
   dplyr::mutate(plot_title = paste(trait, gene_name, gwas_lead, sep = "_"))
 
@@ -162,7 +159,7 @@ plot_data = purrr::by_row(leafcutter_hits,
 
 #Make plots
 plots = purrr::by_row(plot_data, ~plotColoc(.$data[[1]], .$plot_title), .to = "plot")
-plots = dplyr::mutate(plots, plot_title = paste(trait, phenotype_id, gwas_lead, sep = "_"))
+plots = dplyr::mutate(plots, plot_title = paste(trait, gene_name, gwas_lead, sep = "_"))
 plot_list = setNames(plots$plot, plots$plot_title)
 savePlotList(plot_list, "processed/acLDL/coloc_plots/leafcutter/")
 
