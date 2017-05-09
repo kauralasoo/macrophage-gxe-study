@@ -84,6 +84,31 @@ flow_purity_plot = ggplot(flow_df, aes(x = mean_purity)) +
   theme(legend.position = "top")
 ggsave(paste0(figure_folder, "diff_flow_purity_histogram.pdf"), plot = flow_purity_plot, width = 4, height = 4)
 
+flow_purity_plot = ggplot(flow_df, aes(x = max_purity)) + 
+  geom_histogram(binwidth = 0.01) + 
+  xlab("Max purity") + 
+  theme_light() +
+  theme(legend.position = "top")
+ggsave(paste0(figure_folder, "diff_flow_purity_histogram.max.png"), plot = flow_purity_plot, width = 4, height = 4)
+
+#Import individual flow measurements
+purity_values = readRDS("macrophage-gxe-study/data/covariates/flow_cytometry_purity.rds") %>%
+  dplyr::select(donor, flow_date, channel, purity) %>%
+  dplyr::semi_join(flow_df, by = c("donor","flow_date"))
+purity_df = tidyr::spread(purity_values, channel, purity)
+
+cd14_cd16_scatter = ggplot(purity_df, aes(x = Pacific.Blue.A, y = PE.A)) + 
+  geom_point() + 
+  theme_light() + xlab("CD14 positive fraction") + 
+  ylab("CD16 positive fraction")
+ggsave(paste0(figure_folder, "CD14_CD16_scatter.pdf"), cd14_cd16_scatter, width = 3.5, height = 3.5)
+
+cd14_cd206_scatter = ggplot(purity_df, aes(x = Pacific.Blue.A, y = APC.A)) + 
+  geom_point() + 
+  theme_light() + xlab("CD14 positive fraction") + 
+  ylab("CD206 positive fraction")
+ggsave(paste0(figure_folder, "CD14_CD206_scatter.pdf"), cd14_cd206_scatter, width = 3.5, height = 3.5)
+
 
 #Look at sources of variation in the RNA-Seq data
 combined_expression_data = readRDS("results/SL1344/combined_expression_data_covariates.rds")
