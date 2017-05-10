@@ -30,12 +30,16 @@ cut -f1 -d" " chr9 > variant_coords/chr9
 cut -f1 -d" " chrX > variant_coords/chrX
 
 #Perform GARFIELD enrichments
-bsub -G team170 -n1 -R "span[hosts=1] select[mem>6000] rusage[mem=6000]" -q normal -M 6000 -o garfield_test.%J.jobout "./garfield"
-
+cat ~/scratch/projects/macrophage-gxe-study/macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.txt | python ~/software/utils/submitJobs.py --MEM 6000 --jobname run_GARFIELD --command "./garfield"
 echo "GIANT_HEIGHT" | python ~/software/utils/submitJobs.py --MEM 6000 --jobname run_GARFIELD --command "./garfield"
-cat ../../macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.txt | python ~/software/utils/submitJobs.py --MEM 6000 --jobname run_GARFIELD --command "./garfield"
+
 
 #Extract top SNPs form each GWAS study for faster coloc analysis:
 cat macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.txt  | python ~/software/utils/GWAS/extractTopVariants.py --indir databases/GWAS/summary/ --outdir databases/GWAS/summary/
 
 cat macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.txt | tail -n 5 | python ~/software/utils/GWAS/extractTopVariants.py --indir databases/GWAS/summary/ --outdir databases/GWAS/summary/
+
+
+
+echo "Inflammatory_bowel_disease_CD_Liu_2015_NatGen_Immunochip" | python ~/software/utils/submitJobs.py --MEM 6000 --jobname run_GARFIELD --command "./garfield"
+echo "Inflammatory_bowel_disease_CD_Liu_2015_NatGen_Immunochip" | python ~/software/utils/submitJobs.py --MEM 6000 --jobname run_GARFIELD --command "./garfield"
