@@ -89,8 +89,8 @@ interaction_df_perm = purrr::map_df(interaction_list_perm, identity, .id = "othe
   dplyr::mutate(test = "permuted")
 df_all = dplyr::bind_rows(interaction_df, interaction_df_perm)
 
-p_histogram = ggplot(df_all, aes(x = p_nominal)) + geom_histogram(bins = 20) + 
-  facet_wrap(~test) + 
+p_histogram = ggplot(interaction_df, aes(x = p_nominal)) + geom_histogram(bins = 20) + 
+  #facet_wrap(~test) + 
   theme_light() +
   xlab("p-value")
 ggsave("figures/supplementary/dependent_peak_interaction_histogram.pdf", plot = p_histogram, width = 5, height = 3)
@@ -98,7 +98,12 @@ ggsave("figures/supplementary/dependent_peak_interaction_histogram.png", plot = 
 
 
 #Convert list into a df and extract interaction hits
-interaction_df = purrr::map_df(interaction_list, identity, .id = "other_condition")
+interaction_df = purrr::map_df(interaction_list, identity, .id = "other_condition") %>%
+  dplyr::mutate(p_nominal = pmin(p_nominal*3,1)) %>%
+  dplyr::group_by(master_id, dependent_id) %>%
+  dplyr::arrange(p_nominal) %>% 
+  dplyr::filter(row_number() == 1) %>%
+  dplyr::ungroup()
 interaction_hits = dplyr::mutate(interaction_df, p_fdr = p.adjust(p_nominal, method = "fdr")) %>% 
   dplyr::arrange(p_nominal) %>% dplyr::filter(p_fdr < 0.1) %>%
   dplyr::mutate(baseline_condition = "naive") 
