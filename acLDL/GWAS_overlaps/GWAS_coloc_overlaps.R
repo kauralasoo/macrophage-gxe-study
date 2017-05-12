@@ -194,5 +194,38 @@ plot_list = setNames(plots$plot, plots$plot_title)
 savePlotList(plot_list, "processed/acLDL/coloc_plots/featureCounts/")
 
 
+#Count overlaps by quantification strategy (by gene-trait pair)
+unique_trait_gene_pairs = purrr::map_df(gwas_olaps, identity, .id = "phenotype") %>% 
+  dplyr::filter(trait != "CAD_2017") %>% 
+  dplyr::select(phenotype, trait, gene_name) %>% 
+  unique() %>%
+  dplyr::mutate(gene_name = ifelse(gene_name == "FCGR2A;RP11-25K21.6", "FCGR2A", gene_name))
 
+overlap_counts = dplyr::mutate(unique_trait_gene_pairs, id = paste(trait, gene_name, sep = "_")) %>% 
+  tidyr::spread(phenotype, id) %>%
+  dplyr::mutate(ensembl_87 = ifelse(is.na(ensembl_87), 0, 1),
+                featureCounts = ifelse(is.na(featureCounts), 0, 1),
+                revisedAnnotation = ifelse(is.na(revisedAnnotation), 0, 1),
+                leafcutter = ifelse(is.na(leafcutter), 0, 1))
 
+upset(as.data.frame(overlap_counts), sets = c("featureCounts", "ensembl_87", "revisedAnnotation", "leafcutter"), sets.bar.color = "#56B4E9",
+      order.by = "freq")
+
+#Count overlaps by quantification strategy (by gene only)
+unique_trait_gene_pairs = purrr::map_df(gwas_olaps, identity, .id = "phenotype") %>% 
+  dplyr::filter(trait != "CAD_2017") %>% 
+  dplyr::select(phenotype, gene_name) %>% 
+  unique() %>%
+  dplyr::mutate(gene_name = ifelse(gene_name == "FCGR2A;RP11-25K21.6", "FCGR2A", gene_name))
+
+overlap_counts = dplyr::mutate(unique_trait_gene_pairs, id = paste(gene_name, sep = "_")) %>% 
+  tidyr::spread(phenotype, id) %>%
+  dplyr::mutate(ensembl_87 = ifelse(is.na(ensembl_87), 0, 1),
+                featureCounts = ifelse(is.na(featureCounts), 0, 1),
+                revisedAnnotation = ifelse(is.na(revisedAnnotation), 0, 1),
+                leafcutter = ifelse(is.na(leafcutter), 0, 1))
+
+pdf("acLDL_figures/GWAS_overlap_UpSetR.pdf", width = 6, height = 5, onefile = FALSE)
+upset(as.data.frame(overlap_counts), sets = rev(c("featureCounts", "ensembl_87", "leafcutter", "revisedAnnotation")), 
+      order.by = "freq", keep.order = TRUE)
+dev.off()
