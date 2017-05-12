@@ -20,7 +20,7 @@ trQTL_interactions = readRDS("results/acLDL/trQTLs/trQTL_interaction_results.rds
 #Import eQTL interaction test results
 #NOTE: there seems to be a problem with a difference between RASQUAL and LM eQTLs
 interaction_df = readRDS("results/acLDL/eQTLs/lme4_qtltools_interaction_results.rds")
-interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.01) %>%
+interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1) %>%
   dplyr::transmute(phenotype_id = gene_id, qtl_snp_id = snp_id)
 interaction_eqtl_olaps = dplyr::left_join(interaction_hits, gwas_olaps$featureCounts, by = "phenotype_id") %>%
   dplyr::filter(!is.na(trait)) %>%
@@ -33,7 +33,7 @@ write.table(interaction_eqtl_olaps, "acLDL_figures/tables/GWAS_coloc_eQTL_intera
 
 
 #trQTL interaction hits
-trQTL_hits = purrr::map(trQTL_interactions, ~dplyr::filter(.,p_fdr < 0.01) %>% 
+trQTL_hits = purrr::map(trQTL_interactions, ~dplyr::filter(.,p_fdr < 0.1) %>% 
              dplyr::transmute(phenotype_id = gene_id, qtl_snp_id = snp_id))
 
 trQTL_iteraction_olaps = purrr::map2(trQTL_hits, gwas_olaps[1:3], ~dplyr::left_join(.x, .y, by = "phenotype_id") %>%
@@ -48,5 +48,10 @@ write.table(trQTL_iteraction_olaps, "acLDL_figures/tables/GWAS_coloc_trQTL_inter
 
 
 
-
-
+#Visualise FADS2
+sample_metadata = sample_meta_list$ensembl_87 %>% dplyr::mutate(condition_name = factor(condition_name, levels = c("Ctrl", "AcLDL")))
+data = constructQtlPlotDataFrame("ENST00000355484", "rs968567", assays(se_ensembl)$tpm_ratios, vcf_file$genotypes, 
+                                 sample_metadata, 
+                                 tbl_df2(rowData(se_ensembl)) %>% dplyr::mutate(gene_id = transcript_id, gene_name = transcript_id)) %>%
+  dplyr::left_join(constructGenotypeText("rs968567", variant_information), by = "genotype_value")
+boxplot = plotQtlRow(data)

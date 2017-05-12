@@ -1,6 +1,7 @@
 library("dplyr")
 library("tidyr")
 library("purrr")
+library("UpSetR")
 library("devtools")
 library("ggplot2")
 library("SummarizedExperiment")
@@ -26,14 +27,18 @@ mhc_featureCounts = dplyr::filter(tbl_df2(rowData(se_featureCounts)), chr == "6"
 
 
 #Gene names
-ensembl_name_map = dplyr::select(tbl_df2(rowData(se_ensembl)), transcript_id, gene_name) %>% dplyr::rename(phenotype_id = transcript_id)
-revised_name_map = dplyr::select(tbl_df2(rowData(se_reviseAnnotations)), transcript_id, gene_name) %>% dplyr::rename(phenotype_id = transcript_id)
-leafcutter_name_map = dplyr::select(tbl_df2(rowData(se_leafcutter)), transcript_id, gene_name) %>% dplyr::rename(phenotype_id = transcript_id)
-featureCounts_name_map = dplyr::select(tbl_df2(rowData(se_featureCounts)), gene_id, gene_name) %>% dplyr::rename(phenotype_id = gene_id)
+ensembl_name_map = dplyr::select(tbl_df2(rowData(se_ensembl)), transcript_id, gene_name) %>% 
+  dplyr::rename(phenotype_id = transcript_id)
+revised_name_map = dplyr::select(tbl_df2(rowData(se_reviseAnnotations)), transcript_id, gene_name) %>% 
+  dplyr::rename(phenotype_id = transcript_id)
+leafcutter_name_map = dplyr::select(tbl_df2(rowData(se_leafcutter)), transcript_id, gene_name) %>% 
+  dplyr::rename(phenotype_id = transcript_id)
+featureCounts_name_map = dplyr::select(tbl_df2(rowData(se_featureCounts)), gene_id, gene_name) %>% 
+  dplyr::rename(phenotype_id = gene_id)
 
 #Import GWAS traits
 gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt",
-                                     col_names = c("trait","file_name")) %>%
+                                     col_names = c("trait","file_name", "type")) %>%
   dplyr::filter(!(trait %in% c("UC_2014","UC_2012", "CEL_2010","PS", "CD_2012", "RA_2012", "T2D_1", "MS", "T1D", "T1D_2", "PBC")))
 
 #Import coloc output
@@ -77,6 +82,7 @@ featureCounts_200kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_su
 gwas_olaps = list(ensembl_87 = ensembl_200kb_hits, revisedAnnotation = revised_200kb_hits, 
                   leafcutter = leafcutter_200kb_hits, featureCounts = featureCounts_200kb_hits)
 saveRDS(gwas_olaps, "acLDL_figures/tables/GWAS_coloc_hits.rds")
+gwas_olaps = readRDS("acLDL_figures/tables/GWAS_coloc_hits.rds")
 
 #Save a text table as well
 gwas_olaps_tbl = purrr::map_df(gwas_olaps, identity ,.id = "annotation")

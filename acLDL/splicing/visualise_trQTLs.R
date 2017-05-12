@@ -1,3 +1,4 @@
+library("dplyr")
 library("devtools")
 library("rtracklayer")
 library("wiggleplotr")
@@ -103,6 +104,7 @@ plots_df = purrr::by_row(ensembl_hits, ~makeQTLCoveragePlot(.,str1_df, str2_df, 
 plots_df_df = dplyr::mutate(plots_df, plot_title = paste(gene_name, snp_id, phenotype_id, sep = "_"))
 plot_list = setNames(plots_df_df$plot, plots_df_df$plot_title)
 savePlotList(plot_list, "processed/acLDL/coloc_plots/coverage/ensembl_87//")
+
 
 
 #Visualise interaction resluts
