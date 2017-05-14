@@ -1,5 +1,4 @@
 library("dplyr")
-library("data.table")
 library("ggplot2")
 library("devtools")
 library("rtracklayer")
@@ -36,8 +35,6 @@ cdss = cdsBy(txdb, by = "tx", use.names = TRUE)
 
 #Leafcutter txs
 leafcutter_granges = readRDS("results/acLDL/acLDL_leafcutter.GRangesList.rds")
-revised_granges = readRDS("results/reviseAnnotations/reviseAnnotations.GRangesList.rds") %>%
-  purrr::flatten()
 
 #Set up sample coverage df
 str1_df = wiggleplotrConstructMetadata(acldl_list$counts, 
@@ -52,29 +49,47 @@ str2_df = wiggleplotrConstructMetadata(acldl_list$counts,
                                        condition_name_levels = c("Ctrl","AcLDL"))
 
 #### Visualise GWAS overlaps ####
-gwas_olaps = readRDS("acLDL_figures/tables/GWAS_coloc_hits.rds") %>% 
-  purrr::map_df(identity, .id = "phenotype")
+gwas_olaps = readRDS("acLDL_figures/tables/GWAS_coloc_hits.rds")
 
-#Find FCGR2A overlaps
-hits = dplyr::filter(gwas_olaps, gene_name %like% "FADS2", trait == "RA")
+#identify QTLs
+ensembl_qtls = dplyr::filter(trqtl_min_pvalues$ensembl_87$Ctrl, group_id == "ENSG00000138386")
+revised_qtls = dplyr::filter(trqtl_min_pvalues$revisedAnnotations$Ctrl, group_id %like% "ENSG00000138386")
+leafcutter_qtls = dplyr::filter(trqtl_min_pvalues$leafcutter$Ctrl, group_id == "clu_8618")
 
 #Extract QTL
-qtl_row = dplyr::filter(trqtl_min_pvalues$revisedAnnotations$AcLDL, phenotype_id == "ENSG00000134824.clique_1.upstream.ENST00000355484") %>%
-  dplyr::mutate(phenotype_id = "ENSG00000134824.clique_1.upstream.ENST00000521849")
-qtl_data = extractTrQtlDataFromSE(qtl_row, se_revised, vcf_file$genotypes, variant_information, phenotype_name = "tpms")
-plotQtlRow(qtl_data)
+downstream_qtl = revised_qtls[2,]
+downstream_tx_names = dplyr::filter(gene_meta_list$revisedAnnotation, gene_id == "ENSG00000138386.downstream")$transcript_id
+downstream_tx = revised_granges[downstream_tx_names]
 
-#Extract all alternative transcripts in this clique
-alt_promoters = dplyr::filter(gene_meta_list$revisedAnnotation, gene_id == "ENSG00000134824.upstream", transcript_id %like% "clique_1")
-alt_granges = leafcutter_granges[alt_promoters$transcript_id]
+#Extract annotatated transcripts
+lipa_tx = exons["ENST00000336233"] %>% removeMetadata()
+lipa_cdss = cdss["ENST00000336233"] %>% removeMetadata()
 
 #Make a coverage plot
-track_data = wiggleplotrGenotypeColourGroup(str2_df, qtl_row$snp_id, vcf_file$genotypes, 1)
-utr = GRanges(seqnames = "11", IRanges(start = 61846591, end =61848158 - 100), strand = "+")
-lipa_coverage = wiggleplotr::plotCoverage(list(UTR = utr), track_data = track_data, 
+track_data = wiggleplotrGenotypeColourGroup(str2_df, downstream_qtl$snp_id, vcf_file$genotypes, 1)
+lipa_coverage = wiggleplotr::plotCoverage(downstream_tx, track_data = track_data, 
                                           fill_palette = getGenotypePalette(), 
                                           plot_fraction = 0.2, 
                                           coverage_type = "line", 
-                                          rescale_introns = FALSE, flanking_length = c(25,25))
+                                          rescale_introns = TRUE)
+ggsave("acLDL_figures/LIPA_leafcutter_coverage.pdf", lipa_coverage, width = 10, height = 6)
 
+
+#Extract QTL
+downstream_qtl = ensembl_qtls
+downstream_tx_names = dplyr::filter(gene_meta_list$ensembl_87, gene_id == "ENSG00000138386")$transcript_id
+downstream_tx = exons[downstream_tx_names]
+
+#Extract annotatated transcripts
+lipa_tx = exons["ENST00000336233"] %>% removeMetadata()
+lipa_cdss = cdss["ENST00000336233"] %>% removeMetadata()
+
+#Make a coverage plot
+track_data = wiggleplotrGenotypeColourGroup(str2_df, downstream_qtl$snp_id, vcf_file$genotypes, 1)
+lipa_coverage = wiggleplotr::plotCoverage(downstream_tx, track_data = track_data, 
+                                          fill_palette = getGenotypePalette(), 
+                                          plot_fraction = 0.2, 
+                                          coverage_type = "line", 
+                                          rescale_introns = TRUE)
+ggsave("acLDL_figures/LIPA_leafcutter_coverage.pdf", lipa_coverage, width = 10, height = 6)
 
