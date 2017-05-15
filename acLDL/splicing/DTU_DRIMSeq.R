@@ -64,6 +64,6 @@ design_null <- model.matrix(~ 1, data = DRIMSeq::samples(splicing_data_batch))
 model_fit <- dmTest(model_fit, design = design_null)
 
 #Save output from each batch
-output_file = file.path("results/acLDL/diff_splicing", paste0("differential_events_batch",gsub(" ","_",batch_string), ".rds"))
+output_file = file.path("results/acLDL/diff_splicing", paste("differential_events_batch", phenotype ,gsub(" ","_",batch_string), "rds", sep = "."))
 saveRDS(model_fit, output_file)
 
