@@ -187,3 +187,7 @@ snakemake --cluster ../../Blood_ATAC/scripts/snakemake_submit.py -np -s acLDL_al
 snakemake --cluster ../../Blood_ATAC/scripts/snakemake_submit.py -np -s acLDL_run_coloc.snakefile --jobs 500
 snakemake --cluster ../../Blood_ATAC/scripts/snakemake_submit.py -np -s ATAC_RNA_run_coloc.snakefile --jobs 500
 
+#Perform DTU analysis on the acLDL data
+cat dtu_batches.txt | python ~/software/utils/submitJobs.py --MEM 5000 --jobname dtu_test --ncores 1 --command "/software/R-3.4.0/bin/Rscript macrophage-gxe-study/acLDL/splicing/DTU_DRIMSeq.R --phenotype leafcutter"
+
+

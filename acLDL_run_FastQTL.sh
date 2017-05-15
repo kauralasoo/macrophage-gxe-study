@@ -109,4 +109,3 @@ rm results/acLDL/fastqtl/output_FC/*.chunk_*
 
 
 
-
