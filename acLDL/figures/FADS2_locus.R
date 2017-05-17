@@ -78,3 +78,11 @@ lipa_coverage = wiggleplotr::plotCoverage(list(UTR = utr), track_data = track_da
                                           rescale_introns = FALSE, flanking_length = c(25,25))
 
 
+
+#Make eQTL boxplot
+gene_data = constructQtlPlotDataFrame("ENSG00000134824", "rs61896141", acldl_list$cqn, vcf_file$genotypes, 
+                                      acldl_list$sample_metadata, acldl_list$gene_metadata) %>%
+  dplyr::mutate(condition_name = factor(condition_name, levels = c("Ctrl", "AcLDL"))) %>%
+  dplyr::left_join(constructGenotypeText("rs61896141", variant_information), by = "genotype_value")
+qtl_plot = plotQtlRow(gene_data)
+ggsave("acLDL_figures/FADS2_boxplot.pdf", plot = qtl_plot, width = 4, height = 3)
