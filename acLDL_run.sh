@@ -193,4 +193,3 @@ cat dtu_batches.txt | python ~/software/utils/submitJobs.py --MEM 5000 --jobname
 cat dtu_batches.txt | python ~/software/utils/submitJobs.py --MEM 5000 --jobname dtu_test --ncores 1 --command "/software/R-3.4.0/bin/Rscript macrophage-gxe-study/acLDL/splicing/DTU_DRIMSeq.R --phenotype ensembl_87"
 
 
-

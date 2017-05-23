@@ -65,8 +65,8 @@ revised_hits = dplyr::filter(dtu_list$revisedAnnotation, max_diff > 0.1, p_fdr <
   dplyr::arrange(-max_diff) %>%
   dplyr::left_join(dplyr::select(gene_meta_list$revisedAnnotation, gene_id, gene_name, strand) %>% unique(), by = "gene_id")
 
-gene_meta = dplyr::filter(gene_meta_list$revisedAnnotation, gene_id == "ENSG00000166523.downstream")
-plotCoverage(revised_granges[gene_meta$transcript_id], track_data = str1_df)
+gene_meta = dplyr::filter(gene_meta_list$revisedAnnotation, gene_id == "ENSG00000134824.downstream")
+plotCoverage(revised_granges[gene_meta$transcript_id], track_data = str2_df)
 
 
 

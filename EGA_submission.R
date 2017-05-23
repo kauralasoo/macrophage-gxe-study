@@ -1,5 +1,7 @@
 library("dplyr")
 library("readr")
+library("devtools")
+load_all("macrophage-gxe-study/housekeeping/")
 
 #Import complete line metadata
 line_data = readRDS("macrophage-gxe-study/data/covariates/compiled_line_metadata.rds") %>%
@@ -136,6 +138,24 @@ acLDL_open = dplyr::filter(acLDL_access_type, open_access == 1) %>% dplyr::selec
 acLDL_closed = dplyr::filter(acLDL_access_type, open_access == 0) %>% dplyr::select(-full_name)
 write.table(acLDL_open, "results/sample_lists/submission/acLDL.open_access.txt", sep = ",", row.names = FALSE, quote = FALSE)
 write.table(acLDL_closed, "results/sample_lists/submission/acLDL.managed_access.txt", sep = ",", row.names = FALSE, quote = FALSE)
+
+
+#Import acLDL lanelets
+acldl_lanelets = readr::read_tsv("macrophage-gxe-study/data/sample_lists/acLDL/acLDL_names_all.txt", col_names = c("sample_id", "lanelet_ids"))
+acldl_lanelet_pairs = purrr::by_row(acldl_lanelets, 
+                          ~data_frame(sample_id = .$sample_id, 
+                          lanelet_id = unlist(strsplit(.$lanelet_ids, ";"))))$.out %>% 
+  purrr::map_df(identity)
+
+#Extract open and managed lanelets
+open_lanelets = dplyr::semi_join(acldl_lanelet_pairs, acLDL_open, by = "sample_id") %>%
+  dplyr::arrange(sample_id)
+managed_lanelets = dplyr::semi_join(acldl_lanelet_pairs, acLDL_closed, by = "sample_id") %>%
+  dplyr::arrange(sample_id)
+write.table(open_lanelets, "results/sample_lists/submission/acLDL.open_access.lanelets.txt", sep = ",", row.names = FALSE, quote = FALSE)
+write.table(managed_lanelets, "results/sample_lists/submission/acLDL.managed_access.lanelets.txt", sep = ",", row.names = FALSE, quote = FALSE)
+
+
 
 
 
