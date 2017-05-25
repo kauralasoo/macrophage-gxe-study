@@ -105,6 +105,11 @@ cat results/acLDL/fastqtl/input/chunk_table.txt | python ~/software/utils/submit
 zcat results/acLDL/fastqtl/output_FC/FC_perm.chunk_*.txt.gz | bgzip > results/acLDL/fastqtl/output_FC/FC_permuted.txt.gz
 rm results/acLDL/fastqtl/output_FC/*.chunk_*
 
+#Construct event annotations using rnaseqlib
+python /Users/alasoo/anaconda/envs/py27/lib/python2.7/site-packages/rnaseqlib/gff/gff_make_annotation.py --flanking-rule commonshortest --genome-label hg38 tables/ gff/
+
+python /Users/alasoo/anaconda/envs/py27/lib/python2.7/site-packages/rnaseqlib/gff/gff_make_annotation.py --flanking-rule commonshortest --genome-label hg38_multi --multi-iso tables/ gff/
+
 
 
 
