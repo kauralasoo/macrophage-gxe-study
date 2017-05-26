@@ -1,6 +1,8 @@
-library("GenomicFeatures")
+library("purrr")
 library("dplyr")
 library("devtools")
+library("rtracklayer")
+library("GenomicFeatures")
 load_all("../reviseAnnotations/")
 load_all("../seqUtils/")
 
