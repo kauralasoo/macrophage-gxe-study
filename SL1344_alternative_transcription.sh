@@ -17,10 +17,11 @@ echo "test" | python ~/software/utils/submitJobs.py --MEM 12000 --jobname drimse
 echo "test" | python ~/software/utils/submitJobs.py --MEM 8000 --jobname drimseq_dispersions --ncores 1 --queue normal --command "/software/R-3.3.0/bin/Rscript macrophage-gxe-study/SL1344/splicing/differentialTranscriptExpression.R"
 
 #Construct new alternative transcription events
-cat annotation_batches.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname reviseAnnotations4 --ncores 1 --queue normal --command "/software/R-3.2.2/bin/Rscript macrophage-gxe-study/munge/constructTranscriptionEvents.R"
+cat annotation_batches.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname reviseAnnotations --ncores 1 --queue normal --command "/software/R-3.4.0/bin/Rscript macrophage-gxe-study/munge/constructTranscriptionEvents.R"
 
 #Merge all GFF files together
-cat reviseAnnotations_batch_* | grep -v "^#" > reviseAnnotations.gff3
+cat results/reviseAnnotations/reviseAnnotations.grp_1.batch_* | grep -v "^#" > results/reviseAnnotations/reviseAnnotations.grp_1.gff3 &
+cat results/reviseAnnotations/reviseAnnotations.grp_2.batch_* | grep -v "^#" > results/reviseAnnotations/reviseAnnotations.grp_2.gff3 &
 
 #Convert GFF files to fastq
 /software/team82/cufflinks/2.2.1/bin/gffread -w reviseAnnotations.contained.fa -g ../../../../annotations/GRCh38/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa reviseAnnotations.contained.gff3 
