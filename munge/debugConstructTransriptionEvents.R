@@ -17,13 +17,13 @@ cdss = GenomicFeatures::cdsBy(txdb, by = "tx", use.names = TRUE)
 filtered_metadata = reviseAnnotations::filterTranscriptMetadata(gene_metadata)
 
 #Extract gene data from annotations
-gene_data = reviseAnnotations::extractGeneData("ENSG00000111912", filtered_metadata, exons, cdss)
+gene_data = reviseAnnotations::extractGeneData("ENSG00000128604", filtered_metadata, exons, cdss)
 
 #Extend truncated transcripts until the longest transcript
 gene_extended_tx = reviseAnnotations::extendTranscriptsPerGene(gene_data$metadata, gene_data$exons, gene_data$cdss)
 gene_data_ext = reviseAnnotations::replaceExtendedTranscripts(gene_data, gene_extended_tx)
 
-alt_events = constructAlternativeEvents(gene_data_ext$exons, "ENSG00000111912")
+alt_events = constructAlternativeEvents(gene_data_ext$exons, "ENSG00000128604")
 
 #Make some plots
 plotting_annotations = dplyr::select(filtered_metadata, ensembl_transcript_id, ensembl_gene_id, external_gene_name, strand) %>% 
