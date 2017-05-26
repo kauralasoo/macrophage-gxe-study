@@ -14,18 +14,13 @@ close(f)
 ####### END #######
 
 #Import transcript annotations
-gene_metadata = readRDS("../../annotations/GRCh38/genes/Ensembl_87/Homo_sapiens.GRCh38.87.compiled_tx_metadata.filtered.rds")  
+gene_metadata = readRDS("../../annotations/GRCh38/genes/Ensembl_87/Homo_sapiens.GRCh38.87.compiled_tx_metadata.rds")  
 txdb = AnnotationDbi::loadDb("../../annotations/GRCh38/genes/Ensembl_87/TranscriptDb_GRCh38_87.db")
 exons = GenomicFeatures::exonsBy(txdb, by = "tx", use.names = TRUE)
 cdss = GenomicFeatures::cdsBy(txdb, by = "tx", use.names = TRUE)
 
 #Filter gene annotations
-filtered_metadata = dplyr::filter(gene_metadata, transcript_biotype %in% c("lincRNA", "protein_coding")) %>% 
-  dplyr::group_by(ensembl_gene_id) %>% 
-  dplyr::mutate(n_transcripts = length(ensembl_gene_id)) %>% 
-  dplyr::ungroup() %>% 
-  dplyr::filter(n_transcripts > 1) %>%
-  reviseAnnotations::markLongestTranscripts()
+filtered_metadata = reviseAnnotations::filterTranscriptMetadata(gene_metadata)
 
 #### Split genes into batches ####
 gene_ids = unique(filtered_metadata$ensembl_gene_id)
@@ -50,16 +45,23 @@ alt_events = purrr::flatten(alt_events) %>% flattenAlternativeEvents()
 #Construct event metadata
 event_metadata = reviseAnnotations::constructEventMetadata(names(alt_events))
 
+#Separate the two groups
+grp1_events = dplyr::filter(event_metadata, grp_id == "grp_1")
+grp2_events = dplyr::filter(event_metadata, grp_id == "grp_2")
+
 #Construct transcript annotations
-transcript_annotations = reviseAnnotations::transcriptsToAnnotations(alt_events, event_metadata)
+grp1_annotations = reviseAnnotations::transcriptsToAnnotations(alt_events[grp1_events$transcript_id], grp1_events)
+grp2_annotations = reviseAnnotations::transcriptsToAnnotations(alt_events[grp2_events$transcript_id], grp2_events)
 
 #Make a list of failed genes
 failed_names = names(which(failed_genes))
 
 #Save output from each batch
 if(!is.null(batch_id)){
-  output_file = file.path("results/reviseAnnotations", paste0("reviseAnnotations_batch_",batch_id, ".gff3"))
-  error_file = file.path("results/reviseAnnotations", paste0("failed_genes_batch_",batch_id, ".txt"))
-  rtracklayer::export.gff3(transcript_annotations, output_file)
+  grp1_file = file.path("results/reviseAnnotations", paste0("reviseAnnotations.grp_1.batch_",batch_id, ".gff3"))
+  grp2_file = file.path("results/reviseAnnotations", paste0("reviseAnnotations.grp_2.batch_",batch_id, ".gff3"))
+  error_file = file.path("results/reviseAnnotations", paste0("failed_genes.batch_",batch_id, ".txt"))
+  rtracklayer::export.gff3(grp1_annotations, grp1_file)
+  rtracklayer::export.gff3(grp2_annotations, grp2_file)
   write.table(failed_names, error_file, row.names = FALSE, col.names = FALSE, quote = FALSE)
 }
