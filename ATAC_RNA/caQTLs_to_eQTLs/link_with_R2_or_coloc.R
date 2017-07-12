@@ -99,6 +99,8 @@ plotQTLBetasAll2 <- function(beta_df){
 }
 
 
+#use coloc
+use_coloc = TRUE
 
 #### Import data ####
 #Load the raw eQTL dataset
@@ -147,8 +149,10 @@ saveRDS(rna_atac_overlaps, "results/ATAC_RNA_overlaps/QTL_overlap_list_R2.rds")
 rna_atac_overlaps = readRDS("results/ATAC_RNA_overlaps/QTL_overlap_list_R2.rds")
 
 #Filter results with coloc
-#coloc_overlaps = readRDS("results/ATAC_RNA_overlaps/QTL_overlap_list_coloc.rds")
-#rna_atac_overlaps = dplyr::semi_join(rna_atac_overlaps, coloc_overlaps, by = c("gene_id", "peak_id"))
+if(use_coloc == TRUE){
+  coloc_overlaps = readRDS("results/ATAC_RNA_overlaps/QTL_overlap_list_coloc.rds")
+  rna_atac_overlaps = dplyr::semi_join(rna_atac_overlaps, coloc_overlaps, by = c("gene_id", "peak_id"))
+}
 
 #Find minimal p-values for each peaks across conditions
 atac_unique_pvalues = purrr::map_df(atac_min_pvalues, identity, .id = "condition_name") %>%
@@ -222,17 +226,15 @@ all_betas_plot1 + theme(axis.text.y = element_text())
 all_betas_plot2 + theme(axis.text.y = element_text())
 all_betas_plot3 + theme(axis.text.y = element_text())
 
-
-ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_1.pdf", all_betas_plot1, width = 3, height = 2)
-ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_2.pdf", all_betas_plot2, width = 3, height = 2)
-ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_3.pdf", all_betas_plot3, width = 3, height = 4.5)
-
-if(coloc_run == TRUE){
-  ggsave("figures/supplementary/eQTLs_vs_caQTL_heatmap.coloc.pdf", all_betas_plot, width = 3, height = 5)
+if(use_coloc == TRUE){
+  ggsave("figures/supplementary/eQTLs_vs_caQTL_heatmap_1_coloc.pdf", all_betas_plot1, width = 3, height = 2)
+  ggsave("figures/supplementary/eQTLs_vs_caQTL_heatmap_2_coloc.pdf", all_betas_plot2, width = 3, height = 2)
+  ggsave("figures/supplementary/eQTLs_vs_caQTL_heatmap_3_coloc.pdf", all_betas_plot3, width = 3, height = 4.5)
+} else {
+  ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_1.pdf", all_betas_plot1, width = 3, height = 2)
+  ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_2.pdf", all_betas_plot2, width = 3, height = 2)
+  ggsave("figures/main_figures/eQTLs_vs_caQTL_heatmap_3.pdf", all_betas_plot3, width = 3, height = 4.5)
 }
-
-
-ggsave("figures/test.pdf", plot = all_betas_plot + theme(axis.text.y = element_text()), width = 5, height = 12)
 
 
 #Count caQTLs present in the naive condition
@@ -245,10 +247,9 @@ present_fraction = dplyr::filter(all_betas, phenotype == "ATAC-seq", condition_n
   dplyr::mutate(fraction = present/(absent+present)) %>%
   dplyr::mutate(type = "forward")
 
-saveRDS(all_betas, "results/ATAC_RNA_overlaps/caQTL_eQTL_pairs_betas.rds")
-
-
-
+if(use_coloc == FALSE){
+  saveRDS(all_betas, "results/ATAC_RNA_overlaps/caQTL_eQTL_pairs_betas.rds")
+}
 
 
 ###### Reverse analysis #####
@@ -307,11 +308,12 @@ peak_all_betas = purrr::map_df(peak_beta_processed, ~dplyr::arrange(., gene_name
   dplyr::mutate(qtl_id = factor(qtl_id, levels = unique(qtl_id))) %>%
   dplyr::mutate(max_effect = ifelse(max_effect == "IFNg", "I", ifelse(max_effect == "SL1344", "S", "I+S"))) %>%
   dplyr::mutate(max_effect = factor(max_effect, levels = c("I","S","I+S")))
-peak_all_betas_plot = plotQTLBetasAll(peak_all_betas)
-ggsave("figures/supplementary/eQTLs_vs_caQTL_heatmap_reverse.pdf", peak_all_betas_plot, width = 3, height = 7)
+peak_all_betas_plot = plotQTLBetasAll2(peak_all_betas)
 
-if(coloc_run == TRUE){
+if(use_coloc == TRUE){
   ggsave("figures/supplementary/eQTLs_vs_caQTL_heatmap_reverse.coloc.pdf", peak_all_betas_plot, width = 3, height = 7)
+} else{
+  ggsave("figures/supplementary/eQTLs_vs_caQTL_heatmap_reverse.pdf", peak_all_betas_plot, width = 3, height = 7)
 }
 
 #Count caQTLs present in the naive condition
@@ -324,26 +326,33 @@ peak_present_fraction = dplyr::filter(peak_all_betas, phenotype == "RNA-seq", co
   dplyr::mutate(fraction = present/(absent+present)) %>%
   dplyr::mutate(type = "reverse")
 
-
-#Save proportions to disk
+#Put results together
 combined_results = dplyr::bind_rows(present_fraction, peak_present_fraction)
-write.table(combined_results, "results/ATAC_RNA_overlaps/foreshadow_quant.txt", sep = "\t", quote = FALSE)
-combined_results = read.table("results/ATAC_RNA_overlaps/foreshadow_quant.txt", stringsAsFactors = FALSE) %>%
-  dplyr::mutate(max_effect = factor(max_effect, levels = c("I","S","I+S")))
 
-if(coloc_run == TRUE){
-  write.table(combined_results, "results/ATAC_RNA_overlaps/foreshadow_quant.coloc.txt", sep = "\t", quote = FALSE)
+#Make a joint count for coloc results only
+if(use_coloc == TRUE){
+  joint_counts = dplyr::mutate(combined_results, absent = ifelse(is.na(absent), 0, absent), present = ifelse(is.na(present), 0, present)) %>% 
+    dplyr::group_by(type) %>% 
+    dplyr::summarise(absent_sum = sum(absent), present_sum = sum(present)) %>%
+    dplyr::mutate(fraction = present_sum/(present_sum + absent_sum))
+  write.table(joint_counts, "results/ATAC_RNA_overlaps/foreshadow_quant.coloc.txt", sep = "\t", quote = FALSE)
+} else{
+  #Save proportions to disk
+  write.table(combined_results, "results/ATAC_RNA_overlaps/foreshadow_quant.txt", sep = "\t", quote = FALSE)
+  combined_results = read.table("results/ATAC_RNA_overlaps/foreshadow_quant.txt", stringsAsFactors = FALSE) %>%
+    dplyr::mutate(max_effect = factor(max_effect, levels = c("I","S","I+S")))
 }
 
-fisher.test(matrix(c(14, 2, 2, 8), ncol = 2))
 
-#Make a plot of proportions
-plot_data = dplyr::mutate(combined_results, type = ifelse(type == "forward", "caQTL before eQTL", "eQTL before caQTL"))
-
-foreshadow_plot = ggplot(plot_data, aes(x = max_effect, y = fraction, fill = type)) + 
-  geom_bar(stat = "identity", position = "dodge") + 
-  xlab("Condition") +
-  ylab("Fraction of caQTL-eQTL pairs") + 
-  theme_light() +
-  theme(legend.position = "right")
-ggsave("figures/main_figures/foreshadowing_proportions.pdf", plot = foreshadow_plot, width = 3.7, height = 3)
+if(use_coloc == FALSE){
+  #Make a plot of proportions
+  plot_data = dplyr::mutate(combined_results, type = ifelse(type == "forward", "caQTL before eQTL", "eQTL before caQTL"))
+  
+  foreshadow_plot = ggplot(plot_data, aes(x = max_effect, y = fraction, fill = type)) + 
+    geom_bar(stat = "identity", position = "dodge") + 
+    xlab("Condition") +
+    ylab("Fraction of caQTL-eQTL pairs") + 
+    theme_light() +
+    theme(legend.position = "right")
+  ggsave("figures/main_figures/foreshadowing_proportions.pdf", plot = foreshadow_plot, width = 3.7, height = 3)
+}
