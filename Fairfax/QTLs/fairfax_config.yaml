@@ -1,7 +1,7 @@
 #QTL mapping 
 conditions: ["CD14", "IFN", "LPS2", "LPS24"]
 n_batches: 250
-qtl_vcf: "/nfs/users/nfs_k/ka8/scratch/projects/macrophage-gxe-study/genotypes/SL1344/imputed_20151005/imputed.86_samples.sorted.filtered.named.vcf.gz"
+qtl_vcf: "/nfs/users/nfs_k/ka8/scratch/projects/macrophage-gxe-study/processed/Fairfax/merged_genotypes/fairfax_genotypes.sorted.filtered.vcf.gz"
 cis_window: 500000
 nominal_cis_window: 500000
 annot_type: ["full", "shared", "shared_84"]
