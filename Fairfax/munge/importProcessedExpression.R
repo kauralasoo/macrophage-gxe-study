@@ -43,7 +43,8 @@ filtered_metadata = tbl_df(gene_metadata) %>%
 gene_granges = dplyr::transmute(filtered_metadata, seqnames = paste0("chr",chr), 
                                 start = gene_start, end = gene_end, 
                                 strand = ifelse(1, "+","-"), name = gene_id) %>% 
-  dataFrameToGRanges()
+  dataFrameToGRanges() %>%
+  unique()
 rtracklayer::export.bed(gene_granges, "macrophage-gxe-study/data/Fairfax/gene_coords.GRCh38.bed")
 
 final_gene_metadata = as.data.frame(filtered_metadata)
