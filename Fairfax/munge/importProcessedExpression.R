@@ -21,6 +21,7 @@ valid_gene_biotypes = c("lincRNA","protein_coding","IG_C_gene","IG_D_gene","IG_J
                         "IG_V_gene", "TR_C_gene","TR_D_gene","TR_J_gene", "TR_V_gene",
                         "3prime_overlapping_ncrna","known_ncrna", "processed_transcript",
                         "antisense","sense_intronic","sense_overlapping")
+valid_chomosome_names = c(as.character(c(1:22)), "X","Y")
 
 #Filter to uniquely mapping probes
 filtered_metadata = tbl_df(gene_metadata) %>% 
@@ -39,15 +40,18 @@ filtered_metadata = tbl_df(gene_metadata) %>%
   dplyr::select(-gene_count) %>%
   dplyr::filter(gene_biotype %in% valid_gene_biotypes)
 
-#Export gene metadata as a bed file
-gene_granges = dplyr::transmute(filtered_metadata, seqnames = paste0("chr",chr), 
-                                start = gene_start, end = gene_end, 
-                                strand = ifelse(1, "+","-"), name = gene_id) %>% 
-  dataFrameToGRanges() %>%
-  unique()
-rtracklayer::export.bed(gene_granges, "macrophage-gxe-study/data/Fairfax/gene_coords.GRCh38.bed")
+#Import Ensembl_74 gff file with GRCh37 coordinates
+ensembl_74_gff = readr::read_tsv("../../annotations/GRCh37/Ensembl_74/Homo_sapiens.GRCh37.74.gff3", skip = 1, col_names = FALSE)
+ensembl74_meta = dplyr::filter(ensembl_74_gff, X3 == "gene") %>% 
+  tidyr::separate(X9, c("F","S","gene_id"), sep = ";Name=") %>% 
+  dplyr::transmute(gene_id, chr = X1, gene_start = X4, gene_end = X5, strand = X7)
 
-final_gene_metadata = as.data.frame(filtered_metadata)
+#Add new gene coordinates to metadata
+metadata_new_coords = dplyr::select(filtered_metadata, -chr, -gene_start, -gene_end, -strand) %>% 
+  dplyr::left_join(ensembl74_meta, by = "gene_id") %>% dplyr::filter(!is.na(gene_start)) %>%
+  dplyr::filter(chr %in% valid_chomosome_names)
+
+final_gene_metadata = as.data.frame(metadata_new_coords)
 rownames(final_gene_metadata) = final_gene_metadata$probe_id
 
 #Make a single expression matrix
@@ -67,8 +71,8 @@ ifn_mat = as.matrix(ifn[,-1])
 rownames(ifn_mat) = ifn$PROBE_ID
 colnames(ifn_mat) = paste("IFN", colnames(ifn_mat), sep = "_")
 
-matrix_list = list(cd14_mat[filtered_metadata$probe_id,], lps2_mat[filtered_metadata$probe_id,], 
-                   lps24_mat[filtered_metadata$probe_id,], ifn_mat[filtered_metadata$probe_id,])
+matrix_list = list(cd14_mat[final_gene_metadata$probe_id,], lps2_mat[final_gene_metadata$probe_id,], 
+                   lps24_mat[final_gene_metadata$probe_id,], ifn_mat[final_gene_metadata$probe_id,])
 expression_matrix = purrr::reduce(matrix_list, cbind)
 
 #Construct sample metadata
@@ -90,6 +94,7 @@ ifn_present = dplyr::filter(sample_metadata, condition_name %in% c("CD14", "IFN"
 
 final_sample_metadata = dplyr::left_join(sample_metadata, ifn_present, by = "sample_id") %>%
   dplyr::mutate(present_in_IFN = ifelse(is.na(present_in_IFN), FALSE, TRUE)) %>%
+  dplyr::mutate(genotype_id = paste(donor_id, donor_id, sep = "_")) %>%
   as.data.frame()
 rownames(final_sample_metadata) = final_sample_metadata$sample_id
 
