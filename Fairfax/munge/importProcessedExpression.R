@@ -1,6 +1,10 @@
+library("dplyr")
 library("readr")
 library("biomaRt")
+library("rtracklayer")
 library("SummarizedExperiment")
+library("devtools")
+load_all("../seqUtils/")
 
 #Import all matrices
 cd14 = readr::read_tsv("../../datasets/Fairfax_2014/processed_expression/CD14.47231.414.b.txt.gz", col_names = TRUE)
@@ -34,6 +38,13 @@ filtered_metadata = tbl_df(gene_metadata) %>%
   dplyr::filter(gene_count == 1) %>%
   dplyr::select(-gene_count) %>%
   dplyr::filter(gene_biotype %in% valid_gene_biotypes)
+
+#Export gene metadata as a bed file
+gene_granges = dplyr::transmute(filtered_metadata, seqnames = paste0("chr",chr), 
+                                start = gene_start, end = gene_end, 
+                                strand = ifelse(1, "+","-"), name = gene_id) %>% 
+  dataFrameToGRanges()
+rtracklayer::export.bed(gene_granges, "macrophage-gxe-study/data/Fairfax/gene_coords.GRCh38.bed")
 
 final_gene_metadata = as.data.frame(filtered_metadata)
 rownames(final_gene_metadata) = final_gene_metadata$probe_id
