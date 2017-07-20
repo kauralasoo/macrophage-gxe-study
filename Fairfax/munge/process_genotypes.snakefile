@@ -44,7 +44,7 @@ rule concat_chromosomes:
 		mem = 1000
 	threads: 1
 	shell:
-		"bcftools concat -a {input} > {output}"
+		"bcftools concat -a {input.vcfs} > {output}"
 
 rule sort_vcf:
 	input:
