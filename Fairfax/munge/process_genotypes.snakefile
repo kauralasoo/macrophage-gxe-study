@@ -61,7 +61,7 @@ rule keep_unique_biallelic:
 	input:
 		"processed/Fairfax/merged_genotypes/fairfax_genotypes.sorted.vcf"
 	output:
-		"processed/Fairfax/merged_genotypes/fairfax_genotypes.sorted.filtered.vcf.gz"
+		protected("processed/Fairfax/merged_genotypes/fairfax_genotypes.sorted.filtered.vcf.gz")
 	resources:
 		mem = 1000
 	threads: 3
@@ -69,6 +69,17 @@ rule keep_unique_biallelic:
 		"~/software/vcflib/bin/vcfuniq {input} | bcftools norm -m+any - | "
 		"bcftools view -m2 -M2 - | "
 		"bcftools annotate -O z --set-id +'%CHROM\_%POS' > {output}"
+
+rule extract_variant_infromation:
+	input:
+		"processed/Fairfax/merged_genotypes/fairfax_genotypes.sorted.filtered.vcf.gz"
+	output:
+		"processed/Fairfax/merged_genotypes/fairfax_genotypes.variant_information.txt.gz"
+	resources:
+		mem = 1000
+	threads: 2	
+	shell:
+		"bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%TYPE\t%AC\t%AN\n' {input} | bgzip > {output}"
 
 
 
