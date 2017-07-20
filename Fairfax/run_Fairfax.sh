@@ -7,4 +7,6 @@ bsub -G team170 -n1 -R "span[hosts=1] select[mem>35000] rusage[mem=35000]" -q no
 #Map QTLs
 snakemake --cluster ../../../../macrophage-trQTLs/scripts/snakemake_submit.py -np -s map_QTLs.snakefile processed/Fairfax/out.txt --jobs 1200 --configfile fairfax_config.yaml
 
+#Run coloc against QTLs
+snakemake --cluster ../macrophage-trQTLs/scripts/snakemake_submit.py -np -s macrophage-gxe-study/fairfax_run_coloc.snakefile processed/Fairfax/coloc_out.txt --jobs 100 --configfile fairfax_config.yaml
 
