@@ -15,7 +15,6 @@ expression_mat = assays(se_fairfax)$exprs
 sample_metadata = colData(se_fairfax) %>% tbl_df2()
 gene_metadata = rowData(se_fairfax) %>% tbl_df2() %>% dplyr::mutate(gene_id = probe_id)
 
-
 #Import genotypes
 vcf_file = seqUtils::gdsToMatrix("processed/Fairfax/geno_by_chr/9.gds")
 variant_information = importVariantInformation("processed/Fairfax/merged_genotypes/fairfax_genotypes.variant_information.txt.gz")
