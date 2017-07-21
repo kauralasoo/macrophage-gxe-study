@@ -81,7 +81,41 @@ rule extract_variant_infromation:
 	shell:
 		"bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%TYPE\t%AC\t%AN\n' {input} | bgzip > {output}"
 
+rule index_full_vcf:
+	input:
+		"processed/Fairfax/merged_genotypes/fairfax_genotypes.sorted.filtered.vcf.gz"
+	output:
+		"processed/Fairfax/merged_genotypes/fairfax_genotypes.sorted.filtered.vcf.gz.csi"
+	resources:
+		mem = 1000
+	threads: 1
+	shell:
+		"bcftools index {input}"
 
+rule extract_chr:
+	input:
+		vcf = "processed/Fairfax/merged_genotypes/fairfax_genotypes.sorted.filtered.vcf.gz"
+		index = "processed/Fairfax/merged_genotypes/fairfax_genotypes.sorted.filtered.vcf.gz.csi"
+	output:
+		vcf = "processed/Fairfax/geno_by_chr/{chr}.vcf.gz"
+	resources:
+		mem = 1000
+	threads: 1
+	shell:
+		"bcftools view -O z -r {wildcards.chr} {input.vcf} > {output.vcf}"
+
+
+rule make_all:
+	input:
+		"processed/Fairfax/merged_genotypes/fairfax_genotypes.variant_information.txt.gz",
+		expand("processed/Fairfax/geno_by_chr/{chr}.vcf.gz", chr=chromosomes)
+	output:
+		"processed/Fairfax/out.txt"
+	resources:
+		mem = 1000
+	threads: 1
+	shell:
+		"echo 'Done!' > {output}"
 
 
 
