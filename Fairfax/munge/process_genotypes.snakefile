@@ -94,7 +94,7 @@ rule index_full_vcf:
 
 rule extract_chr:
 	input:
-		vcf = "processed/Fairfax/merged_genotypes/fairfax_genotypes.sorted.filtered.vcf.gz"
+		vcf = "processed/Fairfax/merged_genotypes/fairfax_genotypes.sorted.filtered.vcf.gz",
 		index = "processed/Fairfax/merged_genotypes/fairfax_genotypes.sorted.filtered.vcf.gz.csi"
 	output:
 		vcf = "processed/Fairfax/geno_by_chr/{chr}.vcf.gz"
@@ -104,11 +104,23 @@ rule extract_chr:
 	shell:
 		"bcftools view -O z -r {wildcards.chr} {input.vcf} > {output.vcf}"
 
+rule convert_vcf_to_gds:
+	input:
+		vcf = "processed/Fairfax/geno_by_chr/{chr}.vcf.gz"
+	output:
+		gds = "processed/Fairfax/geno_by_chr/{chr}.gds"
+	resources:
+		mem = 1000
+	threads: 1
+	shell:
+		"/software/R-3.4.0/bin/Rscript ~/software/utils/vcf/vcfToGds.R -v {input.vcf} -g {output.gds}"
+
 
 rule make_all:
 	input:
 		"processed/Fairfax/merged_genotypes/fairfax_genotypes.variant_information.txt.gz",
-		expand("processed/Fairfax/geno_by_chr/{chr}.vcf.gz", chr=chromosomes)
+		expand("processed/Fairfax/geno_by_chr/{chr}.vcf.gz", chr=chromosomes),
+		expand("processed/Fairfax/geno_by_chr/{chr}.gds", chr=chromosomes)
 	output:
 		"processed/Fairfax/out.txt"
 	resources:
