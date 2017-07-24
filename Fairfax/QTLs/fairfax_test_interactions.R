@@ -59,7 +59,8 @@ interaction_res_list = purrr::map(chr_list, ~testInteractionByChromosome(chr = .
                              qtl_formula = formula_qtl, 
                              interaction_formula = formula_interaction, 
                              id_field_separator = "-", lme4 = TRUE))
-saveRDS(interaction_res_list, "results/Fairfax/shared_interactions_lme4.rds")
+interaction_df = purrr::flatten(interaction_res_list) %>% postProcessInteractionPvalues(id_field_separator = "-")
+saveRDS(interaction_df, "results/Fairfax/shared_84_interactions_lme4.rds")
 
 
 
@@ -113,7 +114,8 @@ interaction_res_list = purrr::map(chr_list, ~testInteractionByChromosome(chr = .
                                                                          qtl_formula = formula_qtl, 
                                                                          interaction_formula = formula_interaction, 
                                                                          id_field_separator = "-", lme4 = TRUE))
-saveRDS(interaction_res_list, "results/Fairfax/shared_84_interactions_lme4.rds")
+interaction_df = purrr::flatten(interaction_res_list) %>% postProcessInteractionPvalues(id_field_separator = "-")
+saveRDS(interaction_df, "results/Fairfax/shared_84_interactions_lme4.rds")
 
 
 
