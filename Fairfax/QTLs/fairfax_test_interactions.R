@@ -45,6 +45,11 @@ min_pvalues_df = purrr::map_df(min_pvalue_hits, identity, .id = "condition_name"
   dplyr::arrange(phenotype_id, p_nominal)
 joint_pairs = dplyr::transmute(min_pvalues_df, gene_id = phenotype_id, snp_id, pheno_chr) %>% unique()
 
+#Export QTL pairs for aFC calculation
+afc_pairs = dplyr::transmute(min_pvalues_df, pid = phenotype_id, sid = snp_id, sid_chr = snp_chr, sid_pos = snp_start) %>% unique()
+write.table(afc_pairs, "processed/Fairfax/qtltools/input/shared/qtl_pairs.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+
 #Use a paired design to test for interaction
 covariate_names = c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6")
 formula_qtl = as.formula(paste("expression ~ genotype + condition_name + (1|donor) ", 
@@ -60,7 +65,7 @@ interaction_res_list = purrr::map(chr_list, ~testInteractionByChromosome(chr = .
                              interaction_formula = formula_interaction, 
                              id_field_separator = "-", lme4 = TRUE))
 interaction_df = purrr::flatten(interaction_res_list) %>% postProcessInteractionPvalues(id_field_separator = "-")
-saveRDS(interaction_df, "results/Fairfax/shared_84_interactions_lme4.rds")
+saveRDS(interaction_df, "results/Fairfax/shared_interactions_lme4.rds")
 
 
 
@@ -99,6 +104,10 @@ min_pvalue_hits = purrr::map(qtl_min_pvalues$shared_84, ~dplyr::filter(.,p_fdr <
 min_pvalues_df = purrr::map_df(min_pvalue_hits, identity, .id = "condition_name") %>%
   dplyr::arrange(phenotype_id, p_nominal)
 joint_pairs = dplyr::transmute(min_pvalues_df, gene_id = phenotype_id, snp_id, pheno_chr) %>% unique()
+
+#Export QTL pairs for aFC calculation
+afc_pairs = dplyr::transmute(min_pvalues_df, pid = phenotype_id, sid = snp_id, sid_chr = snp_chr, sid_pos = snp_start) %>% unique()
+write.table(afc_pairs, "processed/Fairfax/qtltools/input/shared_84/qtl_pairs.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 
 #Use a paired design to test for interaction
 covariate_names = c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6")

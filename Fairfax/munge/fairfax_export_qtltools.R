@@ -86,6 +86,19 @@ exprs_list = purrr::map(event_conditions_renamed, ~assays(.)$exprs)
 qtltools_cqn_list = purrr::map(exprs_list, prepareQTLtoolsMatrix, fastqtl_genepos)
 saveFastqtlMatrices(qtltools_cqn_list, output_path, file_suffix = "norm_prop")
 
+#Export expression data in FastQTL format for aFC estimation
+#Construct gene positions for QTL mapping
+afc_genepos = tbl_df2(rowData(expressed_dataset)) %>% 
+  dplyr::filter(probe_id %in% rownames(expressed_dataset)) %>%
+  dplyr::mutate(gene_id = probe_id, start = gene_start, end = gene_end) %>%
+  constructFastQTLGenePos()
+output_path = "processed/Fairfax/qtltools/input/shared/"
+
+exprs_list = purrr::map(event_conditions_renamed, ~assays(.)$exprs)
+qtltools_cqn_list = purrr::map(exprs_list, prepareFastqtlMatrix, afc_genepos)
+saveFastqtlMatrices(qtltools_cqn_list, output_path, file_suffix = "aFC")
+
+
 #Calculate covariates
 sample_meta = purrr::map(event_conditions_renamed, ~tbl_df2(colData(.)))
 covariates_list = purrr::map2(exprs_list, sample_meta, 
@@ -139,6 +152,18 @@ output_path = "processed/Fairfax/qtltools/input/shared_84/"
 exprs_list = purrr::map(event_conditions_renamed, ~assays(.)$exprs)
 qtltools_cqn_list = purrr::map(exprs_list, prepareQTLtoolsMatrix, fastqtl_genepos)
 saveFastqtlMatrices(qtltools_cqn_list, output_path, file_suffix = "norm_prop")
+
+#Export expression data in FastQTL format for aFC estimation
+#Construct gene positions for QTL mapping
+afc_genepos = tbl_df2(rowData(expressed_dataset)) %>% 
+  dplyr::filter(probe_id %in% rownames(expressed_dataset)) %>%
+  dplyr::mutate(gene_id = probe_id, start = gene_start, end = gene_end) %>%
+  constructFastQTLGenePos()
+output_path = "processed/Fairfax/qtltools/input/shared_84/"
+
+exprs_list = purrr::map(event_conditions_renamed, ~assays(.)$exprs)
+qtltools_cqn_list = purrr::map(exprs_list, prepareFastqtlMatrix, afc_genepos)
+saveFastqtlMatrices(qtltools_cqn_list, output_path, file_suffix = "aFC")
 
 #Calculate covariates
 sample_meta = purrr::map(event_conditions_renamed, ~tbl_df2(colData(.)))
