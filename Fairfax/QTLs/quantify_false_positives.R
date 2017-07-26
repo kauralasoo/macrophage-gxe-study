@@ -34,6 +34,8 @@ shared_hits = dplyr::filter(shared_interactions, p_fdr < 0.1)
 
 #Import aFCs
 shared_diff_df = importFairfaxAFC("processed/Fairfax/qtltools/input/shared/")
+saveRDS(shared_diff_df, "results/Fairfax/interactions/shared_aFC_estimates.rds")
+
 
 #Identify condition-specific QTLs
 shared_fc_hits = dplyr::semi_join(shared_diff_df, shared_hits, by = c("gene_id", "snp_id")) %>% 
