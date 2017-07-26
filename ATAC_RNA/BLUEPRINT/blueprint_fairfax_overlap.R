@@ -83,6 +83,8 @@ k4me_overlaps = purrr::map_df(response_olap_list, ~.$k4me)
 length(unique(k27ac_overlaps$gene_id)) / length(unique(response_qtls$gene_id))
 length(unique(k4me_overlaps$gene_id)) / length(unique(response_qtls$gene_id))
 
+length(unique(k27ac_overlaps$gene_id))/length(unique(c(k27ac_overlaps$gene_id,k4me_overlaps$gene_id)))
+
 
 #Find overlaps with all eQTLs
 all_olap_list = purrr::map(chr_list, function(chrom){
@@ -105,4 +107,9 @@ k4me_olaps_all = purrr::map_df(all_olap_list, ~.$k4me)
 
 length(unique(k27ac_olaps_all$gene_id)) / length(unique(all_qtls$gene_id))
 length(unique(k4me_olaps_all$gene_id)) / length(unique(all_qtls$gene_id))
+
+length(unique(k27ac_olaps_all$gene_id))/length(unique(c(k27ac_olaps_all$gene_id,k4me_olaps_all$gene_id)))
+
+fisher.test(matrix(c(152, 226-152,378, 469-378), ncol = 2))
+
 
