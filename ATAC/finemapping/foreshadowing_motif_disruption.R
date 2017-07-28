@@ -1,5 +1,7 @@
 library("TFBSTools")
 library("dplyr")
+library("devtools")
+load_all("../seqUtils/")
 
 #Import QTL credible sets
 atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
