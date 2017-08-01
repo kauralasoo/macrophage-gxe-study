@@ -1,3 +1,4 @@
+library("rtracklayer")
 
 #Define helper functions
 findValidPairs <- function(master_id, meta_df, bin_df){
@@ -49,7 +50,55 @@ master_ids = sample1$gene_id[1:5000] %>% idVectorToList()
 valid_pairs = purrr::map_df(master_ids, ~findValidPairs(.,meta_df, bin_df))
 saveRDS(valid_pairs, "results/ATAC/ATAC_random_pairs.rds")
 
+#Construct pairs
+peak_coords_gr = dplyr::bind_rows(dplyr::transmute(valid_pairs, peak_id = master_id, seqnames = master_chr, start = master_centre), 
+                 dplyr::transmute(valid_pairs, peak_id = dependent_id, seqnames = dependent_chr, start = dependent_centre)) %>%
+  unique() %>%
+  dplyr::mutate(end = start, strand = "*") %>%
+  dplyr::mutate(seqnames = paste0("chr",seqnames)) %>%
+  dataFrameToGRanges()
 
+#Lift over coordinates using rtracklayer::liftOver
+chain = rtracklayer::import.chain("macrophage-gxe-study/data/liftOver_genotypes/hg38ToHg19.over.chain")
+new_coords = rtracklayer::liftOver(peak_coords_gr, chain) %>% as.list()
+new_coords_df = purrr::map_df(new_coords, ~as.data.frame(.)) %>% tbl_df()
+new_coords_dff =tidyr::separate(new_coords_df, seqnames, c("none", "chr"), sep = "chr") %>%
+  dplyr::select(peak_id, chr, start)
+
+#Add coords back
+random_pairs = dplyr::select(valid_pairs, master_id, dependent_id) %>% 
+  dplyr::left_join(new_coords_dff, by = c("master_id" = "peak_id")) %>% 
+  dplyr::rename(master_chr = chr, master_midpoint = start) %>%
+  dplyr::left_join(new_coords_dff, by = c("dependent_id" = "peak_id")) %>% 
+  dplyr::rename(master_chr = chr, dependent_midpoint = start)
+write.table(random_pairs, "results/ATAC/TAD_enrichment/random_multipeak_pairs.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+
+#Convert true pairs to GRCh37 coordinates
+peak_coords_gr = dplyr::bind_rows(dplyr::transmute(dependent_distances, peak_id = master_id, seqnames = master_chr, start = master_centre), 
+                                  dplyr::transmute(dependent_distances, peak_id = dependent_id, seqnames = dependent_chr, start = dependent_centre)) %>%
+  unique() %>%
+  dplyr::mutate(end = start, strand = "*") %>%
+  dplyr::mutate(seqnames = paste0("chr",seqnames)) %>%
+  dataFrameToGRanges()
+
+#Lift over coordinates using rtracklayer::liftOver
+chain = rtracklayer::import.chain("macrophage-gxe-study/data/liftOver_genotypes/hg38ToHg19.over.chain")
+new_coords = rtracklayer::liftOver(peak_coords_gr, chain) %>% as.list()
+new_coords_df = purrr::map_df(new_coords, ~as.data.frame(.)) %>% tbl_df()
+new_coords_dff =tidyr::separate(new_coords_df, seqnames, c("none", "chr"), sep = "chr") %>%
+  dplyr::select(peak_id, chr, start)
+
+#Add coords back
+true_pairs = dplyr::select(dependent_distances, master_id, dependent_id) %>% 
+  dplyr::left_join(new_coords_dff, by = c("master_id" = "peak_id")) %>% 
+  dplyr::rename(master_chr = chr, master_midpoint = start) %>%
+  dplyr::left_join(new_coords_dff, by = c("dependent_id" = "peak_id")) %>% 
+  dplyr::rename(master_chr = chr, dependent_midpoint = start)
+write.table(true_pairs, "results/ATAC/TAD_enrichment/true_multipeak_pairs.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+
+#Make a plot of true distances
 dependent_distance_plot = ggplot(dependent_distances, aes(x = abs(distance)/1000)) + geom_histogram(binwidth = 2) + theme_light() +
   xlab("Distance from master region (kb)") +
   ylab("Dependent region count")
