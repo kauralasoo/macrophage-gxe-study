@@ -3,7 +3,8 @@ library("devtools")
 library("dplyr")
 library("ggplot2")
 load_all("../seqUtils/")
-load_all("~/software/rasqual/rasqualTools/")
+load_all("macrophage-gxe-study/housekeeping/")
+Nload_all("~/software/rasqual/rasqualTools/")
 
 #Import p-value from both methods
 rasqual_pvalues = readRDS("results/SL1344/eQTLs/rasqual_min_pvalues.rds")
@@ -65,16 +66,18 @@ qqplot_lists = purrr::map2(rasqual_expected, fastqtl_expected, function(rasqual,
   res = rbind(rasqual_res, fastqtl_res)
 })
 qqplot_df = purrr::map_df(qqplot_lists, identity, .id = "condition_name") %>%
-  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344", "IFNg_SL1344")))
+  dplyr::mutate(condition_name = factor(condition_name, levels = c("naive","IFNg","SL1344", "IFNg_SL1344"))) %>%
+  dplyr::left_join(figureNames())
 
 #Make a Q-Q plot for each condition
 qqplot = ggplot(qqplot_df, aes(x = -log(p_expected,10), y = -log(p_eigen, 10),color = method)) + 
   geom_point() + 
   geom_abline(slope = 1, intercept = 0, color = "black") + 
-  facet_wrap(~condition_name, ncol = 4) +
+  facet_wrap(~figure_name, ncol = 4) +
   theme_light() + 
-  ylab("log10 observed p-value") + 
-  xlab("log10 expected p-value")
+  ylab(expression(paste(Log[10], " observed p-value", sep = ""))) + 
+  xlab(expression(paste(Log[10], " expected p-value", sep = ""))) +
+  scale_colour_manual(values = c("#ca0020","#404040"))
 ggsave("figures/supplementary/rna_fastQTL_vs_rasqual_eQTL_qqplots.png", plot = qqplot, width = 8, height = 4)
 ggsave("figures/supplementary/rna_fastQTL_vs_rasqual_eQTL_qqplots.pdf", plot = qqplot, width = 10, height = 5)
 
