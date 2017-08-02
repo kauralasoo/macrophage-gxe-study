@@ -110,6 +110,40 @@ NXPH2_data = constructQtlPlotDataFrame("ENSG00000144227", "rs7594476", combined_
 NXPH2_plot = plotQTLCompact(NXPH2_data)
 ggsave("figures/main_figures/NXPH2_expression_boxplot.pdf", plot = NXPH2_plot, width = 2, height = 2.5)
 
+#Make eQTL boxplots (TPM units)
+NXPH2_data = constructQtlPlotDataFrame("ENSG00000144227", "rs7594476", combined_expression_data$tpm, vcf_file$genotypes, 
+                                       combined_expression_data$sample_metadata, combined_expression_data$gene_metadata) %>%
+  dplyr::filter(condition_name %in% c("naive","IFNg")) %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::mutate(condition_name = figure_name) %>%
+  dplyr::left_join(constructGenotypeText("rs7594476", variant_information), by = "genotype_value")
+NXPH2_plot = plotQTLCompact(NXPH2_data) + ylab("NXPH2 expression (TPM)")
+ggsave("figures/supplementary/NXPH2_expression_boxplot_tpm.pdf", plot = NXPH2_plot, width = 2, height = 2.5)
+
+
+#Visualise allelic imbalance
+#Fetch ASE data from disk
+exon_ranges = constructExonRanges("ENSG00000144227", "rs7594476", combined_expression_data$gene_metadata)
+sample_meta = dplyr::select(combined_expression_data$sample_metadata, sample_id, condition_name, genotype_id)
+ase_data = fetchGeneASEData(exon_ranges, "results/SL1344/combined_ASE_counts.sorted.txt.gz", sample_meta) %>%
+  aseDataAddGenotypes(vcf_file$genotypes)
+
+#Filter for plotting
+plotting_data = dplyr::filter(ase_data, lead_snp_value == 1, feature_snp_value == 1)  %>%
+  dplyr::filter(condition_name %in% c("naive","IFNg")) %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::mutate(ratio = ifelse(is.na(ratio), 0.5, ratio))
+NXPH2_ASE_plot = ggplot(plotting_data, aes(x = feature_snp_id, y = abs(0.5-ratio), label = sample_id, size = total_count)) + 
+  facet_grid(~figure_name) +
+  geom_jitter(position = position_jitter(width = .3, height = .01)) +
+  xlab("Feature SNP id") + 
+  ylab("Allelic imbalance") + 
+  theme_light()
+ggsave("figures/supplementary/NXPH2_ASE_plot.pdf", plot = NXPH2_ASE_plot, width = 5, height = 5)
+
+
+
+
 #SPOPL gene
 SPOPL_data = constructQtlPlotDataFrame("ENSG00000144228", "rs7594476", combined_expression_data$cqn, vcf_file$genotypes, 
                                        combined_expression_data$sample_metadata, combined_expression_data$gene_metadata) %>%
