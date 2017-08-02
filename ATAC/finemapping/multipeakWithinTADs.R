@@ -104,3 +104,18 @@ dependent_distance_plot = ggplot(dependent_distances, aes(x = abs(distance)/1000
   ylab("Dependent region count")
 ggsave("figures/main_figures/caQTL_master_dependent_peak_distance.pdf", plot = dependent_distance_plot, width = 3, height = 3)
 
+
+#Import TAD overlap results from Natsuhiko
+true_tad = read.table("results/ATAC/TAD_enrichment/true_tad.txt", stringsAsFactors = FALSE) %>% tbl_df()
+colnames(true_tad) = c("master_id","dependent_id","master_chr","master_midpoint","dependent_chr","dependent_midpoint", "tad_id")
+true_tad = dplyr::mutate(true_tad, is_in_tad = ifelse(is.na(tad_id), FALSE, TRUE)) %>%
+  dplyr::mutate(distance = abs(master_midpoint-dependent_midpoint))
+
+rand_tad = read.table("results/ATAC/TAD_enrichment/rand_tad.txt", stringsAsFactors = FALSE) %>% tbl_df()
+colnames(rand_tad) = c("master_id","dependent_id","master_chr","master_midpoint","dependent_chr","dependent_midpoint", "tad_id")
+rand_tad = dplyr::mutate(rand_tad, is_in_tad = ifelse(is.na(tad_id), FALSE, TRUE)) %>%
+  dplyr::mutate(distance = abs(master_midpoint-dependent_midpoint))
+
+table(true_tad$is_in_tad)[2]/sum(table(true_tad$is_in_tad)) #75%
+table(rand_tad$is_in_tad)[2]/sum(table(rand_tad$is_in_tad)) #74%
+
