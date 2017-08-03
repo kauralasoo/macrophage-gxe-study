@@ -1,4 +1,12 @@
 library("rtracklayer")
+library("devtools")
+library("purrr")
+library("dplyr")
+library("ggplot2")
+library("scales")
+load_all("../seqUtils/")
+load_all("~/software/rasqual/rasqualTools/")
+load_all("../macrophage-gxe-study/macrophage-gxe-study/housekeeping/")
 
 #Define helper functions
 findValidPairs <- function(master_id, meta_df, bin_df){
@@ -49,6 +57,7 @@ sample1 = meta_df[sample(nrow(meta_df),nrow(meta_df)),]
 master_ids = sample1$gene_id[1:5000] %>% idVectorToList()
 valid_pairs = purrr::map_df(master_ids, ~findValidPairs(.,meta_df, bin_df))
 saveRDS(valid_pairs, "results/ATAC/ATAC_random_pairs.rds")
+valid_pairs = readRDS("results/ATAC/ATAC_random_pairs.rds")
 
 #Construct pairs
 peak_coords_gr = dplyr::bind_rows(dplyr::transmute(valid_pairs, peak_id = master_id, seqnames = master_chr, start = master_centre), 
@@ -70,7 +79,7 @@ random_pairs = dplyr::select(valid_pairs, master_id, dependent_id) %>%
   dplyr::left_join(new_coords_dff, by = c("master_id" = "peak_id")) %>% 
   dplyr::rename(master_chr = chr, master_midpoint = start) %>%
   dplyr::left_join(new_coords_dff, by = c("dependent_id" = "peak_id")) %>% 
-  dplyr::rename(master_chr = chr, dependent_midpoint = start)
+  dplyr::rename(dependent_chr = chr, dependent_midpoint = start)
 write.table(random_pairs, "results/ATAC/TAD_enrichment/random_multipeak_pairs.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 
 
@@ -94,8 +103,9 @@ true_pairs = dplyr::select(dependent_distances, master_id, dependent_id) %>%
   dplyr::left_join(new_coords_dff, by = c("master_id" = "peak_id")) %>% 
   dplyr::rename(master_chr = chr, master_midpoint = start) %>%
   dplyr::left_join(new_coords_dff, by = c("dependent_id" = "peak_id")) %>% 
-  dplyr::rename(master_chr = chr, dependent_midpoint = start)
+  dplyr::rename(dependent_chr = chr, dependent_midpoint = start)
 write.table(true_pairs, "results/ATAC/TAD_enrichment/true_multipeak_pairs.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
 
 
 #Make a plot of true distances
@@ -118,4 +128,28 @@ rand_tad = dplyr::mutate(rand_tad, is_in_tad = ifelse(is.na(tad_id), FALSE, TRUE
 
 table(true_tad$is_in_tad)[2]/sum(table(true_tad$is_in_tad)) #75%
 table(rand_tad$is_in_tad)[2]/sum(table(rand_tad$is_in_tad)) #74%
+
+
+#Count overlaps with TAD boundaries
+tad_boundaries = readr::read_tsv("results/ATAC/TAD_enrichment/tad.intersect.new.txt", col_names = c("chr", "start", "end", "tad_id"), col_types = "ciic")
+tad_starts = dplyr::transmute(tad_boundaries, seqnames = chr, start, end = start, strand = "*")
+tad_ends = dplyr::transmute(tad_boundaries, seqnames = chr, start = end, end, strand = "*")
+boundary_granges = dplyr::bind_rows(tad_starts, tad_ends) %>% unique() %>% dataFrameToGRanges()
+
+#True overlaps with boundaries
+true_ranges = dplyr::transmute(true_pairs, seqnames = master_chr, start = pmin(master_midpoint,dependent_midpoint), 
+                 end = pmax(master_midpoint,dependent_midpoint), master_id, dependent_id, strand = "*") %>% 
+  dataFrameToGRanges()
+cross_boundaries = true_ranges[queryHits(findOverlaps(true_ranges, boundary_granges)),]
+
+
+random_ranges = dplyr::transmute(random_pairs, seqnames = master_chr, start = pmin(master_midpoint,dependent_midpoint), 
+                               end = pmax(master_midpoint,dependent_midpoint), master_id, dependent_id, strand = "*") %>%
+  dplyr::filter(!is.na(seqnames), !is.na(start), !is.na(end)) %>%
+  dataFrameToGRanges()
+random_cross_boundaries = random_ranges[queryHits(findOverlaps(random_ranges, boundary_granges)),]
+
+fisher.test(matrix(c(204, 2023-204, 884, 4688-884), ncol = 2))
+
+
 
