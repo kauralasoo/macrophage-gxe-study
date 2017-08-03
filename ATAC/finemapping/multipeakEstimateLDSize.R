@@ -25,5 +25,11 @@ ld_block_df = credible_sets_df$naive %>%
 
 
 
-ggplot(ld_block_df, aes(x = snp_count, color = is_master)) + geom_density()
-ggplot(ld_block_df, aes(x = ld_region, color = is_master)) + geom_density()
+snp_count = ggplot(dplyr::filter(ld_block_df, snp_count > 0), aes(x = snp_count, color = is_master)) + 
+  geom_density() +
+  theme_light()
+ggsave("figures/supplementary/caQTl_master_snp_count.pdf", plot = snp_count, width = 4, height = 3)
+region_length = ggplot(dplyr::filter(ld_block_df, snp_count > 0), aes(x = ld_region, color = is_master)) + 
+  geom_density() +
+  theme_light()
+ggsave("figures/supplementary/caQTl_master_region_length.pdf", plot = region_length, width = 4, height = 3)
