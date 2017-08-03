@@ -80,3 +80,19 @@ length(unique(appear_peaks$peak_id))
 fisher.test(matrix(c(9, 78-9, 0, 59), ncol = 2))
 
 
+#Test for association with ASB in LCLs
+GRCh38_info = importVariantInformation("genotypes/SL1344/imputed_20151005/imputed.86_samples.variant_information.txt.gz")
+GRCh37_info = importVariantInformation("genotypes/SL1344/imputed_20151005/GRCh37/imputed.86_samples.variant_information.GRCh37.vcf.gz")
+
+#Import ASB results
+asb_table = readr::read_tsv("results/ATAC/ASB/ASB.auto.v2.1.aug16.txt") %>%
+  tidyr::separate(chr, into = c("null", "chr"), sep = "chr") %>%
+  dplyr::rename(pos = end) %>%
+  dplyr::select(-null, -start) %>%
+  dplyr::left_join(dplyr::select(GRCh37_info, chr, pos, snp_id), by = c("chr", "pos")) %>%
+  dplyr::filter(!is.na(snp_id))
+
+dplyr::left_join(persistent_snps, asb_table, by = "snp_id") %>% dplyr::filter(!is.na(chr))
+dplyr::left_join(appear_snps, asb_table, by = "snp_id") %>% dplyr::filter(!is.na(chr))
+
+

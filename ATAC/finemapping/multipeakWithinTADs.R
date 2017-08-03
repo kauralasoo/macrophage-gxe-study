@@ -136,20 +136,27 @@ tad_starts = dplyr::transmute(tad_boundaries, seqnames = chr, start, end = start
 tad_ends = dplyr::transmute(tad_boundaries, seqnames = chr, start = end, end, strand = "*")
 boundary_granges = dplyr::bind_rows(tad_starts, tad_ends) %>% unique() %>% dataFrameToGRanges()
 
+#Import raw TAD boundaries
+tad_boundaries = readr::read_tsv("results/ATAC/TAD_enrichment/GSE63525_GM12878_primary+replicate_HiCCUPS_looplist.txt", col_types = "ciiciiciddddddddiiid")
+tad_starts = dplyr::transmute(tad_boundaries, seqnames = chr1, start = x1, end = x1, strand = "*")
+tad_ends = dplyr::transmute(tad_boundaries, seqnames = chr2, start = y2, end = y2, strand = "*")
+boundary_granges = dplyr::bind_rows(tad_starts, tad_ends) %>% unique() %>% dataFrameToGRanges()
+
+
 #True overlaps with boundaries
 true_ranges = dplyr::transmute(true_pairs, seqnames = master_chr, start = pmin(master_midpoint,dependent_midpoint), 
                  end = pmax(master_midpoint,dependent_midpoint), master_id, dependent_id, strand = "*") %>% 
   dataFrameToGRanges()
-cross_boundaries = true_ranges[queryHits(findOverlaps(true_ranges, boundary_granges)),]
+cross_boundaries = true_ranges[unique(queryHits(findOverlaps(true_ranges, boundary_granges))),]
 
 
 random_ranges = dplyr::transmute(random_pairs, seqnames = master_chr, start = pmin(master_midpoint,dependent_midpoint), 
                                end = pmax(master_midpoint,dependent_midpoint), master_id, dependent_id, strand = "*") %>%
   dplyr::filter(!is.na(seqnames), !is.na(start), !is.na(end)) %>%
   dataFrameToGRanges()
-random_cross_boundaries = random_ranges[queryHits(findOverlaps(random_ranges, boundary_granges)),]
+random_cross_boundaries = random_ranges[unique(queryHits(findOverlaps(random_ranges, boundary_granges))),]
 
-fisher.test(matrix(c(204, 2023-204, 884, 4688-884), ncol = 2))
+fisher.test(matrix(c(156, 2023-156, 543, 4688-543), ncol = 2))
 
 
 
