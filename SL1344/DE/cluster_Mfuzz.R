@@ -31,6 +31,12 @@ sl1344_genes = results(dds, contrast=c("condition_name","SL1344","naive")) %>%
 ifng_sl1344_genes = results(dds, contrast=c("condition_name","IFNg_SL1344","naive")) %>% 
   tidyDESeq(gene_name_map) 
 
+#Save DE tables to disk
+write.table(ifng_genes, "figures/tables/DESeq2/naive_vs_IFNg_DESeq2_fold_change.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(sl1344_genes, "figures/tables/DESeq2/naive_vs_Salmonella_DESeq2_fold_change.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(ifng_sl1344_genes, "figures/tables/DESeq2/naive_vs_IFNg+Salmonella_DESeq2_fold_change.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+
 #Construct a single matrix of fold-changed
 log2FC_table = dplyr::transmute(ifng_genes, gene_id, IFNg_log2FC = log2FoldChange) %>%
   dplyr::left_join(dplyr::transmute(sl1344_genes, gene_id, SL1344_log2FC = log2FoldChange), by = "gene_id") %>%
