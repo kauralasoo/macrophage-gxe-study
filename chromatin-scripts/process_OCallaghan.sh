@@ -46,5 +46,9 @@ rm processed/OCallaghan/*/*.new_header.txt
 cut -f1 macrophage-chromatin/data/OCallaghan/OCallaghan_sample_names.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname chipMacsCallPeakNarrow --command "python ~/software/utils/coverage/chipMacsCallPeak.py --indir processed/OCallaghan/ --outdir processed/OCallaghan/ --execute True --control processed/OCallaghan/Input_ctrl/Input_ctrl.no_duplicates.bam --broad False"
 cut -f1 macrophage-chromatin/data/OCallaghan/OCallaghan_sample_names.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname chipMacsCallPeakBroad --command "python ~/software/utils/coverage/chipMacsCallPeak.py --indir processed/OCallaghan/ --outdir processed/OCallaghan/ --execute True --control processed/OCallaghan/Input_ctrl/Input_ctrl.no_duplicates.bam --broad True"
 
+#Count reads overlapping ATAC peaks
+cut -f1 macrophage-gxe-study/data/chromatin/ChIP/OCallaghan_sample_names.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname featureCounts --command "python ~/software/utils/bam/bam2counts.py --sampleDir processed/OCallaghan/ --gtf annotations/chromatin/ATAC_consensus_peaks.gff3 --strand 0 --countsSuffix .ATAC_peaks.counts.txt --bamSuffix .no_duplicates.bam --execute True --donotsort False --O True"
+
+
 
 

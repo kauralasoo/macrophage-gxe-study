@@ -35,3 +35,9 @@ rm processed/Rehli_2015/*/*.reheadered.bam
 cut -f1 macrophage-chromatin/data/Schultze/Schultze_sample_names.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname chipMacsCallPeakNarrow --command "python ~/software/utils/coverage/chipMacsCallPeak.py --indir processed/Schultze_2016/ --outdir processed/Schultze_2016/ --execute True --control processed/Schultze_2016/Input_naive/Input_naive.no_duplicates.bam --broad False"
 
 cut -f1 macrophage-chromatin/data/Schultze/Schultze_sample_names.txt | python ~/software/utils/submitJobs.py --MEM 3000 --jobname chipMacsCallPeakBroad --command "python ~/software/utils/coverage/chipMacsCallPeak.py --indir processed/Schultze_2016/ --outdir processed/Schultze_2016/ --execute True --control processed/Schultze_2016/Input_naive/Input_naive.no_duplicates.bam --broad True"
+
+#Count number of reads overlapping ATAC peaks
+#Count the number of reads mapping to consensus peaks
+cut -f1 macrophage-gxe-study/data/chromatin/ChIP/Schultze_sample_names.txt | python ~/software/utils/submitJobs.py --MEM 1000 --jobname featureCounts --command "python ~/software/utils/bam/bam2counts.py --sampleDir processed/Schultze_2016/ --gtf annotations/chromatin/ATAC_consensus_peaks.gff3 --strand 0 --countsSuffix .ATAC_peaks.counts.txt --bamSuffix .no_duplicates.bam --execute True --donotsort False --O True"
+
+
