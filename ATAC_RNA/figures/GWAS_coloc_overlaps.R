@@ -120,6 +120,35 @@ coloc_counts_plot = ggplot(coloc_detection_counts, aes(x = figure_name, y = tota
 ggsave("figures/main_figures/coloc_QTL_counts.pdf", plot = coloc_counts_plot, width = 2.6, height = 3)
 
 
+#Count colocs in each condition separately
+rna_condition_count = dplyr::filter(eqtl_200kb_filtered_hits, PP_power > 0.8, PP_coloc > 0.9) %>% 
+  dplyr::select(summarised_trait, gene_name, condition_name) %>% 
+  unique() %>% 
+  dplyr::group_by(condition_name) %>% 
+  dplyr::summarise(coloc_count = length(condition_name)) %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::mutate(phenotype = "RNA-seq")
+
+atac_condition_count = dplyr::filter(caqtl_200kb_filtered_hits, PP_power > 0.8, PP_coloc > 0.9) %>% 
+  dplyr::select(summarised_trait, gene_name, condition_name) %>% 
+  unique() %>% 
+  dplyr::group_by(condition_name) %>% 
+  dplyr::summarise(coloc_count = length(condition_name)) %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::mutate(phenotype = "ATAC-seq")
+
+condition_count = dplyr::bind_rows(rna_condition_count, atac_condition_count)
+coloc_condition_plot = ggplot(condition_count, aes(x = figure_name, y = coloc_count, group = phenotype, fill = phenotype)) + 
+  geom_bar(stat = "identity", position = "dodge") +
+  xlab("Condition") + 
+  ylab("Number of overlaps") +
+  scale_y_continuous(limits = c(0,25)) +
+  theme_light() + 
+  scale_fill_manual(values = c("#e66101","#5e3c99"), name = "") +
+  theme(legend.position = "top")
+ggsave("figures/supplementary/coloc_QTL_condition_counts.pdf", plot = coloc_condition_plot, width = 2.6, height = 3)
+
+
 
 #Count overlaps by trait
 eqtl_by_trait = dplyr::group_by(eqtl_coloc_counts, summarised_trait) %>% 

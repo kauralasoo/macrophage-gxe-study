@@ -62,9 +62,22 @@ condensed_eQTL_hits = dplyr::group_by(shared_84_200kb_hits, summarised_trait, ph
 shared_84_200kb_filtered_hits = dplyr::semi_join(shared_84_200kb_hits, condensed_eQTL_hits, by = c("phenotype_id", "trait"))# %>%
   #dplyr::filter(gene_name != "FADS2")
 
+#Keep one gene per summarised trait
+condensed_full_eQTL_hits = dplyr::group_by(full_200kb_hits, summarised_trait, phenotype_id) %>% 
+  dplyr::arrange(summarised_trait, -PP.H4.abf) %>% 
+  dplyr::filter(row_number() == 1) %>% 
+  dplyr::ungroup() %>%
+  dplyr::arrange(summarised_trait, gwas_lead, -PP.H4.abf) %>% 
+  dplyr::group_by(summarised_trait, gwas_lead) %>% 
+  dplyr::filter(row_number() == 1) %>% 
+  dplyr::ungroup()
+full_200kb_filtered_hits = dplyr::semi_join(full_200kb_hits, condensed_full_eQTL_hits, by = c("phenotype_id", "trait"))# %>%
+#dplyr::filter(gene_name != "FADS2")
+
 
 #Map to Salmonella condition names
 name_map = data_frame(condition_name = c("CD14","IFN","LPS2","LPS24"), condition_name2 = c("naive", "IFNg", "SL1344", "IFNg_SL1344"))
+name_map2 = data_frame(condition_name = c("CD14","IFN","LPS2","LPS24"), condition_name2 = c("N", "I", "S", "I+S"))
 
 #Partition into conditions
 renamed_olaps = dplyr::left_join(shared_84_200kb_filtered_hits, name_map, by = "condition_name") %>%
@@ -73,7 +86,81 @@ eqtl_coloc_counts = countConditionSpecificOverlaps(renamed_olaps, PP_power_thres
 eqtl_total_counts = group_by(eqtl_coloc_counts, figure_name) %>% 
   dplyr::summarise(overlap_count = sum(is_hit)) %>% 
   dplyr::mutate(total_overlap = cumsum(overlap_count)) %>%
-  dplyr::mutate(phenotype = "RNA-seq")
+  dplyr::mutate(phenotype = "84 samples") %>%
+  dplyr::rename(condition_name2 = figure_name) %>%
+  dplyr::left_join(name_map2, by = "condition_name2") %>%
+  dplyr::mutate(condition_name = ifelse(condition_name == "IFN", "CD14\nIFN", condition_name)) %>%
+  dplyr::mutate(condition_name = ifelse(condition_name == "LPS2", "CD14\nIFN\nLPS2", condition_name)) %>%
+  dplyr::mutate(condition_name = ifelse(condition_name == "LPS24", "CD14\nIFN\nLPS2\nLPS24", condition_name))
+
+#Count colocs in each condition separately
+rna_condition_count = dplyr::filter(shared_84_200kb_filtered_hits, PP_power > 0.8, PP_coloc > 0.9) %>% 
+  dplyr::select(summarised_trait, gene_name, condition_name) %>% 
+  unique() %>% 
+  dplyr::group_by(condition_name) %>% 
+  dplyr::summarise(coloc_count = length(condition_name)) %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::mutate(phenotype = "84 samples")
+
+coloc_condition_plot = ggplot(rna_condition_count, aes(x = condition_name, y = coloc_count, group = phenotype, fill = phenotype)) + 
+  geom_bar(stat = "identity", position = "dodge") +
+  xlab("Condition") + 
+  ylab("Number of overlaps") +
+  scale_y_continuous(limits = c(0,25)) +
+  theme_light() + 
+  scale_fill_manual(values = c("#e66101","#5e3c99"), name = "") +
+  theme(legend.position = "top")
+ggsave("figures/supplementary/fairfax_coloc_QTL_condition_counts.pdf", plot = coloc_condition_plot, width = 2.6, height = 3)
+
+
+#### Count overlaps for the full dataset
+#Partition into conditions
+renamed_olaps = dplyr::left_join(full_200kb_filtered_hits, name_map, by = "condition_name") %>%
+  dplyr::mutate(condition_name = condition_name2) %>% dplyr::select(-condition_name2)
+eqtl_coloc_counts = countConditionSpecificOverlaps(renamed_olaps, PP_power_thresh = 0.8, PP_coloc_thresh = .9)
+eqtl_total_counts_full = group_by(eqtl_coloc_counts, figure_name) %>% 
+  dplyr::summarise(overlap_count = sum(is_hit)) %>% 
+  dplyr::mutate(total_overlap = cumsum(overlap_count)) %>%
+  dplyr::mutate(phenotype = "Full dataset") %>%
+  dplyr::rename(condition_name2 = figure_name) %>%
+  dplyr::left_join(name_map2, by = "condition_name2") %>%
+  dplyr::mutate(condition_name = ifelse(condition_name == "IFN", "CD14\nIFN", condition_name)) %>%
+  dplyr::mutate(condition_name = ifelse(condition_name == "LPS2", "CD14\nIFN\nLPS2", condition_name)) %>%
+  dplyr::mutate(condition_name = ifelse(condition_name == "LPS24", "CD14\nIFN\nLPS2\nLPS24", condition_name))
+
+#Count colocs in each condition separately
+rna_condition_count_full = dplyr::filter(full_200kb_filtered_hits, PP_power > 0.8, PP_coloc > 0.9) %>% 
+  dplyr::select(summarised_trait, gene_name, condition_name) %>% 
+  unique() %>% 
+  dplyr::group_by(condition_name) %>% 
+  dplyr::summarise(coloc_count = length(condition_name)) %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::mutate(phenotype = "Full dataset")
+
+#Make a barplot with overlap counts
+coloc_counts_plot = ggplot(bind_rows(eqtl_total_counts, eqtl_total_counts_full), aes(x = condition_name, y = total_overlap, group = phenotype, color = phenotype)) + 
+  geom_point() +
+  geom_line() +
+  xlab("Conditions included") + 
+  ylab("Cumulative number of overlaps") +
+  scale_y_continuous(limits = c(0,110)) +
+  theme_light() + 
+  scale_color_manual(values = c("#e66101","#5e3c99"), name = "") +
+  theme(legend.position = "top")
+ggsave("figures/supplementary/fairfax_coloc_QTL_counts.pdf", plot = coloc_counts_plot, width = 2.6, height = 3)
+
+
+coloc_condition_plot = ggplot(bind_rows(rna_condition_count, rna_condition_count_full), aes(x = condition_name, y = coloc_count, group = phenotype, fill = phenotype)) + 
+  geom_bar(stat = "identity", position = "dodge") +
+  xlab("Condition") + 
+  ylab("Number of overlaps") +
+  scale_y_continuous(limits = c(0,25)) +
+  theme_light() + 
+  scale_fill_manual(values = c("#e66101","#5e3c99"), name = "") +
+  theme(legend.position = "top")
+ggsave("figures/supplementary/fairfax_coloc_QTL_condition_counts.pdf", plot = coloc_condition_plot, width = 2.6, height = 3)
+
+
 
 #Estimate how many of the "stimulated" hits are detected in the naive condition with 414 samples (5x the sample size)
 gained_hits = dplyr::filter(eqtl_coloc_counts, condition_name != "naive") %>%
