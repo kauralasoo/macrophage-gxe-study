@@ -154,7 +154,7 @@ coloc_condition_plot = ggplot(bind_rows(rna_condition_count, rna_condition_count
   geom_bar(stat = "identity", position = "dodge") +
   xlab("Condition") + 
   ylab("Number of overlaps") +
-  scale_y_continuous(limits = c(0,25)) +
+  scale_y_continuous(limits = c(0,60)) +
   theme_light() + 
   scale_fill_manual(values = c("#e66101","#5e3c99"), name = "") +
   theme(legend.position = "top")

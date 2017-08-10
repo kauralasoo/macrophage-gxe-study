@@ -1,5 +1,4 @@
 library("devtools")
-library("plyr")
 library("dplyr")
 library("ggplot2")
 library("purrr")
@@ -28,7 +27,7 @@ schultze_peaks = loadNarrowPeaks("processed/Schultze/peak_calls/", schultze_name
 overlap_atac = atac_granges[queryHits(findOverlaps(atac_granges, schultze_peaks$PU1_naive))]
 overlap_peaks = overlap_atac$gene_id
 
-atac = atac_data$counts[overlap_peaks,]
+atac = atac_list$counts[overlap_peaks,]
 chip = schultze_matrix[overlap_peaks,]
 pdf("figures/supplementary/ATAC_vs_PU1_scatter.pdf", width = 5, height = 5)
 smoothScatter(log(atac$bima_A_ATAC + 1, 2), log(chip$PU1_naive +1, 2), xlab = "Log2(ATAC_signal + 1)", ylab = "Log2(PU1_signal + 1)")

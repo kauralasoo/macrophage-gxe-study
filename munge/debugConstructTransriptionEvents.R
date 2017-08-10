@@ -18,6 +18,7 @@ filtered_metadata = reviseAnnotations::filterTranscriptMetadata(gene_metadata)
 
 #Extract gene data from annotations
 gene_data = reviseAnnotations::extractGeneData("ENSG00000128604", filtered_metadata, exons, cdss)
+saveRDS(gene_data, "../reviseAnnotations/data/IRF5.rds")
 
 #Extend truncated transcripts until the longest transcript
 gene_extended_tx = reviseAnnotations::extendTranscriptsPerGene(gene_data$metadata, gene_data$exons, gene_data$cdss)
