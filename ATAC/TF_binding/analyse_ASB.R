@@ -11,7 +11,7 @@ filterASBCounts <- function(ASB_counts, total_count = 10, min_count = 2){
     dplyr::filter(totalCount >= total_count) %>%
     dplyr::mutate(minCount = pmin(refCount, altCount)) %>%
     dplyr::filter(minCount >= min_count) %>%
-    dplyr::mutate(ratio = altCount/totalCount) %>%
+    dplyr::mutate(ratio = altCount/totalCount)
   return(counts)
 }
 
@@ -57,6 +57,7 @@ cebpb_plot = ggplot(filtered_cebpb, aes(x = ratio, y = effect_size)) +
   theme_light() +
   annotate("text",x = 0.25, y = 0.85, label = paste0("rho = ", round(t$estimate,2)))
 ggsave("figures/supplementary/CEBPb_ASB.pdf", plot = cebpb_plot, width = 5, height = 5)
+
 
 #Import caQTL and eQTL pairs
 caQTL_eQTL_pairs = readRDS("results/ATAC_RNA_overlaps/caQTL_eQTL_pairs_betas.rds")
