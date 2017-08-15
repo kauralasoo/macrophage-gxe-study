@@ -43,13 +43,15 @@ row.names(ocallaghan_matrix) = ocallaghan_counts$gene_id
 
 ocallaghan_peaks = loadNarrowPeaks("processed/OCallaghan/peak_calls/", sample_names, sub_dir = FALSE)
 
-overlap_atac = atac_granges[queryHits(findOverlaps(atac_granges, ocallaghan_peaks$CEBPbeta_ctrl_201))]
+overlap_atac = atac_granges[queryHits(findOverlaps(atac_granges, ocallaghan_peaks$CEBPbeta_ctrl_204))]
 overlap_peaks = overlap_atac$gene_id
 
-atac = atac_data$counts[overlap_peaks,]
+atac = atac_list$counts[overlap_peaks,]
 chip = ocallaghan_matrix[overlap_peaks,]
-smoothScatter(log(atac$bima_A_ATAC + 1, 2), log(chip$CEBPbeta_ctrl_201 +1, 2))
-cor(log(atac$bima_A_ATAC + 1, 2), log(chip$CEBPbeta_ctrl_201 +1, 2))
+pdf("figures/supplementary/ATAC_vs_CEBPb_scatter.pdf", width = 5, height = 5)
+smoothScatter(log(atac$bima_A_ATAC + 1, 2), log(chip$CEBPbeta_ctrl_204 +1, 2))
+dev.off()
+cor(log(atac$bima_A_ATAC + 1, 2), log(chip$CEBPbeta_ctrl_204 +1, 2))
 
 
 

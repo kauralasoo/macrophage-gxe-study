@@ -35,7 +35,7 @@ t = cor.test(filtered_pu1$ratio, filtered_pu1$effect_size, method = "spearman")
 pu1_plot = ggplot(filtered_pu1, aes(x = ratio, y = effect_size)) + 
   geom_point() + 
   ylab(expression(paste("RASQUAL effect size (",pi,")"))) +
-  xlab(expression(paste("PU.1 allelic ratio"))) +
+  xlab(expression(paste("PU.1 alternative allele fraction"))) +
   theme_light() +
   annotate("text",x = 0.25, y = 0.92, label = paste0("rho = ", round(t$estimate,2)))
 ggsave("figures/supplementary/PU1_ASB.pdf", plot = pu1_plot, width = 5, height = 5)
@@ -53,7 +53,7 @@ t = cor.test(filtered_cebpb$ratio, filtered_cebpb$effect_size, method = "spearma
 cebpb_plot = ggplot(filtered_cebpb, aes(x = ratio, y = effect_size)) + 
   geom_point() + 
   ylab(expression(paste("RASQUAL effect size (",pi,")"))) +
-  xlab(expression(paste("CEBP", beta, " allelic ratio"))) +
+  xlab(expression(paste("CEBP", beta, " alternative allele fraction"))) +
   theme_light() +
   annotate("text",x = 0.25, y = 0.85, label = paste0("rho = ", round(t$estimate,2)))
 ggsave("figures/supplementary/CEBPb_ASB.pdf", plot = cebpb_plot, width = 5, height = 5)
