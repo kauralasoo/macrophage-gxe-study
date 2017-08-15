@@ -32,7 +32,7 @@ chip = schultze_matrix[overlap_peaks,]
 pdf("figures/supplementary/ATAC_vs_PU1_scatter.pdf", width = 5, height = 5)
 smoothScatter(log(atac$bima_A_ATAC + 1, 2), log(chip$PU1_naive +1, 2), xlab = "Log2(ATAC_signal + 1)", ylab = "Log2(PU1_signal + 1)")
 dev.off()
-cor(log(atac$bima_A_ATAC + 1, 2), log(chip$PU1_naive +1, 2))
+cor(log(atac$bima_A_ATAC + 1, 2), log(chip$PU1_naive +1, 2), method = "spearman")
 
 
 #Import CEBPb counts

@@ -1,5 +1,6 @@
 library("readr")
 library("dplyr")
+library("SummarizedExperiment")
 
 importFairfaxAFC <- function(dir){
   #Import aFC estimates in each condition for the full dataset (228 ind)
@@ -25,7 +26,8 @@ importFairfaxAFC <- function(dir){
 
 #Import SummarizedExperiment
 se_fairfax = readRDS("results/Fairfax/expression_data.SummarizedExperiment.rds")
-gene_name_map = rowData(se_shared) %>% tbl_df2() %>% dplyr::mutate(gene_id = probe_id) %>%
+gene_name_map = rowData(se_fairfax) %>% tbl_df2() %>% 
+  dplyr::mutate(gene_id = probe_id) %>%
   dplyr::select(gene_id, gene_name)
 
 #Import results from interaction test
@@ -42,6 +44,9 @@ shared_fc_hits = dplyr::semi_join(shared_diff_df, shared_hits, by = c("gene_id",
   dplyr::filter(abs(CD14) <= 0.29, max_fc >= 0.29, max_diff >= 0.29)
 shared_fc_hits_20 = dplyr::semi_join(shared_diff_df, shared_hits, by = c("gene_id", "snp_id")) %>% 
   dplyr::filter(abs(CD14) <= 0.29*1.2, max_fc >= 0.29*0.8, max_diff >= 0.29*0.8)
+
+shared_effects = dplyr::select(shared_fc_hits, gene_id, snp_id, CD14, IFN, LPS2, LPS24) %>% 
+  tidyr::gather("condition_name", "aFC", CD14:LPS24)
 
 
 ##### Import subset interaction results #####
@@ -60,6 +65,24 @@ length(intersect(subset_hits$gene_id, shared_hits$gene_id))/length(unique(subset
 length(intersect(subset_fc_hits$gene_id, shared_fc_hits$gene_id))/length(unique(subset_fc_hits$gene_id))
 length(intersect(subset_fc_hits$gene_id, shared_fc_hits_20$gene_id))/length(unique(subset_fc_hits$gene_id))
 
+#Compare fold_change distributions
+subset_effects = dplyr::select(subset_fc_hits, gene_id, snp_id, CD14, IFN, LPS2, LPS24) %>% 
+  tidyr::gather("condition_name", "aFC", CD14:LPS24)
+max_effects = dplyr::group_by(subset_effects, gene_id, snp_id) %>% 
+  dplyr::mutate(aFC_abs = abs(aFC)) %>% 
+  dplyr::arrange(gene_id, snp_id, -aFC_abs) %>% 
+  dplyr::filter(row_number() == 1) %>% 
+  dplyr::mutate(max_condition = TRUE) %>% dplyr::ungroup()
+naive_effects = dplyr::filter(subset_effects, condition_name == "CD14") %>%
+  dplyr::mutate(aFC_abs = abs(aFC), max_condition = FALSE)
+effects = dplyr::bind_rows(max_effects, naive_effects)
+ggplot(effects, aes(x = aFC_abs)) + geom_histogram() + facet_wrap(~max_condition)
+
+#Extract the same probes from the large dataset:
+shared_selected_effects = dplyr::semi_join(shared_effects, effects, by = c("gene_id", "condition_name")) %>% 
+  dplyr::arrange(gene_id) %>% 
+  dplyr::mutate(aFC_abs = abs(aFC), max_condition = ifelse(condition_name == "CD14", FALSE, TRUE))
+ggplot(shared_selected_effects, aes(x = aFC_abs)) + geom_histogram() + facet_wrap(~max_condition)
 
 
 ##### Import subset interaction results (n = 42) #####
@@ -67,7 +90,7 @@ shared_42_interactions = readRDS("results/Fairfax/interactions/shared_42_interac
 subset_hits = dplyr::filter(shared_84_interactions, p_fdr < 0.1)
 
 #Import aFCs
-subset_diff_df = importFairfaxAFC("processed/Fairfax/qtltools/input/shared_42/")
+subset_diff_df = importFairfaxAFC("processed/Fairfax/qtltools/input/shared_42/") 
 
 #Filter by fold change
 subset_fc_hits = dplyr::semi_join(subset_diff_df, subset_hits, by = c("gene_id", "snp_id")) %>% 

@@ -38,12 +38,12 @@ pu1_plot = ggplot(filtered_pu1, aes(x = ratio, y = effect_size)) +
   xlab(expression(paste("PU.1 alternative allele fraction"))) +
   theme_light() +
   annotate("text",x = 0.25, y = 0.92, label = paste0("rho = ", round(t$estimate,2)))
-ggsave("figures/supplementary/PU1_ASB.pdf", plot = pu1_plot, width = 5, height = 5)
+ggsave("figures/supplementary/PU1_ASB.pdf", plot = pu1_plot, width = 4, height = 4)
 
 
 #CEBP_beta overlaps
 ASB_counts = readr::read_tsv("processed/OCallaghan/ASEcounts/CEBPbeta_ctrl_204.ASEcounts.gz", col_names = TRUE, col_types = "ciccciiiiiiii")
-cebpb_counts = filterASBCounts(ASB_counts, total_count = 10, min_count = 2, min_ratio = 0.1)
+cebpb_counts = filterASBCounts(ASB_counts, total_count = 10, min_count = 2)
 
 #Compare caQTL effect to effect on biding
 filtered_cebpb = dplyr::left_join(cebpb_counts, naive_effects) %>% 
@@ -56,7 +56,7 @@ cebpb_plot = ggplot(filtered_cebpb, aes(x = ratio, y = effect_size)) +
   xlab(expression(paste("CEBP", beta, " alternative allele fraction"))) +
   theme_light() +
   annotate("text",x = 0.25, y = 0.85, label = paste0("rho = ", round(t$estimate,2)))
-ggsave("figures/supplementary/CEBPb_ASB.pdf", plot = cebpb_plot, width = 5, height = 5)
+ggsave("figures/supplementary/CEBPb_ASB.pdf", plot = cebpb_plot, width = 4, height = 4)
 
 
 #Import caQTL and eQTL pairs
