@@ -355,4 +355,16 @@ if(use_coloc == FALSE){
     theme_light() +
     theme(legend.position = "right")
   ggsave("figures/main_figures/foreshadowing_proportions.pdf", plot = foreshadow_plot, width = 3.7, height = 3)
+} else {
+  plot_data = read.table("results/ATAC_RNA_overlaps/foreshadow_quant.coloc.txt", stringsAsFactors = FALSE) %>%
+    dplyr::mutate(type = ifelse(type == "forward", "caQTL before eQTL", "eQTL before caQTL")) %>%
+    dplyr::mutate(max_effect = "All conditions")
+  
+  foreshadow_plot = ggplot(plot_data, aes(x = max_effect, y = fraction, fill = type)) + 
+    geom_bar(stat = "identity", position = "dodge") + 
+    xlab("Condition") +
+    ylab("Fraction of caQTL-eQTL pairs") + 
+    theme_light() +
+    theme(legend.position = "right")
+  ggsave("figures/supplementary/foreshadowing_proportions.coloc.pdf", plot = foreshadow_plot, width = 3.7, height = 3)
 }
