@@ -107,7 +107,7 @@ ggsave("figures/supplementary/fairfax_eQTL_84_228_sample_effects.pdf", plot = la
 
 ##### Import subset interaction results (n = 42) #####
 shared_42_interactions = readRDS("results/Fairfax/interactions/shared_42_interactions_lme4.rds")
-subset_hits = dplyr::filter(shared_84_interactions, p_fdr < 0.1)
+subset_hits = dplyr::filter(shared_42_interactions, p_fdr < 0.1)
 
 #Import aFCs
 subset_diff_df = importFairfaxAFC("processed/Fairfax/qtltools/input/shared_42/") 
