@@ -368,3 +368,40 @@ if(use_coloc == FALSE){
     theme(legend.position = "right")
   ggsave("figures/supplementary/foreshadowing_proportions.coloc.pdf", plot = foreshadow_plot, width = 3.7, height = 3)
 }
+
+
+#Count the number of caQTLs linked to eQTLs and vice versa
+rna_atac_overlaps = readRDS("results/ATAC_RNA_overlaps/QTL_overlap_list_R2.rds")
+peaks_per_gene = dplyr::select(rna_atac_overlaps, gene_id, peak_id) %>% 
+  unique() %>% 
+  dplyr::group_by(gene_id) %>% 
+  dplyr::summarise(peak_count = length(peak_id)) %>%
+  dplyr::rename(feature_id = gene_id) %>%
+  dplyr::mutate(feature_type = "Number of caQTLs per gene")
+
+genes_per_peak = dplyr::select(rna_atac_overlaps, gene_id, peak_id) %>% 
+  unique() %>% 
+  dplyr::group_by(peak_id) %>% 
+  dplyr::summarise(peak_count = length(gene_id)) %>%
+  dplyr::rename(feature_id = peak_id) %>%
+  dplyr::mutate(feature_type = "Number of eQTLs per region")
+
+pair_dist = dplyr::bind_rows(peaks_per_gene, genes_per_peak)
+pair_plot = ggplot(pair_dist, aes(x = peak_count)) + 
+  geom_histogram(binwidth = 1) + 
+  facet_wrap(~feature_type, scales = "free_y") +
+  scale_x_continuous(limits = c(-0,20)) +
+  theme_light() +
+  xlab("Number of caQTLs/eQTLs")
+
+ggsave("figures/supplementary/caQTL_eQTL_pairs_histogram.pdf", plot = pair_plot, width = 5, height = 3)
+ggsave("figures/supplementary/caQTL_eQTL_pairs_histogram.png", plot = pair_plot, width = 5, height = 3)
+
+#Are master caQTLs more likely to regulate multiple genes?
+
+#Import multi-peak QTLs
+result_list = readRDS("results/ATAC/QTLs/qtl_peak_type_assignment.rds")
+master_peaks = unique(result_list$dependents$unique_masters$master_id)
+master_eQTL_count = dplyr::filter(genes_per_peak, feature_id %in% master_peaks)
+
+
