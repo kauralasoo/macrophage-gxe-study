@@ -1,6 +1,8 @@
 library("readr")
 library("dplyr")
 library("SummarizedExperiment")
+library("devtools")
+load_all("../seqUtils/")
 
 importFairfaxAFC <- function(dir, suffix = ".aFC_results.txt"){
   #Import aFC estimates in each condition for the full dataset (228 ind)
@@ -70,6 +72,17 @@ subset_fc_hits = dplyr::semi_join(subset_diff_df, subset_hits, by = c("gene_id",
 length(intersect(subset_hits$gene_id, shared_hits$gene_id))/length(unique(subset_hits$gene_id))
 length(intersect(subset_fc_hits$gene_id, shared_fc_hits$gene_id))/length(unique(subset_fc_hits$gene_id))
 length(intersect(subset_fc_hits$gene_id, shared_fc_hits_20$gene_id))/length(unique(subset_fc_hits$gene_id))
+
+#What fraction of fold-change 1.5 eQTLs are detected in the small sample
+shared_fc_hits = dplyr::semi_join(shared_diff_df, shared_hits, by = c("gene_id", "snp_id")) %>% 
+  dplyr::filter(abs(CD14) <= 0.29, max_fc >= 0.29, max_diff >= 0.29)
+length(intersect(shared_fc_hits$gene_id, subset_hits$gene_id))/length(unique(shared_fc_hits$gene_id))
+
+#What fraction of fold-change 1.5 eQTLs are detected in the small sample
+shared_fc_hits = dplyr::semi_join(shared_diff_df, shared_hits, by = c("gene_id", "snp_id")) %>% 
+  dplyr::filter(abs(CD14) <= 0.5, max_fc >= 0.5, max_diff >= 0.5)
+length(intersect(shared_fc_hits$gene_id, subset_hits$gene_id))/length(unique(shared_fc_hits$gene_id))
+
 
 #Compare fold_change distributions
 subset_effects = dplyr::select(subset_fc_hits, gene_id, snp_id, CD14, IFN, LPS2, LPS24) %>% 
