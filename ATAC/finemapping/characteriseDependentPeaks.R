@@ -1,6 +1,7 @@
 library("dplyr")
 library("GenomicRanges")
 library("devtools")
+library("rtracklayer")
 load_all("../seqUtils/")
 
 #Import transcript annotations
@@ -17,6 +18,9 @@ atac_list = readRDS("results/ATAC/ATAC_combined_accessibility_data.rds")
 dependent_peak_ranges = dplyr::filter(atac_list$gene_metadata, gene_id %in% all_dependent_peaks$dependent_id) %>% 
   dplyr::transmute(seqnames = chr, start, end, strand, peak_id = gene_id) %>% 
   dataFrameToGRanges()
+master_peak_ranges = dplyr::filter(atac_list$gene_metadata, gene_id %in% all_dependent_peaks$master_id) %>% 
+  dplyr::transmute(seqnames = chr, start, end, strand, peak_id = gene_id) %>% 
+  dataFrameToGRanges()
 
 tx_ranges = dplyr::filter(tx_metadata, gene_biotype %in% c("protein_coding", "lincRNA")) %>% 
   dplyr::transmute(seqnames = chromosome_name, 
@@ -29,17 +33,48 @@ tx_ranges = dplyr::filter(tx_metadata, gene_biotype %in% c("protein_coding", "li
   dplyr::mutate(start = start - 500, end = end + 500) %>%
   dataFrameToGRanges()
 
-olaps = findOverlaps(dependent_peak_ranges, tx_ranges)
-peaks = elementMetadata(dependent_peak_ranges[queryHits(olaps)])
-transcripts = elementMetadata(tx_ranges[subjectHits(olaps)])
-matches = cbind(peaks, transcripts) %>% tbl_df2()
+#Find dependent overlaps
+dep_olaps = findOverlaps(dependent_peak_ranges, tx_ranges)
+dep_peaks = elementMetadata(dependent_peak_ranges[queryHits(dep_olaps)])
+dep_transcripts = elementMetadata(tx_ranges[subjectHits(dep_olaps)])
+dep_matches = cbind(dep_peaks, dep_transcripts) %>% tbl_df2()
 
 #Filter overlaps
-filtered_overlaps = dplyr::filter(matches, transcript_biotype %in% c("protein_coding", "lincRNA")) %>% 
+dep_filtered_overlaps = dplyr::filter(dep_matches, transcript_biotype %in% c("protein_coding", "lincRNA")) %>% 
   dplyr::select(peak_id, gene_id, gene_name) %>% unique()
 
-#Import condition_specific eQTLs
-variable_qtls = readRDS("results/SL1344/eQTLs/appeat_disappear_eQTLs.rds")
-gene_clusters = dplyr::select(variable_qtls$appear, gene_id, snp_id, max_condition) %>% ungroup() %>% unique()
+#Find master overlaps
+master_olaps = findOverlaps(master_peak_ranges, tx_ranges)
+master_peaks = elementMetadata(master_peak_ranges[queryHits(master_olaps)])
+master_transcripts = elementMetadata(tx_ranges[subjectHits(master_olaps)])
+master_matches = cbind(master_peaks, master_transcripts) %>% tbl_df2()
 
-dplyr::semi_join(filtered_overlaps, gene_clusters)
+#Filter overlaps
+master_filtered_overlaps = dplyr::filter(master_matches, transcript_biotype %in% c("protein_coding", "lincRNA")) %>% 
+  dplyr::select(peak_id, gene_id, gene_name) %>% unique()
+
+##### Count overlaps with h2k27ac peaks ####
+h3k27ac_peaks = import.gff3("annotations/chromatin/H3K27Ac_joint_peaks.gff3")
+
+olaps = findOverlaps(master_peak_ranges, h3k27ac_peaks)
+master_peaks = elementMetadata(master_peak_ranges[queryHits(olaps)]) %>% tbl_df2() %>% unique()
+
+olaps = findOverlaps(dependent_peak_ranges, h3k27ac_peaks)
+dependent_peaks = elementMetadata(dependent_peak_ranges[queryHits(olaps)]) %>% tbl_df2() %>% unique()
+
+
+#Combine results into a table
+result_df = data_frame(type = c("master", "dependent"), 
+                       total_count = c(length(master_peak_ranges), length(dependent_peak_ranges)),
+                       promoter_count = c(nrow(master_filtered_overlaps), nrow(dep_filtered_overlaps)),
+                       H3K27ac_count = c(nrow(master_peaks), nrow(dependent_peaks))) %>%
+  dplyr::mutate(promoter_fraction = round(promoter_count/total_count,3),
+                H3K27ac_fraction = round(H3K27ac_count/total_count,3))
+write.table(result_df, "figures/tables/enhancer_promoter_overlap.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+
+
+
+
+
+
