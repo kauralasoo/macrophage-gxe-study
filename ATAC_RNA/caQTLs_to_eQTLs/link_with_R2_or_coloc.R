@@ -392,7 +392,7 @@ if(use_filtering == TRUE){
     theme_light() +
     theme(legend.position = "right")
   ggsave("figures/supplementary/foreshadowing_proportions.FC_2.pdf", plot = foreshadow_plot, width = 3.7, height = 3)
-  ggsave("figures/supplementary/foreshadowing_proportions.coloc.png", plot = foreshadow_plot, width = 3.7, height = 3)
+  ggsave("figures/supplementary/foreshadowing_proportions.FC_2.png", plot = foreshadow_plot, width = 3.7, height = 3)
 }
 
 
