@@ -63,23 +63,6 @@ sortByBeta <- function(beta_df, phenotype_name, beta_thresh = 0.59){
   return(sorted_df)
 }
 
-plotQTLBetas <- function(beta_df){
-  n_pairs = nrow(dplyr::select(beta_df, gene_name, snp_id) %>% unique())
-  ylabel = paste(n_pairs, "eQTL-caQTL pairs")
-  effect_size_heatmap = ggplot(beta_df, aes(x = figure_name, y = gene_name, fill = beta_quantile)) + 
-    facet_wrap(~phenotype) + 
-    geom_tile() + 
-    ylab(ylabel) + 
-    xlab("Condition") + 
-    scale_x_discrete(expand = c(0, 0)) +
-    scale_y_discrete(expand = c(0, 0)) +
-    scale_fill_gradient2(space = "Lab", low = "#4575B4", 
-                         mid = "#FFFFBF", high = "#E24C36", name = "Normalised effect", midpoint = 0) +
-    theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.x = element_blank()) +
-    theme(legend.title = element_text(angle = 90))
-  return(effect_size_heatmap)
-}
-
 plotQTLBetasAll2 <- function(beta_df){
   n_pairs = nrow(dplyr::select(beta_df, gene_name, snp_id) %>% unique())
   ylabel = paste(n_pairs, "eQTL-caQTL pairs")
