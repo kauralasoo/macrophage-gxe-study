@@ -83,7 +83,9 @@ plotQTLBetasAll2 <- function(beta_df){
 
 
 #use coloc
-use_coloc = TRUE
+use_coloc = FALSE
+use_filtering = TRUE
+filter_threshold = 1
 
 #### Import data ####
 #Load the raw eQTL dataset
@@ -163,6 +165,18 @@ atac_selected_pvalues = fetchRasqualSNPs(unique_pairs_r2$snp_id, vcf_file$snpspo
 variable_qtls = readRDS("results/SL1344/eQTLs/appear_disappear_eQTLs.rds")
 gene_clusters = dplyr::select(variable_qtls$appear, gene_id, snp_id, max_condition) %>% ungroup() %>% unique()
 
+#Perform additional, more stringent filtering on the eQTL effect size
+if(use_filtering == TRUE){
+  gene_cluster_effects = dplyr::filter(variable_qtls$appear, condition_name == "naive" | condition_name == max_condition) %>% 
+    dplyr::transmute(gene_id, snp_id, max_condition, condition_name, beta) %>%
+    dplyr::mutate(condition_name = ifelse(condition_name == "naive", "naive", "max")) %>%
+    tidyr::spread(condition_name, beta)
+  gene_clusters = dplyr::filter(gene_cluster_effects, abs(max) >= filter_threshold, 
+                                abs(naive) <= filter_threshold, 
+                                abs(max-naive) >= filter_threshold) %>%
+    dplyr::select(gene_id, snp_id, max_condition)
+}
+
 #Extract individual gene clusters
 gene_cluster_list = list(IFNg = dplyr::filter(gene_clusters, max_condition == "IFNg"),
                          SL1344 = dplyr::filter(gene_clusters, max_condition == "SL1344"),
@@ -222,7 +236,7 @@ if(use_coloc == TRUE){
 
 #Count caQTLs present in the naive condition
 present_fraction = dplyr::filter(all_betas, phenotype == "ATAC-seq", condition_name == "naive") %>% 
-  dplyr::mutate(beta_binary = ifelse(abs(beta) > 0.59, "present", "absent")) %>% 
+  dplyr::mutate(beta_binary = ifelse(abs(beta) > filter_threshold, "present", "absent")) %>% 
   dplyr::group_by(max_effect, beta_binary) %>% 
   dplyr::summarise(count = length(beta_binary)) %>%
   dplyr::ungroup() %>%
@@ -257,6 +271,18 @@ atac_unique_pairs_r2 = dplyr::left_join(rna_atac_overlaps, rna_unique_pvalues, b
 #Import condition-specific QTLs
 atac_variable_qtls = readRDS("results/ATAC/QTLs/rasqual_appear_disappear_qtls.rds")
 peak_clusters = dplyr::select(atac_variable_qtls$appear, gene_id, snp_id, max_condition) %>% ungroup() %>% unique()
+
+#Perform additional, more stringent filtering on the eQTL effect size
+if(use_filtering == TRUE){
+  peak_cluster_effects = dplyr::filter(atac_variable_qtls$appear, condition_name == "naive" | condition_name == max_condition) %>% 
+    dplyr::transmute(gene_id, snp_id, max_condition, condition_name, beta) %>%
+    dplyr::mutate(condition_name = ifelse(condition_name == "naive", "naive", "max")) %>%
+    tidyr::spread(condition_name, beta)
+  peak_clusters = dplyr::filter(peak_cluster_effects, abs(max) >= filter_threshold, 
+                                abs(naive) <= filter_threshold, 
+                                abs(max-naive) >= filter_threshold) %>%
+    dplyr::select(gene_id, snp_id, max_condition)
+}
 
 #Extract individual gene clusters
 peak_cluster_list = list(IFNg = dplyr::filter(peak_clusters, max_condition == "IFNg"),
@@ -301,7 +327,7 @@ if(use_coloc == TRUE){
 
 #Count caQTLs present in the naive condition
 peak_present_fraction = dplyr::filter(peak_all_betas, phenotype == "RNA-seq", condition_name == "naive") %>% 
-  dplyr::mutate(beta_binary = ifelse(abs(beta) > 0.59, "present", "absent")) %>% 
+  dplyr::mutate(beta_binary = ifelse(abs(beta) > filter_threshold, "present", "absent")) %>% 
   dplyr::group_by(max_effect, beta_binary) %>% 
   dplyr::summarise(count = length(beta_binary)) %>%
   dplyr::ungroup() %>%
@@ -310,7 +336,10 @@ peak_present_fraction = dplyr::filter(peak_all_betas, phenotype == "RNA-seq", co
   dplyr::mutate(type = "reverse")
 
 #Put results together
-combined_results = dplyr::bind_rows(present_fraction, peak_present_fraction)
+combined_results = dplyr::bind_rows(present_fraction, peak_present_fraction) %>%
+  dplyr::mutate(present = ifelse(is.na(present),0,present)) %>%
+  dplyr::mutate(fraction = ifelse(is.na(fraction),0,fraction))
+
 
 #Make a joint count for coloc results only
 if(use_coloc == TRUE){
@@ -350,6 +379,20 @@ if(use_coloc == FALSE){
     theme_light() +
     theme(legend.position = "right")
   ggsave("figures/supplementary/foreshadowing_proportions.coloc.pdf", plot = foreshadow_plot, width = 3.7, height = 3)
+}
+
+if(use_filtering == TRUE){
+  plot_data = combined_results %>%
+    dplyr::mutate(type = ifelse(type == "forward", "caQTL before eQTL", "eQTL before caQTL"))
+  
+  foreshadow_plot = ggplot(plot_data, aes(x = max_effect, y = fraction, fill = type)) + 
+    geom_bar(stat = "identity", position = "dodge") + 
+    xlab("Condition") +
+    ylab("Fraction of caQTL-eQTL pairs") + 
+    theme_light() +
+    theme(legend.position = "right")
+  ggsave("figures/supplementary/foreshadowing_proportions.FC_2.pdf", plot = foreshadow_plot, width = 3.7, height = 3)
+  ggsave("figures/supplementary/foreshadowing_proportions.coloc.png", plot = foreshadow_plot, width = 3.7, height = 3)
 }
 
 
