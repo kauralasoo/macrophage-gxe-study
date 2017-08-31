@@ -83,6 +83,7 @@ name_map2 = data_frame(condition_name = c("CD14","IFN","LPS2","LPS24"), conditio
 renamed_olaps = dplyr::left_join(shared_84_200kb_filtered_hits, name_map, by = "condition_name") %>%
   dplyr::mutate(condition_name = condition_name2) %>% dplyr::select(-condition_name2)
 eqtl_coloc_counts = countConditionSpecificOverlaps(renamed_olaps, PP_power_thresh = 0.8, PP_coloc_thresh = .9)
+eqtl_coloc_counts_84 = eqtl_coloc_counts
 eqtl_total_counts = group_by(eqtl_coloc_counts, figure_name) %>% 
   dplyr::summarise(overlap_count = sum(is_hit)) %>% 
   dplyr::mutate(total_overlap = cumsum(overlap_count)) %>%
@@ -163,7 +164,7 @@ ggsave("figures/supplementary/fairfax_coloc_QTL_condition_counts.pdf", plot = co
 
 
 #Estimate how many of the "stimulated" hits are detected in the naive condition with 414 samples (5x the sample size)
-gained_hits = dplyr::filter(eqtl_coloc_counts, condition_name != "naive") %>%
+gained_hits = dplyr::filter(eqtl_coloc_counts_84, condition_name != "naive") %>%
   dplyr::left_join(probe_name_map) %>%
   dplyr::select(summarised_trait, gene_name) %>%
   unique()
@@ -179,5 +180,28 @@ discovered_in_full = dplyr::semi_join(full_naive_hits, gained_hits_lead, by = c(
 nrow(discovered_in_full)
 nrow(gained_hits_lead)
 nrow(discovered_in_full)/nrow(gained_hits_lead)
+
+#Make some bar plots
+coloc_count = data_frame(condition = factor(c("naive (84)", "stimulated (84)"), levels = c("stimulated (84)", "naive (84)")), 
+           count = c(12,18), type = "colocalisations")
+  
+plot_84 = ggplot(coloc_count, aes(x = type, y = count, fill = condition)) + 
+  geom_bar(stat = "identity") + 
+  theme_light() +
+  xlab("") +
+  theme(legend.position="right")
+ggsave("figures/supplementary/fairfax_coloc_add1.pdf", plot = plot_84, width = 2.5, height = 3)
+
+coloc_count_2 = data_frame(condition = factor(c("naive (414)", "stimulated (84)"), levels = c("stimulated (84)", "naive (414)")), 
+                         count = c(6,12), type = "colocalisations")
+
+plot_414 = ggplot(coloc_count_2, aes(x = type, y = count, fill = condition)) + 
+  geom_bar(stat = "identity") + 
+  theme_light() +
+  xlab("") + 
+  theme(legend.position="right")
+ggsave("figures/supplementary/fairfax_coloc_add2.pdf", plot = plot_414, width = 2.5, height = 3)
+
+
 
 
