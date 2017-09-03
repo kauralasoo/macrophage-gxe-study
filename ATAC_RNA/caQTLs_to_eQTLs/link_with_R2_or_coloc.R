@@ -430,4 +430,7 @@ result_list = readRDS("results/ATAC/QTLs/qtl_peak_type_assignment.rds")
 master_peaks = unique(result_list$dependents$unique_masters$master_id)
 master_eQTL_count = dplyr::filter(genes_per_peak, feature_id %in% master_peaks)
 
+fisher.test(matrix(c(4194-3039,3039, 18, 176),ncol = 2 ))
+
+
 

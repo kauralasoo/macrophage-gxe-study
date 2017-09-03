@@ -62,6 +62,18 @@ master_peaks = elementMetadata(master_peak_ranges[queryHits(olaps)]) %>% tbl_df2
 olaps = findOverlaps(dependent_peak_ranges, h3k27ac_peaks)
 dependent_peaks = elementMetadata(dependent_peak_ranges[queryHits(olaps)]) %>% tbl_df2() %>% unique()
 
+#Count overlaps between all caQTL peaks and H3K27Ac signal
+rasqual_pvalues = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
+rasqual_qtl_count = purrr::map(rasqual_pvalues, ~dplyr::filter(., p_eigen < fdr_thresh))
+
+#Construct Granges
+gene_ids = as.character(rasqual_qtl_count$naive$gene_id)
+all_peak_ranges = dplyr::filter(atac_list$gene_metadata, gene_id %in% gene_ids) %>% 
+  dplyr::transmute(seqnames = chr, start, end, strand, peak_id = gene_id) %>% 
+  dataFrameToGRanges()
+olaps = findOverlaps(all_peak_ranges, h3k27ac_peaks)
+overlap_peaks = elementMetadata(all_peak_ranges[queryHits(olaps)]) %>% tbl_df2() %>% unique()
+nrow(overlap_peaks)/nrow(rasqual_qtl_count$naive)
 
 #Combine results into a table
 result_df = data_frame(type = c("master", "dependent"), 
