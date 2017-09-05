@@ -1,4 +1,10 @@
-library(ggplot2)
+library("ggplot2")
+library("readr")
+library("dplyr")
+library("SummarizedExperiment")
+library("devtools")
+load_all("../seqUtils/")
+
 
 #Import credible sets from disk and add overlapping peaks
 credible_sets_df = importCredibleSets("results/ATAC/QTLs/rasqual_credible_sets.rds", atac_list$gene_metadata)

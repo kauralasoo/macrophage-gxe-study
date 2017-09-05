@@ -55,7 +55,7 @@ TRAF1_col_plot = plotQtlCol(TRAF1_data, scales = "free_y") +
   ggplot2::scale_color_manual(values = conditionPalette()[c(1,4)], guide=FALSE) + 
   theme(strip.text.y = element_text(colour = "grey10"), strip.background = element_rect(fill = "grey85"))
   
-ggsave("figures/main_figures/TRAF1_boxplot_column.pdf", TRAF1_col_plot, width = 2, height = 3.5)
+ggsave("figures/supplementary/TRAF1_boxplot_column.pdf", TRAF1_col_plot, width = 2, height = 3.5)
 
 
 #Plot gene structure

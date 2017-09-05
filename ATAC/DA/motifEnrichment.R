@@ -75,7 +75,7 @@ ggsave("figures/main_figures/ATAC_motif_enrichment_in_clusters.pdf", plot = moti
 
 
 #### Perform motif enrichemnt against a background of promotoer sequences #####
-fimo_promoter_hits = readr::read_delim("results/ATAC/FIMO_CISBP_promoter_matches.txt.gz", delim = "\t", col_types = c("cciicddcc"), 
+fimo_promoter_hits = readr::read_delim("results/ATAC/cisBP/FIMO_CISBP_promoter_matches.txt.gz", delim = "\t", col_types = c("cciicddcc"), 
                               col_names = c("motif_id","seq_name","start","end","strand","score","p_value","dummy","matched_seq"), skip = 1)
 
 #Calculate enrichments
@@ -89,8 +89,8 @@ enrichment = enrichment %>%
   dplyr::arrange(-fold_enrichment)
 
 #Import motifs from disk
-cisbp_pwm_list = readRDS("results/ATAC/cisBP_PWMatrixList.rds")
-cisbp_pfm_list = readRDS("results/ATAC/cisBP_PFMatrixList.rds")
+cisbp_pwm_list = readRDS("results/ATAC/cisBP/cisBP_PWMatrixList.rds")
+cisbp_pfm_list = readRDS("results/ATAC/cisBP/cisBP_PFMatrixList.rds")
 
 #Make seqLogos for the enriched motifs
 enriched_motifs = dplyr::filter(enrichment, OR > 1.2)
@@ -126,8 +126,15 @@ ggsave("figures/supplementary/ATAC_motif_enrichment_in_all_peaks.pdf", plot = ba
 #Save sequence logos of selected motifs to disk
 motif_list = as.list(cisbp_pfm_list)[selected_motifs$motif_id]
 names(motif_list) = paste(selected_motifs$tf_name, selected_motifs$motif_id, sep = "-")
+
+#Make logos for the positive strand
 pwm_list = purrr::map(motif_list, ~Matrix(.)) %>% purrr::map(~seqLogo::makePWM(./colSums(.)))
 saveMotifListLogos(pwm_list, "results/ATAC/motif_analysis/selected_motifs/", width = 8, height = 4)
+
+#Make the same logos for the negative strand
+pwm_list = purrr::map(motif_list, ~Matrix(.) %>% PWMEnrich::toPWM() %>% PWMEnrich::reverseComplement()) %>%
+  purrr::map(~.$pfm) %>% purrr::map(~seqLogo::makePWM(./colSums(.)))
+saveMotifListLogos(pwm_list, "results/ATAC/motif_analysis/selected_motifs_RC/", width = 8, height = 4)
 
 #Export all motif counts with TF names
 unique_motif_matches = dplyr::rename(fimo_hits_clean, peak_id = gene_id) %>%

@@ -16,7 +16,7 @@ appear_peaks = dplyr::filter(filtered_pairs, abs(beta) < 0.59) %>% dplyr::select
 persistent_peaks = dplyr::filter(filtered_pairs, abs(beta) > 0.59) %>% dplyr::select(peak_id) %>% unique()
 
 #GBP1BA enhancer
-persistent_peaks = data_frame(peak_id = "ATAC_peak_145162")
+persistent_peaks = data_frame(peak_id = "ATAC_peak_106417")
 
 #Identify credible sets of causal variants for both groups
 appear_snps = purrr::map_df(credible_sets_df, ~dplyr::filter(., gene_id %in% appear_peaks$peak_id) %>% 

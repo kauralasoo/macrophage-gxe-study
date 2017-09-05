@@ -43,7 +43,7 @@ gene_data = constructQtlPlotDataFrame("ENSG00000185245", "rs4486968", combined_e
   dplyr::filter(condition_name %in% c("naive","IFNg_SL1344")) %>%
   dplyr::left_join(figureNames()) %>%
   dplyr::mutate(condition_name = figure_name) %>%
-  dplyr::left_join(constructGenotypeText("rs9902753", variant_information), by = "genotype_value")
+  dplyr::left_join(constructGenotypeText("rs4486968", variant_information), by = "genotype_value")
 gene_plot = plotQTLCompact(gene_data) + ggplot2::scale_color_manual(values = conditionPalette()[c(1,4)], guide=FALSE)
 ggsave("figures/main_figures/GP1BA_expression_boxplot.pdf", plot = gene_plot, width = 2, height = 2.5)
 
@@ -52,7 +52,7 @@ peak_data = constructQtlPlotDataFrame("ATAC_peak_106417", "rs4486968", atac_list
   dplyr::filter(condition_name %in% c("naive","IFNg_SL1344")) %>%
   dplyr::left_join(figureNames()) %>%
   dplyr::mutate(condition_name = figure_name) %>%
-  dplyr::left_join(constructGenotypeText("rs9902753", variant_information), by = "genotype_value")
+  dplyr::left_join(constructGenotypeText("rs4486968", variant_information), by = "genotype_value")
 peak_plot = plotQTLCompact(peak_data) + ggplot2::scale_color_manual(values = conditionPalette()[c(1,4)], guide=FALSE) + 
   ylab("Chromatin accessibility")
 ggsave("figures/main_figures/GP1BA_atac_boxplot.pdf", plot = peak_plot, width = 2, height = 2.5)
