@@ -81,11 +81,172 @@ plotQTLBetasAll2 <- function(beta_df){
   return(effect_size_heatmap)
 }
 
+forwardAnalysis <- function(atac_min_pvalues, rna_atac_overlaps, use_filtering = FALSE, filter_threshold = 1){
+  
+  #Find minimal p-values for each peaks across conditions
+  atac_unique_pvalues = purrr::map_df(atac_min_pvalues, identity, .id = "condition_name") %>%
+    dplyr::filter(gene_id %in% unique(rna_atac_overlaps$peak_id)) %>%
+    dplyr::group_by(gene_id) %>% 
+    dplyr::arrange(gene_id, p_nominal) %>%
+    dplyr::filter(row_number() == 1) %>%
+    dplyr::ungroup() %>%
+    dplyr::transmute(peak_id = gene_id, p_nominal)
+  
+  #Find unique pairs between genes and peaks
+  unique_pairs_r2 = dplyr::left_join(rna_atac_overlaps, atac_unique_pvalues, by = "peak_id") %>% 
+    dplyr::group_by(gene_id, snp_id) %>% 
+    dplyr::arrange(gene_id, snp_id, p_nominal) %>% 
+    dplyr::filter(row_number() == 1) %>% 
+    dplyr::filter(chr != "X") %>%
+    dplyr::ungroup()
+  
+  #Fetch summary stats for all QTL pairs
+  #Import selected p-values from disk
+  rna_selected_pvalues = readRDS("results/SL1344/eQTLs/rasqual_selected_pvalues.rds")
+  atac_selected_pvalues = fetchRasqualSNPs(unique_pairs_r2$snp_id, vcf_file$snpspos, qtlResults()$atac_rasqual)
+  
+  #Import eQTL clusters
+  variable_qtls = readRDS("results/SL1344/eQTLs/appear_disappear_eQTLs.rds")
+  gene_clusters = dplyr::select(variable_qtls$appear, gene_id, snp_id, max_condition) %>% ungroup() %>% unique()
+  
+  #Perform additional, more stringent filtering on the eQTL effect size
+  if(use_filtering == TRUE){
+    gene_cluster_effects = dplyr::filter(variable_qtls$appear, condition_name == "naive" | condition_name == max_condition) %>% 
+      dplyr::transmute(gene_id, snp_id, max_condition, condition_name, beta) %>%
+      dplyr::mutate(condition_name = ifelse(condition_name == "naive", "naive", "max")) %>%
+      tidyr::spread(condition_name, beta)
+    gene_clusters = dplyr::filter(gene_cluster_effects, abs(max) >= filter_threshold, 
+                                  abs(naive) <= filter_threshold, 
+                                  abs(max-naive) >= filter_threshold) %>%
+      dplyr::select(gene_id, snp_id, max_condition)
+  }
+  
+  #Extract individual gene clusters
+  gene_cluster_list = list(IFNg = dplyr::filter(gene_clusters, max_condition == "IFNg"),
+                           SL1344 = dplyr::filter(gene_clusters, max_condition == "SL1344"),
+                           IFNg_SL1344 = dplyr::filter(gene_clusters, max_condition == "IFNg_SL1344"))
+  gene_cluster_conditions = list(IFNg = c("naive","IFNg"), SL1344 = c("naive","SL1344"),
+                                 IFNg_SL1344 = c("naive","IFNg_SL1344"))
+  
+  #Extract cluster pairs
+  pairs_list = purrr::map(gene_cluster_list, ~extractGenePeakPairs(unique_pairs_r2, .))
+  
+  #Extract betas for all pairs
+  betas_list = purrr::map(pairs_list, ~extractBetasForQTLPairs(., rna_selected_pvalues, atac_selected_pvalues) %>%
+                            betaCorrectSignPairs())
+  
+  #Filter and process the betas for plotting
+  beta_processed = purrr::map2(betas_list, gene_cluster_conditions, ~dplyr::filter(.x, condition_name %in% .y) %>%
+                                 dplyr::left_join(figureNames(), by = "condition_name") %>%
+                                 dplyr::mutate(beta_quantile = quantileNormaliseBeta(beta)) %>%
+                                 dplyr::left_join(gene_name_map, by = "gene_id") %>%
+                                 sortByBeta("ATAC") %>%
+                                 dplyr::mutate(phenotype = ifelse(phenotype == "ATAC", "ATAC-seq", "RNA-seq")))
+  
+  #Merge all betas together
+  all_betas = purrr::map_df(beta_processed, ~dplyr::arrange(., gene_name) %>%
+                              dplyr::mutate(.,stimulation_state = ifelse(condition_name == "naive", "Naive","Stimulated")), .id = "max_effect") %>%
+    dplyr::mutate(qtl_id = paste(gene_name, snp_id)) %>% 
+    dplyr::mutate(qtl_id = factor(qtl_id, levels = unique(qtl_id))) %>%
+    dplyr::mutate(max_effect = ifelse(max_effect == "IFNg", "I", ifelse(max_effect == "SL1344", "S", "I+S"))) %>%
+    dplyr::mutate(max_effect = factor(max_effect, levels = c("I","S","I+S")))
+  
+  #Count caQTLs present in the naive condition
+  present_fraction = dplyr::filter(all_betas, phenotype == "ATAC-seq", condition_name == "naive") %>% 
+    dplyr::mutate(beta_binary = ifelse(abs(beta) > filter_threshold, "present", "absent")) %>% 
+    dplyr::group_by(max_effect, beta_binary) %>% 
+    dplyr::summarise(count = length(beta_binary)) %>%
+    dplyr::ungroup() %>%
+    tidyr::spread(beta_binary, count) %>%
+    dplyr::mutate(fraction = present/(absent+present)) %>%
+    dplyr::mutate(type = "forward")
+  
+  return(list(betas = all_betas, present_fraction = present_fraction))
+}
 
-#use coloc
-use_coloc = FALSE
-use_filtering = TRUE
-filter_threshold = 1
+reverseAnalysis <- function(rna_min_pvalues, rna_atac_overlaps, use_filtering = FALSE, filter_threshold = 1){
+  ###### Reverse analysis #####
+  #Find minimal p-values for each gene across conditions
+  rna_unique_pvalues = purrr::map_df(rna_min_pvalues, identity, .id = "condition_name") %>%
+    dplyr::filter(gene_id %in% unique(rna_atac_overlaps$gene_id)) %>%
+    dplyr::group_by(gene_id) %>% 
+    dplyr::arrange(gene_id, p_nominal) %>%
+    dplyr::filter(row_number() == 1) %>%
+    dplyr::ungroup() %>%
+    dplyr::transmute(gene_id, p_nominal)
+  
+  #Find unique pairs between genes and peaks (focussing on peaks)
+  atac_unique_pairs_r2 = dplyr::left_join(rna_atac_overlaps, rna_unique_pvalues, by = "gene_id") %>% 
+    dplyr::group_by(peak_id, snp_id) %>% 
+    dplyr::arrange(peak_id, snp_id, p_nominal) %>% 
+    dplyr::filter(row_number() == 1) %>% 
+    dplyr::filter(chr != "X") %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(snp_id = gwas_snp_id)
+  
+  #Import condition-specific QTLs
+  atac_variable_qtls = readRDS("results/ATAC/QTLs/rasqual_appear_disappear_qtls.rds")
+  peak_clusters = dplyr::select(atac_variable_qtls$appear, gene_id, snp_id, max_condition) %>% ungroup() %>% unique()
+  
+  #Perform additional, more stringent filtering on the eQTL effect size
+  if(use_filtering == TRUE){
+    peak_cluster_effects = dplyr::filter(atac_variable_qtls$appear, condition_name == "naive" | condition_name == max_condition) %>% 
+      dplyr::transmute(gene_id, snp_id, max_condition, condition_name, beta) %>%
+      dplyr::mutate(condition_name = ifelse(condition_name == "naive", "naive", "max")) %>%
+      tidyr::spread(condition_name, beta)
+    peak_clusters = dplyr::filter(peak_cluster_effects, abs(max) >= filter_threshold, 
+                                  abs(naive) <= filter_threshold, 
+                                  abs(max-naive) >= filter_threshold) %>%
+      dplyr::select(gene_id, snp_id, max_condition)
+  }
+  
+  #Extract individual gene clusters
+  peak_cluster_list = list(IFNg = dplyr::filter(peak_clusters, max_condition == "IFNg"),
+                           SL1344 = dplyr::filter(peak_clusters, max_condition == "SL1344"),
+                           IFNg_SL1344 = dplyr::filter(peak_clusters, max_condition == "IFNg_SL1344"))
+  peak_cluster_conditions = list(IFNg = c("naive","IFNg"), SL1344 = c("naive","SL1344"),
+                                 IFNg_SL1344 = c("naive","IFNg_SL1344"))
+  
+  #Import RNA selected p-values for ATAC QTLs
+  atac_atac_selected_pvalues = readRDS("results/ATAC/QTLs/rasqual_selected_pvalues.rds")
+  atac_rna_selected_pvalues = fetchRasqualSNPs(atac_unique_pairs_r2$snp_id, vcf_file$snpspos, qtlResults()$rna_rasqual)
+  
+  #Extract cluster pairs
+  peak_pairs_list = purrr::map(peak_cluster_list, ~extractPeakGenePairs(atac_unique_pairs_r2, .))
+  
+  #Extract betas for all pairs
+  peak_betas_list = purrr::map(peak_pairs_list, ~extractBetasForQTLPairs(., atac_rna_selected_pvalues, atac_atac_selected_pvalues) %>%
+                                 betaCorrectSignPairs())
+  
+  #Filter and process the betas for plotting
+  peak_beta_processed = purrr::map2(peak_betas_list, peak_cluster_conditions, ~dplyr::filter(.x, condition_name %in% .y) %>%
+                                      dplyr::left_join(figureNames(), by = "condition_name") %>%
+                                      dplyr::mutate(beta_quantile = quantileNormaliseBeta(beta)) %>%
+                                      dplyr::mutate(gene_name = peak_id) %>%
+                                      sortByBeta("RNA") %>% 
+                                      dplyr::mutate(phenotype = ifelse(phenotype == "ATAC", "ATAC-seq", "RNA-seq")))
+  
+  #Merge all betas together
+  peak_all_betas = purrr::map_df(peak_beta_processed, ~dplyr::arrange(., gene_name) %>%
+                                   dplyr::mutate(.,stimulation_state = ifelse(condition_name == "naive", "Naive","Stimulated")), .id = "max_effect") %>%
+    dplyr::mutate(qtl_id = paste(gene_name, snp_id)) %>% 
+    dplyr::mutate(qtl_id = factor(qtl_id, levels = unique(qtl_id))) %>%
+    dplyr::mutate(max_effect = ifelse(max_effect == "IFNg", "I", ifelse(max_effect == "SL1344", "S", "I+S"))) %>%
+    dplyr::mutate(max_effect = factor(max_effect, levels = c("I","S","I+S")))
+  
+  #Count caQTLs present in the naive condition
+  peak_present_fraction = dplyr::filter(peak_all_betas, phenotype == "RNA-seq", condition_name == "naive") %>% 
+    dplyr::mutate(beta_binary = ifelse(abs(beta) > filter_threshold, "present", "absent")) %>% 
+    dplyr::group_by(max_effect, beta_binary) %>% 
+    dplyr::summarise(count = length(beta_binary)) %>%
+    dplyr::ungroup() %>%
+    tidyr::spread(beta_binary, count) %>%
+    dplyr::mutate(fraction = present/(absent+present)) %>%
+    dplyr::mutate(type = "reverse")
+  
+  return(list(all_betas = peak_all_betas, present_fraction = peak_present_fraction))
+}
+
 
 #### Import data ####
 #Load the raw eQTL dataset
@@ -126,86 +287,131 @@ overlap_list = purrr::map(chr_list, ~findGWASOverlaps(dplyr::filter(rna_trait_pa
 rna_atac_overlaps = purrr::map_df(overlap_list, identity)
 saveRDS(rna_atac_overlaps, "results/ATAC_RNA_overlaps/QTL_overlap_list_R2.rds")
 
-
-
-
-
-#Identify shared QTLs
+#Import shared QTLs
 rna_atac_overlaps = readRDS("results/ATAC_RNA_overlaps/QTL_overlap_list_R2.rds")
 
+
+
+#Original analysis (FC threshold 0.59)
+#Perform forward and reverse analysis indepedndently
+fwd_results = forwardAnalysis(atac_min_pvalues, rna_atac_overlaps, use_filtering = FALSE, filter_threshold = 0.59)
+rev_results = reverseAnalysis(rasqual_min_pvalues, rna_atac_overlaps, use_filtering = FALSE, filter_threshold = 0.59)
+
+#Make a plot estimating the proportion of foreshadowing
+combined_results = dplyr::bind_rows(fwd_results$present_fraction, rev_results$present_fraction) %>%
+  dplyr::mutate(present = ifelse(is.na(present),0,present)) %>%
+  dplyr::mutate(fraction = ifelse(is.na(fraction),0,fraction))
+
+plot_data = combined_results %>%
+  dplyr::mutate(type = ifelse(type == "forward", "caQTL before eQTL", "eQTL before caQTL"))
+
+foreshadow_plot = ggplot(plot_data, aes(x = max_effect, y = fraction, fill = type)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  xlab("Condition") +
+  ylab("Fraction of caQTL-eQTL pairs") + 
+  theme_light() +
+  theme(legend.position = "right")
+
+#Save results to disk
+ggsave("figures/main_figures/foreshadowing_proportions.pdf", plot = foreshadow_plot, width = 3.7, height = 3)
+write.table(combined_results, "results/ATAC_RNA_overlaps/foreshadow_quant.txt", sep = "\t", quote = FALSE)
+
+
+#Analysis with a more stringent cutoff (FC threshold 1)
+#Perform forward and reverse analysis indepedndently
+fwd_results = forwardAnalysis(atac_min_pvalues, rna_atac_overlaps, use_filtering = TRUE, filter_threshold = 1)
+rev_results = reverseAnalysis(rasqual_min_pvalues, rna_atac_overlaps, use_filtering = TRUE, filter_threshold = 1)
+
+#Make a plot estimating the proportion of foreshadowing
+combined_results = dplyr::bind_rows(fwd_results$present_fraction, rev_results$present_fraction) %>%
+  dplyr::mutate(present = ifelse(is.na(present),0,present)) %>%
+  dplyr::mutate(fraction = ifelse(is.na(fraction),0,fraction))
+
+plot_data = combined_results %>%
+  dplyr::mutate(type = ifelse(type == "forward", "caQTL before eQTL", "eQTL before caQTL"))
+
+foreshadow_plot = ggplot(plot_data, aes(x = max_effect, y = fraction, fill = type)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  xlab("Condition") +
+  ylab("Fraction of caQTL-eQTL pairs") + 
+  theme_light() +
+  theme(legend.position = "right")
+
+ggsave("figures/supplementary/foreshadowing_proportions.FC_2.pdf", plot = foreshadow_plot, width = 3.7, height = 3)
+ggsave("figures/supplementary/foreshadowing_proportions.FC_2.png", plot = foreshadow_plot, width = 3.7, height = 3)
+
+
+#Perform the same analysis using coloc pairs
+
 #Filter results with coloc
-if(use_coloc == TRUE){
-  coloc_overlaps = readRDS("results/ATAC_RNA_overlaps/QTL_overlap_list_coloc.rds")
-  rna_atac_overlaps = dplyr::semi_join(rna_atac_overlaps, coloc_overlaps, by = c("gene_id", "peak_id"))
+coloc_overlaps = readRDS("results/ATAC_RNA_overlaps/QTL_overlap_list_coloc.rds")
+rna_atac_overlaps = dplyr::semi_join(rna_atac_overlaps, coloc_overlaps, by = c("gene_id", "peak_id"))
+
+#Perform forward and reverse analysis
+fwd_results = forwardAnalysis(atac_min_pvalues, rna_atac_overlaps, use_filtering = FALSE, filter_threshold = 0.59)
+rev_results = reverseAnalysis(rasqual_min_pvalues, rna_atac_overlaps, use_filtering = FALSE, filter_threshold = 0.59)
+
+#Count fraction present
+combined_results = dplyr::bind_rows(fwd_results$present_fraction, rev_results$present_fraction) %>%
+  dplyr::mutate(present = ifelse(is.na(present),0,present)) %>%
+  dplyr::mutate(absent = ifelse(is.na(absent),0,absent)) %>%
+  dplyr::mutate(fraction = present/(absent+present))
+
+joint_counts = combined_results %>% 
+  dplyr::group_by(type) %>% 
+  dplyr::summarise(absent_sum = sum(absent), present_sum = sum(present)) %>%
+  dplyr::mutate(fraction = present_sum/(present_sum + absent_sum))
+
+plot_data = joint_counts %>%
+  dplyr::mutate(type = ifelse(type == "forward", "caQTL before eQTL", "eQTL before caQTL")) %>%
+  dplyr::mutate(max_effect = "All conditions")
+
+foreshadow_plot = ggplot(plot_data, aes(x = max_effect, y = fraction, fill = type)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  xlab("Condition") +
+  ylab("Fraction of caQTL-eQTL pairs") + 
+  theme_light() +
+  theme(legend.position = "right")
+
+#Save files
+ggsave("figures/supplementary/foreshadowing_proportions.coloc.pdf", plot = foreshadow_plot, width = 3.7, height = 3)
+write.table(joint_counts, "figures/tables/foreshadow_quant.coloc.txt", sep = "\t", quote = FALSE)
+
+
+
+#Perform downsampling analyis
+
+#Perform down-sampling anaysis on the QTLs
+performSubsamplingAnalysis <- function(rna_atac_overlaps, rasqual_qtl_df, atac_qtl_df, atac_min_pvalues, rasqual_min_pvalues){
+  print("item")
+  uniq_genes = unique(rasqual_qtl_df$gene_id)
+  uniq_peaks = unique(atac_qtl_df$gene_id)
+  sample_peaks = sample(uniq_peaks, length(uniq_genes))
+  rna_atac_overlaps_sample = dplyr::filter(rna_atac_overlaps, peak_id %in% sample_peaks)
+  
+  #Perform FWD and REV analysis
+  fwd_results = forwardAnalysis(atac_min_pvalues, rna_atac_overlaps_sample, use_filtering = FALSE, filter_threshold = 0.59)
+  rev_results = reverseAnalysis(rasqual_min_pvalues, rna_atac_overlaps_sample, use_filtering = FALSE, filter_threshold = 0.59)
+  
+  #Make a plot estimating the proportion of foreshadowing
+  joint_counts = dplyr::bind_rows(fwd_results$present_fraction, rev_results$present_fraction) %>%
+    dplyr::mutate(present = ifelse(is.na(present),0,present)) %>%
+    dplyr::mutate(absent = ifelse(is.na(absent),0,absent)) %>%
+    dplyr::mutate(fraction = present/(absent+present)) %>%
+    dplyr::group_by(type) %>% 
+    dplyr::summarise(absent_sum = sum(absent), present_sum = sum(present)) %>%
+    dplyr::mutate(fraction = present_sum/(present_sum + absent_sum))
+  
+  return(joint_counts)
 }
 
-#Find minimal p-values for each peaks across conditions
-atac_unique_pvalues = purrr::map_df(atac_min_pvalues, identity, .id = "condition_name") %>%
-  dplyr::filter(gene_id %in% unique(rna_atac_overlaps$peak_id)) %>%
-  dplyr::group_by(gene_id) %>% 
-  dplyr::arrange(gene_id, p_nominal) %>%
-  dplyr::filter(row_number() == 1) %>%
-  dplyr::ungroup() %>%
-  dplyr::transmute(peak_id = gene_id, p_nominal)
+#Apply to 100 random samples
+list = as.list(c(1:100))
+quietSampling = purrr::quietly(performSubsamplingAnalysis)
+result = purrr::map(list, ~quietSampling(rna_atac_overlaps, rasqual_qtl_df, 
+                                                      atac_qtl_df, atac_min_pvalues, rasqual_min_pvalues))
 
-#Find unique pairs between genes and peaks
-unique_pairs_r2 = dplyr::left_join(rna_atac_overlaps, atac_unique_pvalues, by = "peak_id") %>% 
-  dplyr::group_by(gene_id, snp_id) %>% 
-  dplyr::arrange(gene_id, snp_id, p_nominal) %>% 
-  dplyr::filter(row_number() == 1) %>% 
-  dplyr::filter(chr != "X") %>%
-  dplyr::ungroup()
 
-#Fetch summary stats for all QTL pairs
-#Import selected p-values from disk
-rna_selected_pvalues = readRDS("results/SL1344/eQTLs/rasqual_selected_pvalues.rds")
-atac_selected_pvalues = fetchRasqualSNPs(unique_pairs_r2$snp_id, vcf_file$snpspos, qtlResults()$atac_rasqual)
-
-#Import eQTL clusters
-variable_qtls = readRDS("results/SL1344/eQTLs/appear_disappear_eQTLs.rds")
-gene_clusters = dplyr::select(variable_qtls$appear, gene_id, snp_id, max_condition) %>% ungroup() %>% unique()
-
-#Perform additional, more stringent filtering on the eQTL effect size
-if(use_filtering == TRUE){
-  gene_cluster_effects = dplyr::filter(variable_qtls$appear, condition_name == "naive" | condition_name == max_condition) %>% 
-    dplyr::transmute(gene_id, snp_id, max_condition, condition_name, beta) %>%
-    dplyr::mutate(condition_name = ifelse(condition_name == "naive", "naive", "max")) %>%
-    tidyr::spread(condition_name, beta)
-  gene_clusters = dplyr::filter(gene_cluster_effects, abs(max) >= filter_threshold, 
-                                abs(naive) <= filter_threshold, 
-                                abs(max-naive) >= filter_threshold) %>%
-    dplyr::select(gene_id, snp_id, max_condition)
-}
-
-#Extract individual gene clusters
-gene_cluster_list = list(IFNg = dplyr::filter(gene_clusters, max_condition == "IFNg"),
-                         SL1344 = dplyr::filter(gene_clusters, max_condition == "SL1344"),
-                         IFNg_SL1344 = dplyr::filter(gene_clusters, max_condition == "IFNg_SL1344"))
-gene_cluster_conditions = list(IFNg = c("naive","IFNg"), SL1344 = c("naive","SL1344"),
-                               IFNg_SL1344 = c("naive","IFNg_SL1344"))
-
-#Extract cluster pairs
-pairs_list = purrr::map(gene_cluster_list, ~extractGenePeakPairs(unique_pairs_r2, .))
-
-#Extract betas for all pairs
-betas_list = purrr::map(pairs_list, ~extractBetasForQTLPairs(., rna_selected_pvalues, atac_selected_pvalues) %>%
-                          betaCorrectSignPairs())
-
-#Filter and process the betas for plotting
-beta_processed = purrr::map2(betas_list, gene_cluster_conditions, ~dplyr::filter(.x, condition_name %in% .y) %>%
-                               dplyr::left_join(figureNames(), by = "condition_name") %>%
-                               dplyr::mutate(beta_quantile = quantileNormaliseBeta(beta)) %>%
-                               dplyr::left_join(gene_name_map, by = "gene_id") %>%
-                               sortByBeta("ATAC") %>%
-                               dplyr::mutate(phenotype = ifelse(phenotype == "ATAC", "ATAC-seq", "RNA-seq")))
-
-#Merge all betas together
-all_betas = purrr::map_df(beta_processed, ~dplyr::arrange(., gene_name) %>%
-                    dplyr::mutate(.,stimulation_state = ifelse(condition_name == "naive", "Naive","Stimulated")), .id = "max_effect") %>%
-  dplyr::mutate(qtl_id = paste(gene_name, snp_id)) %>% 
-  dplyr::mutate(qtl_id = factor(qtl_id, levels = unique(qtl_id))) %>%
-  dplyr::mutate(max_effect = ifelse(max_effect == "IFNg", "I", ifelse(max_effect == "SL1344", "S", "I+S"))) %>%
-  dplyr::mutate(max_effect = factor(max_effect, levels = c("I","S","I+S")))
 
 all_betas_plot1 = plotQTLBetasAll2(dplyr::filter(all_betas, max_effect %in% c("I")))
 all_betas_plot2 = plotQTLBetasAll2(dplyr::filter(all_betas, max_effect %in% c("S")))
@@ -234,89 +440,16 @@ if(use_coloc == TRUE){
 }
 
 
-#Count caQTLs present in the naive condition
-present_fraction = dplyr::filter(all_betas, phenotype == "ATAC-seq", condition_name == "naive") %>% 
-  dplyr::mutate(beta_binary = ifelse(abs(beta) > filter_threshold, "present", "absent")) %>% 
-  dplyr::group_by(max_effect, beta_binary) %>% 
-  dplyr::summarise(count = length(beta_binary)) %>%
-  dplyr::ungroup() %>%
-  tidyr::spread(beta_binary, count) %>%
-  dplyr::mutate(fraction = present/(absent+present)) %>%
-  dplyr::mutate(type = "forward")
+
 
 if(use_coloc == FALSE){
   saveRDS(all_betas, "results/ATAC_RNA_overlaps/caQTL_eQTL_pairs_betas.rds")
 }
 
 
-###### Reverse analysis #####
-#Find minimal p-values for each gene across conditions
-rna_unique_pvalues = purrr::map_df(rasqual_min_pvalues, identity, .id = "condition_name") %>%
-  dplyr::filter(gene_id %in% unique(rna_atac_overlaps$gene_id)) %>%
-  dplyr::group_by(gene_id) %>% 
-  dplyr::arrange(gene_id, p_nominal) %>%
-  dplyr::filter(row_number() == 1) %>%
-  dplyr::ungroup() %>%
-  dplyr::transmute(gene_id, p_nominal)
 
-#Find unique pairs between genes and peaks (focussing on peaks)
-atac_unique_pairs_r2 = dplyr::left_join(rna_atac_overlaps, rna_unique_pvalues, by = "gene_id") %>% 
-  dplyr::group_by(peak_id, snp_id) %>% 
-  dplyr::arrange(peak_id, snp_id, p_nominal) %>% 
-  dplyr::filter(row_number() == 1) %>% 
-  dplyr::filter(chr != "X") %>%
-  dplyr::ungroup() %>%
-  dplyr::mutate(snp_id = gwas_snp_id)
 
-#Import condition-specific QTLs
-atac_variable_qtls = readRDS("results/ATAC/QTLs/rasqual_appear_disappear_qtls.rds")
-peak_clusters = dplyr::select(atac_variable_qtls$appear, gene_id, snp_id, max_condition) %>% ungroup() %>% unique()
 
-#Perform additional, more stringent filtering on the eQTL effect size
-if(use_filtering == TRUE){
-  peak_cluster_effects = dplyr::filter(atac_variable_qtls$appear, condition_name == "naive" | condition_name == max_condition) %>% 
-    dplyr::transmute(gene_id, snp_id, max_condition, condition_name, beta) %>%
-    dplyr::mutate(condition_name = ifelse(condition_name == "naive", "naive", "max")) %>%
-    tidyr::spread(condition_name, beta)
-  peak_clusters = dplyr::filter(peak_cluster_effects, abs(max) >= filter_threshold, 
-                                abs(naive) <= filter_threshold, 
-                                abs(max-naive) >= filter_threshold) %>%
-    dplyr::select(gene_id, snp_id, max_condition)
-}
-
-#Extract individual gene clusters
-peak_cluster_list = list(IFNg = dplyr::filter(peak_clusters, max_condition == "IFNg"),
-                         SL1344 = dplyr::filter(peak_clusters, max_condition == "SL1344"),
-                         IFNg_SL1344 = dplyr::filter(peak_clusters, max_condition == "IFNg_SL1344"))
-peak_cluster_conditions = list(IFNg = c("naive","IFNg"), SL1344 = c("naive","SL1344"),
-                               IFNg_SL1344 = c("naive","IFNg_SL1344"))
-
-#Import RNA selected p-values for ATAC QTLs
-atac_atac_selected_pvalues = readRDS("results/ATAC/QTLs/rasqual_selected_pvalues.rds")
-atac_rna_selected_pvalues = fetchRasqualSNPs(atac_unique_pairs_r2$snp_id, vcf_file$snpspos, qtlResults()$rna_rasqual)
-
-#Extract cluster pairs
-peak_pairs_list = purrr::map(peak_cluster_list, ~extractPeakGenePairs(atac_unique_pairs_r2, .))
-
-#Extract betas for all pairs
-peak_betas_list = purrr::map(peak_pairs_list, ~extractBetasForQTLPairs(., atac_rna_selected_pvalues, atac_atac_selected_pvalues) %>%
-                          betaCorrectSignPairs())
-
-#Filter and process the betas for plotting
-peak_beta_processed = purrr::map2(peak_betas_list, peak_cluster_conditions, ~dplyr::filter(.x, condition_name %in% .y) %>%
-                               dplyr::left_join(figureNames(), by = "condition_name") %>%
-                               dplyr::mutate(beta_quantile = quantileNormaliseBeta(beta)) %>%
-                               dplyr::mutate(gene_name = peak_id) %>%
-                               sortByBeta("RNA") %>% 
-                               dplyr::mutate(phenotype = ifelse(phenotype == "ATAC", "ATAC-seq", "RNA-seq")))
-
-#Merge all betas together
-peak_all_betas = purrr::map_df(peak_beta_processed, ~dplyr::arrange(., gene_name) %>%
-                            dplyr::mutate(.,stimulation_state = ifelse(condition_name == "naive", "Naive","Stimulated")), .id = "max_effect") %>%
-  dplyr::mutate(qtl_id = paste(gene_name, snp_id)) %>% 
-  dplyr::mutate(qtl_id = factor(qtl_id, levels = unique(qtl_id))) %>%
-  dplyr::mutate(max_effect = ifelse(max_effect == "IFNg", "I", ifelse(max_effect == "SL1344", "S", "I+S"))) %>%
-  dplyr::mutate(max_effect = factor(max_effect, levels = c("I","S","I+S")))
 peak_all_betas_plot = plotQTLBetasAll2(peak_all_betas)
 
 if(use_coloc == TRUE){
@@ -325,61 +458,6 @@ if(use_coloc == TRUE){
   ggsave("figures/supplementary/eQTLs_vs_caQTL_heatmap_reverse.pdf", peak_all_betas_plot, width = 3, height = 7)
 }
 
-#Count caQTLs present in the naive condition
-peak_present_fraction = dplyr::filter(peak_all_betas, phenotype == "RNA-seq", condition_name == "naive") %>% 
-  dplyr::mutate(beta_binary = ifelse(abs(beta) > filter_threshold, "present", "absent")) %>% 
-  dplyr::group_by(max_effect, beta_binary) %>% 
-  dplyr::summarise(count = length(beta_binary)) %>%
-  dplyr::ungroup() %>%
-  tidyr::spread(beta_binary, count) %>%
-  dplyr::mutate(fraction = present/(absent+present)) %>%
-  dplyr::mutate(type = "reverse")
-
-#Put results together
-combined_results = dplyr::bind_rows(present_fraction, peak_present_fraction) %>%
-  dplyr::mutate(present = ifelse(is.na(present),0,present)) %>%
-  dplyr::mutate(fraction = ifelse(is.na(fraction),0,fraction))
-
-
-#Make a joint count for coloc results only
-if(use_coloc == TRUE){
-  joint_counts = dplyr::mutate(combined_results, absent = ifelse(is.na(absent), 0, absent), present = ifelse(is.na(present), 0, present)) %>% 
-    dplyr::group_by(type) %>% 
-    dplyr::summarise(absent_sum = sum(absent), present_sum = sum(present)) %>%
-    dplyr::mutate(fraction = present_sum/(present_sum + absent_sum))
-  write.table(joint_counts, "results/ATAC_RNA_overlaps/foreshadow_quant.coloc.txt", sep = "\t", quote = FALSE)
-} else{
-  #Save proportions to disk
-  write.table(combined_results, "results/ATAC_RNA_overlaps/foreshadow_quant.txt", sep = "\t", quote = FALSE)
-  combined_results = read.table("results/ATAC_RNA_overlaps/foreshadow_quant.txt", stringsAsFactors = FALSE) %>%
-    dplyr::mutate(max_effect = factor(max_effect, levels = c("I","S","I+S")))
-}
-
-
-if(use_coloc == FALSE){
-  #Make a plot of proportions
-  plot_data = dplyr::mutate(combined_results, type = ifelse(type == "forward", "caQTL before eQTL", "eQTL before caQTL"))
-  
-  foreshadow_plot = ggplot(plot_data, aes(x = max_effect, y = fraction, fill = type)) + 
-    geom_bar(stat = "identity", position = "dodge") + 
-    xlab("Condition") +
-    ylab("Fraction of caQTL-eQTL pairs") + 
-    theme_light() +
-    theme(legend.position = "right")
-  ggsave("figures/main_figures/foreshadowing_proportions.pdf", plot = foreshadow_plot, width = 3.7, height = 3)
-} else {
-  plot_data = read.table("results/ATAC_RNA_overlaps/foreshadow_quant.coloc.txt", stringsAsFactors = FALSE) %>%
-    dplyr::mutate(type = ifelse(type == "forward", "caQTL before eQTL", "eQTL before caQTL")) %>%
-    dplyr::mutate(max_effect = "All conditions")
-  
-  foreshadow_plot = ggplot(plot_data, aes(x = max_effect, y = fraction, fill = type)) + 
-    geom_bar(stat = "identity", position = "dodge") + 
-    xlab("Condition") +
-    ylab("Fraction of caQTL-eQTL pairs") + 
-    theme_light() +
-    theme(legend.position = "right")
-  ggsave("figures/supplementary/foreshadowing_proportions.coloc.pdf", plot = foreshadow_plot, width = 3.7, height = 3)
-}
 
 if(use_filtering == TRUE){
   plot_data = combined_results %>%
