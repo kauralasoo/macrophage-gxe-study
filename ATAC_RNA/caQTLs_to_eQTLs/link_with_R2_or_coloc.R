@@ -410,6 +410,18 @@ list = as.list(c(1:100))
 quietSampling = purrr::quietly(performSubsamplingAnalysis)
 result = purrr::map(list, ~quietSampling(rna_atac_overlaps, rasqual_qtl_df, 
                                                       atac_qtl_df, atac_min_pvalues, rasqual_min_pvalues))
+df_list = purrr::map(result, ~.$result)
+names(df_list) = as.character(c(1:100))
+
+fraction_df = purrr::map_df(df_list, identity, .id = "sample") %>%
+  dplyr::mutate(type = ifelse(type == "forward", "caQTL before eQTL", "eQTL before caQTL"))
+plot = ggplot(fraction_df, aes(x = fraction, fill = type)) + 
+  geom_histogram(binwidth = .03) +
+  theme_light() +
+  xlab("Fraction of caQTL-eQTL pairs")
+ggsave("figures/supplementary/foreshadowing_proportions.downsample_caQTLs.pdf", plot = plot, width = 4, height = 3)
+ggsave("figures/supplementary/foreshadowing_proportions.downsample_caQTLs.png", plot = plot, width = 4, height = 3)
+
 
 
 
