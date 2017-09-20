@@ -314,7 +314,7 @@ foreshadow_plot = ggplot(plot_data, aes(x = max_effect, y = fraction, fill = typ
 
 #Save results to disk
 ggsave("figures/main_figures/foreshadowing_proportions.pdf", plot = foreshadow_plot, width = 3.7, height = 3)
-write.table(combined_results, "results/ATAC_RNA_overlaps/foreshadow_quant.txt", sep = "\t", quote = FALSE)
+write.table(combined_results, "figures/tables/foreshadow_quant.txt", sep = "\t", quote = FALSE)
 
 
 #Analysis with a more stringent cutoff (FC threshold 1)
