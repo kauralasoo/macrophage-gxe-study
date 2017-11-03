@@ -322,6 +322,9 @@ write.table(combined_results, "figures/tables/foreshadow_quant.txt", sep = "\t",
 fwd_results = forwardAnalysis(atac_min_pvalues, rna_atac_overlaps, use_filtering = TRUE, filter_threshold = 1)
 rev_results = reverseAnalysis(rasqual_min_pvalues, rna_atac_overlaps, use_filtering = TRUE, filter_threshold = 1)
 
+#Save forward analysis results:
+saveRDS(fwd_results$betas, "results/ATAC_RNA_overlaps/caQTL_eQTL_pairs_betas_FC2.rds")
+
 #Make a plot estimating the proportion of foreshadowing
 combined_results = dplyr::bind_rows(fwd_results$present_fraction, rev_results$present_fraction) %>%
   dplyr::mutate(present = ifelse(is.na(present),0,present)) %>%

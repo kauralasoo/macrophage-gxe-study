@@ -27,6 +27,12 @@ gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWA
                                "RA_2012", "T2D_1", "MS", "T1D", "T1D_2", "PBC", "CAD_2017"))) %>%
   dplyr::filter(type == "Autoimmune")
 
+#Include all traits
+gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt",
+                                     col_names = c("trait","file_name", "type")) %>%
+  dplyr::filter(!(trait %in% c("UC_2014","UC_2012", "CEL_2010","PS", "CD_2012", "RA_2012", "T2D_1", "MS", "T1D", "T1D_2", "PBC")))
+
+
 #Import coloc output for each subset of data
 full_200kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".full.2e5.txt", 
                                               coloc_prefix = "processed/Fairfax/coloc/",
@@ -34,6 +40,8 @@ full_200kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".
                                               gwas_pval_thresh = 1e-6, mhc_phenotypes = mhc_fairfax)$coloc_filtered %>%
   dplyr::left_join(probe_name_map, by = "phenotype_id") %>%
   dplyr::select(-.row)
+write.table(full_200kb_hits, "results/Fairfax/fairfax_GWAS_coloc_hits.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
 
 shared_200kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".shared.2e5.txt", 
                                            coloc_prefix = "processed/Fairfax/coloc/",
