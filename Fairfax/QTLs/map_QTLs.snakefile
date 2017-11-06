@@ -120,6 +120,8 @@ rule run_eigenMT_chr:
 		gen = "processed/{study}/eigenMT/genotypes/{chromosome}.genotypes.txt",
 		gen_pos = "processed/{study}/eigenMT/genotypes/{chromosome}.snp_positions.txt",
 		phe_pos = "processed/{study}//eigenMT/input/gene_positions.txt",
+	params:
+		chr = "{chromosome}"
 	output:
 		"processed/{study}/eigenMT/output/{condition}.{chromosome}.txt"
 	resources:
@@ -127,9 +129,4 @@ rule run_eigenMT_chr:
 	threads: 1
 	shell:
 		"python ~/software/eigenMT/eigenMT.py --QTL {input.qtl} --GEN {input.gen} --OUT {output} "
-		"--GENPOS {input.gen_pos} --PHEPOS {input.phe_pos} --cis_dist {config[cis_window]} --external --CHROM {chromosome}"
-
-
-
-
-
+		"--GENPOS {input.gen_pos} --PHEPOS {input.phe_pos} --cis_dist {config[cis_window]} --external --CHROM {params.chr}"
