@@ -6,6 +6,10 @@ cis_window: 500000
 nominal_cis_window: 500000
 annot_type: ["full", "shared", "shared_84", "shared_42"]
 
+#eigenMT
+chromosomes: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22]
+
+
 #Colocalisation
 coloc_phenotypes: ["full", "shared", "shared_84", "shared_42"]
 gwas_dir: "/nfs/users/nfs_k/ka8/scratch/datasets/Inflammatory_GWAS/"

@@ -2,7 +2,8 @@ rule map_qtls:
 	input:
 		expand("processed/{{study}}/qtltools/output/{annot_type}/{condition}.permuted.txt.gz", annot_type = config["annot_type"], condition = config["conditions"]),
 		expand("processed/{{study}}/qtltools/output/{annot_type}/sorted/{condition}.nominal.sorted.txt.gz", annot_type = config["annot_type"], condition = config["conditions"]),
-		expand("processed/{{study}}/qtltools/output/{annot_type}/sorted/{condition}.nominal.sorted.txt.gz.tbi", annot_type = config["annot_type"], condition = config["conditions"])
+		expand("processed/{{study}}/qtltools/output/{annot_type}/sorted/{condition}.nominal.sorted.txt.gz.tbi", annot_type = config["annot_type"], condition = config["conditions"]),
+		expand("processed/{{study}}/eigenMT/output/{condition}.{chromosome}.txt", condition = config["conditions"], chromosome = config["chromosomes"])
 	output:
 		"processed/{study}/out.txt"
 	resources:
@@ -111,5 +112,24 @@ rule index_qtltools_output:
 	threads: 1
 	shell:
 		"tabix -s9 -b10 -e11 -f {input}"
+
+#Run eigenMT correction on the linear model
+rule run_eigenMT_chr:
+	input:
+		qtl = "processed/{study}/eigenMT/input/{condition}.input.txt",
+		gen = "processed/{study}/eigenMT/genotypes/{chromosome}.genotypes.txt",
+		gen_pos = "processed/{study}/eigenMT/genotypes/{chromosome}.snp_positions.txt",
+		phe_pos = "processed/{study}//eigenMT/input/gene_positions.txt",
+	output:
+		"processed/{study}/eigenMT/output/{condition}.{chromosome}.txt"
+	resources:
+		mem = 4000
+	threads: 1
+	shell:
+		"python ~/software/eigenMT/eigenMT.py --QTL {input.qtl} --GEN {input.gen} --OUT {output} "
+		"--GENPOS {input.gen_pos} --PHEPOS {input.phe_pos} --cis_dist {config[cis_window]} --external --CHROM {chromosome}"
+
+
+
 
 
