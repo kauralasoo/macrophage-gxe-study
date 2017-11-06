@@ -10,3 +10,10 @@ snakemake --cluster ../../../../macrophage-trQTLs/scripts/snakemake_submit.py -n
 #Run coloc against QTLs
 snakemake --cluster ../macrophage-trQTLs/scripts/snakemake_submit.py -np -s macrophage-gxe-study/fairfax_run_coloc.snakefile processed/Fairfax/coloc_out.txt --jobs 100 --configfile macrophage-gxe-study/Fairfax/QTLs/fairfax_config.yaml
 
+#Permute genotypes for one permutation run
+bcftools query -l fairfax_genotypes.sorted.filtered.vcf.gz | sort -R > permuted_individuals.txt
+bcftools reheader -s permuted_individuals.txt fairfax_genotypes.sorted.filtered.vcf.gz > fairfax_genotypes.sorted.filtered.permuted.vcf.gz
+tabix -p vcf fairfax_genotypes.sorted.filtered.permuted.vcf.gz
+
+#Map QTLs again using permuted genotypes
+snakemake --cluster ../../../../macrophage-trQTLs/scripts/snakemake_submit.py -np -s map_QTLs.snakefile processed/Fairfax_permuted/out.txt --jobs 1200 --configfile fairfax_config_permuted.yaml

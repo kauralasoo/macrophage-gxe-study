@@ -1,9 +1,9 @@
 rule map_qtls:
 	input:
 		expand("processed/{{study}}/qtltools/output/{annot_type}/{condition}.permuted.txt.gz", annot_type = config["annot_type"], condition = config["conditions"]),
-		expand("processed/{{study}}/qtltools/output/{annot_type}/sorted/{condition}.nominal.sorted.txt.gz", annot_type = config["annot_type"], condition = config["conditions"]),
-		expand("processed/{{study}}/qtltools/output/{annot_type}/sorted/{condition}.nominal.sorted.txt.gz.tbi", annot_type = config["annot_type"], condition = config["conditions"]),
-		expand("processed/{{study}}/eigenMT/output/{condition}.{chromosome}.txt", condition = config["conditions"], chromosome = config["chromosomes"])
+		#expand("processed/{{study}}/qtltools/output/{annot_type}/sorted/{condition}.nominal.sorted.txt.gz", annot_type = config["annot_type"], condition = config["conditions"]),
+		#expand("processed/{{study}}/qtltools/output/{annot_type}/sorted/{condition}.nominal.sorted.txt.gz.tbi", annot_type = config["annot_type"], condition = config["conditions"]),
+		#expand("processed/{{study}}/eigenMT/output/{condition}.{chromosome}.txt", condition = config["conditions"], chromosome = config["chromosomes"])
 	output:
 		"processed/{study}/out.txt"
 	resources:

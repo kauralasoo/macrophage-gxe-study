@@ -1,0 +1,21 @@
+#QTL mapping 
+conditions: ["CD14", "IFN", "LPS2", "LPS24"]
+n_batches: 250
+qtl_vcf: "/nfs/users/nfs_k/ka8/scratch/projects/macrophage-gxe-study/processed/Fairfax_permuted/merged_genotypes/fairfax_genotypes.sorted.filtered.permuted.vcf.gz"
+cis_window: 500000
+nominal_cis_window: 500000
+annot_type: ["full", "shared", "shared_84", "shared_42"]
+
+#eigenMT
+chromosomes: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22]
+
+
+#Colocalisation
+coloc_phenotypes: ["full", "shared", "shared_84", "shared_42"]
+gwas_dir: "/nfs/users/nfs_k/ka8/scratch/datasets/Inflammatory_GWAS/"
+coloc_window: 2e5
+gwas_traits: ["AD","CEL_2010","CEL","CD","IBD","UC","MS","NAR","PBC","PS","RA_2012","RA","SCZ","SLE","T1D","T1D_2","T2D_1","T2D","UC_2012","UC_2014","CAD","MI","CRE","CRP","GLU","HDL","HGB","HOMA_b","HOMA_ir","IL6","INS","MCHC","MCH","MCV","PCV","PLT","RBC","TC","TG","UA","WBC","LDL","CAD_2017"]
+
+
+
+
