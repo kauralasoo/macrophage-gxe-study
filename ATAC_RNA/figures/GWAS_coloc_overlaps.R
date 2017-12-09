@@ -1,6 +1,7 @@
 library("dplyr")
 library("tidyr")
 library("purrr")
+library("ggplot2")
 library("devtools")
 load_all("../seqUtils/")
 load_all("~/software/rasqual/rasqualTools/")
@@ -43,7 +44,7 @@ eqtl_200kb_hits = importAndFilterColocHits(gwas_stats_labeled, coloc_suffix = ".
 saveRDS(eqtl_200kb_hits, "results/SL1344/coloc/eQTL_coloc_200kb_hits.rds")
 write.table(eqtl_200kb_hits, "figures/tables/eQTL_coloc_200kb_hits.txt", sep = "\t", 
             row.names = FALSE, col.names = TRUE, quote = FALSE)
-
+eqtl_200kb_hits = readRDS("results/SL1344/coloc/eQTL_coloc_200kb_hits.rds")
 
 #Keep one gene per summarised trait
 condensed_eQTL_hits = dplyr::group_by(eqtl_200kb_hits, summarised_trait, phenotype_id) %>% 
@@ -81,6 +82,7 @@ caqtl_200kb_filtered_hits = dplyr::semi_join(caqtl_200kb_hits, condensed_caqtl_h
 saveRDS(caqtl_200kb_filtered_hits, "results/SL1344/coloc/caQTL_coloc_200kb_hits.rds")
 write.table(caqtl_200kb_filtered_hits, "figures/tables/caQTL_coloc_200kb_hits.txt", sep = "\t", 
             row.names = FALSE, col.names = TRUE, quote = FALSE)
+caqtl_200kb_filtered_hits = readRDS("results/SL1344/coloc/caQTL_coloc_200kb_hits.rds")
 
 #### Count the number of coloc hits by condition and by trait ####
 
@@ -113,10 +115,12 @@ coloc_counts_plot = ggplot(coloc_detection_counts, aes(x = figure_name, y = tota
   geom_line() +
   xlab("Conditions included") + 
   ylab("Cumulative number of overlaps") +
-  scale_y_continuous(limits = c(0,40)) +
+  scale_y_continuous(limits = c(0,25)) +
   theme_light() + 
   scale_color_manual(values = c("#e66101","#5e3c99"), name = "") +
-  theme(legend.position = "top")
+  theme(legend.position = "top") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+        panel.border = element_blank(), axis.line = element_line(colour = "grey60"))
 ggsave("figures/main_figures/coloc_QTL_counts.pdf", plot = coloc_counts_plot, width = 2.6, height = 3)
 
 
@@ -173,7 +177,9 @@ coloc_traits_plot = ggplot(merged_counts, aes(x = summarised_trait, y = overlap_
   xlab("Trait") +
   ylab("Number of colocalised loci")  + 
   scale_fill_manual(values = c("#e66101","#5e3c99"), name = "", guide = guide_legend(reverse = TRUE)) +
-  theme(legend.position = "top")
+  theme(legend.position = "top") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+        panel.border = element_blank(), axis.line = element_line(colour = "grey60"))
 ggsave("figures/main_figures/coloc_trait_counts.pdf", plot = coloc_traits_plot, width = 2.6, height = 3)
 
 
