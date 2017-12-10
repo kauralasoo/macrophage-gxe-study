@@ -122,13 +122,15 @@ summary_df = dplyr::select(summary_stats, unique_masters, shared_masters, other_
 #Make a plot of fractions
 cs_plot = ggplot(summary_df, aes(x = caqtl_type, y = fraction, label = count)) + 
   geom_bar(stat = "identity", width = 0.7) + 
-  scale_y_continuous(labels=percent, breaks=pretty_breaks(n=4), limits = c(0,0.6)) +
+  scale_y_continuous(labels=percent, breaks=pretty_breaks(n=4), limits = c(0,0.65), expand = c(0, 0)) +
   theme_light() +
   xlab("Credible set contains") +
   ylab("Fraction of caQTLs") + 
   coord_flip() +
   geom_text(nudge_y = 0.1) +
-  theme(axis.text.y = element_blank(), axis.title.y = element_blank())
+  theme(axis.text.y = element_blank(), axis.title.y = element_blank()) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+        panel.border = element_blank(), axis.line = element_line(colour = "grey60"))
 
 ggsave("figures/main_figures/caQTL_credible_set_contents.pdf", cs_plot, width = 1.7, height = 3)
 
@@ -160,8 +162,11 @@ dependent_peak_count = master_dependent_pairs %>%
   dplyr::summarise(dependent_peak_count = length(dependent_id)) %>% 
   arrange(-dependent_peak_count)
 dependent_plot = ggplot(dependent_peak_count, aes(x = dependent_peak_count)) + geom_bar() + theme_light() +
-  xlab("Number of dependent regions") +
-  ylab("Master region count")
+    xlab("Number of dependent regions") +
+    ylab("Master region count") +
+    scale_y_continuous(expand = c(0.01,0)) + 
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+          panel.border = element_blank(), axis.line = element_line(colour = "grey60"))
 ggsave("figures/main_figures/caQTL_number_of_dependent_peaks_per_unqiue_master.pdf", plot = dependent_plot, width = 3, height = 3)
 
 #Plot distances between master and dependent peaks

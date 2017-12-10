@@ -301,16 +301,21 @@ rev_results = reverseAnalysis(rasqual_min_pvalues, rna_atac_overlaps, use_filter
 combined_results = dplyr::bind_rows(fwd_results$present_fraction, rev_results$present_fraction) %>%
   dplyr::mutate(present = ifelse(is.na(present),0,present)) %>%
   dplyr::mutate(fraction = ifelse(is.na(fraction),0,fraction))
+combined_results = read.table("figures/tables/foreshadow_quant.txt")
 
 plot_data = combined_results %>%
-  dplyr::mutate(type = ifelse(type == "forward", "caQTL before eQTL", "eQTL before caQTL"))
+  dplyr::mutate(type = ifelse(type == "forward", "caQTL before eQTL", "eQTL before caQTL")) %>%
+  dplyr::mutate(max_effect = factor(as.character(max_effect), levels = c("I","S","I+S")))
 
 foreshadow_plot = ggplot(plot_data, aes(x = max_effect, y = fraction, fill = type)) + 
   geom_bar(stat = "identity", position = "dodge") + 
   xlab("Condition") +
   ylab("Fraction of caQTL-eQTL pairs") + 
   theme_light() +
-  theme(legend.position = "right")
+  scale_y_continuous(expand = c(0.01,0)) + 
+  theme(legend.position = "right") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+        panel.border = element_blank(), axis.line = element_line(colour = "grey60"))
 
 #Save results to disk
 ggsave("figures/main_figures/foreshadowing_proportions.pdf", plot = foreshadow_plot, width = 3.7, height = 3)
