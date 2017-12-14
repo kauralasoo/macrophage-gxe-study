@@ -5,3 +5,4 @@ covariates/makeQCreport_files/*
 processed
 FarmOut
 .snakemake
+*.history
