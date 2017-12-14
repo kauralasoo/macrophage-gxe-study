@@ -18,6 +18,10 @@ persistent_peaks = dplyr::filter(filtered_pairs, abs(beta) > 0.59) %>% dplyr::se
 #GBP1BA enhancer
 persistent_peaks = data_frame(peak_id = "ATAC_peak_106417")
 
+# PTK2B enhancer
+persistent_peaks = data_frame(peak_id = "ATAC_peak_261927")
+
+
 #Identify credible sets of causal variants for both groups
 appear_snps = purrr::map_df(credible_sets_df, ~dplyr::filter(., gene_id %in% appear_peaks$peak_id) %>% 
   dplyr::filter(gene_id == overlap_peak_id)) %>% 
