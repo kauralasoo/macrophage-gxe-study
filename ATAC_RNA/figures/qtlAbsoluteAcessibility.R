@@ -59,7 +59,7 @@ caqtl_stimulated_df = dplyr::bind_rows(naive_tpms, stimulated_tpms) %>% dplyr::m
 
 #### Perform the same analysis for eQTL data
 #Import condition-specific QTLs
-rna_variable_qtls = readRDS("results/SL1344/eQTLs/appeat_disappear_eQTLs.rds")
+rna_variable_qtls = readRDS("results/SL1344/eQTLs/appear_disappear_eQTLs.rds")
 rna_list = readRDS("results/SL1344/combined_expression_data_covariates.rds")
 
 #Calculate mean accessibility in each condition
