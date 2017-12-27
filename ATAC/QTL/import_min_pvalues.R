@@ -87,24 +87,6 @@ saveRDS(fastqtl_fdr_thres_list, "results/ATAC/QTLs/fastqtl_min_pvalues.rds")
 
 purrr::map(fastqtl_fdr_thres_list, ~dplyr::filter(.,p_eigen < fdr_thresh))
 
-#Import min p-values from fastqtl 100kb and 50kb windows centred around the peak
-fastqtl_100kb_list = list(
-  naive = "/Volumes/JetDrive/databases/ATAC/fastqtl/peak_centre/naive_100kb_cqn_perm.txt.gz",
-  IFNg = "/Volumes/JetDrive/databases/ATAC/fastqtl/peak_centre/IFNg_100kb_cqn_perm.txt.gz",
-  SL1344 = "/Volumes/JetDrive/databases/ATAC/fastqtl/peak_centre/SL1344_100kb_cqn_perm.txt.gz",
-  IFNg_SL1344 = "/Volumes/JetDrive/databases/ATAC/fastqtl/peak_centre/IFNg_SL1344_100kb_cqn_perm.txt.gz")
-fastqtl_100kb_min_pvalues = purrr::map(fastqtl_100kb_list, ~importFastQTLTable(.))
-saveRDS(fastqtl_100kb_min_pvalues, "results/ATAC/QTLs/fastqtl_min_pvalues_100kb.rds")
-
-fastqtl_50kb_list = list(
-  naive = "/Volumes/JetDrive/databases/ATAC/fastqtl/peak_centre/naive_50kb_cqn_perm.txt.gz",
-  IFNg = "/Volumes/JetDrive/databases/ATAC/fastqtl/peak_centre/IFNg_50kb_cqn_perm.txt.gz",
-  SL1344 = "/Volumes/JetDrive/databases/ATAC/fastqtl/peak_centre/SL1344_50kb_cqn_perm.txt.gz",
-  IFNg_SL1344 = "/Volumes/JetDrive/databases/ATAC/fastqtl/peak_centre/IFNg_SL1344_50kb_cqn_perm.txt.gz")
-fastqtl_50kb_min_pvalues = purrr::map(fastqtl_50kb_list, ~importFastQTLTable(.))
-saveRDS(fastqtl_50kb_min_pvalues, "results/ATAC/QTLs/fastqtl_min_pvalues_50kb.rds")
-
-
 ##### Export min QTL lists for Zenodo #####
 #RASQUAL
 rasqual_pvalues = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
