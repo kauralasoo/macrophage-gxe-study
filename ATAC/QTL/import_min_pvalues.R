@@ -105,3 +105,26 @@ fastqtl_50kb_min_pvalues = purrr::map(fastqtl_50kb_list, ~importFastQTLTable(.))
 saveRDS(fastqtl_50kb_min_pvalues, "results/ATAC/QTLs/fastqtl_min_pvalues_50kb.rds")
 
 
+##### Export min QTL lists for Zenodo #####
+#RASQUAL
+rasqual_pvalues = readRDS("results/ATAC/QTLs/rasqual_min_pvalues.rds")
+write.table(rasqual_pvalues$naive, "figures/tables/caQTLs/caQTL_naive_RASQUAL_lead_only.txt", 
+            sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(rasqual_pvalues$IFNg, "figures/tables/caQTLs/caQTL_IFNg_RASQUAL_lead_only.txt", 
+            sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(rasqual_pvalues$SL1344, "figures/tables/caQTLs/caQTL_SL1344_RASQUAL_lead_only.txt", 
+            sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(rasqual_pvalues$IFNg_SL1344, "figures/tables/caQTLs/caQTL_IFNg_SL1344_RASQUAL_lead_only.txt", 
+            sep = "\t", quote = FALSE, row.names = FALSE)
+
+#FastQTL
+fastqtl_pvalues = readRDS("results/ATAC/QTLs/fastqtl_min_pvalues.rds")
+write.table(fastqtl_pvalues$naive, "figures/tables/caQTLs/caQTL_naive_FastQTL_lead_only.txt", 
+            sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(fastqtl_pvalues$IFNg, "figures/tables/caQTLs/caQTL_IFNg_FastQTL_lead_only.txt", 
+            sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(fastqtl_pvalues$SL1344, "figures/tables/caQTLs/caQTL_SL1344_FastQTL_lead_only.txt", 
+            sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(fastqtl_pvalues$IFNg_SL1344, "figures/tables/caQTLs/caQTL_IFNg_SL1344_FastQTL_lead_only.txt", 
+            sep = "\t", quote = FALSE, row.names = FALSE)
+
