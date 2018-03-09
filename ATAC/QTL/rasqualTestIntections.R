@@ -44,6 +44,8 @@ interaction_results = testMultipleInteractions(filtered_pairs, trait_matrix = at
 interaction_df = postProcessInteractionPvalues(interaction_results, id_field_separator = "-")
 saveRDS(interaction_df, "results/ATAC/QTLs/rasqual_interaction_results.rds")
 interaction_df = readRDS("results/ATAC/QTLs/rasqual_interaction_results.rds")
+write.table(interaction_df, "figures/tables/ATAC_caQTL_lm_interaction_test.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
 
 #Perform Bonferroni correction at the peak level
 interaction_df_bonferroni = dplyr::group_by(interaction_df, gene_id) %>% 

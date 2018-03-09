@@ -85,6 +85,7 @@ interaction_results = testMultipleInteractions(tbl_df(filtered_pairs), combined_
 interaction_df = postProcessInteractionPvalues(interaction_results, id_field_separator = "-")
 saveRDS(interaction_df, "results/SL1344/eQTLs/SL1344_interaction_pvalues_lme4.rds")
 interaction_df = readRDS("results/SL1344/eQTLs/SL1344_interaction_pvalues_lme4.rds")
+write.table(interaction_df, "figures/tables/RNA_eQTL_lme4_interaction_test.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 interaction_hits = dplyr::filter(interaction_df, p_fdr < 0.1)
 
 #Import permutation p-values for the linear model
