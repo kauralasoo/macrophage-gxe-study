@@ -30,7 +30,7 @@ GRCh38_variants = importVariantInformation("genotypes/SL1344/imputed_20151005/im
 GRCh37_variants = importVariantInformation("genotypes/SL1344/imputed_20151005/GRCh37/imputed.86_samples.variant_information.GRCh37.vcf.gz")
 
 #Import list of GWAS studies
-gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt", col_names = c("trait","file_name"))
+gwas_stats_labeled = readr::read_tsv("macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.labeled.txt", col_names = c("trait","file_name", "type"))
 
 #Import eQTL min p-values
 #Load p-values from disk
@@ -57,8 +57,8 @@ UC_coverage = plotCoverage(
 
 #Import caQTL and GWAS summary stats
 #Import QTL and GWAS summary stats and convert them to the same GRCh38 coordinate space
-qtl_df = data_frame(gene_id = "ATAC_peak_166661", snp_id = "rs7282490", trait = "UC")
-qtl_summary = importSummariesForPlotting(qtl_df, gwas_stats_labeled, qtl_paths = qtlResults()$atac_fastqtl, 
+qtl_df = data_frame(phenotype_id = "ATAC_peak_166661", snp_id = "rs7282490", trait = "UC")
+qtl_summary = importSummariesForPlotting(qtl_df, gwas_stats_labeled, gwas_dir = "~/datasets/Inflammatory_GWAS/", qtl_paths = qtlResults()$atac_fastqtl, 
                                          GRCh37_variants = GRCh37_variants, GRCh38_variants = GRCh38_variants, cis_dist = 2e5) %>%
   arrange(condition_name, p_nominal) %>% 
   addR2FromLead(vcf_file$genotypes) %>%
@@ -70,13 +70,12 @@ caqtl_manhattan_plot = makeManhattanPlot(qtl_summary, region_coords, color_R2 = 
 
 
 #Import eQTL summary stats for the ICOSLG gene
-qtl_df = data_frame(gene_id = "ENSG00000160223", snp_id = "rs7282490", trait = "UC")
-eqtl_summary = importSummariesForPlotting(qtl_df, gwas_stats_labeled, qtl_paths = qtlResults()$rna_fastqtl, 
-                                         GRCh37_variants = GRCh37_variants, GRCh38_variants = GRCh38_variants, cis_dist = 2e5, use_rasqual = FALSE) %>%
+qtl_df = data_frame(phenotype_id = "ENSG00000160223", snp_id = "rs7282490", trait = "UC")
+eqtl_summary = importSummariesForPlotting(qtl_df, gwas_stats_labeled, gwas_dir = "~/datasets/Inflammatory_GWAS/", qtl_paths = qtlResults()$rna_fastqtl, 
+                                         GRCh37_variants = GRCh37_variants, GRCh38_variants = GRCh38_variants, cis_dist = 2e5) %>%
   arrange(condition_name, p_nominal) %>% 
   addR2FromLead(vcf_file$genotypes) %>%
   dplyr::filter(condition_name %in% c("naive")) %>%
-  dplyr::rename(track_id = condition_name) %>%
   dplyr::mutate(track_id = "N")
 
 eqtl_manhattan_plot = makeManhattanPlot(eqtl_summary, region_coords, color_R2 = TRUE, data_track = TRUE)
@@ -86,6 +85,11 @@ joint_plot = cowplot::plot_grid(caqtl_manhattan_plot, eqtl_manhattan_plot, UC_co
                                 align = "v", ncol = 1, rel_heights = c(4,2,2,1))
 ggsave("figures/main_figures/UC_caQTL_overlap.png", plot = joint_plot, width = 4, height = 4)
 
+#Merge all summary stats together
+summary_list = list(UC = dplyr::filter(qtl_summary, condition_name == "UC"),
+                    ATAC_peak_166661 = dplyr::filter(qtl_summary, condition_name == "naive"),
+                    ENSG00000160223 = eqtl_summary)
+saveRDS(summary_list, "figures/tables/ICOSLG_pvalues.rds")
 
 
 #Make a coverage plot from the narrow region around the peak
