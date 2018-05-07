@@ -17,6 +17,7 @@ https://www.biorxiv.org/content/early/2017/05/18/102392
 * **public_chromatin** - scripts to analyse processed public ChIP-seq datasets
 * **chromatin-scripts** - Process raw ChIP-seq and ATAC-seq data
 
+## Dependencies
 
-
+Many functions are imported from the seqUtils package: https://github.com/kauralasoo/seqUtils
 
