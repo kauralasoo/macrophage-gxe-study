@@ -254,6 +254,10 @@ disappear_means_plot = ggplot(disappear_cluster_means, aes(x = figure_name, y = 
 variable_qtls = list(appear = appear_betas, disappear = disappear_betas)
 saveRDS(variable_qtls, "results/SL1344/eQTLs/appear_disappear_eQTLs.rds")
 
+#Export gene lists to disk
+variable_qtls = readRDS("results/SL1344/eQTLs/appear_disappear_eQTLs.rds")
+write.table(variable_qtls$appear, "figures/tables/Figure_2a_response_eQTLs.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
 
 
 

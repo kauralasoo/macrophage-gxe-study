@@ -35,4 +35,29 @@ write.table(combined_expression_data$gene_metadata, "results/SL1344/datasets/RNA
             sep = "\t", quote = FALSE, row.names = FALSE)
 
 
+#Export lead QTL variants
+rasqual_min_pvalues = readRDS("results/SL1344/eQTLs/rasqual_min_pvalues.rds") %>%
+  purrr::map(~dplyr::select(.,-p_fdr))
+write.table(rasqual_min_pvalues$naive, "results/SL1344/datasets/eQTLs/eQTL_naive_RASQUAL_lead_only.txt",
+            sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(rasqual_min_pvalues$IFNg, "results/SL1344/datasets/eQTLs/eQTL_IFNg_RASQUAL_lead_only.txt",
+            sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(rasqual_min_pvalues$SL1344, "results/SL1344/datasets/eQTLs/eQTL_SL1344_RASQUAL_lead_only.txt",
+            sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(rasqual_min_pvalues$IFNg_SL1344, "results/SL1344/datasets/eQTLs/eQTL_IFNg_SL1344_RASQUAL_lead_only.txt",
+            sep = "\t", quote = FALSE, row.names = FALSE)
+
+rasqual_min_pvalues = readRDS("results/SL1344/eQTLs/fastqtl_min_pvalues.rds") %>%
+  purrr::map(~dplyr::select(.,-p_fdr))
+
+
+fastqtl_min_pvalues = readRDS("results/SL1344/eQTLs/fastqtl_min_pvalues.rds")
+write.table(fastqtl_min_pvalues$naive, "results/SL1344/datasets/eQTLs/eQTL_naive_FastQTL_lead_only.txt",
+            sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(fastqtl_min_pvalues$IFNg, "results/SL1344/datasets/eQTLs/eQTL_IFNg_FastQTL_lead_only.txt",
+            sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(fastqtl_min_pvalues$SL1344, "results/SL1344/datasets/eQTLs/eQTL_SL1344_FastQTL_lead_only.txt",
+            sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(fastqtl_min_pvalues$IFNg_SL1344, "results/SL1344/datasets/eQTLs/eQTL_IFNg_SL1344_FastQTL_lead_only.txt",
+            sep = "\t", quote = FALSE, row.names = FALSE)
 
