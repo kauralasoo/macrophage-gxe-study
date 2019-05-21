@@ -43,3 +43,5 @@ cat macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.txt | tail -n 
 
 echo "Inflammatory_bowel_disease_CD_Liu_2015_NatGen_Immunochip" | python ~/software/utils/submitJobs.py --MEM 6000 --jobname run_GARFIELD --command "./garfield"
 echo "Inflammatory_bowel_disease_CD_Liu_2015_NatGen_Immunochip" | python ~/software/utils/submitJobs.py --MEM 6000 --jobname run_GARFIELD --command "./garfield"
+
+cut -f1 ~/scratch/projects/macrophage-gxe-study/macrophage-gxe-study/data/gwas_catalog/GWAS_summary_stat_list.txt | python ~/software/utils/submitJobs.py --MEM 6000 --jobname run_GARFIELD --command "./garfield"

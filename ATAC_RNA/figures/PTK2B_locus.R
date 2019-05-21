@@ -76,6 +76,19 @@ gene_plot = plotQTLCompact(gene_data) +
 ggsave("figures/supplementary/PTK2B_boxplot.pdf", gene_plot, width = 3, height = 3)
 
 
+#Make a boxplot of the accessible region
+peak_data = constructQtlPlotDataFrame("ATAC_peak_261927", "rs28834970", atac_data$cqn, vcf_file$genotypes, 
+                                      atac_data$sample_metadata, atac_data$gene_metadata) %>%
+  dplyr::filter(condition_name %in% c("naive")) %>%
+  dplyr::left_join(figureNames()) %>%
+  dplyr::mutate(condition_name = figure_name) %>%
+  dplyr::left_join(constructGenotypeText("rs28834970", variant_information), by = "genotype_value")
+gene_plot = plotQTLCompact(peak_data) + 
+  ggplot2::scale_color_manual(values = conditionPalette()[c(1,4)], guide=FALSE) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  ylab("Chromatin accessibility")
+ggsave("figures/supplementary/PTK2B_accessiblity_boxplot.pdf", gene_plot, width = 3, height = 3)
+
 #Make a read coverage plot for RNA-Seq
 txdb = loadDb("../../annotations/GRCh38/genes/Ensembl_79/TranscriptDb_GRCh38_79.db")
 tx_metadata = readRDS("../../annotations/GRCh38/genes/Ensembl_79/Homo_sapiens.GRCh38.79.transcript_data.rds") %>%
